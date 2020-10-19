@@ -1,6 +1,9 @@
 import { Container, interfaces } from 'inversify';
-import Web3 from 'web3';
-import getWeb3 from '../functions/getWeb3';
+import { Logger } from 'winston';
+import settings from '../config/settings';
+import logger from './logger';
+import Settings from '../types/Settings';
+import Blockchain from './Blockchain';
 import ChainContract from '../contracts/ChainContract';
 
 class Application {
@@ -9,8 +12,10 @@ class Application {
 
   private constructor() {
     this.container = new Container({ autoBindInjectable: true });
-    this.container.bind<Web3>(Web3).toConstantValue(getWeb3());
+    this.container.bind<Settings>('Settings').toConstantValue(settings);
+    this.container.bind<Logger>('Logger').toConstantValue(logger);
     this.container.bind<ChainContract>(ChainContract).toSelf().inSingletonScope();
+    this.container.bind<Blockchain>(Blockchain).toSelf().inSingletonScope();
   }
 
   public static get instance(): Application {
