@@ -118,7 +118,6 @@ GET /blocks/:block_id/leaves
   "data": [
     {
       "_id": "507f1f77bcf86cd799439011",
-      "block-id": "507f191e810c19729de860ea",
       "key": "prices::eth::usd",
       "value": 0xf541c3cd1d2df407fb9bb52b3489fc2aaeedd97e,
       "proof": [
