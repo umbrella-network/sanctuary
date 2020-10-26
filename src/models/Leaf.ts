@@ -8,7 +8,7 @@ export interface ILeaf extends Document {
 
 const Leafchema: Schema = new Schema({
   _id: { type: String, required: true },
-  blockId: { type: Number, required: true },
+  blockId: { type: String, required: true },
   key: { type: String, required: true },
   value: { type: String, required: true }
 }, { _id: false });
