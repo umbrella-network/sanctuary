@@ -23,6 +23,11 @@ PORT=3000 # HTTP port the server will listen to.
 $ npm run start:dev
 ```
 
+## Seed Mock Data
+```
+npx tsc -p . | node ./dist/scripts/mock-seeds.js
+```
+
 ## Building & Releasing
 First, compile the application:
 ```
@@ -53,7 +58,7 @@ GET /v1/blocks
   "data": [
     {
       "id": "507f1f77bcf86cd799439011",
-      "block-height": 22,
+      "height": 22,
       "anchor": 12345,
       "timestamp": "2011-10-05T14:48:00.000Z",
       "root": "0xf8b72d93bb187e4adad3bbb423b261eb334d1fbdbe021cb248386ad7e39da9df",
@@ -82,8 +87,7 @@ GET /v1/blocks/:id
 {
   "data": {
     "id": "507f1f77bcf86cd799439011",
-    "chain": "0x5a061f5e94ba7A460Ac875984e1d966854f680C7",
-    "block-height": 22,
+    "height": 22,
     "anchor": 12345,
     "timestamp": "2011-10-05T14:48:00.000Z",
     "root": "0xf8b72d93bb187e4adad3bbb423b261eb334d1fbdbe021cb248386ad7e39da9df",

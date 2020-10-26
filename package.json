@@ -1,8 +1,8 @@
 {
-  "name": "pegasus",
+  "name": "sanctuary",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/umbrella-network/pegasus.git"
+    "url": "git+https://github.com/umbrella-network/sanctuary.git"
   },
   "scripts": {
     "lint": "eslint ./src/**/*.ts",
