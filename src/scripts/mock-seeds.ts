@@ -11,7 +11,7 @@ async function main() {
 
   for await (let i = 0; i < 100; i++) {
     const block = new Block({
-      _id: `blocks::${i}`,
+      _id: `block::${i}`,
       height: i,
       anchor: 1024 + (i * 8),
       timestamp: new Date().toISOString(),
@@ -36,10 +36,15 @@ async function main() {
       const feed = feeds.data[i];
   
       const leaf = new Leaf({
-        _id: `leafs::${block.id}::${feed.id}`,
+        _id: `leaf::${block.id}::${feed.id}`,
         blockId: block.id,
         key: feed.id,
-        value: ethers.utils.keccak256('0x1234')
+        value: ethers.utils.keccak256('0x1234'),
+        proof: [
+          ethers.utils.keccak256('0x1234'),
+          ethers.utils.keccak256('0x1234'),
+          ethers.utils.keccak256('0x1234')
+        ]
       });
 
       await leaf.save();

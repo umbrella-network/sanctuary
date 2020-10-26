@@ -49,7 +49,7 @@ This endpoint returns a set of blocks along with some basic information about th
 ### Index
 #### Request
 ```
-GET /v1/blocks
+GET /blocks
 ```
 
 #### Response
@@ -57,7 +57,7 @@ GET /v1/blocks
 {
   "data": [
     {
-      "id": "507f1f77bcf86cd799439011",
+      "_id": "507f1f77bcf86cd799439011",
       "height": 22,
       "anchor": 12345,
       "timestamp": "2011-10-05T14:48:00.000Z",
@@ -79,14 +79,14 @@ GET /v1/blocks
 ### Show
 #### Request
 ```
-GET /v1/blocks/:id
+GET /blocks/:id
 ```
 
 #### Response
 ```
 {
   "data": {
-    "id": "507f1f77bcf86cd799439011",
+    "_id": "507f1f77bcf86cd799439011",
     "height": 22,
     "anchor": 12345,
     "timestamp": "2011-10-05T14:48:00.000Z",
@@ -109,7 +109,7 @@ This endpoint returns a set of leaves, along with their raw values and Merkle pr
 
 #### Request
 ```
-GET /v1/blocks/:id/leaves
+GET /blocks/:block_id/leaves
 ```
 
 #### Response
@@ -117,7 +117,7 @@ GET /v1/blocks/:id/leaves
 {
   "data": [
     {
-      "id": "507f1f77bcf86cd799439011",
+      "_id": "507f1f77bcf86cd799439011",
       "block-id": "507f191e810c19729de860ea",
       "key": "prices::eth::usd",
       "value": 0xf541c3cd1d2df407fb9bb52b3489fc2aaeedd97e,
