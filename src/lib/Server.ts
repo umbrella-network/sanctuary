@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import logger from './logger';
 import HealthController from '../controllers/HealthController';
+import BlocksController from '../controllers/BlocksController';
 import Settings from '../types/Settings';
 
 @injectable()
@@ -15,7 +16,8 @@ class Server {
 
   constructor(
     @inject('Settings') settings: Settings,
-    @inject(HealthController) healthController: HealthController
+    @inject(HealthController) healthController: HealthController,
+    @inject(BlocksController) blocksController: BlocksController
   ) {
     this.port = settings.port;
 
@@ -24,7 +26,8 @@ class Server {
       .use(compression())
       .use(express.json())
       .use(express.urlencoded({ extended: true }))
-      .use('/health', healthController.router);
+      .use('/health', healthController.router)
+      .use('/blocks', blocksController.router);
 
     this.server = http.createServer(this.router);
   }
