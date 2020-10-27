@@ -22,7 +22,10 @@ async function main() {
       power: 75,
       voters: [
         '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F'
-      ]
+      ],
+      votes: {
+        '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F': 200
+      }
     });
   
     await block.save();
