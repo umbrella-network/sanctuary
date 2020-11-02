@@ -11,57 +11,66 @@ class BlockSynchronizer {
   @inject(ChainContract) chainContract!: ChainContract;
 
   async apply(): Promise<void> {
-    // figure out what the latest block height is
-    // find or create the block in database
-    //const anchor = Number(await this.blockchain.provider.getBlockNumber());
     const currentBlockHeight = Number(await this.chainContract.getBlockHeight());
-    //this.logger.info(`Current block height: ${blockHeight} with anchor: ${anchor}`);
-
     const lookback = Math.max(currentBlockHeight - 100, 0);
-    this.logger.info(`Synchronizing blocks starting at: ${lookback}`);
+    this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
       let anchor = height * 8;
-      // this.logger.info(`Block with height: ${height} and anchor: ${anchor}`);
+      let anchorBlock = await this.blockchain.provider.getBlock(anchor);
+      let timestamp = new Date(anchorBlock.timestamp);
 
       let block = await Block.findOneAndUpdate(
         {
           _id: `block::${height}`,
           height: height
         }, {
-          anchor: anchor
+          anchor: anchor,
+          timestamp: timestamp
         }, {
           new: true,
           upsert: true
         }
       );
 
-      this.logger.info(`Block ${block.id} with height: ${height} and anchor: ${anchor} and status: ${block.status}`);
+      // this.logger.info(`Block ${block.id} with height: ${height} and anchor: ${anchor} and timestamp: ${block.timestamp} and status: ${block.status}`);
 
       if (!block.status) {
         this.logger.info(`New block detected: ${block.id}`);
         block.status = 'new';
         await block.save();
+      } else if (block.status == 'new') {
+        if (block.height < currentBlockHeight) {
+          await this.syncFinished(block.id);
+        }
       }
     }
+  }
 
-    /*
-    let block = await Block.findOneAndUpdate(
-      {
-        height: Number(blockHeight)
-      }, {
-        anchor: anchor
-      }, {
-        new: true,
-        upsert: true
-      }
-    );
+  async syncFinished(id: String): Promise<void> {
+    let block = await Block.findOne({_id: id});
+    const height = block.height;
+    const sideBlock = await this.chainContract.contract.blocks(height);
+    let status;
 
-    if (!block.status) {
-      block.status = 'new';
-      await block.save();
+
+    if (sideBlock.root == '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      status = 'failed';
+    } else {
+      status = 'completed';
     }
-    */
+
+    this.logger.info(`Block ${height} has finished: ${sideBlock} with status: ${status}`);
+
+    await block.updateOne({
+      status: status,
+      root: sideBlock.root,
+      minter: sideBlock.minter,
+      staked: sideBlock.staked,
+      power: sideBlock.power,
+      voters: sideBlock.voters,
+      votes: sideBlock.votes
+    });
   }
 }
 
