@@ -16,15 +16,15 @@ export interface IBlock extends Document {
 const BlockSchema: Schema = new Schema({
   _id: { type: String, required: true },
   height: { type: Number, required: true, unique: true },
-  status: { type: String, required: true },
-  anchor: { type: Number, required: true },
-  timestamp: { type: Date, required: true },
-  root: { type: String, required: true },
-  minter: { type: String, required: true },
-  staked: { type: Number, required: true },
-  power: { type: Number, required: true },
-  voters: { type: [String], required: true },
-  votes: { type: Map, required: false }
+  status: { type: String, required: false },
+  anchor: { type: Number, required: false },
+  timestamp: { type: Date, required: false },
+  root: { type: String, required: false },
+  minter: { type: String, required: false },
+  staked: { type: Number, required: false, default: 0 },
+  power: { type: Number, required: false, default: 0 },
+  voters: { type: [String], required: false, default: [] },
+  votes: { type: Map, required: false, default: {} }
 });
 
 export default mongoose.model<IBlock>('Block', BlockSchema);

@@ -28,6 +28,16 @@ $ npm run start:dev
 npx tsc -p . | node ./dist/scripts/mock-seeds.js
 ```
 
+## Worker
+```
+$ npm run start:worker -- --worker BlockMintingWorker
+```
+
+## Scheduler
+```
+$ npm run start:scheduler
+```
+
 ## Building & Releasing
 First, compile the application:
 ```
