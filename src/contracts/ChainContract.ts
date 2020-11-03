@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import fs from 'fs';
 import path from 'path';
-import { Contract, ContractInterface, BigNumber } from 'ethers';
+import { Contract, ContractInterface, BigNumber, utils } from 'ethers';
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
 
@@ -24,6 +24,7 @@ class ChainContract {
 
   getLeaderAddress = async (): Promise<string> => this.contract.getLeaderAddress();
   getBlockHeight = async (): Promise<BigNumber> => this.contract.getBlockHeight();
+  blocks = async (index: number): Promise<utils.Result> => this.contract.blocks(index);
 
   submit = async (root: string, v: number[], r: string[], s: string[]): Promise<void> => this
     .contract

@@ -1,14 +1,18 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import ChainContract from '../contracts/ChainContract';
+import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
 import Block, { IBlock } from '../models/Block';
+import LeavesSynchronizer from '../services/LeavesSynchronizer';
 
 @injectable()
 class BlockSynchronizer {
   @inject('Logger') logger!: Logger;
   @inject(Blockchain) blockchain!: Blockchain;
   @inject(ChainContract) chainContract!: ChainContract;
+  @inject(ValidatorRegistryContract) validatorRegistryContract!: ValidatorRegistryContract;
+  @inject(LeavesSynchronizer) leavesSynchronizer!: LeavesSynchronizer;
 
   async apply(): Promise<void> {
     const currentBlockHeight = Number(await this.chainContract.getBlockHeight());
@@ -42,7 +46,14 @@ class BlockSynchronizer {
       } else if (block.status == 'new') {
         if (block.height < currentBlockHeight) {
           await this.syncFinished(block.id);
+        } else {
+          this.logger.info(`Block is not just finished: ${block.id}`);
         }
+      } else if (block.status == 'completed') {
+        this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
+        await this.leavesSynchronizer.apply(block.id);
+        block.status = 'synchronized';
+        await block.save();
       }
     }
   }
@@ -50,9 +61,8 @@ class BlockSynchronizer {
   async syncFinished(id: String): Promise<void> {
     let block = await Block.findOne({_id: id});
     const height = block.height;
-    const sideBlock = await this.chainContract.contract.blocks(height);
+    const sideBlock = await this.chainContract.blocks(height);
     let status;
-
 
     if (sideBlock.root == '0x0000000000000000000000000000000000000000000000000000000000000000') {
       status = 'failed';
