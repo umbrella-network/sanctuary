@@ -143,6 +143,26 @@ GET /blocks/:block_id/leaves
 }
 ```
 
+## Keys
+This endpoint returns a full list of configured Merkle tree leaf keys.
+
+#### Request
+```
+GET /keys
+```
+
+#### Response
+```
+{
+  "data": [
+    {
+      "id": "eth-usd",
+      "url":"https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD"
+    }
+  ]
+}
+```
+
 ## Proofs
 This endpoint returns the latest block height and proofs for a given set of leaf keys.
 
