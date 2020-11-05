@@ -36,15 +36,15 @@ async function main() {
     await Leaf.deleteMany({
       blockId: block.id
     });
-  
-    for (let i of feeds.data) {
+
+    for (let i = 0; i < feeds.data.length; i++) {
       const feed = feeds.data[i];
-  
+
       const leaf = new Leaf({
         _id: `leaf::${block.id}::${feed.id}`,
         blockId: block.id,
         key: feed.id,
-        value: ethers.utils.keccak256('0x1234'),
+        value: 12345,
         proof: [
           ethers.utils.keccak256('0x1234'),
           ethers.utils.keccak256('0x1234'),

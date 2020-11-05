@@ -6,6 +6,7 @@ import compression from 'compression';
 import logger from './logger';
 import HealthController from '../controllers/HealthController';
 import BlocksController from '../controllers/BlocksController';
+import ProofsController from '../controllers/ProofsController';
 import Settings from '../types/Settings';
 
 @injectable()
@@ -17,7 +18,8 @@ class Server {
   constructor(
     @inject('Settings') settings: Settings,
     @inject(HealthController) healthController: HealthController,
-    @inject(BlocksController) blocksController: BlocksController
+    @inject(BlocksController) blocksController: BlocksController,
+    @inject(ProofsController) proofsController: ProofsController
   ) {
     this.port = settings.port;
 
@@ -27,7 +29,8 @@ class Server {
       .use(express.json())
       .use(express.urlencoded({ extended: true }))
       .use('/health', healthController.router)
-      .use('/blocks', blocksController.router);
+      .use('/blocks', blocksController.router)
+      .use('/proofs', proofsController.router);
 
     this.server = http.createServer(this.router);
   }

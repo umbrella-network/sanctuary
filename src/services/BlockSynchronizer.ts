@@ -52,7 +52,7 @@ class BlockSynchronizer {
       } else if (block.status == 'completed') {
         this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
         await this.leavesSynchronizer.apply(block.id);
-        block.status = 'synchronized';
+        block.status = 'finalized';
         await block.save();
       }
     }

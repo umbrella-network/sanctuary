@@ -159,19 +159,21 @@ GET /proofs/?keys[]=eth-usd&keys[]=btc-eur&keys[]=uni-usd
       "id": "507f1f77bcf86cd799439011",
       "height": 123
     },
-    "eth-usd": {
-      "value": 12345,
-      "proof": [
-        "0x123456",
-        "0x7890123"
-      ]
-    },
-    "btc-eur": {
-      "value": 45679,
-      "proof": [
-        "0x890981",
-        "0x9819405"
-      ]
+    "leaves": {
+      "eth-usd": {
+        "value": 12345,
+        "proof": [
+          "0x123456",
+          "0x7890123"
+        ]
+      },
+      "btc-eur": {
+        "value": 45679,
+        "proof": [
+          "0x890981",
+          "0x9819405"
+        ]
+      }
     }
   }
 }
