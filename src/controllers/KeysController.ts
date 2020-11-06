@@ -16,7 +16,6 @@ class KeysController {
   index = async (request: Request, response: Response): Promise<void> => {
     response.send({ data: feeds.data });
   }
-
 }
 
 export default KeysController;

@@ -9,7 +9,6 @@ import * as feeds from '../config/feeds.json';
 async function main() {
   await Block.deleteMany();
 
-  // for await (let i = 0; i < 100; i++) {
   for await (let i of Array(100).keys()) {
     const block = new Block({
       _id: `block::${i}`,

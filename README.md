@@ -33,9 +33,19 @@ npx tsc -p . | node ./dist/scripts/mock-seeds.js
 $ npm run start:worker -- --worker BlockMintingWorker
 ```
 
+## Worker (Development)
+```
+npm run start:dev:worker -- --worker BlockSynchronizerWorker 
+```
+
 ## Scheduler
 ```
 $ npm run start:scheduler
+```
+
+## Scheduler (Development)
+```
+npm run start:dev:scheduler
 ```
 
 ## Building & Releasing
