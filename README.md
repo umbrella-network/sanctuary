@@ -15,6 +15,9 @@ Setup a dotenv file (`.env`) with local configuration values. Example:
 
 ```
 PORT=3000 # HTTP port the server will listen to.
+BLOCKCHAIN_PRIVATE_KEY=0x123456
+CHAIN_CONTRACT_ADDRESS=0x78901
+VALIDATOR_REGISTRY_CONTRACT_ADDRESS=0xABCD1234
 ```
 
 # Commands
