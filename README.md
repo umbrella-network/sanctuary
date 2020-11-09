@@ -15,6 +15,9 @@ Setup a dotenv file (`.env`) with local configuration values. Example:
 
 ```
 PORT=3000 # HTTP port the server will listen to.
+BLOCKCHAIN_PRIVATE_KEY=0x123456
+CHAIN_CONTRACT_ADDRESS=0x78901
+VALIDATOR_REGISTRY_CONTRACT_ADDRESS=0xABCD1234
 ```
 
 # Commands
@@ -26,6 +29,26 @@ $ npm run start:dev
 ## Seed Mock Data
 ```
 npx tsc -p . | node ./dist/scripts/mock-seeds.js
+```
+
+## Worker
+```
+$ npm run start:worker -- --worker BlockMintingWorker
+```
+
+## Worker (Development)
+```
+npm run start:dev:worker -- --worker BlockSynchronizerWorker 
+```
+
+## Scheduler
+```
+$ npm run start:scheduler
+```
+
+## Scheduler (Development)
+```
+npm run start:dev:scheduler
 ```
 
 ## Building & Releasing
@@ -130,5 +153,61 @@ GET /blocks/:block_id/leaves
       ]
     }
   ]
+}
+```
+
+## Keys
+This endpoint returns a full list of configured Merkle tree leaf keys.
+
+#### Request
+```
+GET /keys
+```
+
+#### Response
+```
+{
+  "data": [
+    {
+      "id": "eth-usd",
+      "url":"https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD"
+    }
+  ]
+}
+```
+
+## Proofs
+This endpoint returns the latest block height and proofs for a given set of leaf keys.
+
+#### Request
+```
+GET /proofs/?keys[]=eth-usd&keys[]=btc-eur&keys[]=uni-usd
+```
+
+#### Response
+```
+{
+  "data": {
+    "block": {
+      "id": "507f1f77bcf86cd799439011",
+      "height": 123
+    },
+    "leaves": {
+      "eth-usd": {
+        "value": 12345,
+        "proof": [
+          "0x123456",
+          "0x7890123"
+        ]
+      },
+      "btc-eur": {
+        "value": 45679,
+        "proof": [
+          "0x890981",
+          "0x9819405"
+        ]
+      }
+    }
+  }
 }
 ```

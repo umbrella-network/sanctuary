@@ -19,6 +19,9 @@ type Settings = {
     contracts: {
       chain: {
         address: string
+      },
+      validatorRegistry: {
+        address: string
       }
     }
   }

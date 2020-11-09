@@ -9,7 +9,7 @@ import * as feeds from '../config/feeds.json';
 async function main() {
   await Block.deleteMany();
 
-  for await (let i = 0; i < 100; i++) {
+  for await (let i of Array(100).keys()) {
     const block = new Block({
       _id: `block::${i}`,
       height: i,
@@ -35,15 +35,15 @@ async function main() {
     await Leaf.deleteMany({
       blockId: block.id
     });
-  
+
     for (let i = 0; i < feeds.data.length; i++) {
       const feed = feeds.data[i];
-  
+
       const leaf = new Leaf({
         _id: `leaf::${block.id}::${feed.id}`,
         blockId: block.id,
         key: feed.id,
-        value: ethers.utils.keccak256('0x1234'),
+        value: 12345,
         proof: [
           ethers.utils.keccak256('0x1234'),
           ethers.utils.keccak256('0x1234'),
