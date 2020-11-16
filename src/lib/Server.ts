@@ -31,6 +31,7 @@ class Server {
       .use(compression())
       .use(express.json())
       .use(express.urlencoded({ extended: true }))
+      .use(cors())
       .use('/health', healthController.router)
       .use('/blocks', blocksController.router)
       .use('/proofs', proofsController.router)
