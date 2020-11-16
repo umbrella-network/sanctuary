@@ -14,6 +14,7 @@ const settings: Settings = {
     url: (process.env.MONGODB_URL || 'mongodb://localhost:27017/sanctuary')
   },
   blockchain: {
+    blockSize: parseInt(process.env.BLOCKCHAIN_BLOCK_SIZE || '8'),
     provider: {
       url: (process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545'),
       privateKey: <string> process.env.BLOCKCHAIN_PRIVATE_KEY

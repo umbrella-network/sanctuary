@@ -5,10 +5,12 @@ import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
 import Block, { IBlock } from '../models/Block';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
+import Settings from 'src/types/Settings';
 
 @injectable()
 class BlockSynchronizer {
   @inject('Logger') logger!: Logger;
+  @inject('Settings') settings!: Settings;
   @inject(Blockchain) blockchain!: Blockchain;
   @inject(ChainContract) chainContract!: ChainContract;
   @inject(ValidatorRegistryContract) validatorRegistryContract!: ValidatorRegistryContract;
@@ -20,7 +22,7 @@ class BlockSynchronizer {
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
-      let anchor = height * 8;
+      let anchor = height * this.settings.blockchain.blockSize;
       let anchorBlock = await this.blockchain.provider.getBlock(anchor);
       let timestamp = new Date(anchorBlock.timestamp);
 
