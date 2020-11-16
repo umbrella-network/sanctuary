@@ -31,7 +31,7 @@ class BlockSynchronizer {
         continue;
       }
 
-      let timestamp = new Date(anchorBlock.timestamp);
+      let timestamp = new Date(anchorBlock.timestamp * 1000);
 
       let block = await Block.findOneAndUpdate(
         {
@@ -72,6 +72,8 @@ class BlockSynchronizer {
     const height = block.height;
     const sideBlock = await this.chainContract.blocks(height);
     let status;
+
+    this.logger.info(sideBlock);
 
     if (sideBlock.root == '0x0000000000000000000000000000000000000000000000000000000000000000') {
       status = 'failed';
