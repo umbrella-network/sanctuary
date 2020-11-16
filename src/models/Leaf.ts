@@ -7,7 +7,7 @@ export interface ILeaf extends Document {
   proof: string[]
 }
 
-const Leafchema: Schema = new Schema({
+const LeafSchema: Schema = new Schema({
   _id: { type: String, required: true },
   blockId: { type: String, required: true },
   key: { type: String, required: true },
@@ -15,4 +15,6 @@ const Leafchema: Schema = new Schema({
   proof: { type: [String], required: true }
 }, { _id: false });
 
-export default mongoose.model<ILeaf>('Leaf', Leafchema);
+LeafSchema.index({ blockId: 1, key: 1 });
+
+export default mongoose.model<ILeaf>('Leaf', LeafSchema);
