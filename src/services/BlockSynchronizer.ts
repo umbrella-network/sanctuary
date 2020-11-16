@@ -18,13 +18,19 @@ class BlockSynchronizer {
 
   async apply(): Promise<void> {
     const interval = await this.chainContract.getInterval();
-    const currentBlockHeight = Number(await this.chainContract.getBlockHeight());
+    const currentBlockHeight = (await this.chainContract.getBlockHeight()).toNumber();
     const lookback = Math.max(currentBlockHeight - 100, 0);
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
       let anchor = height * interval;
       let anchorBlock = await this.blockchain.provider.getBlock(anchor);
+
+      if (!anchorBlock) { 
+        this.logger.error(`No such block: ${anchor}`);
+        continue;
+      }
+
       let timestamp = new Date(anchorBlock.timestamp);
 
       let block = await Block.findOneAndUpdate(
@@ -40,7 +46,7 @@ class BlockSynchronizer {
         }
       );
 
-      // this.logger.info(`Block ${block.id} with height: ${height} and anchor: ${anchor} and timestamp: ${block.timestamp} and status: ${block.status}`);
+      this.logger.debug(`Block ${block.id} with height: ${height} and anchor: ${anchor} and timestamp: ${block.timestamp} and status: ${block.status}`);
 
       if (!block.status) {
         this.logger.info(`New block detected: ${block.id}`);
