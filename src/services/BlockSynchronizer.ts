@@ -17,7 +17,7 @@ class BlockSynchronizer {
   @inject(LeavesSynchronizer) leavesSynchronizer!: LeavesSynchronizer;
 
   async apply(): Promise<void> {
-    const interval = await this.chainContract.getInterval();
+    const interval = Number(await this.chainContract.getInterval());
     const currentBlockHeight = (await this.chainContract.getBlockHeight()).toNumber();
     const lookback = Math.max(currentBlockHeight - 100, 0);
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);

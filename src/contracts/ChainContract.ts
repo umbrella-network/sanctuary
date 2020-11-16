@@ -22,7 +22,7 @@ class ChainContract {
     ).connect(blockchain.wallet);
   }
 
-  getInterval = async (): Promise<number> => this.contract.interval();
+  getInterval = async (): Promise<BigNumber> => this.contract.interval();
   getLeaderAddress = async (): Promise<string> => this.contract.getLeaderAddress();
   getBlockHeight = async (): Promise<BigNumber> => this.contract.getBlockHeight();
   blocks = async (index: number): Promise<utils.Result> => this.contract.blocks(index);
