@@ -17,12 +17,13 @@ class BlockSynchronizer {
   @inject(LeavesSynchronizer) leavesSynchronizer!: LeavesSynchronizer;
 
   async apply(): Promise<void> {
+    const interval = await this.chainContract.getInterval();
     const currentBlockHeight = Number(await this.chainContract.getBlockHeight());
     const lookback = Math.max(currentBlockHeight - 100, 0);
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
-      let anchor = height * this.settings.blockchain.blockSize;
+      let anchor = height * interval;
       let anchorBlock = await this.blockchain.provider.getBlock(anchor);
       let timestamp = new Date(anchorBlock.timestamp);
 

@@ -1,8 +1,7 @@
 import { injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import Block from '../models/Block';
-import Leaf, { ILeaf } from '../models/Leaf';
-import { getModelForClass } from '@typegoose/typegoose';
+import Leaf from '../models/Leaf';
 
 @injectable()
 class ProofsController {

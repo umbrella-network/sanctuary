@@ -12,7 +12,6 @@ type Settings = {
     url: string
   },
   blockchain: {
-    blockSize: number,
     provider: {
       url: string,
       privateKey: string
