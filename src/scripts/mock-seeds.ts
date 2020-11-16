@@ -7,7 +7,7 @@ import { ethers, Wallet } from 'ethers';
 import * as feeds from '../config/feeds.json';
 
 async function main() {
-  await Block.deleteMany();
+  await Block.deleteMany({});
 
   for await (let i of Array(100).keys()) {
     const block = new Block({
@@ -57,10 +57,6 @@ async function main() {
   }
 }
 
-main(() => {
-  console.log('done');
-}).catch(e => {
-  console.error(e);
-}).finally(() => {
-  process.exit(0);
-});
+main()
+  .then(() => console.log('done'))
+  .finally(() => process.exit(0));

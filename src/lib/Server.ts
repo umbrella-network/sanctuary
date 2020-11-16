@@ -4,6 +4,7 @@ import http from 'http';
 import helmet from 'helmet';
 import compression from 'compression';
 import logger from './logger';
+import cors from 'cors';
 import HealthController from '../controllers/HealthController';
 import BlocksController from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
@@ -30,10 +31,12 @@ class Server {
       .use(compression())
       .use(express.json())
       .use(express.urlencoded({ extended: true }))
+      .use(cors())
       .use('/health', healthController.router)
       .use('/blocks', blocksController.router)
       .use('/proofs', proofsController.router)
-      .use('/keys', keysController.router);
+      .use('/keys', keysController.router)
+      .options('*', cors());
 
     this.server = http.createServer(this.router);
   }

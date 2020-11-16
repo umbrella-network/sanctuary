@@ -15,7 +15,16 @@ class BlocksController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    let blocks = await Block.find({});
+    const offset: number = parseInt(<string> request.query.offset) || 0;
+    const limit: number = parseInt(<string> request.query.limit) || 100;
+
+    const blocks = await Block
+      .find({})
+      .skip(offset)
+      .limit(limit)
+      .sort({ height: -1 })
+      .exec();
+
     response.send(blocks);
   }
 

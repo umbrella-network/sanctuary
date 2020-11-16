@@ -5,24 +5,33 @@ import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
 import Block, { IBlock } from '../models/Block';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
+import Settings from 'src/types/Settings';
 
 @injectable()
 class BlockSynchronizer {
   @inject('Logger') logger!: Logger;
+  @inject('Settings') settings!: Settings;
   @inject(Blockchain) blockchain!: Blockchain;
   @inject(ChainContract) chainContract!: ChainContract;
   @inject(ValidatorRegistryContract) validatorRegistryContract!: ValidatorRegistryContract;
   @inject(LeavesSynchronizer) leavesSynchronizer!: LeavesSynchronizer;
 
   async apply(): Promise<void> {
-    const currentBlockHeight = Number(await this.chainContract.getBlockHeight());
+    const interval = Number(await this.chainContract.getInterval());
+    const currentBlockHeight = (await this.chainContract.getBlockHeight()).toNumber();
     const lookback = Math.max(currentBlockHeight - 100, 0);
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
-      let anchor = height * 8;
+      let anchor = height * interval;
       let anchorBlock = await this.blockchain.provider.getBlock(anchor);
-      let timestamp = new Date(anchorBlock.timestamp);
+
+      if (!anchorBlock) { 
+        this.logger.error(`No such block: ${anchor}`);
+        continue;
+      }
+
+      let timestamp = new Date(anchorBlock.timestamp * 1000);
 
       let block = await Block.findOneAndUpdate(
         {
@@ -37,7 +46,7 @@ class BlockSynchronizer {
         }
       );
 
-      // this.logger.info(`Block ${block.id} with height: ${height} and anchor: ${anchor} and timestamp: ${block.timestamp} and status: ${block.status}`);
+      this.logger.debug(`Block ${block.id} with height: ${height} and anchor: ${anchor} and timestamp: ${block.timestamp} and status: ${block.status}`);
 
       if (!block.status) {
         this.logger.info(`New block detected: ${block.id}`);
@@ -63,6 +72,8 @@ class BlockSynchronizer {
     const height = block.height;
     const sideBlock = await this.chainContract.blocks(height);
     let status;
+
+    this.logger.info(sideBlock);
 
     if (sideBlock.root == '0x0000000000000000000000000000000000000000000000000000000000000000') {
       status = 'failed';

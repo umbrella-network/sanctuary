@@ -27,4 +27,7 @@ const BlockSchema: Schema = new Schema({
   votes: { type: Map, required: false, default: {} }
 });
 
+BlockSchema.index({ height: -1 });
+BlockSchema.index({ status: 1 });
+
 export default mongoose.model<IBlock>('Block', BlockSchema);
