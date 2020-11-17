@@ -19,7 +19,8 @@ class BlockSynchronizer {
   async apply(): Promise<void> {
     const interval = Number(await this.chainContract.getInterval());
     const currentBlockHeight = (await this.chainContract.getBlockHeight()).toNumber();
-    const lookback = Math.max(currentBlockHeight - 100, 0);
+    const lastBlock = await Block.findOne({}).sort({ _id: -1 });
+    const lookback = Math.min(lastBlock ? lastBlock.height : Math.max(currentBlockHeight - 100, 0), 100);
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {

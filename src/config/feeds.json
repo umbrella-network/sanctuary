@@ -3,15 +3,17 @@
     {
       "id": "eth-usd",
       "name": "ETH->USD [Spot]",
-      "url": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD",
-      "path": "$.USD",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD",
+      "leafLabel": "eth-usd",
+      "valuePath": "$.USD",
       "discrepancy": 0.1
     },
     {
       "id": "eth-eur",
       "name": "ETH->EUR [Spot]",
-      "url": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=EUR",
-      "path": "$.EUR",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=EUR",
+      "leafLabel": "eth-usd",
+      "valuePath": "$.EUR",
       "discrepancy": 0.1
     }
   ]
