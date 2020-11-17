@@ -15,20 +15,24 @@ class LeavesSynchronizer {
   @inject(ValidatorRegistryContract) validatorRegistryContract!: ValidatorRegistryContract;
   @inject(SortedMerkleTreeFactory) sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
 
-  async apply(blockId: string): Promise<void> {
+  async apply(blockId: string): Promise<boolean> {
     let block = await Block.findOne({_id: blockId});
 
-    this.logger.info(`Synchronizing leaves for block: ${block.id}`);
+    this.logger.info(`Synchronizing leaves for block: ${block.id} with ${block.voters.length} voters: - ${block.voters}`);
 
-    for (let voterId in block.voters) {
+    let success = false;
+
+    for (let voterIndex in block.voters) {
+      const voterId = block.voters[voterIndex];
+      console.log(voterId);
       const validator = await this.validatorRegistryContract.validators(voterId);
       const location = validator['location'];
-      const url = new URL(`${location}/blocks/${block.height}`);
+      const url = new URL(`${location}/blocks/height/${block.height}`);
       this.logger.info(`Resolving leaves from: ${url}`);
-      const response = await axios.get(location);
+      const response = await axios.get(url.toString());
 
       if (response.status == 200) {
-        const input = response.data.data;
+        const input = new Map<string, string>(Object.entries(response.data.data.data));
         const tree = this.sortedMerkleTreeFactory.apply(input);
         const root = tree.getRoot();
 
@@ -53,12 +57,15 @@ class LeavesSynchronizer {
             this.logger.info(`Created new leaf: ${leaf.id}`);
           });
 
+          success = true;
           break;
         } else {
-          this.logger.error(`Validator: ${url} returned non matching tree data`);
+          this.logger.warn(`Validator: ${url} returned non matching tree data; consensus = ${block.root} & validator = ${root}`);
         }
       }
     }
+
+    return success;
   }
 }
 

@@ -2,11 +2,13 @@ import {injectable} from 'inversify';
 import int64 from 'int64-buffer';
 
 import SortedMerkleTree from '../lib/SortedMerkleTree';
+import * as feeds from '../config/feeds.json';
 
 @injectable()
 class SortedMerkleTreeFactory {
   apply(data: Map<string, string>): SortedMerkleTree {
-    const treeData = Object.keys(data)
+    console.log(Object.keys(data));
+    const treeData = Array.from(data.keys()).sort()
       .map(key => {
         const value = data.get(key);
         const converted = this.intToBuffer(Number(value));

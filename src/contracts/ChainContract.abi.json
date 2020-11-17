@@ -120,9 +120,95 @@
   },
   {
     "inputs":[
+      {
+        "internalType":"uint256",
+        "name":"_blockHeight",
+        "type":"uint256"
+      },
+      {
+        "internalType":"bytes32",
+        "name":"_key",
+        "type":"bytes32"
+      }
+    ],
+    "name":"getBlockData",
+    "outputs":[
+      {
+        "internalType":"bytes32",
+        "name":"",
+        "type":"bytes32"
+      }
+    ],
+    "stateMutability":"view",
+    "type":"function"
+  },
+  {
+    "inputs":[
       
     ],
     "name":"getBlockHeight",
+    "outputs":[
+      {
+        "internalType":"uint256",
+        "name":"",
+        "type":"uint256"
+      }
+    ],
+    "stateMutability":"view",
+    "type":"function"
+  },
+  {
+    "inputs":[
+      {
+        "internalType":"uint256",
+        "name":"_blockHeight",
+        "type":"uint256"
+      }
+    ],
+    "name":"getBlockVoters",
+    "outputs":[
+      {
+        "internalType":"address[]",
+        "name":"",
+        "type":"address[]"
+      }
+    ],
+    "stateMutability":"view",
+    "type":"function"
+  },
+  {
+    "inputs":[
+      {
+        "internalType":"uint256",
+        "name":"_blockHeight",
+        "type":"uint256"
+      }
+    ],
+    "name":"getBlockVotersCount",
+    "outputs":[
+      {
+        "internalType":"uint256",
+        "name":"",
+        "type":"uint256"
+      }
+    ],
+    "stateMutability":"view",
+    "type":"function"
+  },
+  {
+    "inputs":[
+      {
+        "internalType":"uint256",
+        "name":"_blockHeight",
+        "type":"uint256"
+      },
+      {
+        "internalType":"address",
+        "name":"_voter",
+        "type":"address"
+      }
+    ],
+    "name":"getBlockVotes",
     "outputs":[
       {
         "internalType":"uint256",
@@ -150,21 +236,6 @@
   },
   {
     "inputs":[
-      
-    ],
-    "name":"interval",
-    "outputs":[
-      {
-        "internalType":"uint256",
-        "name":"",
-        "type":"uint256"
-      }
-    ],
-    "stateMutability":"view",
-    "type":"function"
-  },
-  {
-    "inputs":[
       {
         "internalType":"bytes",
         "name":"_key",
@@ -176,7 +247,7 @@
         "type":"bytes"
       }
     ],
-    "name":"leafHash",
+    "name":"hashLeaf",
     "outputs":[
       {
         "internalType":"bytes32",
@@ -185,6 +256,21 @@
       }
     ],
     "stateMutability":"pure",
+    "type":"function"
+  },
+  {
+    "inputs":[
+      
+    ],
+    "name":"interval",
+    "outputs":[
+      {
+        "internalType":"uint256",
+        "name":"",
+        "type":"uint256"
+      }
+    ],
+    "stateMutability":"view",
     "type":"function"
   },
   {
