@@ -65,6 +65,7 @@ class LeavesSynchronizer {
       }
     }
 
+    this.logger.info(`Leaf syncing ran with success: ${success}`)
     return success;
   }
 }

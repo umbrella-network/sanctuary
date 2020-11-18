@@ -19,9 +19,7 @@ class BlockSynchronizer {
   async apply(): Promise<void> {
     const interval = Number(await this.chainContract.getInterval());
     const currentBlockHeight = (await this.chainContract.getBlockHeight()).toNumber();
-    const lastBlock = await Block.findOne({}).sort({ _id: -1 });
-    const lookback = lastBlock ? lastBlock.height : Math.max(currentBlockHeight - 100, 0);
-    // const lookback = Math.min(lastBlock ? lastBlock.height : Math.max(currentBlockHeight - 100, 0), 100);
+    const lookback = Math.max(currentBlockHeight - 10, 0);
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
@@ -61,7 +59,7 @@ class BlockSynchronizer {
           this.logger.info(`Block is not just finished: ${block.id}`);
         }
       } else if (block.status == 'completed') {
-        this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
+        this.logger.info(`Synchronizing leaves for completed block: ${currentBlockHeight}`);
         const success = await this.leavesSynchronizer.apply(block.id);
 
         if (success) {

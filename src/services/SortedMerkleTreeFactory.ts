@@ -7,7 +7,6 @@ import * as feeds from '../config/feeds.json';
 @injectable()
 class SortedMerkleTreeFactory {
   apply(data: Map<string, string>): SortedMerkleTree {
-    console.log(Object.keys(data));
     const treeData = Array.from(data.keys()).sort()
       .map(key => {
         const value = data.get(key);
