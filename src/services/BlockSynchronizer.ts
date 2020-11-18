@@ -19,7 +19,7 @@ class BlockSynchronizer {
   async apply(): Promise<void> {
     const interval = Number(await this.chainContract.getInterval());
     const currentBlockHeight = (await this.chainContract.getBlockHeight()).toNumber();
-    const lookback = Math.max(currentBlockHeight - 100, 0);
+    const lookback = Math.max(currentBlockHeight - 10, 0);
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
@@ -59,10 +59,13 @@ class BlockSynchronizer {
           this.logger.info(`Block is not just finished: ${block.id}`);
         }
       } else if (block.status == 'completed') {
-        this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
-        await this.leavesSynchronizer.apply(block.id);
-        block.status = 'finalized';
-        await block.save();
+        this.logger.info(`Synchronizing leaves for completed block: ${currentBlockHeight}`);
+        const success = await this.leavesSynchronizer.apply(block.id);
+
+        if (success) {
+          block.status = 'finalized';
+          await block.save();
+        }
       }
     }
   }
@@ -71,9 +74,10 @@ class BlockSynchronizer {
     let block = await Block.findOne({_id: id});
     const height = block.height;
     const sideBlock = await this.chainContract.blocks(height);
+    const voters = await this.chainContract.getBlockVoters(height);
     let status;
 
-    this.logger.info(sideBlock);
+    this.logger.info(`Syncing finished side block with voters: ${voters}`);
 
     if (sideBlock.root == '0x0000000000000000000000000000000000000000000000000000000000000000') {
       status = 'failed';
@@ -89,8 +93,7 @@ class BlockSynchronizer {
       minter: sideBlock.minter,
       staked: sideBlock.staked,
       power: sideBlock.power,
-      voters: sideBlock.voters,
-      votes: sideBlock.votes
+      voters: voters
     });
   }
 }

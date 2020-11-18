@@ -25,6 +25,7 @@ class ChainContract {
   getInterval = async (): Promise<BigNumber> => this.contract.interval();
   getLeaderAddress = async (): Promise<string> => this.contract.getLeaderAddress();
   getBlockHeight = async (): Promise<BigNumber> => this.contract.getBlockHeight();
+  getBlockVoters = async (height: number): Promise<string[]> => this.contract.getBlockVoters(height);
   blocks = async (index: number): Promise<utils.Result> => this.contract.blocks(index);
 
   submit = async (root: string, v: number[], r: string[], s: string[]): Promise<void> => this
