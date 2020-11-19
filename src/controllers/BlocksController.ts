@@ -19,7 +19,7 @@ class BlocksController {
     const limit: number = parseInt(<string> request.query.limit) || 100;
 
     const blocks = await Block
-      .find({})
+      .find({status: 'finalized'})
       .skip(offset)
       .limit(limit)
       .sort({ height: -1 })
