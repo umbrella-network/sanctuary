@@ -65,6 +65,9 @@ class BlockSynchronizer {
         if (success) {
           block.status = 'finalized';
           await block.save();
+        } if (success === null) {
+          block.status = 'failed';
+          await block.save();
         }
       }
     }
