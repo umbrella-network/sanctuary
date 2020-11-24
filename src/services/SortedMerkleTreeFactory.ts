@@ -2,7 +2,6 @@ import {injectable} from 'inversify';
 import int64 from 'int64-buffer';
 
 import SortedMerkleTree from '../lib/SortedMerkleTree';
-import * as feeds from '../config/feeds.json';
 
 @injectable()
 class SortedMerkleTreeFactory {
