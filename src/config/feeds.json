@@ -2,7 +2,7 @@
   "data": [
     {
       "id": "eth-usd",
-      "name": "ETH->USD [Spot]",
+      "name": "ETH-USD [Spot]",
       "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD",
       "leafLabel": "eth-usd",
       "valuePath": "$.USD",
@@ -10,10 +10,50 @@
     },
     {
       "id": "eth-eur",
-      "name": "ETH->EUR [Spot]",
+      "name": "ETH-EUR [Spot]",
       "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=EUR",
       "leafLabel": "eth-usd",
       "valuePath": "$.EUR",
+      "discrepancy": 0.1
+    },
+    {
+      "id": "wbtc-usd",
+      "name": "wBTC-USD [Spot]",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=wBTC&tsyms=USD",
+      "leafLabel": "wbtc-usd",
+      "valuePath": "$.USD",
+      "discrepancy": 0.1
+    },
+    {
+      "id": "aave-usd",
+      "name": "Aave-USD [Spot]",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=Aave&tsyms=USD",
+      "leafLabel": "aave-usd",
+      "valuePath": "$.USD",
+      "discrepancy": 0.1
+    },
+    {
+      "id": "yfi-usd",
+      "name": "YFI-USD [Spot]",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=YFI&tsyms=USD",
+      "leafLabel": "yfi-usd",
+      "valuePath": "$.USD",
+      "discrepancy": 0.1
+    },
+    {
+      "id": "uni-usd",
+      "name": "UNI-USD [Spot]",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=UNI&tsyms=USD",
+      "leafLabel": "uni-usd",
+      "valuePath": "$.USD",
+      "discrepancy": 0.1
+    },
+    {
+      "id": "comp-usd",
+      "name": "COMP-USD [Spot]",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=COMP&tsyms=USD",
+      "leafLabel": "comp-usd",
+      "valuePath": "$.USD",
       "discrepancy": 0.1
     }
   ]

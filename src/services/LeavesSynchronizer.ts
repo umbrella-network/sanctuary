@@ -32,6 +32,11 @@ class LeavesSynchronizer {
       const response = await axios.get(url.toString());
 
       if (response.status == 200) {
+        if (!response.data || response.data.data === null) {
+          this.logger.warn(`Empty response.data.data for: ${url}`);
+          continue;
+        }
+
         const input = new Map<string, string>(Object.entries(response.data.data.data));
         const tree = this.sortedMerkleTreeFactory.apply(input);
         const root = tree.getRoot();
