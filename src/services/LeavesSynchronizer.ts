@@ -34,7 +34,6 @@ class LeavesSynchronizer {
       if (response.status == 200) {
         if (!response.data || response.data.data === null) {
           this.logger.warn(`Empty response.data.data for: ${url}`);
-          success = null;
           continue;
         }
 
