@@ -22,38 +22,38 @@ VALIDATOR_REGISTRY_CONTRACT_ADDRESS=0xABCD1234
 
 # Commands
 ## Running Locally (Development)
-```
+```shell script
 $ npm run start:dev
 ```
 
 ## Seed Mock Data
-```
+```shell script
 npx tsc -p . | node ./dist/scripts/mock-seeds.js
 ```
 
 ## Worker
-```
+```shell script
 $ npm run start:worker -- --worker BlockMintingWorker
 ```
 
 ## Worker (Development)
-```
+```shell script
 npm run start:dev:worker -- --worker BlockSynchronizerWorker 
 ```
 
 ## Scheduler
-```
+```shell script
 $ npm run start:scheduler
 ```
 
 ## Scheduler (Development)
-```
+```shell script
 npm run start:dev:scheduler
 ```
 
 ## Building & Releasing
 First, compile the application:
-```
+```shell script
 $ npm run bundle
 ```
 
@@ -61,7 +61,7 @@ This will create a directory with optimized JS files under `dist`.
 
 Run the application under production via:
 
-```
+```shell script
 $ npm run start
 ```
 
@@ -76,7 +76,7 @@ GET /blocks
 ```
 
 #### Response
-```
+```json
 {
   "data": [
     {
@@ -106,7 +106,7 @@ GET /blocks/:id
 ```
 
 #### Response
-```
+```json
 {
   "data": {
     "_id": "507f1f77bcf86cd799439011",
@@ -139,7 +139,7 @@ GET /blocks/:block_id/leaves
 ```
 
 #### Response
-```
+```json
 {
   "data": [
     {
@@ -165,7 +165,7 @@ GET /keys
 ```
 
 #### Response
-```
+```json
 {
   "data": [
     {
@@ -185,7 +185,7 @@ GET /proofs/?keys[]=eth-usd&keys[]=btc-eur&keys[]=uni-usd
 ```
 
 #### Response
-```
+```json
 {
   "data": {
     "block": {

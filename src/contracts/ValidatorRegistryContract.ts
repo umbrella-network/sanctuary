@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
 import fs from 'fs';
 import path from 'path';
-import { Contract, ContractInterface, BigNumber, utils } from 'ethers';
+import { Contract, ContractInterface, utils } from 'ethers';
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
+import {ContractRegistry} from "@umb-network/toolbox";
 
 @injectable()
 class ValidatorRegistryContract {
@@ -15,12 +16,16 @@ class ValidatorRegistryContract {
     @inject('Settings') settings: Settings,
     @inject(Blockchain) blockchain: Blockchain
   ) {
-    this.contract = new Contract(
-      settings.blockchain.contracts.validatorRegistry.address,
-      ValidatorRegistryContract.ABI,
-      blockchain.provider
-    ).connect(blockchain.wallet);
-  }
+    new ContractRegistry(blockchain.provider, settings.blockchain.contracts.registry.address)
+      .getAddress(settings.blockchain.contracts.validatorRegistry.name)
+      .then((validatorRegistryAddress: string) => {
+        this.contract = new Contract(
+          validatorRegistryAddress,
+          ValidatorRegistryContract.ABI,
+          blockchain.provider
+        ).connect(blockchain.wallet);
+      })
+  };
 
   validators = async (id: String): Promise<utils.Result> => this.contract.validators(id);
 }

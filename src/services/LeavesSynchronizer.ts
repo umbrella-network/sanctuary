@@ -1,10 +1,9 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
-import ChainContract from '../contracts/ChainContract';
 import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
-import Block, { IBlock } from '../models/Block';
-import Leaf, { ILeaf } from '../models/Leaf';
+import Block from '../models/Block';
+import Leaf from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import axios from 'axios';
 

@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 import express, { Request, Response } from 'express';
-import { getModelForClass } from '@typegoose/typegoose';
 import * as feeds from '../config/feeds.json';
 
 @injectable()
