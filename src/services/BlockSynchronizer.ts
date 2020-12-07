@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import ChainContract from '../contracts/ChainContract';
 import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
-import Block, { IBlock } from '../models/Block';
+import Block from '../models/Block';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
 import Settings from 'src/types/Settings';
 
@@ -22,10 +22,10 @@ class BlockSynchronizer {
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
-      const minedBlock = await this.chainContract.blocks(height)
+      const minedBlock = await this.chainContract.blocks(height);
       const timestamp = new Date(minedBlock.timestamp.toNumber() * 1000);
 
-      let block = await Block.findOneAndUpdate(
+      const block = await Block.findOneAndUpdate(
         {
           _id: `block::${height}`,
           height: height
@@ -65,8 +65,8 @@ class BlockSynchronizer {
     }
   }
 
-  async syncFinished(id: String): Promise<void> {
-    let block = await Block.findOne({_id: id});
+  async syncFinished(id: string): Promise<void> {
+    const block = await Block.findOne({_id: id});
     const height = block.height;
     const sideBlock = await this.chainContract.blocks(height);
     const voters = await this.chainContract.getBlockVoters(height);

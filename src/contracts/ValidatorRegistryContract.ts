@@ -4,7 +4,7 @@ import path from 'path';
 import { Contract, ContractInterface, utils } from 'ethers';
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
-import {ContractRegistry} from "@umb-network/toolbox";
+import {ContractRegistry} from '@umb-network/toolbox';
 
 @injectable()
 class ValidatorRegistryContract {
@@ -24,10 +24,10 @@ class ValidatorRegistryContract {
           ValidatorRegistryContract.ABI,
           blockchain.provider
         ).connect(blockchain.wallet);
-      })
-  };
+      });
+  }
 
-  validators = async (id: String): Promise<utils.Result> => this.contract.validators(id);
+  validators = async (id: string): Promise<utils.Result> => this.contract.validators(id);
 }
 
 export default ValidatorRegistryContract;

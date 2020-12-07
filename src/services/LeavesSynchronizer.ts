@@ -15,13 +15,13 @@ class LeavesSynchronizer {
   @inject(SortedMerkleTreeFactory) sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
 
   async apply(blockId: string): Promise<boolean> {
-    let block = await Block.findOne({_id: blockId});
+    const block = await Block.findOne({_id: blockId});
 
     this.logger.info(`Synchronizing leaves for block: ${block.id} with ${block.voters.length} voters: - ${block.voters}`);
 
     let success = false;
 
-    for (let voterIndex in block.voters) {
+    for (const voterIndex in block.voters) {
       const voterId = block.voters[voterIndex];
       console.log(voterId);
       const validator = await this.validatorRegistryContract.validators(voterId);
@@ -44,11 +44,11 @@ class LeavesSynchronizer {
           await input.forEach(async (value: string, key: string) => {
             const proof = tree.getProofForKey(key);
 
-            let leaf = await Leaf.findOneAndUpdate(
+            const leaf = await Leaf.findOneAndUpdate(
               {
-                 _id: `leaf::${block.id}::${key}`,
-                 blockId: block.id,
-                 key: key
+                _id: `leaf::${block.id}::${key}`,
+                blockId: block.id,
+                key: key
               }, {
                 value: value,
                 proof: proof
@@ -69,7 +69,7 @@ class LeavesSynchronizer {
       }
     }
 
-    this.logger.info(`Leaf syncing ran with success: ${success}`)
+    this.logger.info(`Leaf syncing ran with success: ${success}`);
     return success;
   }
 }

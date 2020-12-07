@@ -30,6 +30,6 @@ const settings: Settings = {
       }
     }
   }
-}
+};
 
 export default settings;

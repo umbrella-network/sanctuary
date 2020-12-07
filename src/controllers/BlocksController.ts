@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
 import express, { Request, Response } from 'express';
-import Block, { IBlock } from '../models/Block';
-import Leaf, { ILeaf } from '../models/Leaf';
+import Block from '../models/Block';
+import Leaf from '../models/Leaf';
 
 @injectable()
 class BlocksController {
@@ -29,12 +29,12 @@ class BlocksController {
   }
 
   show = async (request: Request, response: Response): Promise<void> => {
-    let block = await Block.findById(request.params.id);
+    const block = await Block.findById(request.params.id);
     response.send({data: block});
   }
 
   leaves = async (request: Request, response: Response): Promise<void> => {
-    let leaves = await Leaf.find({blockId: request.params.id});
+    const leaves = await Leaf.find({blockId: request.params.id});
     response.send(leaves);
   }
 }

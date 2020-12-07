@@ -24,7 +24,7 @@ class ChainContract {
           ChainContract.ABI,
           blockchain.provider
         ).connect(blockchain.wallet);
-      })
+      });
   }
 
   getLeaderAddress = async (): Promise<string> => this.contract.getLeaderAddress();
