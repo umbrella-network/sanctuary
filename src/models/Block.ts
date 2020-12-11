@@ -10,7 +10,7 @@ export interface IBlock extends Document {
   staked: number,
   power: number,
   voters: Array<string>,
-  votes: any
+  votes: Map<string, number>,
 }
 
 const BlockSchema: Schema = new Schema({

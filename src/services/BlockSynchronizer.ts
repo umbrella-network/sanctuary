@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import ChainContract from '../contracts/ChainContract';
 import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
-import Block, { IBlock } from '../models/Block';
+import Block from '../models/Block';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
 import Settings from 'src/types/Settings';
 
@@ -17,28 +17,20 @@ class BlockSynchronizer {
   @inject(LeavesSynchronizer) leavesSynchronizer!: LeavesSynchronizer;
 
   async apply(): Promise<void> {
-    const interval = Number(await this.chainContract.getInterval());
     const currentBlockHeight = (await this.chainContract.getBlockHeight()).toNumber();
     const lookback = Math.max(currentBlockHeight - 10, 0);
     this.logger.info(`Synchronizing blocks starting at: ${lookback} and current height: ${currentBlockHeight}`);
 
     for (let height = lookback; height < currentBlockHeight; height++) {
-      let anchor = height * interval;
-      let anchorBlock = await this.blockchain.provider.getBlock(anchor);
+      const minedBlock = await this.chainContract.blocks(height);
+      const timestamp = new Date(minedBlock.timestamp.toNumber() * 1000);
 
-      if (!anchorBlock) { 
-        this.logger.error(`No such block: ${anchor}`);
-        continue;
-      }
-
-      let timestamp = new Date(anchorBlock.timestamp * 1000);
-
-      let block = await Block.findOneAndUpdate(
+      const block = await Block.findOneAndUpdate(
         {
           _id: `block::${height}`,
           height: height
         }, {
-          anchor: anchor,
+          anchor: minedBlock.anchor.toNumber(),
           timestamp: timestamp
         }, {
           new: true,
@@ -46,7 +38,7 @@ class BlockSynchronizer {
         }
       );
 
-      this.logger.debug(`Block ${block.id} with height: ${height} and anchor: ${anchor} and timestamp: ${block.timestamp} and status: ${block.status}`);
+      this.logger.debug(`Block ${block.id} with height: ${height} and anchor: ${block.anchor} and timestamp: ${block.timestamp} and status: ${block.status}`);
 
       if (!block.status) {
         this.logger.info(`New block detected: ${block.id}`);
@@ -73,8 +65,8 @@ class BlockSynchronizer {
     }
   }
 
-  async syncFinished(id: String): Promise<void> {
-    let block = await Block.findOne({_id: id});
+  async syncFinished(id: string): Promise<void> {
+    const block = await Block.findOne({_id: id});
     const height = block.height;
     const sideBlock = await this.chainContract.blocks(height);
     const voters = await this.chainContract.getBlockVoters(height);

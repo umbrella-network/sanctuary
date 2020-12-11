@@ -18,10 +18,13 @@ type Settings = {
     },
     contracts: {
       chain: {
-        address: string
+        name: string
       },
-      validatorRegistry: {
+      registry: {
         address: string
+      }
+      validatorRegistry: {
+        name: string
       }
     }
   }

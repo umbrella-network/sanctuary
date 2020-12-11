@@ -20,4 +20,11 @@ publish:
 	@kubectl set image deployment/sanctuary-scheduler sanctuary-scheduler=$(IMAGE)
 	@kubectl set image deployment/sanctuary-worker sanctuary-worker=$(IMAGE)
 
+publish-staging:
+	@kubectl set image deployment/sanctuary-api sanctuary-api=$(IMAGE) --namespace staging
+	@kubectl set image deployment/sanctuary-scheduler sanctuary-scheduler=$(IMAGE) --namespace staging
+	@kubectl set image deployment/sanctuary-worker sanctuary-worker=$(IMAGE) --namespace staging
+
 deploy: build push publish
+
+stage: build push publish-staging

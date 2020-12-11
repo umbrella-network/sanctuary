@@ -20,13 +20,16 @@ const settings: Settings = {
     },
     contracts: {
       chain: {
-        address: process.env.CHAIN_CONTRACT_ADDRESS
+        name: 'Chain'
+      },
+      registry: {
+        address: process.env.REGISTRY_CONTRACT_ADDRESS
       },
       validatorRegistry: {
-        address: process.env.VALIDATOR_REGISTRY_CONTRACT_ADDRESS
+        name: 'ValidatorRegistry'
       }
     }
   }
-}
+};
 
 export default settings;
