@@ -211,3 +211,12 @@ GET /proofs/?keys[]=eth-usd&keys[]=btc-eur&keys[]=uni-usd
   }
 }
 ```
+
+## Kubectl cheats
+
+```shell script
+# set env variable
+kubectl set env deployment/sanctuary-worker REGISTRY_CONTRACT_ADDRESS='0x622c7725a8D1103E44F89341A6358A0e811Df0a5' --namespace staging
+
+kubectl scale --replicas=1 deployment/sanctuary-worker --namespace staging
+```
