@@ -9,3 +9,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - initial version
 - use registry to resolve contract addresses
 - block padding support
+- support for numeric front class data
