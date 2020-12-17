@@ -1,15 +1,11 @@
 import {inject, injectable} from 'inversify';
-import fs from 'fs';
-import path from 'path';
-import {BigNumber, Contract, ContractInterface, utils} from 'ethers';
+import {BigNumber, Contract, utils} from 'ethers';
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
-import {ContractRegistry} from '@umb-network/toolbox';
+import {ContractRegistry, ABI} from '@umb-network/toolbox';
 
 @injectable()
 class ChainContract {
-  static ABI: ContractInterface = fs.readFileSync(path.resolve(__dirname, './ChainContract.abi.json'), 'utf-8');
-
   contract!: Contract;
 
   constructor(
@@ -21,7 +17,7 @@ class ChainContract {
       .then((chainAddress: string) => {
         this.contract = new Contract(
           chainAddress,
-          ChainContract.ABI,
+          ABI.chainAbi,
           blockchain.provider
         ).connect(blockchain.wallet);
       });
