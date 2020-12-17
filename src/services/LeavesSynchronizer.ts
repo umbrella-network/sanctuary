@@ -1,5 +1,5 @@
-import { Logger } from 'winston';
-import { inject, injectable } from 'inversify';
+import {Logger} from 'winston';
+import {inject, injectable} from 'inversify';
 import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
 import Block from '../models/Block';
@@ -23,7 +23,6 @@ class LeavesSynchronizer {
 
     for (const voterIndex in block.voters) {
       const voterId = block.voters[voterIndex];
-      console.log(voterId);
       const validator = await this.validatorRegistryContract.validators(voterId);
       const location = validator['location'];
       const url = new URL(`${location}/blocks/height/${block.height}`);
@@ -41,6 +40,8 @@ class LeavesSynchronizer {
         const root = tree.getRoot();
 
         if (root == block.root) {
+          await this.updateNumericFCD(block.id, response.data.data.numericFcdKeys);
+
           await input.forEach(async (value: string, key: string) => {
             const proof = tree.getProofForKey(key);
 
@@ -71,6 +72,14 @@ class LeavesSynchronizer {
 
     this.logger.info(`Leaf syncing ran with success: ${success}`);
     return success;
+  }
+
+  private updateNumericFCD = async (blockId: string, numericFcdKeys: string[]) => {
+    await Block.findOneAndUpdate(
+      {_id: blockId},
+      {numericFcdKeys: numericFcdKeys},
+      {new: false, upsert: true}
+    );
   }
 }
 

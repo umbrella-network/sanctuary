@@ -23,7 +23,7 @@ VALIDATOR_REGISTRY_CONTRACT_ADDRESS=0xABCD1234
 # Commands
 ## Running Locally (Development)
 ```shell script
-$ npm run start:dev
+npm run start:dev
 ```
 
 ## Seed Mock Data
@@ -33,7 +33,7 @@ npx tsc -p . | node ./dist/scripts/mock-seeds.js
 
 ## Worker
 ```shell script
-$ npm run start:worker -- --worker BlockMintingWorker
+npm run start:worker -- --worker BlockSynchronizerWorker
 ```
 
 ## Worker (Development)
@@ -43,7 +43,7 @@ npm run start:dev:worker -- --worker BlockSynchronizerWorker
 
 ## Scheduler
 ```shell script
-$ npm run start:scheduler
+npm run start:scheduler
 ```
 
 ## Scheduler (Development)
@@ -54,7 +54,7 @@ npm run start:dev:scheduler
 ## Building & Releasing
 First, compile the application:
 ```shell script
-$ npm run bundle
+npm run bundle
 ```
 
 This will create a directory with optimized JS files under `dist`.
@@ -78,24 +78,26 @@ GET /blocks
 #### Response
 ```json
 {
-  "data": [
-    {
-      "_id": "507f1f77bcf86cd799439011",
-      "height": 22,
-      "anchor": 12345,
-      "timestamp": "2011-10-05T14:48:00.000Z",
-      "root": "0xf8b72d93bb187e4adad3bbb423b261eb334d1fbdbe021cb248386ad7e39da9df",
-      "minter": "0xf541c3cd1d2df407fb9bb52b3489fc2aaeedd97e",
-      "staked": 1234,
-      "power": 1234,
-      "voters": [
-        "0xea674fdde714fd979de3edf0f56aa9716b898ec8",
-        "0x829bd824b016326a401d083b33d092293333a830",
-        "0x09ab1303d3ccaf5f018cd511146b07a240c70294",
-        "0xb3b7874f13387d44a3398d298b075b7a3505d8d4"
-      ]
-    }
-  ]
+  "data": {
+    "staked": 1000000000000000000,
+    "power": 1000000000000000000,
+    "voters": [
+      "0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F"
+    ],
+    "votes": {},
+    "numericFcdKeys": [
+      "eth-eur",
+      "eth-usd"
+    ],
+    "_id": "block::83",
+    "height": 83,
+    "__v": 1,
+    "anchor": 1179,
+    "timestamp": "2020-12-17T22:02:02.000Z",
+    "status": "finalized",
+    "minter": "0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F",
+    "root": "0xf6991e5c6d1e6e3100fa8e39f9ab9c9edc9c8d6be4a561c772626448b0e64ef9"
+  }
 }
 ```
 
