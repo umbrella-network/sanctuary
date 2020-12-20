@@ -19,7 +19,7 @@ class ValidatorRegistryContract {
           validatorRegistryAddress,
           ABI.validatorRegistryAbi,
           blockchain.provider
-        ).connect(blockchain.wallet);
+        );
       });
   }
 

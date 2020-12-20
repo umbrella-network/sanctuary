@@ -19,7 +19,7 @@ class ChainContract {
           chainAddress,
           ABI.chainAbi,
           blockchain.provider
-        ).connect(blockchain.wallet);
+        );
       });
   }
 

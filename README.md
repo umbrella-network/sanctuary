@@ -16,48 +16,40 @@ Setup a dotenv file (`.env`) with local configuration values. Example:
 
 ```
 PORT=3000 # HTTP port the server will listen to.
-BLOCKCHAIN_PRIVATE_KEY=0x123456
-CHAIN_CONTRACT_ADDRESS=0x78901
 REGISTRY_CONTRACT_ADDRESS=0xABCD1234
 BLOCKCHAIN_PROVIDER_URL=https://kovan.infura.io/v3/:id # Leave it empty if running locally
 ```
 
 # Commands
 
-## Running Locally (Development)
+## Running 
+
+### Locally (Development)
 
 ```shell script
+# Seed Mock Data - optional
+npx tsc -p . | node ./dist/scripts/mock-seeds.js
+
+# Scheduler
+npm run start:dev:scheduler
+
+# Worker
+npm run start:dev:worker -- --worker BlockSynchronizerWorker
+
+# Server
 npm run start:dev
 ```
 
-## Seed Mock Data
-
-```shell script
-npx tsc -p . | node ./dist/scripts/mock-seeds.js
-```
-
-## Worker
-
-```shell script
-npm run start:worker -- --worker BlockSynchronizerWorker
-```
-
-## Worker (Development)
-
-```shell script
-npm run start:dev:worker -- --worker BlockSynchronizerWorker
-```
-
-## Scheduler
+### Live
 
 ```shell script
 npm run start:scheduler
-```
 
-## Scheduler (Development)
+# Worker
+npm run start:worker -- --worker BlockSynchronizerWorker
 
-```shell script
-npm run start:dev:scheduler
+# Server
+npm run start
 ```
 
 ## Building & Releasing
@@ -205,7 +197,7 @@ GET /keys
 }
 ```
 
-## Proofs
+### Proofs
 
 This endpoint returns the latest block height and proofs for a given set of leaf keys.
 

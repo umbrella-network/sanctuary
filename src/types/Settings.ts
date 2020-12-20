@@ -13,8 +13,7 @@ type Settings = {
   },
   blockchain: {
     provider: {
-      url: string,
-      privateKey: string
+      url: string
     },
     contracts: {
       chain: {
