@@ -8,9 +8,7 @@ class Blockchain {
   provider: Provider;
   wallet: Wallet;
 
-  constructor(
-    @inject('Settings') settings: Settings
-  ) {
+  constructor(@inject('Settings') settings: Settings) {
     this.provider = ethers.providers.getDefaultProvider(settings.blockchain.provider.url);
     this.wallet = new Wallet(settings.blockchain.provider.privateKey, this.provider);
   }

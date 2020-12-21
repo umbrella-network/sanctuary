@@ -11,7 +11,7 @@ class HeathController {
 
   pong = async (request: Request, response: Response): Promise<void> => {
     response.send('pong');
-  }
+  };
 }
 
 export default HeathController;

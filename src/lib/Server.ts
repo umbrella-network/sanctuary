@@ -26,7 +26,7 @@ class Server {
     @inject(ProofsController) proofsController: ProofsController,
     @inject(KeysController) keysController: KeysController,
     @inject(AuthController) authController: AuthController,
-    @inject(UsersController) usersController: UsersController,
+    @inject(UsersController) usersController: UsersController
   ) {
     this.port = settings.port;
 

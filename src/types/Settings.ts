@@ -1,33 +1,33 @@
 type Settings = {
-  port: number,
+  port: number;
   jobs: {
     blockCreation: {
-      interval: number
-    }
-  },
+      interval: number;
+    };
+  };
   redis: {
-    url: string
-  },
+    url: string;
+  };
   mongodb: {
-    url: string
-  },
+    url: string;
+  };
   blockchain: {
     provider: {
-      url: string,
-      privateKey: string
-    },
+      url: string;
+      privateKey: string;
+    };
     contracts: {
       chain: {
-        name: string
-      },
+        name: string;
+      };
       registry: {
-        address: string
-      }
+        address: string;
+      };
       validatorRegistry: {
-        name: string
-      }
-    }
-  }
-}
+        name: string;
+      };
+    };
+  };
+};
 
 export default Settings;
