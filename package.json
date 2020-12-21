@@ -5,7 +5,8 @@
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
   },
   "scripts": {
-    "lint": "eslint ./src/**/*.ts --fix",
+    "lint": "eslint ./src/**/*.ts",
+    "lint-fix": "eslint ./src/**/*.ts --fix",
     "clean": "rimraf dist",
     "compile": "tsc -p .",
     "prettier": "prettier --config .prettierrc 'src/**/*.ts' --write",
