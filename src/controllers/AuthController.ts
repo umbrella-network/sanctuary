@@ -39,7 +39,7 @@ class AuthController {
     // 1 week expiry
     const exp = Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7);
     const privateKey = process.env.AUTH_PRIVATE_KEY;
-    const token = sign({exp}, privateKey);
+    const token = sign({exp, userId: user.id}, privateKey);
     response.send(201).send({token});
   }
 }
