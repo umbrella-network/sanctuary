@@ -9,8 +9,6 @@ import HealthController from '../controllers/HealthController';
 import BlocksController from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
 import KeysController from '../controllers/KeysController';
-import AuthController from '../controllers/AuthController';
-import UsersController from '../controllers/UsersController';
 import Settings from '../types/Settings';
 
 @injectable()
@@ -24,9 +22,7 @@ class Server {
     @inject(HealthController) healthController: HealthController,
     @inject(BlocksController) blocksController: BlocksController,
     @inject(ProofsController) proofsController: ProofsController,
-    @inject(KeysController) keysController: KeysController,
-    @inject(AuthController) authController: AuthController,
-    @inject(UsersController) usersController: UsersController
+    @inject(KeysController) keysController: KeysController
   ) {
     this.port = settings.port;
 
@@ -40,8 +36,6 @@ class Server {
       .use('/blocks', blocksController.router)
       .use('/proofs', proofsController.router)
       .use('/keys', keysController.router)
-      .use('/users', usersController.router)
-      .use('/auth', authController.router)
       .options('*', cors());
 
     this.server = http.createServer(this.router);
