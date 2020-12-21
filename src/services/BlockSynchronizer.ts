@@ -28,17 +28,21 @@ class BlockSynchronizer {
       const block = await Block.findOneAndUpdate(
         {
           _id: `block::${height}`,
-          height: height
-        }, {
+          height: height,
+        },
+        {
           anchor: minedBlock.anchor.toNumber(),
-          timestamp: timestamp
-        }, {
+          timestamp: timestamp,
+        },
+        {
           new: true,
-          upsert: true
+          upsert: true,
         }
       );
 
-      this.logger.debug(`Block ${block.id} with height: ${height} and anchor: ${block.anchor} and timestamp: ${block.timestamp} and status: ${block.status}`);
+      this.logger.debug(
+        `Block ${block.id} with height: ${height} and anchor: ${block.anchor} and timestamp: ${block.timestamp} and status: ${block.status}`
+      );
 
       if (!block.status) {
         this.logger.info(`New block detected: ${block.id}`);
@@ -57,7 +61,8 @@ class BlockSynchronizer {
         if (success) {
           block.status = 'finalized';
           await block.save();
-        } if (success === null) {
+        }
+        if (success === null) {
           block.status = 'failed';
           await block.save();
         }
@@ -66,7 +71,7 @@ class BlockSynchronizer {
   }
 
   async syncFinished(id: string): Promise<void> {
-    const block = await Block.findOne({_id: id});
+    const block = await Block.findOne({ _id: id });
     const height = block.height;
     const sideBlock = await this.chainContract.blocks(height);
     const voters = await this.chainContract.getBlockVoters(height);
@@ -88,7 +93,7 @@ class BlockSynchronizer {
       minter: sideBlock.minter,
       staked: sideBlock.staked,
       power: sideBlock.power,
-      voters: voters
+      voters: voters,
     });
   }
 }

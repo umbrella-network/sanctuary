@@ -1,25 +1,18 @@
-import {inject, injectable} from 'inversify';
-import {BigNumber, Contract, utils} from 'ethers';
+import { inject, injectable } from 'inversify';
+import { BigNumber, Contract, utils } from 'ethers';
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
-import {ContractRegistry, ABI} from '@umb-network/toolbox';
+import { ContractRegistry, ABI } from '@umb-network/toolbox';
 
 @injectable()
 class ChainContract {
   contract!: Contract;
 
-  constructor(
-    @inject('Settings') settings: Settings,
-    @inject(Blockchain) blockchain: Blockchain
-  ) {
+  constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
     new ContractRegistry(blockchain.provider, settings.blockchain.contracts.registry.address)
       .getAddress(settings.blockchain.contracts.chain.name)
       .then((chainAddress: string) => {
-        this.contract = new Contract(
-          chainAddress,
-          ABI.chainAbi,
-          blockchain.provider
-        );
+        this.contract = new Contract(chainAddress, ABI.chainAbi, blockchain.provider);
       });
   }
 

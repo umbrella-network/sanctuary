@@ -10,4 +10,4 @@ import initMongoDB from './config/initMongoDB';
   const { default: settings } = await require('./config/settings');
 
   await initMongoDB(settings);
-})()
+})();
