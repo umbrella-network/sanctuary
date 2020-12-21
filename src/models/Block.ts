@@ -1,17 +1,17 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBlock extends Document {
-  height: number,
-  status: string,
-  anchor: number,
-  timestamp: Date,
-  root: string,
-  minter: string,
-  staked: number,
-  power: number,
-  voters: Array<string>,
-  votes: Map<string, number>,
-  numericFcdKeys: Array<string>,
+  height: number;
+  status: string;
+  anchor: number;
+  timestamp: Date;
+  root: string;
+  minter: string;
+  staked: number;
+  power: number;
+  voters: Array<string>;
+  votes: Map<string, number>;
+  numericFcdKeys: Array<string>;
 }
 
 const BlockSchema: Schema = new Schema({
@@ -26,7 +26,7 @@ const BlockSchema: Schema = new Schema({
   power: { type: Number, required: false, default: 0 },
   voters: { type: [String], required: false, default: [] },
   votes: { type: Map, required: false, default: {} },
-  numericFcdKeys: { type: [String], required: false, default: [] }
+  numericFcdKeys: { type: [String], required: false, default: [] },
 });
 
 BlockSchema.index({ height: -1 });

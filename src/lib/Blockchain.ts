@@ -7,9 +7,7 @@ import { ethers } from 'ethers';
 class Blockchain {
   provider: Provider;
 
-  constructor(
-    @inject('Settings') settings: Settings
-  ) {
+  constructor(@inject('Settings') settings: Settings) {
     this.provider = ethers.providers.getDefaultProvider(settings.blockchain.provider.url);
   }
 }

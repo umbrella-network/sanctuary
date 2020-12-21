@@ -7,14 +7,12 @@ class KeysController {
   router: express.Router;
 
   constructor() {
-    this.router = express
-      .Router()
-      .get('/', this.index);
+    this.router = express.Router().get('/', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
     response.send({ data: feeds.data });
-  }
+  };
 }
 
 export default KeysController;
