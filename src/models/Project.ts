@@ -1,9 +1,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IProject extends Document {
-  name: string,
-  ownerId: number,
-  ownerType: string,
+  name: string;
+  ownerId: number;
+  ownerType: string;
 }
 
 const ProjectSchema: Schema = new Schema({
