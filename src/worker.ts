@@ -4,7 +4,7 @@ import Application from './lib/Application';
 import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
 
 const argv = yargs(process.argv.slice(2)).options({
-  worker: { type: 'string', demandOption: true }
+  worker: { type: 'string', demandOption: true },
 }).argv;
 
 switch (argv.worker) {

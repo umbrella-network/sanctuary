@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUser extends Document {
-  email: string,
-  password: string,
+  email: string;
+  password: string;
 }
 
 const UserSchema: Schema = new Schema({
@@ -11,6 +11,6 @@ const UserSchema: Schema = new Schema({
   password: { type: String, required: true },
 });
 
-UserSchema.index({ email: 1 });
+UserSchema.index({ email: 1 }, { unique: true });
 
 export default mongoose.model<IUser>('User', UserSchema);
