@@ -1,5 +1,5 @@
-import {Logger} from 'winston';
-import {inject, injectable} from 'inversify';
+import { Logger } from 'winston';
+import { inject, injectable } from 'inversify';
 import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
 import Block from '../models/Block';
@@ -15,9 +15,11 @@ class LeavesSynchronizer {
   @inject(SortedMerkleTreeFactory) sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
 
   async apply(blockId: string): Promise<boolean> {
-    const block = await Block.findOne({_id: blockId});
+    const block = await Block.findOne({ _id: blockId });
 
-    this.logger.info(`Synchronizing leaves for block: ${block.id} with ${block.voters.length} voters: - ${block.voters}`);
+    this.logger.info(
+      `Synchronizing leaves for block: ${block.id} with ${block.voters.length} voters: - ${block.voters}`
+    );
 
     let success = false;
 
@@ -49,13 +51,15 @@ class LeavesSynchronizer {
               {
                 _id: `leaf::${block.id}::${key}`,
                 blockId: block.id,
-                key: key
-              }, {
+                key: key,
+              },
+              {
                 value: value,
-                proof: proof
-              }, {
+                proof: proof,
+              },
+              {
                 new: true,
-                upsert: true
+                upsert: true,
               }
             );
 
@@ -65,7 +69,9 @@ class LeavesSynchronizer {
           success = true;
           break;
         } else {
-          this.logger.warn(`Validator: ${url} returned non matching tree data; consensus = ${block.root} & validator = ${root}`);
+          this.logger.warn(
+            `Validator: ${url} returned non matching tree data; consensus = ${block.root} & validator = ${root}`
+          );
         }
       }
     }
@@ -75,12 +81,8 @@ class LeavesSynchronizer {
   }
 
   private updateNumericFCD = async (blockId: string, numericFcdKeys: string[]) => {
-    await Block.findOneAndUpdate(
-      {_id: blockId},
-      {numericFcdKeys: numericFcdKeys},
-      {new: false, upsert: true}
-    );
-  }
+    await Block.findOneAndUpdate({ _id: blockId }, { numericFcdKeys: numericFcdKeys }, { new: false, upsert: true });
+  };
 }
 
 export default LeavesSynchronizer;
