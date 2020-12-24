@@ -27,7 +27,7 @@ class UsersController {
       const id = new mongoose.Types.ObjectId().toHexString();
       const user = new User({ _id: id, email, password: hashed });
       const errors = user.validateSync();
-      
+
       if (errors) {
         return response.status(422).send(errors);
       }

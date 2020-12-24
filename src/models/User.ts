@@ -15,7 +15,7 @@ const UserSchema: Schema = new Schema({
     validate: {
       validator: (email: string) => {
         return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,7})?$/.test(email);
-      }
+      },
     },
   },
   password: { type: String, required: true },
@@ -24,7 +24,7 @@ const UserSchema: Schema = new Schema({
 
 UserSchema.index({ email: 1 }, { unique: true });
 
-UserSchema.post('save', user => {
+UserSchema.post('save', (user) => {
   // Send verification request
 });
 
