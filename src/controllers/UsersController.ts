@@ -31,7 +31,13 @@ class UsersController {
           return response.status(422).send();
         }
 
-        return response.status(201).send({ user });
+        return response.status(201).send({
+          user: {
+            id: user.id,
+            email: user.email,
+            verified: false,
+          },
+        });
       });
     });
   };
