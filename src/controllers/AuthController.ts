@@ -1,15 +1,18 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import User from '../models/User';
+import Settings from '../types/Settings';
 
 @injectable()
 class AuthController {
   router: express.Application;
+  settings: Settings;
 
-  constructor() {
+  constructor(@inject('Settings') settings: Settings) {
     this.router = express().post('/', this.create);
+    this.settings = settings;
   }
 
   create = async (request: Request, response: Response): Promise<void> => {
@@ -34,8 +37,7 @@ class AuthController {
       return;
     }
 
-    // 1 week expiry
-    const exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
+    const exp = Math.floor(Date.now() / 1000) + this.settings.auth.tokenExpiry;
     const privateKey = process.env.AUTH_PRIVATE_KEY;
     const token = sign({ exp, userId: user.id }, privateKey);
     response.status(201).send({ token });

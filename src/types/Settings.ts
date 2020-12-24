@@ -27,6 +27,9 @@ type Settings = {
       };
     };
   };
+  auth: {
+    tokenExpiry: number;
+  };
 };
 
 export default Settings;
