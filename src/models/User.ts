@@ -24,4 +24,8 @@ const UserSchema: Schema = new Schema({
 
 UserSchema.index({ email: 1 }, { unique: true });
 
+UserSchema.post('save', user => {
+  // Send verification request
+});
+
 export default mongoose.model<IUser>('User', UserSchema);
