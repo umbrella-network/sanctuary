@@ -26,16 +26,22 @@ class UsersController {
 
       const id = new mongoose.Types.ObjectId().toHexString();
       const user = new User({ _id: id, email, password: hashed });
-      user.save((err, user) => {
-        if (err) {
-          return response.status(422).send();
+      const errors = user.validateSync();
+      
+      if (errors) {
+        return response.status(422).send(errors);
+      }
+
+      user.save((errors, user) => {
+        if (errors) {
+          return response.status(422).send({ errors });
         }
 
         return response.status(201).send({
           user: {
             id: user.id,
             email: user.email,
-            verified: false,
+            verified: false, // can't be verified when initially created
           },
         });
       });
