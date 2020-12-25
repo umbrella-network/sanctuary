@@ -15,9 +15,14 @@ class UsersController {
   create = async (request: Request, response: Response): Promise<void> => {
     const { email, password } = request.body;
 
+    if (password.length < 8) {
+      response.status(422).send();
+      return;
+    }
+
     bcrypt.hash(password, 10, (err, hashed) => {
       if (err) {
-        return response.send(422).send();
+        return response.status(422).send();
       }
 
       const id = new mongoose.Types.ObjectId().toHexString();
