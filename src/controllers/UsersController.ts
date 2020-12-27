@@ -69,7 +69,7 @@ class UsersController {
         verified: user.verified,
         projects,
         companies,
-      }
+      },
     });
   };
 }
