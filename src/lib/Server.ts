@@ -12,6 +12,7 @@ import KeysController from '../controllers/KeysController';
 import AuthController from '../controllers/AuthController';
 import UsersController from '../controllers/UsersController';
 import Settings from '../types/Settings';
+import ApiKeysController from '../controllers/ApiKeysController';
 
 @injectable()
 class Server {
@@ -26,7 +27,8 @@ class Server {
     @inject(ProofsController) proofsController: ProofsController,
     @inject(KeysController) keysController: KeysController,
     @inject(AuthController) authController: AuthController,
-    @inject(UsersController) usersController: UsersController
+    @inject(UsersController) usersController: UsersController,
+    @inject(ApiKeysController) apiKeyController: ApiKeysController
   ) {
     this.port = settings.port;
 
@@ -42,6 +44,7 @@ class Server {
       .use('/keys', keysController.router)
       .use('/users', usersController.router)
       .use('/auth', authController.router)
+      .use('/api-keys', apiKeyController.router)
       .options('*', cors());
 
     this.server = http.createServer(this.router);
