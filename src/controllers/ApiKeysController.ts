@@ -64,7 +64,7 @@ class ApiKeysController {
       expiresAt: expiresAt ? new Date(expiresAt) : null,
     });
 
-    response.send(apiKey.toJSON());
+    response.send(apiKey);
   };
 
   index = async (request: Request, response: Response): Promise<void> => {
@@ -149,7 +149,7 @@ class ApiKeysController {
     apiKey.description = description || apiKey.description;
     apiKey.expiresAt = expiresAt ? new Date(expiresAt) : apiKey.expiresAt;
     await apiKey.save();
-    response.send(apiKey.toJSON());
+    response.send(apiKey);
   };
 }
 
