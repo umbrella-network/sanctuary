@@ -1,0 +1,82 @@
+swagger: "2.0"
+info:
+  description: "Umbrella Network API"
+  version: "1.0.0"
+  title: "Umbrella Network API"
+  termsOfService: "https://umb.network"
+  contact:
+    email: "nm@umb.network"
+host: "api.umb.network"
+basePath: "/"
+schemes:
+- "https"
+- "http"
+paths:
+  /users:
+    post:
+      summary: "Create an account"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Account credentials"
+        required: true
+        schema:
+          $ref: "#/definitions/Auth"
+      responses:
+        "422":
+          description: "Invalid email or password"
+        "201":
+          description: "Account created"
+          schema:
+            $ref: "#/definitions/User"
+  /auth:
+    post:
+      summary: "Authenticate an account"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Authentication response"
+        required: true
+        schema:
+          $ref: "#/definitions/Auth"
+      responses:
+        "403":
+          description: "Invalid email or password"
+        "200":
+          description: "Account created"
+          schema:
+            type: "object"
+            properties:
+              token:
+                type: "string"
+definitions:
+  Auth:
+    type: "object"
+    required:
+      - "email"
+      - "password"
+    properties:
+      email:
+        type: "string"
+      password:
+        type: "string"
+  User:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      email:
+        type: "string"
+      verified:
+        type: "boolean"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
