@@ -1,4 +1,4 @@
-swagger: "2.0"
+openapi: 3.0.0
 info:
   description: "Umbrella Network API"
   version: "1.0.0"
@@ -6,77 +6,138 @@ info:
   termsOfService: "https://umb.network"
   contact:
     email: "nm@umb.network"
-host: "api.umb.network"
-basePath: "/"
-schemes:
-- "https"
-- "http"
+servers:
+  - url: "api.umb.network"
+    description: "production"
+security:
+- bearerAuth: []
 paths:
   /users:
     post:
       summary: "Create an account"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
+      requestBody:
         description: "Account credentials"
-        required: true
-        schema:
-          $ref: "#/definitions/Auth"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Auth"
       responses:
         "422":
           description: "Invalid email or password"
         "201":
           description: "Account created"
-          schema:
-            $ref: "#/definitions/User"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
   /auth:
     post:
       summary: "Authenticate an account"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
+      requestBody:
         description: "Authentication response"
-        required: true
-        schema:
-          $ref: "#/definitions/Auth"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Auth"
       responses:
         "403":
           description: "Invalid email or password"
         "200":
           description: "Account created"
-          schema:
-            type: "object"
-            properties:
-              token:
-                type: "string"
-definitions:
-  Auth:
-    type: "object"
-    required:
-      - "email"
-      - "password"
-    properties:
-      email:
-        type: "string"
-      password:
-        type: "string"
-  User:
-    type: "object"
-    properties:
-      id:
-        type: "string"
-      email:
-        type: "string"
-      verified:
-        type: "boolean"
-externalDocs:
-  description: "Find out more about Swagger"
-  url: "http://swagger.io"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  token:
+                    type: "string"
+  "/api-keys":
+    get:
+      summary: Get all API keys
+      security:
+        - bearerAuth: []
+      parameters:
+      - in: "query"
+        name: "projectId"
+        description: "Project by which to get API Keys."
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "API Keys"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIKey"
+    post:
+      summary: "Create an API Key"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/APIKeyRequest"
+      responses:
+        "200":
+          description: "Created API Key"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIKey"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Auth:
+      type: "object"
+      required:
+        - "email"
+        - "password"
+      properties:
+        email:
+          type: "string"
+        password:
+          type: "string"
+    User:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        email:
+          type: "string"
+        verified:
+          type: "boolean"
+    APIKey:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        key:
+          type: "string"
+        description:
+          type: "string"
+        projectId:
+          type: "string"
+        createdAt:
+          type: "string"
+          format: "date-time"
+        expiresAt:
+          type: "string"
+          format: "date-time"
+    APIKeyRequest:
+      type: "object"
+      required:
+        - "projectId"
+      properties:
+        projectId:
+          type: "string"
+          description: "Project to create the API key for."
+        description:
+          type: "string"
+          description: "Description for the API key."
+        expiresAt:
+          type: "string"
+          format: "date-time"
+          description: "Expiration for the API key."
