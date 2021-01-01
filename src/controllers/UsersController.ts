@@ -3,13 +3,17 @@ import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import User from '../models/User';
+import Company from '../models/Company';
+import Project from '../models/Project';
+import Token from '../types/Token';
+import { getAuthorizationToken } from '../lib/auth';
 
 @injectable()
 class UsersController {
   router: express.Application;
 
   constructor() {
-    this.router = express().post('/', this.create);
+    this.router = express().post('/', this.create).get('/', this.find);
   }
 
   create = async (request: Request, response: Response): Promise<void> => {
@@ -46,6 +50,27 @@ class UsersController {
           },
         });
       });
+    });
+  };
+
+  find = async (request: Request, response: Response): Promise<void> => {
+    const auth: Token = getAuthorizationToken(request.headers.authorization);
+    if (!auth) {
+      response.status(403).send();
+      return;
+    }
+
+    const user = await User.findById(auth.userId);
+    const projects = await Project.find({ userId: user.id });
+    const companies = await Company.find({ userId: user.id });
+    response.send({
+      user: {
+        id: user.id,
+        email: user.email,
+        verified: user.verified,
+        projects,
+        companies,
+      },
     });
   };
 }
