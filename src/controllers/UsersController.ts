@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import User from '../models/User';
 import Company from '../models/Company';
 import Project from '../models/Project';
+import Token from '../types/Token';
 import { getAuthorizationToken } from '../lib/auth';
 
 @injectable()
