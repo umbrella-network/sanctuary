@@ -53,7 +53,7 @@ class UsersController {
   };
 
   find = async (request: Request, response: Response): Promise<void> => {
-    const auth: any = getAuthorizationToken(request.headers.authorization);
+    const auth: Token = getAuthorizationToken(request.headers.authorization);
     if (!auth) {
       response.status(403).send();
       return;

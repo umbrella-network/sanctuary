@@ -9,7 +9,7 @@ export function getAuthorizationToken(authorizationHeader: string): Token | unde
   const token = authorizationHeader.replace('Bearer ', '');
   try {
     const decoded = jwt.verify(token, process.env.AUTH_PRIVATE_KEY);
-    return decoded as any;
+    return decoded;
   } catch {
     return;
   }
