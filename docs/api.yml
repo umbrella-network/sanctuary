@@ -13,6 +13,17 @@ security:
 - bearerAuth: []
 paths:
   /users:
+    get:
+      summary: "Get current user account"
+      responses:
+        "403":
+          description: "Unauthenticated request"
+        "200":
+          description: "Retrieved current user"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAccountSummary"
     post:
       summary: "Create an account"
       requestBody:
@@ -109,6 +120,37 @@ components:
           type: "string"
         verified:
           type: "boolean"
+    UserAccountSummary:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        email:
+          type: "string"
+        verified:
+          type: "boolean"
+        projects:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Project"
+        companies:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Company"
+    Project:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+    Company:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
     APIKey:
       type: "object"
       properties:
