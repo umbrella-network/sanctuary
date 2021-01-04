@@ -68,8 +68,18 @@ class UsersController {
         id: user.id,
         email: user.email,
         verified: user.verified,
-        projects,
-        companies,
+        projects: projects.map((project) => {
+          return {
+            id: project.id,
+            name: project.name,
+          };
+        }),
+        companies: companies.map((company) => {
+          return {
+            id: company.id,
+            name: company.name,
+          };
+        }),
       },
     });
   };
