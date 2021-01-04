@@ -39,7 +39,7 @@ class ProjectsController {
       ownerType: 'User',
     });
 
-    response.send(project);
+    response.status(201).send(project);
   };
 
   index = async (request: Request, response: Response): Promise<void> => {

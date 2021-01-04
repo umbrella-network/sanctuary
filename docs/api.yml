@@ -12,6 +12,37 @@ servers:
 security:
 - bearerAuth: []
 paths:
+  /projects:
+    get:
+      summary: "List projects"
+      responses:
+        "403":
+          description: "Unauthenticated request"
+        "200":
+          description: "List of projects"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectsResponse"
+    post:
+      summary: "Create a project"
+      requestBody:
+        description: "Project data"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Project"
+      responses:
+        "403":
+          description: "Unauthenticated request"
+        "400":
+          description: "No project name provided"
+        "201":
+          description: "Project created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
   /users:
     get:
       summary: "Get current user account"
@@ -137,6 +168,13 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/Company"
+    ProjectsResponse:
+      type: "object"
+      properties:
+        projects:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Project"
     Project:
       type: "object"
       properties:
