@@ -5,7 +5,7 @@ import { IApiKey } from '../models/ApiKey';
 @injectable()
 export class AuthUtils {
   async verifyApiKeyFromAuthHeader(
-    authorizationHeader?: string,
+    authorizationHeader?: string
   ): Promise<{ apiKey: IApiKey; errorMessage?: void } | { apiKey?: void; errorMessage: string }> {
     if (!authorizationHeader) {
       return { errorMessage: 'No authorization header' };

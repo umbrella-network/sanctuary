@@ -10,7 +10,7 @@ class ProofsController {
 
   constructor(
     @inject(AuthUtils)
-    private readonly authUtils: AuthUtils,
+    private readonly authUtils: AuthUtils
   ) {
     this.router = express.Router().get('/', this.index);
   }
