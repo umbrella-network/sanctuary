@@ -5,7 +5,7 @@ import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Blockchain from '../lib/Blockchain';
 import Block from '../models/Block';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
-import Settings from 'src/types/Settings';
+import Settings from '../types/Settings';
 
 @injectable()
 class BlockSynchronizer {
