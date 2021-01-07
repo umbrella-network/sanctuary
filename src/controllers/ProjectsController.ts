@@ -50,7 +50,7 @@ class ProjectsController {
       return;
     }
 
-    const projects = await Project.find({ ownerId: auth.userId }, { _id: true });
+    const projects = await Project.find({ ownerId: auth.userId });
 
     response.send({
       projects: projects.map((project) => {
