@@ -8,9 +8,7 @@ import { AuthUtils } from '../services/AuthUtils';
 class ProofsController {
   router: express.Router;
 
-  constructor(
-    @inject(AuthUtils) private readonly authUtils: AuthUtils
-  ) {
+  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
     this.router = express.Router().get('/', this.index);
   }
 
