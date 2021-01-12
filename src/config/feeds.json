@@ -79,6 +79,126 @@
       "leafLabel": "comp-usd",
       "valuePath": "$.USD",
       "discrepancy": 0.1
+    },
+    {
+      "id": "eth-usd-TWAP-1day",
+      "name": "ETH-USD-TWAP-1DAY [Spot]",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/v2/histohour?fsym=ETH&tsym=USD&limit=24",
+      "leafLabel": "eth-usd-TWAP-1day",
+      "valuePath": "$.USD",
+      "discrepancy": 0.1
+    },
+    {
+      "id": "eth-usd-TWAP-30days",
+      "name": "ETH-USD-TWAP-30DAYS [Spot]",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/v2/histoday?fsym=ETH&tsym=USD&limit=30",
+      "leafLabel": "eth-usd-TWAP-30days",
+      "valuePath": "$.USD",
+      "discrepancy": 0.1
+    },
+    {
+      "id": "eth-usd-VWAP-1day",
+      "name": "ETH-USD-VWAP-1DAY [Spot]",
+      "sourceUrl": "https://min-api.cryptocompare.com/data/v2/histohour?fsym=ETH&tsym=USD&limit=24",
+      "leafLabel": "eth-usd-VWAP-1day",
+      "valuePath": "$.USD",
+      "discrepancy": 0.1
+    },
+    {
+      "id": "btc-iv-1day",
+      "name": "BTC-IV-1DAY [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "btc-iv-1day",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "btc-iv-2days",
+      "name": "BTC-IV-2DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "btc-iv-2days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "btc-iv-7days",
+      "name": "BTC-IV-7DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "btc-iv-7days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "btc-iv-14days",
+      "name": "BTC-IV-14DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "btc-iv-14days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "btc-iv-21days",
+      "name": "BTC-IV-21DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "btc-iv-21days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "btc-iv-28days",
+      "name": "BTC-IV-28DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "btc-iv-28days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "eth-iv-1day",
+      "name": "ETH-IV-1DAY [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "eth-iv-1day",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "eth-iv-2days",
+      "name": "ETH-IV-2DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "eth-iv-2days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "eth-iv-7days",
+      "name": "ETH-IV-7DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "eth-iv-7days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "eth-iv-14days",
+      "name": "ETH-IV-14DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "eth-iv-14days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "eth-iv-21days",
+      "name": "ETH-IV-21DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "eth-iv-21days",
+      "valuePath": null,
+      "discrepancy": 0.1
+    },
+    {
+      "id": "eth-iv-28days",
+      "name": "ETH-IV-28DAYS [Spot]",
+      "sourceUrl": null,
+      "leafLabel": "eth-iv-28days",
+      "valuePath": null,
+      "discrepancy": 0.1
     }
   ]
 }
