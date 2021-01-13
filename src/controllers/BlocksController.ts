@@ -8,9 +8,7 @@ import { AuthUtils } from '../services/AuthUtils';
 class BlocksController {
   router: express.Application;
 
-  constructor(
-    @inject(AuthUtils) private readonly authUtils: AuthUtils,
-  ) {
+  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
     this.router = express().get('/', this.index).get('/:id', this.show).get('/:id/leaves', this.leaves);
   }
 
