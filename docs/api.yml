@@ -76,7 +76,7 @@ paths:
     post:
       summary: "Authenticate an account"
       requestBody:
-        description: "Authentication response"
+        description: "Authentication request"
         content:
           application/json:
             schema:
@@ -86,6 +86,27 @@ paths:
           description: "Invalid email or password"
         "200":
           description: "Account created"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  token:
+                    type: "string"
+  "/wallet-auth":
+    post:
+      summary: "Authenticate using wallet address"
+      requestBody:
+        description: "Wallet address request"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletAuthRequest"
+      responses:
+        "400":
+          description: "Provided timestamp expired before verifying."
+        "200":
+          description: "Wallet authenticated"
           content:
             application/json:
               schema:
@@ -206,6 +227,19 @@ components:
         expiresAt:
           type: "string"
           format: "date-time"
+    WalletAuthRequest:
+      type: "object"
+      required:
+        - "verifiedTime"
+        - "signature"
+      properties:
+        verifiedTime:
+          type: integer
+          format: int64
+          description: "Unix epoch time that was used for verifying the signature."
+        signature:
+          type: string
+          description: "Signature string provided by the user to verify."
     APIKeyRequest:
       type: "object"
       required:
