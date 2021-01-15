@@ -10,11 +10,11 @@ class WalletAuthController {
   settings: Settings;
 
   constructor(@inject('Settings') settings: Settings) {
-    this.router = express.Router().post('/verify', this.verify);
+    this.router = express.Router().post('/', this.create);
     this.settings = settings;
   }
 
-  verify = async (request: Request, response: Response): Promise<void> => {
+  create = async (request: Request, response: Response): Promise<void> => {
     const { verifiedTime, signature } = request.body;
 
     const currentTime = Math.floor(Date.now() / 1000);
