@@ -15,21 +15,21 @@ class WalletAuthController {
   }
 
   create = async (request: Request, response: Response): Promise<void> => {
-    const { verifiedTime, signature } = request.body;
+    const { signatureTimestamp, signature } = request.body;
 
     const currentTime = Math.floor(Date.now() / 1000);
-    if (currentTime < verifiedTime) {
+    if (currentTime < signatureTimestamp) {
       response.status(400).send({ error: 'Signed timestamp was in the future, provide valid timestamp.' });
       return;
     }
 
-    if (currentTime > verifiedTime + 10) {
+    if (currentTime > signatureTimestamp + 10) {
       response.status(400).send({ error: 'Signed timestamp has expired (10 second timeout).' });
       return;
     }
 
     try {
-      const address = await ethers.utils.verifyMessage(verifiedTime, signature);
+      const address = await ethers.utils.verifyMessage(signatureTimestamp, signature);
       const tokenPrivateKey = process.env.AUTH_PRIVATE_KEY;
       const exp = Math.floor(Date.now() / 1000) + this.settings.auth.tokenExpiry;
       const token = sign({ exp, userId: address }, tokenPrivateKey);
