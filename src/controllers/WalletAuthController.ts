@@ -18,8 +18,8 @@ class WalletAuthController {
     const { verifiedTime, signature } = request.body;
 
     const currentTime = Math.floor(Date.now() / 1000);
-    if (currentTime > verifiedTime + 30) {
-      response.status(400).send({ error: 'Signed timestamp has expired (30 second timeout).' });
+    if (currentTime > verifiedTime + 10) {
+      response.status(400).send({ error: 'Signed timestamp has expired (10 second timeout).' });
       return;
     }
 
