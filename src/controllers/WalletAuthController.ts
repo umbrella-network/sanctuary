@@ -18,6 +18,11 @@ class WalletAuthController {
     const { verifiedTime, signature } = request.body;
 
     const currentTime = Math.floor(Date.now() / 1000);
+    if (currentTime < verifiedTime) {
+      response.status(400).send({ error: 'Signed timestamp was in the future, provide valid timestamp.' });
+      return;
+    }
+
     if (currentTime > verifiedTime + 10) {
       response.status(400).send({ error: 'Signed timestamp has expired (10 second timeout).' });
       return;
