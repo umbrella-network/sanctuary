@@ -17,7 +17,8 @@ class WalletAuthController {
   create = async (request: Request, response: Response): Promise<void> => {
     const { signatureTimestamp, signature } = request.body;
 
-    const currentTime = Math.floor(Date.now() / 1000);
+    const currentTime = () => Math.floor(Date.now() / 1000);
+
     if (currentTime < signatureTimestamp) {
       response.status(400).send({ error: 'Signed timestamp was in the future, provide valid timestamp.' });
       return;
