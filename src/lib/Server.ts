@@ -14,7 +14,7 @@ import UsersController from '../controllers/UsersController';
 import Settings from '../types/Settings';
 import ApiKeysController from '../controllers/ApiKeysController';
 import ProjectsController from '../controllers/ProjectsController';
-import WalletAuthController from 'src/controllers/WalletAuthController';
+import WalletAuthController from '../controllers/WalletAuthController';
 
 @injectable()
 class Server {
