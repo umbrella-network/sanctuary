@@ -3,6 +3,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ILeaf extends Document {
   blockId: string;
   key: string;
+  /**
+   * The value in hex format with leading `0x`
+   */
   value: string;
   proof: string[];
 }

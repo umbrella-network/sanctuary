@@ -4,6 +4,7 @@ import Leaf from '../models/Leaf';
 import { ethers } from 'ethers';
 
 import * as feeds from '../config/feeds.json';
+import { LeafType, LeafValueCoder } from '@umb-network/toolbox';
 
 async function main() {
   await Block.deleteMany({});
@@ -42,7 +43,7 @@ async function main() {
         _id: `leaf::${block.id}::${feed.id}`,
         blockId: block.id,
         key: feed.id,
-        value: 12345,
+        value: '0x' + LeafValueCoder.encode(12345, LeafType.TYPE_FLOAT),
         proof: [ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234')],
       });
 
