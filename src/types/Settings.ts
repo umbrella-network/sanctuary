@@ -29,6 +29,7 @@ type Settings = {
   };
   auth: {
     tokenExpiry: number;
+    walletVerificationThreshold: number;
   };
 };
 

@@ -31,6 +31,7 @@ const settings: Settings = {
   },
   auth: {
     tokenExpiry: 60 * 60 * 24 * 7, // 1 week
+    walletVerificationThreshold: 10,
   },
 };
 
