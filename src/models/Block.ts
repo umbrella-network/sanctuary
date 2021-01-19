@@ -3,12 +3,12 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IBlock extends Document {
   height: number;
   status: string;
-  anchor: number;
+  anchor: string;
   timestamp: Date;
   root: string;
   minter: string;
-  staked: number;
-  power: number;
+  staked: string;
+  power: string;
   voters: Array<string>;
   votes: Map<string, number>;
   numericFcdKeys: Array<string>;
@@ -18,12 +18,12 @@ const BlockSchema: Schema = new Schema({
   _id: { type: String, required: true },
   height: { type: Number, required: true, unique: true },
   status: { type: String, required: false },
-  anchor: { type: Number, required: false },
+  anchor: { type: String, required: false },
   timestamp: { type: Date, required: false },
   root: { type: String, required: false },
   minter: { type: String, required: false },
-  staked: { type: Number, required: false, default: 0 },
-  power: { type: Number, required: false, default: 0 },
+  staked: { type: String, required: false, default: 0 },
+  power: { type: String, required: false, default: 0 },
   voters: { type: [String], required: false, default: [] },
   votes: { type: Map, required: false, default: {} },
   numericFcdKeys: { type: [String], required: false, default: [] },

@@ -31,8 +31,8 @@ class BlockSynchronizer {
           height: height,
         },
         {
-          anchor: minedBlock.anchor.toNumber(),
-          timestamp: timestamp,
+          anchor: minedBlock.anchor.toString(),
+          timestamp,
         },
         {
           new: true,
@@ -91,8 +91,8 @@ class BlockSynchronizer {
       status: status,
       root: sideBlock.root,
       minter: sideBlock.minter,
-      staked: sideBlock.staked,
-      power: sideBlock.power,
+      staked: sideBlock.staked.toString(),
+      power: sideBlock.power.toString(),
       voters: voters,
     });
   }

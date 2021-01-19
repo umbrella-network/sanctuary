@@ -14,11 +14,11 @@ async function main() {
       _id: `block::${i}`,
       height: i,
       status: 'finalized',
-      anchor: 1024 + i * 8,
+      anchor: (1024 + i * 8).toString(),
       timestamp: new Date(),
       root: ethers.utils.keccak256('0x1234'),
       minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
-      staked: 100,
+      staked: '100',
       power: 75,
       voters: ['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F'],
       votes: {
