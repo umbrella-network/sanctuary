@@ -2,9 +2,35 @@ import '../boot';
 import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { ethers } from 'ethers';
-
-import * as feeds from '../config/feeds.json';
 import { LeafType, LeafValueCoder } from '@umb-network/toolbox';
+
+const exampleKeys = [
+  'eth-usd',
+  'eth-eur',
+  'eth-usdt',
+  'usdt-eur',
+  'usdt-usd',
+  'wbtc-usd',
+  'aave-usd',
+  'yfi-usd',
+  'uni-usd',
+  'comp-usd',
+  'eth-usd-TWAP-1day',
+  'eth-usd-TWAP-30days',
+  'eth-usd-VWAP-1day',
+  'btc-iv-1day',
+  'btc-iv-2days',
+  'btc-iv-7days',
+  'btc-iv-14days',
+  'btc-iv-21days',
+  'btc-iv-28days',
+  'eth-iv-1day',
+  'eth-iv-2days',
+  'eth-iv-7days',
+  'eth-iv-14days',
+  'eth-iv-21days',
+  'eth-iv-28days'
+];
 
 async function main() {
   await Block.deleteMany({});
@@ -36,13 +62,13 @@ async function main() {
       blockId: block.id,
     });
 
-    for (let i = 0; i < feeds.data.length; i++) {
-      const feed = feeds.data[i];
+    for (let i = 0; i < exampleKeys.length; i++) {
+      const key = exampleKeys[i];
 
       const leaf = new Leaf({
-        _id: `leaf::${block.id}::${feed.id}`,
+        _id: `leaf::${block.id}::${key}`,
         blockId: block.id,
-        key: feed.id,
+        key: key,
         value: '0x' + LeafValueCoder.encode(12345, LeafType.TYPE_FLOAT),
         proof: [ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234')],
       });
