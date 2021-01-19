@@ -1,12 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { HexStringWith0x } from '../types/HexStringWith0x';
 
 export interface ILeaf extends Document {
   blockId: string;
   key: string;
-  /**
-   * The value in hex format with leading `0x`
-   */
-  value: string;
+  value: HexStringWith0x;
   proof: string[];
 }
 
