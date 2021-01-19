@@ -5,31 +5,12 @@ import { ethers } from 'ethers';
 import { LeafType, LeafValueCoder } from '@umb-network/toolbox';
 
 const exampleKeys = [
-  'eth-usd',
-  'eth-eur',
-  'eth-usdt',
-  'usdt-eur',
-  'usdt-usd',
-  'wbtc-usd',
-  'aave-usd',
-  'yfi-usd',
-  'uni-usd',
-  'comp-usd',
-  'eth-usd-TWAP-1day',
-  'eth-usd-TWAP-30days',
-  'eth-usd-VWAP-1day',
-  'btc-iv-1day',
-  'btc-iv-2days',
-  'btc-iv-7days',
-  'btc-iv-14days',
-  'btc-iv-21days',
-  'btc-iv-28days',
-  'eth-iv-1day',
-  'eth-iv-2days',
-  'eth-iv-7days',
-  'eth-iv-14days',
-  'eth-iv-21days',
-  'eth-iv-28days'
+  'ABS-XYZ',
+  'XYZ-ABS',
+  'QWERTY-ABS',
+  'ABS-QWERTY',
+  'QWERTY-XYZ',
+  'XYZ-QWERTY',
 ];
 
 async function main() {
