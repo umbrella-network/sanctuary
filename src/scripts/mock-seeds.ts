@@ -4,14 +4,7 @@ import Leaf from '../models/Leaf';
 import { ethers } from 'ethers';
 import { LeafType, LeafValueCoder } from '@umb-network/toolbox';
 
-const exampleKeys = [
-  'ABS-XYZ',
-  'XYZ-ABS',
-  'QWERTY-ABS',
-  'ABS-QWERTY',
-  'QWERTY-XYZ',
-  'XYZ-QWERTY',
-];
+const exampleKeys = ['ABS-XYZ', 'XYZ-ABS', 'QWERTY-ABS', 'ABS-QWERTY', 'QWERTY-XYZ', 'XYZ-QWERTY'];
 
 async function main() {
   await Block.deleteMany({});
