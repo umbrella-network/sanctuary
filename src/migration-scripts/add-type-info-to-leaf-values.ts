@@ -5,11 +5,9 @@ import '../boot';
 import { connection } from 'mongoose';
 
 (async () => {
-  const leafsNotInHexFormatCursor = Leaf
-    .find({
-      value: { $not: { $regex: /^0x/ } }
-    })
-    .cursor();
+  const leafsNotInHexFormatCursor = Leaf.find({
+    value: { $not: { $regex: /^0x/ } },
+  }).cursor();
 
   let leaf: ILeaf = await leafsNotInHexFormatCursor.next();
 
