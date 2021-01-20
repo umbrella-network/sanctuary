@@ -6,6 +6,7 @@ import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import axios from 'axios';
+import { BlockFromPegasus } from '../types/BlockFromPegasus';
 
 @injectable()
 class LeavesSynchronizer {
@@ -29,7 +30,7 @@ class LeavesSynchronizer {
       const location = validator['location'];
       const url = new URL(`${location}/blocks/height/${block.height}`);
       this.logger.info(`Resolving leaves from: ${url}`);
-      const response = await axios.get(url.toString());
+      const response = await axios.get<{ data: BlockFromPegasus }>(url.toString());
 
       if (response.status == 200) {
         if (!response.data || response.data.data === null) {
