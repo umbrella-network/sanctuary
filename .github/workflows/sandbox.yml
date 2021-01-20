@@ -60,8 +60,8 @@ jobs:
       - name: Push EKS
         uses: ianbelcher/eks-kubectl-action@master
         with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
           aws_region: ${{ secrets.AWS_REGION }}
           cluster_name: ${{ secrets.CLUSTER_NAME_PROD }}
           args: set image --record deployment/sanctuary sanctuary="${{ steps.docker_meta.outputs.tags }}" --namespace prod
