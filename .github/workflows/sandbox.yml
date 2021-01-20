@@ -57,14 +57,30 @@ jobs:
           tags: ${{ steps.docker_meta.outputs.tags }}
 
 
-      - name: Push EKS
+      - name: Push sanctuary-api
         uses: ianbelcher/eks-kubectl-action@master
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
           aws_region: ${{ secrets.AWS_REGION }}
           cluster_name: ${{ secrets.CLUSTER_NAME_PROD }}
-          args: set image --record deployment/sanctuary sanctuary="${{ steps.docker_meta.outputs.tags }}" --namespace prod
+          args: set image --record deployment/sanctuary-api sanctuary-api="${{ steps.docker_meta.outputs.tags }}" --namespace prod
 
 
+      - name: Push sanctuary-worker
+        uses: ianbelcher/eks-kubectl-action@master
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          cluster_name: ${{ secrets.CLUSTER_NAME_PROD }}
+          args: set image --record deployment/sanctuary-worker sanctuary-worker="${{ steps.docker_meta.outputs.tags }}" --namespace prod
     
+      - name: Push sanctuary-scheduler
+        uses: ianbelcher/eks-kubectl-action@master
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          cluster_name: ${{ secrets.CLUSTER_NAME_PROD }}
+          args: set image --record deployment/sanctuary-scheduler sanctuary-scheduler="${{ steps.docker_meta.outputs.tags }}" --namespace prod
