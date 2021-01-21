@@ -75,9 +75,10 @@ class BlockSynchronizer {
     const height = block.height;
     const sideBlock = await this.chainContract.blocks(height);
     const voters = await this.chainContract.getBlockVoters(height);
+    const votes = await this.getVotes(height, voters);
     let status;
 
-    this.logger.info(`Syncing finished side block with voters: ${voters}`);
+    this.logger.info(`Syncing finished side block with votes: ${JSON.stringify([...votes.entries()])}`);
 
     if (sideBlock.root == '0x0000000000000000000000000000000000000000000000000000000000000000') {
       status = 'failed';
@@ -94,7 +95,25 @@ class BlockSynchronizer {
       staked: sideBlock.staked.toString(),
       power: sideBlock.power.toString(),
       voters: voters,
+      votes,
     });
+  }
+
+  private async getVotes(blockHeight: number, voters: string[]): Promise<Map<string, string>> {
+    const votes: string[] = await Promise.all(
+      voters.map(async (voter) => {
+        const vote = await this.chainContract.getBlockVotes(blockHeight, voter);
+        return vote.toString();
+      })
+    );
+
+    const votesMap = new Map<string, string>();
+
+    voters.forEach((voter, i) => {
+      votesMap.set(voter, votes[i]);
+    });
+
+    return votesMap;
   }
 }
 
