@@ -101,10 +101,10 @@ class BlockSynchronizer {
 
   private async getVotes(blockHeight: number, voters: string[]): Promise<Map<string, string>> {
     const votes: string[] = await Promise.all(
-      voters.map(async voter => {
+      voters.map(async (voter) => {
         const vote = await this.chainContract.getBlockVotes(blockHeight, voter);
         return vote.toString();
-      }),
+      })
     );
 
     const votesMap = new Map<string, string>();
