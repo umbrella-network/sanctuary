@@ -19,6 +19,7 @@ class ChainContract {
   getLeaderAddress = async (): Promise<string> => this.contract.getLeaderAddress();
   getBlockHeight = async (): Promise<BigNumber> => this.contract.getBlockHeight();
   getBlockVoters = async (height: number): Promise<string[]> => this.contract.getBlockVoters(height);
+  getBlockVotes = async (blockHeight: number, voter: string): Promise<BigNumber> => this.contract.getBlockVotes(blockHeight, voter);
   blocks = async (index: number): Promise<utils.Result> => this.contract.blocks(index);
 }
 

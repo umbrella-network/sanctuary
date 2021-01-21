@@ -10,7 +10,7 @@ export interface IBlock extends Document {
   staked: string;
   power: string;
   voters: Array<string>;
-  votes: Map<string, number>;
+  votes: Map<string, string>;
   numericFcdKeys: Array<string>;
 }
 
