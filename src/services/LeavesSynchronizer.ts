@@ -43,27 +43,29 @@ class LeavesSynchronizer {
         if (root == block.root) {
           await this.updateNumericFCD(block.id, response.data.data.numericFcdKeys);
 
-          await input.forEach(async (value: string, key: string) => {
-            const proof = tree.getProofForKey(key);
+          await Promise.all(
+            [...input.entries()].map(async ([key, value]: [string, string]) => {
+              const proof = tree.getProofForKey(key);
 
-            const leaf = await Leaf.findOneAndUpdate(
-              {
-                _id: `leaf::${block.id}::${key}`,
-                blockId: block.id,
-                key: key,
-              },
-              {
-                value: value,
-                proof: proof,
-              },
-              {
-                new: true,
-                upsert: true,
-              }
-            );
+              const leaf = await Leaf.findOneAndUpdate(
+                {
+                  _id: `leaf::${block.id}::${key}`,
+                  blockId: block.id,
+                  key: key,
+                },
+                {
+                  value: value,
+                  proof: proof,
+                },
+                {
+                  new: true,
+                  upsert: true,
+                }
+              );
 
-            this.logger.info(`Created new leaf: ${leaf.id}`);
-          });
+              this.logger.info(`Created new leaf: ${leaf.id}`);
+            })
+          );
 
           success = true;
           break;
