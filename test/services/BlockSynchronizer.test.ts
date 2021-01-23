@@ -7,11 +7,12 @@ import ChainContract from '../../src/contracts/ChainContract';
 import LeavesSynchronizer from '../../src/services/LeavesSynchronizer';
 import BlockSynchronizer from '../../src/services/BlockSynchronizer';
 import sinon from 'sinon';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 import mongoose from 'mongoose';
 import { loadTestEnv } from '../helpers';
 import Block from '../../src/models/Block';
 import { expect } from 'chai';
+import { arbitraryBlockFromChain } from '../fixtures/arbitrary-block-from-chain';
 
 describe('BlockSynchronizer', () => {
   let container: Container;
@@ -71,14 +72,7 @@ describe('BlockSynchronizer', () => {
 
   it('marks new blocks as "completed"', async () => {
     mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns(Promise.resolve({
-      timestamp: BigNumber.from(1611359125),
-      anchor: BigNumber.from(1024),
-      root: ethers.utils.keccak256('0x1234'),
-      minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
-      staked: '1000000000000000000',
-      power: '1000000000000000000',
-    } as any));
+    mockedChainContract.blocks.returns(Promise.resolve(arbitraryBlockFromChain));
     mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
     mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
 
@@ -100,14 +94,7 @@ describe('BlockSynchronizer', () => {
   it('marks completed blocks as "finalized" if leaves synchronization finished successfully', async () => {
     mockedLeavesSynchronizer.apply.returns(Promise.resolve(true));
     mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns(Promise.resolve({
-      timestamp: BigNumber.from(1611359125),
-      anchor: BigNumber.from(1024),
-      root: ethers.utils.keccak256('0x1234'),
-      minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
-      staked: '1000000000000000000',
-      power: '1000000000000000000',
-    } as any));
+    mockedChainContract.blocks.returns(Promise.resolve(arbitraryBlockFromChain));
     mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
     mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
 
@@ -133,14 +120,7 @@ describe('BlockSynchronizer', () => {
   it('marks completed blocks as "failed" if leaves synchronization finished unsuccessfully', async () => {
     mockedLeavesSynchronizer.apply.returns(Promise.resolve(null));
     mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns(Promise.resolve({
-      timestamp: BigNumber.from(1611359125),
-      anchor: BigNumber.from(1024),
-      root: ethers.utils.keccak256('0x1234'),
-      minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
-      staked: '1000000000000000000',
-      power: '1000000000000000000',
-    } as any));
+    mockedChainContract.blocks.returns(Promise.resolve(arbitraryBlockFromChain));
     mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
     mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
 
