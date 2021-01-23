@@ -1,7 +1,6 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
-import Blockchain from '../lib/Blockchain';
 import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
@@ -10,10 +9,9 @@ import { BlockFromPegasus } from '../types/BlockFromPegasus';
 
 @injectable()
 class LeavesSynchronizer {
-  @inject('Logger') logger!: Logger;
-  @inject(Blockchain) blockchain!: Blockchain;
-  @inject(ValidatorRegistryContract) validatorRegistryContract!: ValidatorRegistryContract;
-  @inject(SortedMerkleTreeFactory) sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
+  @inject('Logger') private logger!: Logger;
+  @inject(ValidatorRegistryContract) private validatorRegistryContract!: ValidatorRegistryContract;
+  @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
 
   async apply(blockId: string): Promise<boolean> {
     const block = await Block.findOne({ _id: blockId });
