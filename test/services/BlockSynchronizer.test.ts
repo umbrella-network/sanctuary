@@ -11,7 +11,7 @@ import { BigNumber, ethers } from 'ethers';
 import mongoose from 'mongoose';
 import { loadTestEnv } from '../helpers';
 import Block from '../../src/models/Block';
-import chai from 'chai';
+import { expect } from 'chai';
 
 describe('BlockSynchronizer', () => {
   let container: Container;
@@ -51,34 +51,34 @@ describe('BlockSynchronizer', () => {
 
   it('marks ten new blocks as "new" and saves to DB', async () => {
     mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns({
+    mockedChainContract.blocks.returns(Promise.resolve({
       timestamp: BigNumber.from(1611359125),
       anchor: BigNumber.from(1024),
-    } as any);
+    } as any));
 
     await blockSynchronizer.apply();
 
     const blocks: any[] = await Block.find({});
 
-    chai.expect(blocks.length).to.be.equal(10);
+    expect(blocks.length).to.be.equal(10);
 
     blocks.forEach((block, i) => {
-      chai.expect(block).to.have.property('status', 'new');
-      chai.expect(block).to.have.property('height', i + 1);
-      chai.expect(block).to.have.property('_id', `block::${i + 1}`);
+      expect(block).to.have.property('status', 'new');
+      expect(block).to.have.property('height', i + 1);
+      expect(block).to.have.property('_id', `block::${i + 1}`);
     });
   });
 
   it('marks new blocks as "completed"', async () => {
     mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns({
+    mockedChainContract.blocks.returns(Promise.resolve({
       timestamp: BigNumber.from(1611359125),
       anchor: BigNumber.from(1024),
       root: ethers.utils.keccak256('0x1234'),
       minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
       staked: '1000000000000000000',
       power: '1000000000000000000',
-    } as any);
+    } as any));
     mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
     mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
 
@@ -88,26 +88,26 @@ describe('BlockSynchronizer', () => {
 
     const blocks: any[] = await Block.find({});
 
-    chai.expect(blocks.length).to.be.equal(10);
+    expect(blocks.length).to.be.equal(10);
 
     blocks.forEach((block, i) => {
-      chai.expect(block).to.have.property('status', 'completed');
-      chai.expect(block).to.have.property('height', i + 1);
-      chai.expect(block).to.have.property('_id', `block::${i + 1}`);
+      expect(block).to.have.property('status', 'completed');
+      expect(block).to.have.property('height', i + 1);
+      expect(block).to.have.property('_id', `block::${i + 1}`);
     });
   });
 
   it('marks completed blocks as "finalized" if leaves synchronization finished successfully', async () => {
     mockedLeavesSynchronizer.apply.returns(Promise.resolve(true));
     mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns({
+    mockedChainContract.blocks.returns(Promise.resolve({
       timestamp: BigNumber.from(1611359125),
       anchor: BigNumber.from(1024),
       root: ethers.utils.keccak256('0x1234'),
       minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
       staked: '1000000000000000000',
       power: '1000000000000000000',
-    } as any);
+    } as any));
     mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
     mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
 
@@ -117,30 +117,30 @@ describe('BlockSynchronizer', () => {
 
     await blockSynchronizer.apply();
 
-    chai.expect(mockedLeavesSynchronizer.apply.callCount).to.be.equal(10);
+    expect(mockedLeavesSynchronizer.apply.callCount).to.be.equal(10);
 
     const blocks: any[] = await Block.find({});
 
-    chai.expect(blocks.length).to.be.equal(10);
+    expect(blocks.length).to.be.equal(10);
 
     blocks.forEach((block, i) => {
-      chai.expect(block).to.have.property('status', 'finalized');
-      chai.expect(block).to.have.property('height', i + 1);
-      chai.expect(block).to.have.property('_id', `block::${i + 1}`);
+      expect(block).to.have.property('status', 'finalized');
+      expect(block).to.have.property('height', i + 1);
+      expect(block).to.have.property('_id', `block::${i + 1}`);
     });
   });
 
   it('marks completed blocks as "failed" if leaves synchronization finished unsuccessfully', async () => {
     mockedLeavesSynchronizer.apply.returns(Promise.resolve(null));
     mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns({
+    mockedChainContract.blocks.returns(Promise.resolve({
       timestamp: BigNumber.from(1611359125),
       anchor: BigNumber.from(1024),
       root: ethers.utils.keccak256('0x1234'),
       minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
       staked: '1000000000000000000',
       power: '1000000000000000000',
-    } as any);
+    } as any));
     mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
     mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
 
@@ -150,16 +150,16 @@ describe('BlockSynchronizer', () => {
 
     await blockSynchronizer.apply();
 
-    chai.expect(mockedLeavesSynchronizer.apply.callCount).to.be.equal(10);
+    expect(mockedLeavesSynchronizer.apply.callCount).to.be.equal(10);
 
     const blocks: any[] = await Block.find({});
 
-    chai.expect(blocks.length).to.be.equal(10);
+    expect(blocks.length).to.be.equal(10);
 
     blocks.forEach((block, i) => {
-      chai.expect(block).to.have.property('status', 'failed');
-      chai.expect(block).to.have.property('height', i + 1);
-      chai.expect(block).to.have.property('_id', `block::${i + 1}`);
+      expect(block).to.have.property('status', 'failed');
+      expect(block).to.have.property('height', i + 1);
+      expect(block).to.have.property('_id', `block::${i + 1}`);
     });
   });
 });
