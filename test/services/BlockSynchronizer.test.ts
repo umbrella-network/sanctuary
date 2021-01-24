@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 import { loadTestEnv } from '../helpers';
 import Block from '../../src/models/Block';
 import { expect } from 'chai';
-import { arbitraryBlockFromChain } from '../fixtures/arbitrary-block-from-chain';
+import { arbitraryBlockFromChain } from '../fixtures/arbitraryBlockFromChain';
 
 describe('BlockSynchronizer', () => {
   let container: Container;

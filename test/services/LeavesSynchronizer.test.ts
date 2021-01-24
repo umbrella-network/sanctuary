@@ -14,7 +14,7 @@ import SortedMerkleTreeFactory from '../../src/services/SortedMerkleTreeFactory'
 import moxios from 'moxios';
 import { LeafType, LeafValueCoder } from '@umb-network/toolbox';
 import { expect } from 'chai';
-import { inputForBlockModel } from '../fixtures/input-for-block-model';
+import { inputForBlockModel } from '../fixtures/inputForBlockModel';
 
 describe('LeavesSynchronizer', () => {
   let container: Container;
