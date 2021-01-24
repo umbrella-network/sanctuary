@@ -51,11 +51,8 @@ describe('BlockSynchronizer', () => {
   });
 
   it('marks ten new blocks as "new" and saves to DB', async () => {
-    mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns(Promise.resolve({
-      timestamp: BigNumber.from(1611359125),
-      anchor: BigNumber.from(1024),
-    } as any));
+    mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
+    mockedChainContract.blocks.resolves(arbitraryBlockFromChain);
 
     await blockSynchronizer.apply();
 
@@ -71,10 +68,10 @@ describe('BlockSynchronizer', () => {
   });
 
   it('marks new blocks as "completed"', async () => {
-    mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns(Promise.resolve(arbitraryBlockFromChain));
-    mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
-    mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
+    mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
+    mockedChainContract.blocks.resolves(arbitraryBlockFromChain);
+    mockedChainContract.getBlockVoters.resolves(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']);
+    mockedChainContract.getBlockVotes.resolves(BigNumber.from('1000000000000000000'));
 
     await blockSynchronizer.apply();
 
@@ -92,11 +89,11 @@ describe('BlockSynchronizer', () => {
   });
 
   it('marks completed blocks as "finalized" if leaves synchronization finished successfully', async () => {
-    mockedLeavesSynchronizer.apply.returns(Promise.resolve(true));
-    mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns(Promise.resolve(arbitraryBlockFromChain));
-    mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
-    mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
+    mockedLeavesSynchronizer.apply.resolves(true);
+    mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
+    mockedChainContract.blocks.resolves(arbitraryBlockFromChain);
+    mockedChainContract.getBlockVoters.resolves(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']);
+    mockedChainContract.getBlockVotes.resolves(BigNumber.from('1000000000000000000'));
 
     await blockSynchronizer.apply();
 
@@ -118,11 +115,11 @@ describe('BlockSynchronizer', () => {
   });
 
   it('marks completed blocks as "failed" if leaves synchronization finished unsuccessfully', async () => {
-    mockedLeavesSynchronizer.apply.returns(Promise.resolve(null));
-    mockedChainContract.getBlockHeight.returns(Promise.resolve(BigNumber.from(11)));
-    mockedChainContract.blocks.returns(Promise.resolve(arbitraryBlockFromChain));
-    mockedChainContract.getBlockVoters.returns(Promise.resolve(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']));
-    mockedChainContract.getBlockVotes.returns(Promise.resolve(BigNumber.from('1000000000000000000')));
+    mockedLeavesSynchronizer.apply.resolves(null);
+    mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
+    mockedChainContract.blocks.resolves(arbitraryBlockFromChain);
+    mockedChainContract.getBlockVoters.resolves(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']);
+    mockedChainContract.getBlockVotes.resolves(BigNumber.from('1000000000000000000'));
 
     await blockSynchronizer.apply();
 

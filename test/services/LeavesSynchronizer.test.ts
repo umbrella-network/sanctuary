@@ -63,9 +63,7 @@ describe('LeavesSynchronizer', () => {
       root: ethers.utils.keccak256('0x1234'), // overwrite inputForBlockModel with a wrong root hash
     });
 
-    mockedValidatorRegistryContract.validators.returns(Promise.resolve({
-      location: 'http://validator-address'
-    } as any));
+    mockedValidatorRegistryContract.validators.resolves({ location: 'http://validator-address' } as any);
 
     moxios.install();
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/height\/.+/, {
@@ -88,9 +86,7 @@ describe('LeavesSynchronizer', () => {
   it('returns "true" if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
 
-    mockedValidatorRegistryContract.validators.returns(Promise.resolve({
-      location: 'http://validator-address'
-    } as any));
+    mockedValidatorRegistryContract.validators.resolves(({ location: 'http://validator-address' } as any));
 
     moxios.install();
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/height\/.+/, {
@@ -112,9 +108,7 @@ describe('LeavesSynchronizer', () => {
   it('saves leaves correctly if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
 
-    mockedValidatorRegistryContract.validators.returns(Promise.resolve({
-      location: 'http://validator-address'
-    } as any));
+    mockedValidatorRegistryContract.validators.resolves({ location: 'http://validator-address' } as any);
 
     const treeData = {
       'ETH-USD': '0x' + LeafValueCoder.encode(100, LeafType.TYPE_FLOAT).toString('hex'),
@@ -150,9 +144,7 @@ describe('LeavesSynchronizer', () => {
       numericFcdKeys: [], // overwrite inputForBlockModel with an empty numericFcdKeys, we will check if LeavesSynchronizer will update it
     });
 
-    mockedValidatorRegistryContract.validators.returns(Promise.resolve({
-      location: 'http://validator-address'
-    } as any));
+    mockedValidatorRegistryContract.validators.resolves({ location: 'http://validator-address' } as any);
 
     const treeData = {
       'ETH-USD': '0x' + LeafValueCoder.encode(100, LeafType.TYPE_FLOAT).toString('hex'),
