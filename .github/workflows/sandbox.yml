@@ -3,8 +3,8 @@ name: sandbox
 
 on:
   push:
-    branches: 
-      - cicd
+    tags:
+      - sandbox
 
 jobs:
   main:
