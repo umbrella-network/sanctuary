@@ -5,6 +5,7 @@ import logger from './logger';
 import Settings from '../types/Settings';
 import Blockchain from './Blockchain';
 import ChainContract from '../contracts/ChainContract';
+import { AuthUtils } from '../services/AuthUtils';
 
 class Application {
   private static _instance: Application;
@@ -16,6 +17,7 @@ class Application {
     this.container.bind<Logger>('Logger').toConstantValue(logger);
     this.container.bind<ChainContract>(ChainContract).toSelf().inSingletonScope();
     this.container.bind<Blockchain>(Blockchain).toSelf().inSingletonScope();
+    this.container.bind<AuthUtils>(AuthUtils).toSelf().inSingletonScope();
   }
 
   public static get instance(): Application {
