@@ -11,7 +11,7 @@ class InfoController {
   constructor(
     @inject('Settings') private readonly settings: Settings,
     @inject(ValidatorRegistryContract) private readonly validatorRegistryContract: ValidatorRegistryContract,
-    @inject(ChainContract) private readonly chainContract: ChainContract,
+    @inject(ChainContract) private readonly chainContract: ChainContract
   ) {
     this.router = express().get('/', this.index);
   }

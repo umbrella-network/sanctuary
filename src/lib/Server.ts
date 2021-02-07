@@ -32,7 +32,7 @@ class Server {
     @inject(ApiKeysController) apiKeyController: ApiKeysController,
     @inject(ProjectsController) projectsController: ProjectsController,
     @inject(WalletAuthController) walletAuthController: WalletAuthController,
-    @inject(InfoController) infoController: InfoController,
+    @inject(InfoController) infoController: InfoController
   ) {
     this.port = settings.port;
 
