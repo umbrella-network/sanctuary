@@ -21,7 +21,7 @@ class InfoController {
       contractRegistryAddress: this.settings.blockchain.contracts.registry.address,
       validatorRegistryAddress: this.validatorRegistryContract.contract.address,
       chainContractAddress: this.chainContract.contract.address,
-      version: this.settings.version || null,
+      version: this.settings.version,
       environment: this.settings.environment || null,
     });
   };
