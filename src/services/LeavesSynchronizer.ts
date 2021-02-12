@@ -37,6 +37,7 @@ class LeavesSynchronizer {
           this.logger.warn(`Empty response.data.data for: ${url}`);
           continue;
         }
+        this.logger.info(response.data);
 
         const input = new Map<string, string>(Object.entries(response.data.data.data));
         const tree = this.sortedMerkleTreeFactory.apply(input);
