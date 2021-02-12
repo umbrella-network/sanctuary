@@ -1,18 +1,17 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import User from '../models/User';
 import Company from '../models/Company';
 import Project from '../models/Project';
-import Token from '../types/Token';
-import { getAuthorizationToken } from '../lib/auth';
+import { AuthUtils } from '../services/AuthUtils';
 
 @injectable()
 class UsersController {
   router: express.Application;
 
-  constructor() {
+  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
     this.router = express().post('/', this.create).get('/', this.find);
   }
 
@@ -54,13 +53,13 @@ class UsersController {
   };
 
   find = async (request: Request, response: Response): Promise<void> => {
-    const auth: Token = getAuthorizationToken(request.headers.authorization);
-    if (!auth) {
-      response.status(403).send();
+    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
+    if (!tokenResult.token) {
+      response.status(403).send({ error: tokenResult.errorMessage });
       return;
     }
 
-    const user = await User.findById(auth.userId);
+    const user = await User.findById(tokenResult.token.userId);
     const projects = await Project.find({ userId: user.id });
     const companies = await Company.find({ userId: user.id });
     response.send({
