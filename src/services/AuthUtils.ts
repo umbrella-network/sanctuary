@@ -1,6 +1,8 @@
 import { injectable } from 'inversify';
 import ApiKey from '../models/ApiKey';
 import { IApiKey } from '../models/ApiKey';
+import Token from '../types/Token';
+import * as jwt from 'jsonwebtoken';
 
 @injectable()
 export class AuthUtils {
@@ -24,5 +26,21 @@ export class AuthUtils {
     }
 
     return { apiKey };
+  }
+
+  getAuthorizationToken(
+    authorizationHeader: string
+  ): { token: Token; errorMessage?: void } | { token?: void; errorMessage: string } {
+    if (!authorizationHeader) {
+      return { errorMessage: 'No authorization header' };
+    }
+
+    const token = authorizationHeader.replace('Bearer ', '');
+    try {
+      const decoded = jwt.verify(token, process.env.AUTH_PRIVATE_KEY);
+      return { token: decoded as Token };
+    } catch {
+      return { errorMessage: 'Invalid authorization header' };
+    }
   }
 }

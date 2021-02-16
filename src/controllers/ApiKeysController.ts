@@ -1,10 +1,10 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
-import * as jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import Project from '../models/Project';
 import ApiKey from '../models/ApiKey';
 import cryptoRandomString from 'crypto-random-string';
+import { AuthUtils } from '../services/AuthUtils';
 
 interface ICreateApiKeyReqBody {
   projectId?: string;
@@ -25,7 +25,7 @@ interface IEditApiKeyReqBody {
 class ApiKeysController {
   router: express.Router;
 
-  constructor() {
+  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
     this.router = express
       .Router()
       .post('/', this.create)
@@ -35,24 +35,24 @@ class ApiKeysController {
   }
 
   create = async (request: Request<unknown, unknown, ICreateApiKeyReqBody>, response: Response): Promise<void> => {
-    const auth = getAuthorizationToken(request.headers.authorization);
+    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
 
-    if (!auth) {
-      response.status(403).send();
+    if (!tokenResult.token) {
+      response.status(403).send({ error: tokenResult.errorMessage });
       return;
     }
 
     const { projectId, description, expiresAt } = request.body;
 
     if (!projectId) {
-      response.status(400).send();
+      response.status(400).send({ error: 'No project ID was provided' });
       return;
     }
 
-    const project = await Project.findOne({ _id: projectId, ownerId: auth.userId });
+    const project = await Project.findOne({ _id: projectId, ownerId: tokenResult.token.userId });
 
     if (!project) {
-      response.status(404).send();
+      response.status(404).send({ error: 'Project with provided ID not found' });
       return;
     }
 
@@ -68,18 +68,18 @@ class ApiKeysController {
   };
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const auth = getAuthorizationToken(request.headers.authorization);
+    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
 
-    if (!auth) {
-      response.status(403).send();
+    if (!tokenResult.token) {
+      response.status(403).send({ error: tokenResult.errorMessage });
       return;
     }
 
     const projectIdFilter = request.query.projectId;
 
     const projectsProjectedByIds = projectIdFilter
-      ? await Project.find({ _id: projectIdFilter, ownerId: auth.userId }, { _id: true })
-      : await Project.find({ ownerId: auth.userId }, { _id: true });
+      ? await Project.find({ _id: projectIdFilter, ownerId: tokenResult.token.userId }, { _id: true })
+      : await Project.find({ ownerId: tokenResult.token.userId }, { _id: true });
 
     const projectIds: string[] = projectsProjectedByIds.map((project) => project._id);
 
@@ -89,29 +89,29 @@ class ApiKeysController {
   };
 
   delete = async (request: Request<{ id: string }>, response: Response): Promise<void> => {
-    const auth = getAuthorizationToken(request.headers.authorization);
+    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
 
-    if (!auth) {
-      response.status(403).send();
+    if (!tokenResult.token) {
+      response.status(403).send({ error: tokenResult.errorMessage });
       return;
     }
 
     const apiKeyId = request.params.id;
     if (!apiKeyId) {
-      response.status(400).send();
+      response.status(400).send({ error: 'No API key\'s ID was provided' });
       return;
     }
 
     const apiKey = await ApiKey.findById(apiKeyId);
     if (!apiKey) {
-      response.status(404).send();
+      response.status(404).send({ error: 'API key with provided ID not found' });
       return;
     }
 
     // Check if the current user is the owner of project
-    const project = await Project.findOne({ _id: apiKey.projectId, ownerId: auth.userId });
+    const project = await Project.findOne({ _id: apiKey.projectId, ownerId: tokenResult.token.userId });
     if (!project) {
-      response.status(403).send();
+      response.status(403).send({ error: 'You don\'t own this project' });
     }
 
     await apiKey.remove();
@@ -119,29 +119,29 @@ class ApiKeysController {
   };
 
   patch = async (request: Request<{ id: string }, unknown, IEditApiKeyReqBody>, response: Response): Promise<void> => {
-    const auth = getAuthorizationToken(request.headers.authorization);
+    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
 
-    if (!auth) {
-      response.status(403).send();
+    if (!tokenResult.token) {
+      response.status(403).send({ error: tokenResult.errorMessage });
       return;
     }
 
     const apiKeyId = request.params.id;
     if (!apiKeyId) {
-      response.status(400).send();
+      response.status(400).send({ error: 'No API key\'s ID was provided' });
       return;
     }
 
     const apiKey = await ApiKey.findById(apiKeyId);
     if (!apiKey) {
-      response.status(404).send();
+      response.status(404).send({ error: 'API key with provided ID not found' });
       return;
     }
 
     // Check if the current user is the owner of project
-    const project = await Project.findOne({ _id: apiKey.projectId, ownerId: auth.userId });
+    const project = await Project.findOne({ _id: apiKey.projectId, ownerId: tokenResult.token.userId });
     if (!project) {
-      response.status(403).send();
+      response.status(403).send({ error: 'You don\'t own this project' });
     }
 
     const { description, expiresAt } = request.body;
@@ -154,13 +154,3 @@ class ApiKeysController {
 }
 
 export default ApiKeysController;
-
-function getAuthorizationToken(authorizationHeader: string): Record<string, unknown> | undefined {
-  const token = authorizationHeader.replace('Bearer ', '');
-  try {
-    const decoded = jwt.verify(token, process.env.AUTH_PRIVATE_KEY);
-    return decoded as Record<string, unknown>;
-  } catch {
-    return;
-  }
-}
