@@ -15,7 +15,7 @@ const UserSchema: Schema = new Schema({
     lowercase: true,
     validate: {
       validator: (email: string) => {
-        return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,7})?$/.test(email);
+        return /^([\w-.]+@([\w-]+\.)+[\w-]{2,7})?$/.test(email);
       },
     },
   },
@@ -25,6 +25,7 @@ const UserSchema: Schema = new Schema({
 
 UserSchema.index({ email: 1 }, { unique: true });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 UserSchema.post('save', (user) => {
   // Send verification request
 });
