@@ -1,4 +1,6 @@
 import Settings from '../types/Settings';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const packageJson = require('../../package.json');
 
 const settings: Settings = {
   port: parseInt(process.env.PORT || '3000'),
@@ -33,6 +35,8 @@ const settings: Settings = {
     tokenExpiry: 60 * 60 * 24 * 7, // 1 week
     walletVerificationThreshold: 10,
   },
+  environment: process.env.ENVIRONMENT,
+  version: packageJson.version,
 };
 
 export default settings;

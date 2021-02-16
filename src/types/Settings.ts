@@ -31,6 +31,8 @@ type Settings = {
     tokenExpiry: number;
     walletVerificationThreshold: number;
   };
+  version: string;
+  environment?: string;
 };
 
 export default Settings;

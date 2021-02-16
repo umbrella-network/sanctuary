@@ -14,6 +14,7 @@ import Settings from '../types/Settings';
 import ApiKeysController from '../controllers/ApiKeysController';
 import ProjectsController from '../controllers/ProjectsController';
 import WalletAuthController from '../controllers/WalletAuthController';
+import InfoController from '../controllers/InfoController';
 
 @injectable()
 class Server {
@@ -30,7 +31,8 @@ class Server {
     @inject(UsersController) usersController: UsersController,
     @inject(ApiKeysController) apiKeyController: ApiKeysController,
     @inject(ProjectsController) projectsController: ProjectsController,
-    @inject(WalletAuthController) walletAuthController: WalletAuthController
+    @inject(WalletAuthController) walletAuthController: WalletAuthController,
+    @inject(InfoController) infoController: InfoController
   ) {
     this.port = settings.port;
 
@@ -48,6 +50,7 @@ class Server {
       .use('/api-keys', apiKeyController.router)
       .use('/projects', projectsController.router)
       .use('/wallet-auth', walletAuthController.router)
+      .use('/info', infoController.router)
       .options('*', cors());
 
     this.server = http.createServer(this.router);
