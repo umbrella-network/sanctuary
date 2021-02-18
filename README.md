@@ -40,6 +40,16 @@ npm run start:dev:worker -- --worker BlockSynchronizerWorker
 npm run start:dev
 ```
 
+### Containers (Docker Compose)
+```shell script
+
+# Start containers
+npm run containers
+
+#Kill all containers
+npm run kill_containers
+```
+
 ### Live
 
 ```shell script

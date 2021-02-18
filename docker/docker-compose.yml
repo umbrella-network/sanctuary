@@ -1,0 +1,71 @@
+version: '3'
+
+services:
+  api:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../api:/usr/src/app/api
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env-compose
+    environment:
+      MONGODB_URL: mongodb://mongo:password@mongo:27017
+      REDIS_URL: redis://redis:6379/0
+    command: ["npm", "start"]
+  worker:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../api:/usr/src/app/api
+    depends_on:
+      - mongo
+      - redis
+    env_file:
+      - ../.env-compose
+    environment:
+      MONGODB_URL: mongodb://mongo:password@mongo:27017
+      REDIS_URL: redis://redis:6379/0
+    command:  ["npm", "run", "start:scheduler"]
+
+  scheduler:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ../api:/usr/src/app/api
+    depends_on:
+      - mongo
+      - redis
+    env_file:
+      - ../.env-compose
+    environment:
+      MONGODB_URL: mongodb://mongo:password@mongo:27017
+      REDIS_URL: redis://redis:6379/0
+    command:  ["npm", "run", "start:worker", "--", "--worker", "BlockSynchronizerWorker"]
+
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+    env_file:
+      - ../.env
+  tools:
+    image: praqma/network-multitool
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    command: mongod
+ 
