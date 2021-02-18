@@ -18,7 +18,7 @@ services:
       MONGODB_URL: mongodb://mongo:password@mongo:27017
       REDIS_URL: redis://redis:6379/0
     command: ["npm", "start"]
-  worker:
+  scheduler:
     build:
       context: ../
       dockerfile: docker/Dockerfile
@@ -34,7 +34,7 @@ services:
       REDIS_URL: redis://redis:6379/0
     command:  ["npm", "run", "start:scheduler"]
 
-  scheduler:
+  worker:
     build:
       context: ../
       dockerfile: docker/Dockerfile
