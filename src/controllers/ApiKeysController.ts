@@ -111,7 +111,7 @@ class ApiKeysController {
     // Check if the current user is the owner of project
     const project = await Project.findOne({ _id: apiKey.projectId, ownerId: tokenResult.token.userId });
     if (!project) {
-      response.status(403).send({ error: "You don't own this project" });
+      response.status(403).send({ error: 'You do not own this project' });
     }
 
     await apiKey.remove();
@@ -141,7 +141,7 @@ class ApiKeysController {
     // Check if the current user is the owner of project
     const project = await Project.findOne({ _id: apiKey.projectId, ownerId: tokenResult.token.userId });
     if (!project) {
-      response.status(403).send({ error: "You don't own this project" });
+      response.status(403).send({ error: 'You do not own this project' });
     }
 
     const { description, expiresAt } = request.body;
