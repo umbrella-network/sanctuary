@@ -16,7 +16,9 @@ class ChainContract {
   }
 
   resolveContract = async (): Promise<Contract> => {
-    if (this.contract) { return this.contract }
+    if (this.contract) {
+      return this.contract;
+    }
 
     const registry = new ContractRegistry(
       this.blockchain.provider,
