@@ -7,16 +7,26 @@ import { ContractRegistry, ABI } from '@umb-network/toolbox';
 @injectable()
 class ValidatorRegistryContract {
   contract!: Contract;
+  settings!: Settings;
+  blockchain!: Blockchain;
 
   constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
-    new ContractRegistry(blockchain.provider, settings.blockchain.contracts.registry.address)
-      .getAddress(settings.blockchain.contracts.validatorRegistry.name)
-      .then((validatorRegistryAddress: string) => {
-        this.contract = new Contract(validatorRegistryAddress, ABI.validatorRegistryAbi, blockchain.provider);
-      });
+    this.settings = settings;
+    this.blockchain = blockchain;
   }
 
-  validators = async (id: string): Promise<utils.Result> => this.contract.validators(id);
+  resolveContract = async (): Promise<Contract> => {
+    const registry = new ContractRegistry(
+      this.blockchain.provider,
+      this.settings.blockchain.contracts.registry.address
+    );
+
+    const address = await registry.getAddress(this.settings.blockchain.contracts.validatorRegistry.name);
+    this.contract = new Contract(address, ABI.validatorRegistryAbi, this.blockchain.provider);
+    return this.contract;
+  }
+
+  validators = async (id: string): Promise<utils.Result> => (await this.resolveContract()).validators(id);
 }
 
 export default ValidatorRegistryContract;
