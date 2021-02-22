@@ -7,22 +7,36 @@ import { ContractRegistry, ABI } from '@umb-network/toolbox';
 @injectable()
 class ChainContract {
   contract!: Contract;
+  settings!: Settings;
+  blockchain!: Blockchain;
 
   constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
-    new ContractRegistry(blockchain.provider, settings.blockchain.contracts.registry.address)
-      .getAddress(settings.blockchain.contracts.chain.name)
-      .then((chainAddress: string) => {
-        this.contract = new Contract(chainAddress, ABI.chainAbi, blockchain.provider);
-      });
+    this.settings = settings;
+    this.blockchain = blockchain;
   }
 
-  getLeaderAddress = async (): Promise<string> => this.contract.getLeaderAddress();
-  getBlockHeight = async (): Promise<BigNumber> => this.contract.getBlockHeight();
-  getBlockVoters = async (height: number): Promise<string[]> => this.contract.getBlockVoters(height);
-  getBlockVotes = async (blockHeight: number, voter: string): Promise<BigNumber> => {
-    return this.contract.getBlockVotes(blockHeight, voter);
+  resolveContract = async (): Promise<Contract> => {
+    if (this.contract) {
+      return this.contract;
+    }
+
+    const registry = new ContractRegistry(
+      this.blockchain.provider,
+      this.settings.blockchain.contracts.registry.address
+    );
+
+    const chainAddress = await registry.getAddress(this.settings.blockchain.contracts.chain.name);
+    this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.provider);
+    return this.contract;
   };
-  blocks = async (index: number): Promise<utils.Result> => this.contract.blocks(index);
+
+  getLeaderAddress = async (): Promise<string> => (await this.resolveContract()).getLeaderAddress();
+  getBlockHeight = async (): Promise<BigNumber> => (await this.resolveContract()).getBlockHeight();
+  getBlockVoters = async (height: number): Promise<string[]> => (await this.resolveContract()).getBlockVoters(height);
+  getBlockVotes = async (blockHeight: number, voter: string): Promise<BigNumber> => {
+    return (await this.resolveContract()).getBlockVotes(blockHeight, voter);
+  };
+  blocks = async (index: number): Promise<utils.Result> => (await this.resolveContract()).blocks(index);
 }
 
 export default ChainContract;

@@ -13,3 +13,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - use `@umb-network/toolbox` for fetching ABIs for contracts
+
+### Fixed
+- uses contract registry without async in constructor
