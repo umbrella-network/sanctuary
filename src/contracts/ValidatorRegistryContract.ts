@@ -16,6 +16,8 @@ class ValidatorRegistryContract {
   }
 
   resolveContract = async (): Promise<Contract> => {
+    if (this.contract) { return this.contract }
+
     const registry = new ContractRegistry(
       this.blockchain.provider,
       this.settings.blockchain.contracts.registry.address
