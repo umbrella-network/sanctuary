@@ -24,7 +24,7 @@ class ChainContract {
     const chainAddress = await registry.getAddress(this.settings.blockchain.contracts.chain.name);
     this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.provider);
     return this.contract;
-  }
+  };
 
   getLeaderAddress = async (): Promise<string> => (await this.resolveContract()).getLeaderAddress();
   getBlockHeight = async (): Promise<BigNumber> => (await this.resolveContract()).getBlockHeight();

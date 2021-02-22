@@ -24,7 +24,7 @@ class ValidatorRegistryContract {
     const address = await registry.getAddress(this.settings.blockchain.contracts.validatorRegistry.name);
     this.contract = new Contract(address, ABI.validatorRegistryAbi, this.blockchain.provider);
     return this.contract;
-  }
+  };
 
   validators = async (id: string): Promise<utils.Result> => (await this.resolveContract()).validators(id);
 }
