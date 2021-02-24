@@ -1,0 +1,257 @@
+openapi: 3.0.0
+info:
+  description: "Umbrella Network API"
+  version: "1.0.0"
+  title: "Umbrella Network API"
+  termsOfService: "https://umb.network"
+  contact:
+    email: "nm@umb.network"
+servers:
+  - url: "api.umb.network"
+    description: "production"
+security:
+- bearerAuth: []
+paths:
+  /projects:
+    get:
+      summary: "List projects"
+      responses:
+        "403":
+          description: "Unauthenticated request"
+        "200":
+          description: "List of projects"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectsResponse"
+    post:
+      summary: "Create a project"
+      requestBody:
+        description: "Project data"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Project"
+      responses:
+        "403":
+          description: "Unauthenticated request"
+        "400":
+          description: "No project name provided"
+        "201":
+          description: "Project created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+  /users:
+    get:
+      summary: "Get current user account"
+      responses:
+        "403":
+          description: "Unauthenticated request"
+        "200":
+          description: "Retrieved current user"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAccountSummary"
+    post:
+      summary: "Create an account"
+      requestBody:
+        description: "Account credentials"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Auth"
+      responses:
+        "422":
+          description: "Invalid email or password"
+        "201":
+          description: "Account created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth:
+    post:
+      summary: "Authenticate an account"
+      requestBody:
+        description: "Authentication request"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Auth"
+      responses:
+        "403":
+          description: "Invalid email or password"
+        "200":
+          description: "Account created"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  token:
+                    type: "string"
+  "/wallet-auth":
+    post:
+      summary: "Authenticate using wallet address"
+      requestBody:
+        description: "Wallet address request"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletAuthRequest"
+      responses:
+        "400":
+          description: "Provided timestamp expired before verifying."
+        "200":
+          description: "Wallet authenticated"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  token:
+                    type: "string"
+  "/api-keys":
+    get:
+      summary: Get all API keys
+      security:
+        - bearerAuth: []
+      parameters:
+      - in: "query"
+        name: "projectId"
+        description: "Project by which to get API Keys."
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "API Keys"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIKey"
+    post:
+      summary: "Create an API Key"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/APIKeyRequest"
+      responses:
+        "200":
+          description: "Created API Key"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIKey"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Auth:
+      type: "object"
+      required:
+        - "email"
+        - "password"
+      properties:
+        email:
+          type: "string"
+        password:
+          type: "string"
+    User:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        email:
+          type: "string"
+        verified:
+          type: "boolean"
+    UserAccountSummary:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        email:
+          type: "string"
+        verified:
+          type: "boolean"
+        projects:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Project"
+        companies:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Company"
+    ProjectsResponse:
+      type: "object"
+      properties:
+        projects:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Project"
+    Project:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+    Company:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        name:
+          type: "string"
+    APIKey:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        key:
+          type: "string"
+        description:
+          type: "string"
+        projectId:
+          type: "string"
+        createdAt:
+          type: "string"
+          format: "date-time"
+        expiresAt:
+          type: "string"
+          format: "date-time"
+    WalletAuthRequest:
+      type: "object"
+      required:
+        - "verifiedTime"
+        - "signature"
+      properties:
+        verifiedTime:
+          type: integer
+          format: int64
+          description: "Unix epoch time that was used for verifying the signature."
+        signature:
+          type: string
+          description: "Signature string provided by the user to verify."
+    APIKeyRequest:
+      type: "object"
+      required:
+        - "projectId"
+      properties:
+        projectId:
+          type: "string"
+          description: "Project to create the API key for."
+        description:
+          type: "string"
+          description: "Description for the API key."
+        expiresAt:
+          type: "string"
+          format: "date-time"
+          description: "Expiration for the API key."
