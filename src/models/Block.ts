@@ -12,6 +12,7 @@ export interface IBlock extends Document {
   voters: Array<string>;
   votes: Map<string, string>;
   numericFcdKeys: Array<string>;
+  numericFcdValues: Array<number>;
 }
 
 const BlockSchema: Schema = new Schema({
@@ -27,6 +28,7 @@ const BlockSchema: Schema = new Schema({
   voters: { type: [String], required: false, default: [] },
   votes: { type: Map, required: false, default: {} },
   numericFcdKeys: { type: [String], required: false, default: [] },
+  numericFcdValues: { type: [Number], required: false, default: [] },
 });
 
 BlockSchema.index({ height: -1 });

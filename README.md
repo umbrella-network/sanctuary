@@ -22,7 +22,7 @@ BLOCKCHAIN_PROVIDER_URL=https://kovan.infura.io/v3/:id # Leave it empty if runni
 
 # Commands
 
-## Running 
+## Running
 
 ### Locally (Development)
 
@@ -92,6 +92,7 @@ GET /blocks
     "voters": ["0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F"],
     "votes": {},
     "numericFcdKeys": ["eth-eur", "eth-usd"],
+    "numericFcdValues": [481.92, 587.56],
     "_id": "block::83",
     "height": 83,
     "__v": 1,

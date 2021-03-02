@@ -8,4 +8,5 @@ export interface BlockFromPegasus {
   root: string;
   data: Record<string, HexStringWith0x>;
   numericFcdKeys: Array<string>;
+  numericFcdValues: Array<number>;
 }
