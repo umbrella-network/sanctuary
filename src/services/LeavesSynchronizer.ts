@@ -43,7 +43,7 @@ class LeavesSynchronizer {
         const root = tree.getRoot();
 
         if (root == block.root) {
-          await this.updateNumericFCD(block.id, response.data.data.numericFcdKeys);
+          await this.updateNumericFCD(block.id, response.data.data.numericFcdKeys, response.data.data.numericFcdValues);
 
           await input.forEach(async (value: string, key: string) => {
             const proof = tree.getProofForKey(key);
@@ -81,8 +81,12 @@ class LeavesSynchronizer {
     return success;
   }
 
-  private updateNumericFCD = async (blockId: string, numericFcdKeys: string[]) => {
-    await Block.findOneAndUpdate({ _id: blockId }, { numericFcdKeys: numericFcdKeys }, { new: false, upsert: true });
+  private updateNumericFCD = async (blockId: string, numericFcdKeys: string[], numericFcdValues: number[]) => {
+    await Block.findOneAndUpdate(
+      { _id: blockId },
+      { numericFcdKeys: numericFcdKeys, numericFcdValues: numericFcdValues },
+      { new: false, upsert: true }
+    );
   };
 }
 

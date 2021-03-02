@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.2.0] - 2021-03-02
+### Added
+- first class data values
+
+### Fixed
+- remove sensitive data to .env
+
 ## [0.1.0] - 2021-02-24
 ### Added
 - initial version

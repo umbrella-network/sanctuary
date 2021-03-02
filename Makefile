@@ -1,6 +1,7 @@
-REPOSITORY=008205684207.dkr.ecr.us-east-2.amazonaws.com/sanctuary
+include .env
+
 TAG=`git rev-parse --short HEAD`
-IMAGE="$(REPOSITORY):v$(TAG)"
+IMAGE="$(AWS_REPOSITORY)/sanctuary:v$(TAG)"
 
 default: build
 
@@ -9,7 +10,7 @@ build:
 	@docker build -t $(IMAGE) .
 
 login:
-	@aws ecr get-login-password  | docker login --username AWS --password-stdin 008205684207.dkr.ecr.us-east-2.amazonaws.com
+	@aws ecr get-login-password  | docker login --username AWS --password-stdin $(AWS_REPOSITORY)
 
 push: login
 	@echo "## Pushing image to AWS ##"
