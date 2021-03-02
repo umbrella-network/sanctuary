@@ -1,9 +1,9 @@
-name: sandbox
+name: prod
 
 on:
   push:
     tags:
-      - sandbox
+      - prod
 
 jobs:
   main:
