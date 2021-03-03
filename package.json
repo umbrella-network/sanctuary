@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@typegoose/typegoose": "^7.4.1",
-    "@umb-network/toolbox": "^0.4.0",
+    "@umb-network/toolbox": "0.6.1",
     "axios": "^0.20.0",
     "bcrypt": "^5.0.0",
     "bullmq": "^1.9.0",
