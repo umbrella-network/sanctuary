@@ -64,7 +64,7 @@ class ApiKeysController {
       expiresAt: expiresAt ? new Date(expiresAt) : null,
     });
 
-    response.send(apiKey);
+    response.status(201).send(apiKey);
   };
 
   index = async (request: Request, response: Response): Promise<void> => {

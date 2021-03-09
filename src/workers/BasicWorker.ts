@@ -10,7 +10,7 @@ abstract class BasicWorker {
   #queue!: Bull.Queue;
   #worker!: Bull.Worker;
 
-  abstract async apply(job: Bull.Job): Promise<void>;
+  abstract apply(job: Bull.Job): Promise<void>;
 
   constructor(@inject('Settings') settings: Settings) {
     this.connection = new IORedis(settings.redis.url);

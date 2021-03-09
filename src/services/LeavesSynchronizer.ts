@@ -1,7 +1,6 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
-import Blockchain from '../lib/Blockchain';
 import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
@@ -10,10 +9,9 @@ import { BlockFromPegasus } from '../types/BlockFromPegasus';
 
 @injectable()
 class LeavesSynchronizer {
-  @inject('Logger') logger!: Logger;
-  @inject(Blockchain) blockchain!: Blockchain;
-  @inject(ValidatorRegistryContract) validatorRegistryContract!: ValidatorRegistryContract;
-  @inject(SortedMerkleTreeFactory) sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
+  @inject('Logger') private logger!: Logger;
+  @inject(ValidatorRegistryContract) private validatorRegistryContract!: ValidatorRegistryContract;
+  @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
 
   async apply(blockId: string): Promise<boolean> {
     const block = await Block.findOne({ _id: blockId });
@@ -45,27 +43,29 @@ class LeavesSynchronizer {
         if (root == block.root) {
           await this.updateNumericFCD(block.id, response.data.data.numericFcdKeys, response.data.data.numericFcdValues);
 
-          await input.forEach(async (value: string, key: string) => {
-            const proof = tree.getProofForKey(key);
+          await Promise.all(
+            [...input.entries()].map(async ([key, value]: [string, string]) => {
+              const proof = tree.getProofForKey(key);
 
-            const leaf = await Leaf.findOneAndUpdate(
-              {
-                _id: `leaf::${block.id}::${key}`,
-                blockId: block.id,
-                key: key,
-              },
-              {
-                value: value,
-                proof: proof,
-              },
-              {
-                new: true,
-                upsert: true,
-              }
-            );
+              const leaf = await Leaf.findOneAndUpdate(
+                {
+                  _id: `leaf::${block.id}::${key}`,
+                  blockId: block.id,
+                  key: key,
+                },
+                {
+                  value: value,
+                  proof: proof,
+                },
+                {
+                  new: true,
+                  upsert: true,
+                }
+              );
 
-            this.logger.info(`Created new leaf: ${leaf.id}`);
-          });
+              this.logger.info(`Created new leaf: ${leaf.id}`);
+            })
+          );
 
           success = true;
           break;

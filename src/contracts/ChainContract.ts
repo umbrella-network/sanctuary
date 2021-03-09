@@ -1,8 +1,8 @@
-import { inject, injectable } from 'inversify';
-import { BigNumber, Contract, utils } from 'ethers';
+import {inject, injectable} from 'inversify';
+import {BigNumber, Contract, utils} from 'ethers';
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
-import { ContractRegistry, ABI } from '@umb-network/toolbox';
+import {ABI, ContractRegistry} from '@umb-network/toolbox';
 
 @injectable()
 class ChainContract {
@@ -30,13 +30,25 @@ class ChainContract {
     return this.contract;
   };
 
-  getLeaderAddress = async (): Promise<string> => (await this.resolveContract()).getLeaderAddress();
-  getBlockHeight = async (): Promise<BigNumber> => (await this.resolveContract()).getBlockHeight();
-  getBlockVoters = async (height: number): Promise<string[]> => (await this.resolveContract()).getBlockVoters(height);
-  getBlockVotes = async (blockHeight: number, voter: string): Promise<BigNumber> => {
+  async getLeaderAddress(): Promise<string> {
+    return (await this.resolveContract()).getLeaderAddress();
+  }
+
+  async getBlockHeight(): Promise<BigNumber> {
+    return (await this.resolveContract()).getBlockHeight();
+  }
+
+  async getBlockVoters(height: number): Promise<string[]> {
+    return (await this.resolveContract()).getBlockVoters(height);
+  }
+
+  async getBlockVotes(blockHeight: number, voter: string): Promise<BigNumber> {
     return (await this.resolveContract()).getBlockVotes(blockHeight, voter);
-  };
-  blocks = async (index: number): Promise<utils.Result> => (await this.resolveContract()).blocks(index);
+  }
+
+  async blocks(index: number): Promise<utils.Result> {
+    return (await this.resolveContract()).blocks(index);
+  }
 }
 
 export default ChainContract;

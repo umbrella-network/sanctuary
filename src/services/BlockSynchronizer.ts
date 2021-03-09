@@ -1,20 +1,14 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import ChainContract from '../contracts/ChainContract';
-import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
-import Blockchain from '../lib/Blockchain';
 import Block from '../models/Block';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
-import Settings from '../types/Settings';
 
 @injectable()
 class BlockSynchronizer {
-  @inject('Logger') logger!: Logger;
-  @inject('Settings') settings!: Settings;
-  @inject(Blockchain) blockchain!: Blockchain;
-  @inject(ChainContract) chainContract!: ChainContract;
-  @inject(ValidatorRegistryContract) validatorRegistryContract!: ValidatorRegistryContract;
-  @inject(LeavesSynchronizer) leavesSynchronizer!: LeavesSynchronizer;
+  @inject('Logger') private logger!: Logger;
+  @inject(ChainContract) private chainContract!: ChainContract;
+  @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
 
   async apply(): Promise<void> {
     const currentBlockHeight = (await this.chainContract.getBlockHeight()).toNumber();
@@ -70,7 +64,7 @@ class BlockSynchronizer {
     }
   }
 
-  async syncFinished(id: string): Promise<void> {
+  private async syncFinished(id: string): Promise<void> {
     const block = await Block.findOne({ _id: id });
     const height = block.height;
     const sideBlock = await this.chainContract.blocks(height);
