@@ -6,7 +6,7 @@ import {ABI, ContractRegistry} from '@umb-network/toolbox';
 
 @injectable()
 class ChainContract {
-  contract!: Contract;
+  registry!: ContractRegistry;
   settings!: Settings;
   blockchain!: Blockchain;
 
@@ -16,18 +16,15 @@ class ChainContract {
   }
 
   resolveContract = async (): Promise<Contract> => {
-    if (this.contract) {
-      return this.contract;
+    if (!this.registry) {
+      this.registry = new ContractRegistry(
+        this.blockchain.provider,
+        this.settings.blockchain.contracts.registry.address,
+      );
     }
 
-    const registry = new ContractRegistry(
-      this.blockchain.provider,
-      this.settings.blockchain.contracts.registry.address
-    );
-
-    const chainAddress = await registry.getAddress(this.settings.blockchain.contracts.chain.name);
-    this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.provider);
-    return this.contract;
+    const chainAddress = await this.registry.getAddress(this.settings.blockchain.contracts.chain.name);
+    return new Contract(chainAddress, ABI.chainAbi, this.blockchain.provider);
   };
 
   async getLeaderAddress(): Promise<string> {

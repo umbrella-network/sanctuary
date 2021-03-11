@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.2.3] - 2021-03-11
+### Fixed
+- do not cache `Chain` address, pull it from registry
+- fix `/info` endpoint
+
 ## [0.2.2] - 2021-03-03
 ### Changed
 - updated package.json version
