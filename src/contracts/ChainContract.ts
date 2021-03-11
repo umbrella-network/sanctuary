@@ -19,7 +19,7 @@ class ChainContract {
     if (!this.registry) {
       this.registry = new ContractRegistry(
         this.blockchain.provider,
-        this.settings.blockchain.contracts.registry.address,
+        this.settings.blockchain.contracts.registry.address
       );
     }
 
