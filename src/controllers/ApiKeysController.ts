@@ -98,7 +98,7 @@ class ApiKeysController {
 
     const apiKeyId = request.params.id;
     if (!apiKeyId) {
-      response.status(400).send({ error: "No API key's ID was provided" });
+      response.status(400).send({ error: 'No API key`s ID was provided' });
       return;
     }
 
@@ -128,7 +128,7 @@ class ApiKeysController {
 
     const apiKeyId = request.params.id;
     if (!apiKeyId) {
-      response.status(400).send({ error: "No API key's ID was provided" });
+      response.status(400).send({ error: 'No API key`s ID was provided' });
       return;
     }
 
