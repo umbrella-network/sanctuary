@@ -35,7 +35,7 @@ const settings: Settings = {
     tokenExpiry: 60 * 60 * 24 * 7, // 1 week
     walletVerificationThreshold: 10,
   },
-  environment: process.env.ENVIRONMENT,
+  environment: process.env.ENVIRONMENT || process.env.NODE_ENV,
   version: packageJson.version,
 };
 
