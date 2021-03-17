@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 
 
+## [0.2.6] - 2021-03-17
+### Fixed
+- do not cache `ValidatorRegistry` address, pull it from registry
+
 ## [0.2.5] - 2021-03-11
 ### Fixed
 - github action prod workflow
