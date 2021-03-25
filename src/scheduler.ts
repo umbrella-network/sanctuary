@@ -1,4 +1,3 @@
-require('newrelic');
 import './boot';
 import Application from './lib/Application';
 import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
