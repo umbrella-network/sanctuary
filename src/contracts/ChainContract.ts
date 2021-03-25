@@ -1,8 +1,8 @@
-import {inject, injectable} from 'inversify';
-import {BigNumber, Contract, utils} from 'ethers';
+import { inject, injectable } from 'inversify';
+import { BigNumber, Contract, utils } from 'ethers';
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
-import {ABI, ContractRegistry} from '@umb-network/toolbox';
+import { ABI, ContractRegistry } from '@umb-network/toolbox';
 
 @injectable()
 class ChainContract {
