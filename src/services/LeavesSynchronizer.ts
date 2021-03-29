@@ -21,11 +21,10 @@ class LeavesSynchronizer {
     );
 
     let success = false;
-    const validatorRegistry = await this.validatorRegistryContract.resolveContract();
 
     for (const voterIndex in block.voters) {
       const voterId = block.voters[voterIndex];
-      const validator = await validatorRegistry.validators(voterId);
+      const validator = await this.validatorRegistryContract.validators(voterId);
       const location = validator['location'];
       const url = new URL(`${location}/blocks/height/${block.height}`);
       this.logger.info(`Resolving leaves from: ${url}`);

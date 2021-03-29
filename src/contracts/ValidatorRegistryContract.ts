@@ -15,7 +15,7 @@ class ValidatorRegistryContract {
     this.blockchain = blockchain;
   }
 
-  resolveContract = async (): Promise<Contract> => {
+  async resolveContract(): Promise<Contract> {
     if (!this.registry) {
       this.registry = new ContractRegistry(
         this.blockchain.provider,
@@ -25,9 +25,11 @@ class ValidatorRegistryContract {
 
     const address = await this.registry.getAddress(this.settings.blockchain.contracts.validatorRegistry.name);
     return new Contract(address, ABI.validatorRegistryAbi, this.blockchain.provider);
-  };
+  }
 
-  validators = async (id: string): Promise<utils.Result> => (await this.resolveContract()).validators(id);
+  async validators(id: string): Promise<utils.Result> {
+    return (await this.resolveContract()).validators(id);
+  }
 }
 
 export default ValidatorRegistryContract;
