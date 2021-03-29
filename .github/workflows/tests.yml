@@ -52,6 +52,7 @@ jobs:
           echo "AUTH_PRIVATE_KEY=keyboard cat" >> ./.testing.env;
           echo "APP_URL=http://localhost:3003" >> ./.testing.env;
           echo "MONGODB_URL=mongodb://localhost:27017/sanctuary" >> ./.testing.env;
-
-      - name: Run End-to-end tests
-        run: npm run test:e2e
+      
+      # Removing E2E tests for now
+      # - name: Run End-to-end tests
+      #   run: npm run test:e2e
