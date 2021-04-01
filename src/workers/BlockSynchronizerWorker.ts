@@ -4,19 +4,21 @@ import { inject, injectable } from 'inversify';
 import BlockSynchronizer from '../services/BlockSynchronizer';
 import BasicWorker from './BasicWorker';
 import Settings from '../types/Settings';
+import ChainSynchronizer from '../services/ChainSynchronizer';
 
 @injectable()
 class BlockSynchronizerWorker extends BasicWorker {
   @inject('Logger') logger!: Logger;
   @inject('Settings') settings!: Settings;
   @inject(BlockSynchronizer) blockSynchronizer!: BlockSynchronizer;
+  @inject(ChainSynchronizer) chainSynchronizer!: ChainSynchronizer;
 
   apply = async (job: Bull.Job): Promise<void> => {
     if (this.isStale(job)) return;
 
     try {
       this.logger.info(`Running BlockSynchronizerWorker at  ${new Date().toISOString()}`);
-      await this.blockSynchronizer.apply();
+      await Promise.all([this.chainSynchronizer.apply(), this.blockSynchronizer.apply()]);
     } catch (e) {
       this.logger.error(e);
     }

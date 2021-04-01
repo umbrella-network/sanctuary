@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
+import { BlockStatus } from '../types/BlockStatuses';
 
 @injectable()
 class BlocksController {
@@ -20,10 +21,14 @@ class BlocksController {
       return;
     }
 
-    const offset: number = parseInt(<string>request.query.offset) || 0;
-    const limit: number = parseInt(<string>request.query.limit) || 100;
+    const offset: number = parseInt(<string>request.query.offset || '0');
+    const limit: number = Math.min(parseInt(<string>request.query.limit || '100', 10), 100);
 
-    const blocks = await Block.find({ status: 'finalized' }).skip(offset).limit(limit).sort({ height: -1 }).exec();
+    const blocks = await Block.find({ status: BlockStatus.Finalized })
+      .skip(offset)
+      .limit(limit)
+      .sort({ height: -1 })
+      .exec();
 
     response.send(blocks);
   };

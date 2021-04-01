@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
+import { BlockStatus } from '../types/BlockStatuses';
 
 @injectable()
 class ProofsController {
@@ -20,7 +21,7 @@ class ProofsController {
       return;
     }
 
-    const block = await Block.findOne({ status: 'finalized' }).sort({ height: -1 }).limit(1);
+    const block = await Block.findOne({ status: BlockStatus.Finalized }).sort({ height: -1 }).limit(1);
 
     if (block) {
       const keys = (request.query.keys || []) as string[];
