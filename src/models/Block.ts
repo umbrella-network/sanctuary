@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBlock extends Document {
+  chainAddress: string;
   height: number;
   status: string;
   anchor: string;
@@ -17,6 +18,7 @@ export interface IBlock extends Document {
 
 const BlockSchema: Schema = new Schema({
   _id: { type: String, required: true },
+  chainAddress: { type: String, required: true, unique: false },
   height: { type: Number, required: true, unique: true },
   status: { type: String, required: false },
   anchor: { type: String, required: false },

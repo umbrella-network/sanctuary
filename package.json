@@ -7,11 +7,11 @@
   },
   "scripts": {
     "lint": "eslint ./src/**/*.ts ./test/**/*.ts",
-    "lint-fix": "eslint ./src/**/*.ts ./test/**/*.ts --fix",
+    "lint:fix": "eslint ./src/**/*.ts ./test/**/*.ts --fix",
     "clean": "rimraf dist",
     "compile": "tsc -p .",
     "prettier": "prettier --config .prettierrc 'src/**/*.ts' --check",
-    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "prettier:format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "copy:assets": "cpx 'src/**/*.{graphql,html,png,json}' dist",
     "start:dev": "tsnd --respawn src/server.ts",
     "start:dev:worker": "tsnd --respawn src/worker.ts",
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@typegoose/typegoose": "^7.4.1",
-    "@umb-network/toolbox": "^0.4.0",
+    "@umb-network/toolbox": "^0.9.0",
     "axios": "^0.20.0",
     "bcrypt": "^5.0.0",
     "bullmq": "^1.9.0",
