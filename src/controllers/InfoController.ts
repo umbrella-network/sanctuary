@@ -20,7 +20,7 @@ class InfoController {
     response.send({
       contractRegistryAddress: this.settings.blockchain.contracts.registry.address,
       validatorRegistryAddress: (await this.validatorRegistryContract.resolveContract()).address,
-      chainContractAddress: (await this.chainContract.resolveContract()).address,
+      chainContractAddress: (await this.chainContract.resolveContract()).contract.address,
       version: this.settings.version,
       environment: this.settings.environment,
     });

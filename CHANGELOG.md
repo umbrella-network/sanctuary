@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [0.3.0] - 2021-04-01
+### Added
+- support for chain contract update
+- support for block reverts
+  
+### Changed
+- sync data when root is available instead of waiting for next block
+- update toolbox to `^0.9.0`
 
 ## [0.2.6] - 2021-03-17
 ### Fixed
