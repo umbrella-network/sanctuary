@@ -4,6 +4,7 @@ import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
 import { BlockStatus } from '../types/BlockStatuses';
+import StatsDClient from '../lib/StatsDClient';
 
 @injectable()
 class BlocksController {
@@ -14,6 +15,7 @@ class BlocksController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
+    StatsDClient?.increment('sanctuary.blocks-controller.index');
     const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
 
     if (!apiKeyVerificationResult.apiKey) {
@@ -34,6 +36,7 @@ class BlocksController {
   };
 
   show = async (request: Request, response: Response): Promise<void> => {
+    StatsDClient?.increment('sanctuary.blocks-controller.show');
     const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
 
     if (!apiKeyVerificationResult.apiKey) {
@@ -46,6 +49,7 @@ class BlocksController {
   };
 
   leaves = async (request: Request, response: Response): Promise<void> => {
+    StatsDClient?.increment('sanctuary.blocks-controller.leaves');
     const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
 
     if (!apiKeyVerificationResult.apiKey) {

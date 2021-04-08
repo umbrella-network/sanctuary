@@ -49,6 +49,7 @@
     "eslint": "^7.10.0",
     "mocha": "^8.2.1",
     "moxios": "^0.4.0",
+    "node-statsd-client": "^1.0.4",
     "prettier": "^2.2.1",
     "sinon": "^9.2.3",
     "start-server-and-test": "^1.11.7",
