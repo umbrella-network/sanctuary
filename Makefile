@@ -51,14 +51,14 @@ publish-dev:
 	@kubectl set image deployment/sanctuary-scheduler sanctuary-scheduler=$(IMAGE) --namespace dev
 	@kubectl set image deployment/sanctuary-worker sanctuary-worker=$(IMAGE) --namespace dev
 
-publish-bnc:
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bnc01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bnc01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-bnc01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-bnc01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bnc01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bnc01 -n dev
+publish-bsc:
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n dev
 
-dev-bnc: assume login-new-dev build-dev update-stg-kubeconfig publish-bnc
-dev-all: dev dev-bnc
+dev-bsc: assume login-new-dev build-dev update-stg-kubeconfig publish-bsc
+dev-all: dev dev-bsc
 dev: build push publish-dev
