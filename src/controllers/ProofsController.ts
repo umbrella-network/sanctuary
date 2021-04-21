@@ -4,6 +4,7 @@ import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
 import { BlockStatus } from '../types/BlockStatuses';
+import StatsDClient from '../lib/StatsDClient';
 
 @injectable()
 class ProofsController {
@@ -20,6 +21,10 @@ class ProofsController {
       response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
+
+    StatsDClient?.increment('sanctuary.proofs-controller.index', undefined, {
+      projectId: apiKeyVerificationResult.apiKey.projectId,
+    });
 
     const block = await Block.findOne({ status: BlockStatus.Finalized }).sort({ height: -1 }).limit(1);
 
