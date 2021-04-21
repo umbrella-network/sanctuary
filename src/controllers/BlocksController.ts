@@ -15,14 +15,19 @@ class BlocksController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    StatsDClient?.increment('sanctuary.blocks-controller.index');
     const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
-
+    
     if (!apiKeyVerificationResult.apiKey) {
       response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
-
+    
+    StatsDClient?.increment(
+      'sanctuary.blocks-controller.index', 
+      undefined, 
+      { projectId: apiKeyVerificationResult.apiKey.projectId }
+    );
+    
     const offset: number = parseInt(<string>request.query.offset || '0');
     const limit: number = Math.min(parseInt(<string>request.query.limit || '100', 10), 100);
 
@@ -36,26 +41,36 @@ class BlocksController {
   };
 
   show = async (request: Request, response: Response): Promise<void> => {
-    StatsDClient?.increment('sanctuary.blocks-controller.show');
     const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
 
     if (!apiKeyVerificationResult.apiKey) {
       response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
+    
+    StatsDClient?.increment(
+      'sanctuary.blocks-controller.show', 
+      undefined, 
+      { projectId: apiKeyVerificationResult.apiKey.projectId }
+    );
 
     const block = await Block.findById(request.params.id);
     response.send({ data: block });
   };
 
   leaves = async (request: Request, response: Response): Promise<void> => {
-    StatsDClient?.increment('sanctuary.blocks-controller.leaves');
     const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
 
     if (!apiKeyVerificationResult.apiKey) {
       response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
+    
+    StatsDClient?.increment(
+      'sanctuary.blocks-controller.leaves', 
+      undefined, 
+      { projectId: apiKeyVerificationResult.apiKey.projectId }
+    );
 
     const leaves = await Leaf.find({ blockId: request.params.id });
     response.send(leaves);
