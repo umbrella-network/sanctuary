@@ -21,12 +21,10 @@ class ProofsController {
       response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
-    
-    StatsDClient?.increment(
-      'sanctuary.proofs-controller.index', 
-      undefined, 
-      { projectId: apiKeyVerificationResult.apiKey.projectId }
-    );
+
+    StatsDClient?.increment('sanctuary.proofs-controller.index', undefined, {
+      projectId: apiKeyVerificationResult.apiKey.projectId,
+    });
 
     const block = await Block.findOne({ status: BlockStatus.Finalized }).sort({ height: -1 }).limit(1);
 
