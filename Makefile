@@ -1,8 +1,7 @@
 include .env
 
 TAG=`git rev-parse --short HEAD`
-IMAGE="$(AWS_REPOSITORY)/sanctuary:v$(TAG)"
-DEVELOP="$(NEW_AWS_REPOSITORY)/sanctuary:develop"
+DEVELOP="$(AWS_REPOSITORY)/sanctuary:develop"
 
 CRED_TMP := /tmp/.credentials.tmp
 DURATION := 900
@@ -37,19 +36,12 @@ build-dev:
 
 
 login:
-	@aws ecr get-login-password  | docker login --username AWS --password-stdin $(AWS_REPOSITORY)
-
-login-new-dev:
-	@aws ecr --profile umb-central --region $(AWS_REGION) get-login-password  | docker login --username AWS --password-stdin $(NEW_AWS_REPOSITORY)
+	@aws ecr --profile umb-central --region $(AWS_REGION) get-login-password  | docker login --username AWS --password-stdin $(AWS_REPOSITORY)
 
 push: login
 	@echo "## Pushing image to AWS ##"
 	@docker push $(IMAGE)
 
-publish-dev:
-	@kubectl set image deployment/sanctuary-api sanctuary-api=$(IMAGE) --namespace dev
-	@kubectl set image deployment/sanctuary-scheduler sanctuary-scheduler=$(IMAGE) --namespace dev
-	@kubectl set image deployment/sanctuary-worker sanctuary-worker=$(IMAGE) --namespace dev
 
 publish-bsc:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n dev
@@ -59,6 +51,15 @@ publish-bsc:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n dev
 
-dev-bsc: assume login-new-dev build-dev update-stg-kubeconfig publish-bsc
-dev-all: dev dev-bsc
-dev: build push publish-dev
+publish-eth:
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-eth01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-eth01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-eth01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-eth01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-eth01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-eth01 -n dev
+
+
+dev-bsc: assume login build-dev update-stg-kubeconfig publish-bsc
+dev-eth: assume login build-dev update-stg-kubeconfig publish-eth
+dev: assume login build-dev update-stg-kubeconfig publish-bsc publish-eth
