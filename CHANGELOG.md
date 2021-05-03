@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 - added statsd support and reporting of controller requests
 
+## [0.3.1] - 2021-05-03
+### Added
+- Add new Production git workflow
+
 ## [0.3.0] - 2021-04-01
 ### Added
 - support for chain contract update
