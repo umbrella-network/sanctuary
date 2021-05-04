@@ -26,6 +26,10 @@ class LeavesSynchronizer {
       const voterId = block.voters[voterIndex];
       const validator = await this.validatorRegistryContract.validators(voterId);
       const location = validator['location'];
+      if (!location) {
+        continue;
+      }
+
       const url = new URL(`${location}/blocks/height/${block.height}`);
       this.logger.info(`Resolving leaves from: ${url}`);
       const response = await axios.get<{ data: BlockFromPegasus }>(url.toString());
