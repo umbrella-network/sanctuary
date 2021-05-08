@@ -6,7 +6,7 @@
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
   },
   "scripts": {
-    "lint": "eslint ./src/**/*.ts ./test/**/*.ts",
+    "lint": "eslint ./src/**/*.ts ./test/**/*.ts --max-warnings=0",
     "lint:fix": "eslint ./src/**/*.ts ./test/**/*.ts --fix",
     "clean": "rimraf dist",
     "compile": "tsc -p .",
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@typegoose/typegoose": "^7.4.1",
-    "@umb-network/toolbox": "^0.9.0",
+    "@umb-network/toolbox": "2.0.0-alpha.2",
     "axios": "^0.20.0",
     "bcrypt": "^5.0.0",
     "bullmq": "^1.9.0",
@@ -67,7 +67,7 @@
     "cpx": "^1.5.0",
     "crypto-random-string": "^3.3.0",
     "dotenv": "^8.2.0",
-    "ethers": "^5.0.17",
+    "ethers": "^5.1.4",
     "express": "^4.17.1",
     "helmet": "^4.1.1",
     "inversify": "^5.0.1",

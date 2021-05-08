@@ -15,10 +15,9 @@ class BlocksController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
+    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
 
     if (!apiKeyVerificationResult.apiKey) {
-      response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
 
@@ -39,10 +38,9 @@ class BlocksController {
   };
 
   show = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
+    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
 
     if (!apiKeyVerificationResult.apiKey) {
-      response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
 
@@ -55,10 +53,9 @@ class BlocksController {
   };
 
   leaves = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
+    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
 
     if (!apiKeyVerificationResult.apiKey) {
-      response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
 

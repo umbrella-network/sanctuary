@@ -18,7 +18,7 @@ class ChainSynchronizer {
       await ChainInstance.create({
         _id: `chain::${currentChain.address}`,
         address: currentChain.address,
-        blocksCountOffset: blocksCountOffset.toNumber(),
+        blocksCountOffset: blocksCountOffset,
         timestamp: new Date(),
       });
 

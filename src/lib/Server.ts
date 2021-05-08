@@ -15,6 +15,7 @@ import ApiKeysController from '../controllers/ApiKeysController';
 import ProjectsController from '../controllers/ProjectsController';
 import WalletAuthController from '../controllers/WalletAuthController';
 import InfoController from '../controllers/InfoController';
+import FcdsController from '../controllers/FcdsController';
 
 @injectable()
 class Server {
@@ -26,6 +27,7 @@ class Server {
     @inject('Settings') settings: Settings,
     @inject(HealthController) healthController: HealthController,
     @inject(BlocksController) blocksController: BlocksController,
+    @inject(FcdsController) fcdsController: FcdsController,
     @inject(ProofsController) proofsController: ProofsController,
     @inject(AuthController) authController: AuthController,
     @inject(UsersController) usersController: UsersController,
@@ -44,6 +46,7 @@ class Server {
       .use(cors())
       .use('/health', healthController.router)
       .use('/blocks', blocksController.router)
+      .use('/fcds', fcdsController.router)
       .use('/proofs', proofsController.router)
       .use('/users', usersController.router)
       .use('/auth', authController.router)

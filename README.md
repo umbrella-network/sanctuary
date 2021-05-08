@@ -1,8 +1,7 @@
 # Description
 
-Retrieves raw block leaves from Umbrella sidechain blocks.
-Displays information about the leaves and allows users to retrieve Merkle proofs.
-Provides an API for retrieving block leaves and Merkle proofs.
+Retrieves raw block leaves from Umbrella sidechain blocks. Displays information about the leaves and allows users to
+retrieve Merkle proofs. Provides an API for retrieving block leaves and Merkle proofs.
 
 # Setup
 
@@ -74,9 +73,28 @@ $ npm run start
 
 This endpoint returns a set of blocks along with some basic information about those blocks.
 
-### Index
+### FCDs
 
 #### Request
+
+```
+GET /fcds
+```
+
+#### Response
+
+```json
+[
+  {
+    "_id": "UMB-USD",
+    "__v": 0,
+    "dataTimestamp": "2021-05-03T09:52:31.000Z",
+    "value": 0.68
+  }
+]
+```
+
+### Index
 
 ```
 GET /blocks
@@ -89,10 +107,10 @@ GET /blocks
   {
     "staked": 1000000000000000000,
     "power": 1000000000000000000,
-    "voters": ["0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F"],
+    "voters": [
+      "0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F"
+    ],
     "votes": {},
-    "numericFcdKeys": ["eth-eur", "eth-usd"],
-    "numericFcdValues": [481.92, 587.56],
     "_id": "block::83",
     "height": 83,
     "__v": 1,
@@ -129,7 +147,10 @@ GET /blocks/:id
     "votes": {
       "0xA405324F4b6EB7Bc76f1964489b3769cfc71445F": 200
     },
-    "numericFcdKeys": ["eth-eur", "eth-usd"],
+    "numericFcdKeys": [
+      "eth-eur",
+      "eth-usd"
+    ],
     "_id": "block::624",
     "height": 22,
     "__v": 1,
@@ -216,9 +237,14 @@ GET /proofs/?keys[]=eth-usd&keys[]=uni-usd
     "block": {
       "staked": 1000000000000000000,
       "power": 1000000000000000000,
-      "voters": ["0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F"],
+      "voters": [
+        "0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F"
+      ],
       "votes": {},
-      "numericFcdKeys": ["eth-eur", "eth-usd"],
+      "numericFcdKeys": [
+        "eth-eur",
+        "eth-usd"
+      ],
       "_id": "block::83",
       "height": 83,
       "__v": 1,
@@ -228,7 +254,10 @@ GET /proofs/?keys[]=eth-usd&keys[]=uni-usd
       "minter": "0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F",
       "root": "0xf6991e5c6d1e6e3100fa8e39f9ab9c9edc9c8d6be4a561c772626448b0e64ef9"
     },
-    "keys": ["eth-usd", "uni-usd"],
+    "keys": [
+      "eth-usd",
+      "uni-usd"
+    ],
     "leaves": [
       {
         "proof": [

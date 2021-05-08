@@ -33,17 +33,22 @@ class BlockSynchronizer {
 
     this.logger.debug(`updated ${mongoBlocks.length} mongoBlocks`);
 
-    const [leavesSynchronizers, blockIds] = await this.processBlocks(mongoBlocks, onChainBlocksData);
+    const [leavesSynchronizers, blockIds] = await this.processBlocks(
+      currentBlockHeight,
+      mongoBlocks,
+      onChainBlocksData
+    );
 
-    this.logger.info(`Synchronizing leaves for completed blocks: ${blockIds.join(',')}`);
-
-    await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
+    if (blockIds.length > 0) {
+      this.logger.info(`Synchronizing leaves for completed blocks: ${blockIds.join(',')}`);
+      await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
+    }
   }
 
   private getMongoBlocks(onChainBlocksData: ChainBlockDataExtended[]): Promise<IBlock[]> {
     return Promise.all(
       onChainBlocksData.map((onChainBlockData) => {
-        const timestamp = new Date(onChainBlockData.timestamp.toNumber() * 1000);
+        const timestamp = new Date(onChainBlockData.timestamp * 1000);
 
         return Block.findOneAndUpdate(
           {
@@ -65,28 +70,34 @@ class BlockSynchronizer {
     );
   }
 
-  private async updateSynchronizedBlocks(leavesSynchronizers: boolean[], blockIds: string[]): Promise<IBlock[]> {
+  private async updateSynchronizedBlocks(
+    leavesSynchronizers: (boolean | null)[],
+    blockIds: string[]
+  ): Promise<IBlock[]> {
     return Promise.all(
-      leavesSynchronizers.map((success: boolean, i: number) =>
-        Block.findOneAndUpdate(
-          { _id: blockIds[i] },
-          {
-            status: success ? BlockStatus.Finalized : BlockStatus.Failed,
-          },
-          {
-            new: false,
-            upsert: true,
-          }
+      leavesSynchronizers
+        .filter((success: boolean) => success !== null)
+        .map((success: boolean, i: number) =>
+          Block.findOneAndUpdate(
+            { _id: blockIds[i] },
+            {
+              status: success ? BlockStatus.Finalized : BlockStatus.Failed,
+            },
+            {
+              new: false,
+              upsert: true,
+            }
+          )
         )
-      )
     );
   }
 
   private async processBlocks(
+    currentBlockHeight: number,
     mongoBlocks: IBlock[],
     onChainBlocksData: ChainBlockDataExtended[]
-  ): Promise<[Promise<boolean>[], string[]]> {
-    const leavesSynchronizers: Promise<boolean>[] = [];
+  ): Promise<[leavesSynchronizersSuccesses: Promise<boolean | null>[], blockIds: string[]]> {
+    const leavesSynchronizers: Promise<boolean | null>[] = [];
     const blockIds: string[] = [];
 
     await Promise.all(
@@ -112,7 +123,7 @@ class BlockSynchronizer {
           case BlockStatus.Completed:
             this.logger.info(`Synchronizing leaves for completed block: ${mongoBlock.height}`);
             blockIds.push(mongoBlock.id);
-            leavesSynchronizers.push(this.leavesSynchronizer.apply(mongoBlock.id));
+            leavesSynchronizers.push(this.leavesSynchronizer.apply(currentBlockHeight, mongoBlock.id));
             return;
 
           case BlockStatus.Finalized:
@@ -169,7 +180,7 @@ class BlockSynchronizer {
     const status = blockData.root == ethers.constants.HashZero ? BlockStatus.Failed : BlockStatus.Completed;
 
     if (status === BlockStatus.Failed) {
-      this.logger.info(`Block ${height} has finished: ${blockData} with status: ${block.status}`);
+      this.logger.info(`Block ${height} [${JSON.stringify(blockData)}] has finished with status: ${block.status}`);
       return block.updateOne({ status: status });
     }
 
@@ -177,7 +188,7 @@ class BlockSynchronizer {
     const votes = await this.getVotes(blockData.chainInstance, height, voters);
 
     this.logger.info(`Syncing finished side block with votes: ${JSON.stringify([...votes.entries()])}`);
-    this.logger.info(`Block ${height} has finished: ${blockData} with status: ${block.status}`);
+    this.logger.info(`Block ${height} has finished: ${JSON.stringify(blockData)} with status: ${block.status}`);
 
     return block.updateOne({
       status: status,
