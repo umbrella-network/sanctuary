@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { BigNumber, Contract } from 'ethers';
-import { ABI, ContractRegistry } from '@umb-network/toolbox';
+import { ABI, ContractRegistry, converters } from '@umb-network/toolbox';
 import { Logger } from 'winston';
 
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
-import { ChainBlockData } from '../models/ChainBlockData';
+import { ChainBlockData, ChainFCDsData } from '../models/ChainBlockData';
 
 @injectable()
 class ChainContract {
@@ -38,7 +38,7 @@ class ChainContract {
     return this;
   };
 
-  async blocksCountOffset(): Promise<BigNumber> {
+  async blocksCountOffset(): Promise<number> {
     await this._assertContract();
     return this.contract.blocksCountOffset();
   }
@@ -72,6 +72,10 @@ class ChainContract {
 
   async resolveBlockData(chainAddress: string, blockHeight: number): Promise<ChainBlockData> {
     return this.setContract(chainAddress).contract.getBlockData(blockHeight);
+  }
+
+  async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
+    return this.setContract(chainAddress).contract.getCurrentValues(keys.map(converters.strToBytes32));
   }
 
   private async _assertContract(): Promise<void> {

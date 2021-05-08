@@ -130,7 +130,7 @@ describe('BlockSynchronizer', () => {
   });
 
   it('marks completed blocks as "failed" if leaves synchronization finished unsuccessfully', async () => {
-    mockedLeavesSynchronizer.apply.resolves(null);
+    mockedLeavesSynchronizer.apply.resolves(false);
     mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
     mockedChainContract.resolveBlockData.resolves(arbitraryBlockFromChain);
     mockedChainInstanceResolver.apply.resolves(new ChainInstance({address: '0x321'}));
@@ -153,7 +153,7 @@ describe('BlockSynchronizer', () => {
     blocks
       .sort((a, b) => a.height - b.height)
       .forEach((block, i) => {
-        expect(block).to.have.property('status', 'failed');
+        expect(block).to.have.property('status', 'failed', `block ${i}`);
         expect(block).to.have.property('height', i + 1);
         expect(block).to.have.property('_id', `block::${i + 1}`);
       });

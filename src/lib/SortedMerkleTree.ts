@@ -4,13 +4,19 @@ import { LeafKeyCoder } from '@umb-network/toolbox';
 const hash = ethers.utils.solidityKeccak256;
 const lastHash = '0x' + 'f'.repeat(64);
 const emptyRoot = '0x' + '0'.repeat(64);
-const isOdd = n => n % 2 !== 0;
+const isOdd = (n: number): boolean => n % 2 !== 0;
+
+type KeyValuePairs = Record<string, Buffer>;
 
 class SortedMerkleTree {
+  keys: Record<string, number>;
+  tree: string[][];
+  data: KeyValuePairs;
+
   /**
    * @param keyValuePairs {Object} pairs of: string => buffer
    */
-  constructor(keyValuePairs) {
+  constructor(keyValuePairs: KeyValuePairs) {
     this.keys = {};
     this.tree = [];
     this.data = keyValuePairs;
@@ -20,20 +26,20 @@ class SortedMerkleTree {
     }
   }
 
-  hashIt(h1, h2) {
+  hashIt(h1: string, h2: string): string {
     const sorted = [h1, h2].sort();
     return hash(['bytes32', 'bytes32'], [sorted[0], sorted[1]]);
   }
 
-  leafHash(k, v) {
+  leafHash(k: Buffer, v: Buffer): string {
     return hash(['bytes', 'bytes'], [k, v]);
   }
 
-  createLeafHash(k) {
+  createLeafHash(k: string): string {
     return this.leafHash(LeafKeyCoder.encode(k), this.data[k]);
   }
 
-  addEvenHash(hashes) {
+  addEvenHash(hashes: string[]): string[] {
     if (hashes.length > 1 && isOdd(hashes.length)) {
       hashes.push(lastHash);
     }
@@ -41,15 +47,17 @@ class SortedMerkleTree {
     return hashes;
   }
 
-  createLeaves(keyValuePairs) {
-    return Object.keys(keyValuePairs).sort().map((k, i) => {
-      const leafId = this.createLeafHash(k);
-      this.keys[k] = i;
-      return leafId;
-    })
+  createLeaves(keyValuePairs: KeyValuePairs): string[] {
+    return Object.keys(keyValuePairs)
+      .sort()
+      .map((k, i) => {
+        const leafId = this.createLeafHash(k);
+        this.keys[k] = i;
+        return leafId;
+      });
   }
 
-  createNextTreeLevel(inputs) {
+  createNextTreeLevel(inputs: string[]): string[] {
     const hashes = [];
 
     for (let i = 0; i + 1 < inputs.length; i += 2) {
@@ -59,7 +67,7 @@ class SortedMerkleTree {
     return hashes;
   }
 
-  createTree(inputs) {
+  createTree(inputs: string[]): void {
     this.tree.push(inputs);
 
     if (inputs.length > 1) {
@@ -68,15 +76,15 @@ class SortedMerkleTree {
     }
   }
 
-  getLeaves() {
+  getLeaves(): string[] {
     return this.tree.length > 0 ? this.tree[0] : [];
   }
 
-  getIndexForKey(key) {
+  getIndexForKey(key: string): number {
     return this.keys[key];
   }
 
-  generateProof(level, idx, proof = []) {
+  generateProof(level: number, idx: number, proof: string[] = []): string[] {
     if (level === this.tree.length - 1) {
       return proof;
     }
@@ -88,11 +96,11 @@ class SortedMerkleTree {
     return this.generateProof(level + 1, Math.floor(idx / 2), proof);
   }
 
-  getProofForKey(key) {
+  getProofForKey(key: string): string[] {
     return this.generateProof(0, this.getIndexForKey(key));
   }
 
-  getRoot() {
+  getRoot(): string {
     if (this.tree.length === 0) {
       return emptyRoot;
     }
@@ -100,10 +108,10 @@ class SortedMerkleTree {
     return this.tree[this.tree.length - 1][0];
   }
 
-  verifyProof(proof, root, leaf) {
+  verifyProof(proof: string[], root: string, leaf: string): boolean {
     let computedHash = leaf;
 
-    proof.forEach(proofElement => {
+    proof.forEach((proofElement) => {
       if (computedHash <= proofElement) {
         computedHash = this.hashIt(computedHash, proofElement);
       } else {
