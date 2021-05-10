@@ -7,7 +7,7 @@ CRED_TMP := /tmp/.credentials.tmp
 DURATION := 900
 AWS_REGION := us-east-2
 
-default: build
+default: dev
 
 assume:
 	@aws sts assume-role --profile umb-master \
@@ -25,10 +25,6 @@ update-stg-kubeconfig:
 	@aws --profile umb-staging configure set aws_secret_access_key $$(cat ${CRED_TMP} | jq -r '.SecretAccessKey' )
 	@aws --profile umb-staging configure set aws_session_token $$(cat ${CRED_TMP} | jq -r '.SessionToken' )
 	@aws --profile umb-staging --region us-east-2 eks update-kubeconfig --kubeconfig ~/.kube/config-staging --name umb_staging
-
-build:
-	@echo "## Building the docker image ##"
-	@docker build -t $(IMAGE) .
 
 build-dev:
 	@echo "## Building the docker image ##"
@@ -50,12 +46,6 @@ publish-bsc:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-bsc01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-bsc02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-bsc02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc02 -n dev
 
 publish-eth:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-eth01 -n dev
@@ -64,12 +54,6 @@ publish-eth:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-eth01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-eth01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-eth02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-eth02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-eth02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-eth02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-eth02 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-eth02 -n dev
 
 
 dev-bsc: assume login build-dev update-stg-kubeconfig publish-bsc
