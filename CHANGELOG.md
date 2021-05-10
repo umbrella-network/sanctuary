@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - do not mark the latest block as failed right away, when can't get leaves from validators, retry when it happens
 
+## [0.3.3] - 2021-05-10
+### Added
+- Update Makefile
+
 ## [0.3.2] - 2021-05-03
 ### Fixed
 - Mark block as failed when validator can't be reached (not exists)
