@@ -12,10 +12,10 @@ async function main() {
   for await (const i of Array(100).keys()) {
     const block = new Block({
       _id: `block::${i}`,
-      height: i,
+      blockId: i,
       status: 'finalized',
       anchor: (1024 + i * 8).toString(),
-      timestamp: new Date(),
+      dataTimestamp: new Date(),
       root: ethers.utils.keccak256('0x1234'),
       minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
       staked: '100',
@@ -28,27 +28,27 @@ async function main() {
 
     await block.save();
     console.log(
-      `block id = ${block.id}; height = ${block.height}; timestamp = ${block.timestamp}; root = ${block.root}`
+      `id = ${block._id}; blockId = ${block.blockId}; timestamp = ${block.dataTimestamp}; root = ${block.root}`
     );
 
     // create leaves
     await Leaf.deleteMany({
-      blockId: block.id,
+      blockId: block._id,
     });
 
     for (let i = 0; i < exampleKeys.length; i++) {
       const key = exampleKeys[i];
 
       const leaf = new Leaf({
-        _id: `leaf::${block.id}::${key}`,
-        blockId: block.id,
+        _id: `leaf::${block._id}::${key}`,
+        blockId: block._id,
         key: key,
         value: '0x' + LeafValueCoder.encode(12345, LeafType.TYPE_FLOAT),
         proof: [ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234')],
       });
 
       await leaf.save();
-      console.log(`leaf id = ${leaf.id}; key = ${leaf.key}; value = ${leaf.value}`);
+      console.log(`leaf id = ${leaf._id}; key = ${leaf.key}; value = ${leaf.value}`);
     }
   }
 }

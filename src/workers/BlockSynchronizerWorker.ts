@@ -16,9 +16,11 @@ class BlockSynchronizerWorker extends BasicWorker {
   apply = async (job: Bull.Job): Promise<void> => {
     if (this.isStale(job)) return;
 
+    this.logger.info(`Running BlockSynchronizerWorker at ${new Date().toISOString()}`);
+
     try {
-      this.logger.info(`Running BlockSynchronizerWorker at  ${new Date().toISOString()}`);
-      await Promise.all([this.chainSynchronizer.apply(), this.blockSynchronizer.apply()]);
+      await this.chainSynchronizer.apply();
+      await this.blockSynchronizer.apply();
     } catch (e) {
       this.logger.error(e);
     }

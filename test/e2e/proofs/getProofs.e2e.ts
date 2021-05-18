@@ -68,10 +68,10 @@ describe('Getting proofs', () => {
 
   it('returns valid response without leaves for the latest finalized block when keys are not specified', async () => {
     await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', height: 1, status: 'new'},
-      { ...inputForBlockModel, _id: 'block::2', height: 2, status: 'finalized'},
-      { ...inputForBlockModel, _id: 'block::3', height: 3, status: 'failed'},
-      { ...inputForBlockModel, _id: 'block::4', height: 4, status: 'finalized'},
+      { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new'},
+      { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'finalized'},
+      { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed'},
+      { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized'},
     ]);
 
     const proofsResponse = await appAxios.get('/proofs', { headers: { authorization: `Bearer ${apiKey}` } });
@@ -87,10 +87,10 @@ describe('Getting proofs', () => {
 
   it('returns latest block with leaves matching specified keys', async () => {
     await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', height: 1 },
-      { ...inputForBlockModel, _id: 'block::2', height: 2 },
-      { ...inputForBlockModel, _id: 'block::3', height: 3 },
-      { ...inputForBlockModel, _id: 'block::4', height: 4 },
+      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
     ]);
 
     await Leaf.create([
@@ -124,10 +124,10 @@ describe('Getting proofs', () => {
 
   it('returns empty object if no finalized block found', async () => {
     await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', height: 1, status: 'new'},
-      { ...inputForBlockModel, _id: 'block::2', height: 2, status: 'failed'},
-      { ...inputForBlockModel, _id: 'block::3', height: 3, status: 'failed'},
-      { ...inputForBlockModel, _id: 'block::4', height: 4, status: 'failed'},
+      { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new'},
+      { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'failed'},
+      { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed'},
+      { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'failed'},
     ]);
 
 

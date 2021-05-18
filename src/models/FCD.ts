@@ -13,6 +13,6 @@ const FCDSchema: Schema = new Schema({
   dataTimestamp: { type: Date, required: true },
 });
 
-FCDSchema.index({ timestamp: -1 });
+FCDSchema.index({ dataTimestamp: -1 });
 
 export default mongoose.model<IFCD>('FCD', FCDSchema);

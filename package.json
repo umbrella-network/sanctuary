@@ -1,6 +1,6 @@
 {
   "name": "sanctuary",
-  "version": "0.3.3",
+  "version": "1.0.0-beta.8",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@typegoose/typegoose": "^7.4.1",
-    "@umb-network/toolbox": "2.0.0-alpha.2",
+    "@umb-network/toolbox": "2.0.0-alpha.7",
     "axios": "^0.20.0",
     "bcrypt": "^5.0.0",
     "bullmq": "^1.9.0",
@@ -73,7 +73,7 @@
     "inversify": "^5.0.1",
     "ioredis": "^4.17.3",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.10.9",
+    "mongoose": "^5.12.7",
     "newrelic": "^7.2.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",

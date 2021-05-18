@@ -2,13 +2,16 @@ import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Block, { IBlock } from '../models/Block';
-import Leaf from '../models/Leaf';
+import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import axios from 'axios';
 import { BlockFromPegasus } from '../types/BlockFromPegasus';
 import ChainContract from '../contracts/ChainContract';
 import FCD, { IFCD } from '../models/FCD';
 import { converters } from '@umb-network/toolbox';
+import { ChainStatus } from '../types/ChainStatus';
+import SortedMerkleTree from '../lib/SortedMerkleTree';
+import { Validator } from '../types/Validator';
 
 @injectable()
 class LeavesSynchronizer {
@@ -17,81 +20,102 @@ class LeavesSynchronizer {
   @inject(ValidatorRegistryContract) private validatorRegistryContract!: ValidatorRegistryContract;
   @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
 
-  async apply(currentBlockHeight: number, blockId: string): Promise<boolean | null> {
-    const block = await Block.findOne({ _id: blockId });
+  async apply(chainStatus: ChainStatus, mongoBlockId: string): Promise<boolean | null> {
+    const mongoBlock = await Block.findOne({ _id: mongoBlockId });
 
-    this.logger.info(
-      `Synchronizing leaves for block: ${block.id} with ${block.voters.length} voters: - ${block.voters}`
-    );
+    this.logger.info(`Synchronizing leaves for block: ${mongoBlock._id}`);
 
     let success = false;
 
-    for (const voterId of block.voters) {
-      const validator = await this.validatorRegistryContract.validators(voterId);
-      const location = validator['location'];
-      if (!location) {
+    // TODO we can create task for sorting validators in a way, so we have high change of hit minter
+    // sorting order should be based on how leader is selected
+    const validators = this.chainContract.resolveValidators(chainStatus);
+
+    for (const validator of validators) {
+      if (!validator.location) {
         continue;
       }
 
-      const url = new URL(`${location}/blocks/height/${block.height}`);
-      this.logger.info(`Resolving leaves from: ${url}`);
-      const response = await axios.get<{ data: BlockFromPegasus }>(url.toString());
+      success = await this.syncLeavesFromValidator(validator, mongoBlock);
 
-      if (response.status == 200) {
-        if (!response.data || response.data.data === null) {
-          this.logger.warn(`Empty response.data.data for ${url}: ${JSON.stringify(response.data)}`);
-          continue;
-        }
-
-        const input: Map<string, string> = new Map(<[string, string][]>Object.entries(response.data.data.data));
-        const tree = this.sortedMerkleTreeFactory.apply(input);
-        const root = tree.getRoot();
-
-        if (root == block.root) {
-          await this.updateNumericFCD(block, response.data.data.numericFcdKeys);
-
-          await Promise.all(
-            [...input.entries()].map(async ([key, value]: [string, string]) => {
-              const proof = tree.getProofForKey(key);
-
-              const leaf = await Leaf.findOneAndUpdate(
-                {
-                  _id: `leaf::${block.id}::${key}`,
-                  blockId: block.id,
-                  key: key,
-                },
-                {
-                  value: value,
-                  proof: proof,
-                },
-                {
-                  new: true,
-                  upsert: true,
-                }
-              );
-
-              this.logger.info(`Created new leaf: ${leaf.id}`);
-            })
-          );
-
-          success = true;
-          break;
-        } else {
-          this.logger.warn(
-            `Validator: ${url} returned non matching tree data; consensus = ${block.root} & validator = ${root}`
-          );
-        }
+      if (success) {
+        break;
       }
     }
 
-    if (!success && currentBlockHeight === block.height) {
-      this.logger.debug(`Syncing failed, but this is latest block ${currentBlockHeight}, so lets retry`);
+    if (!success && chainStatus.nextBlockId === mongoBlock.blockId) {
+      this.logger.debug(`Syncing failed, but this is latest block ${chainStatus.nextBlockId}, so lets retry`);
       success = null;
     }
 
     this.logger.info(`Leaf syncing ran with success: ${success}`);
     return success;
   }
+
+  private syncLeavesFromValidator = async (validator: Validator, mongoBlock: IBlock): Promise<boolean> => {
+    if (!validator.location) {
+      return false;
+    }
+
+    const url = new URL(`${validator.location}/blocks/blockId/${mongoBlock.blockId}`);
+    const response = await axios.get<{ data: BlockFromPegasus }>(url.toString());
+
+    if (response.status != 200) {
+      this.logger.warn(`Validator ${url} responded with status: ${response.status}`);
+      return false;
+    }
+
+    if (!response.data || response.data.data === null) {
+      this.logger.warn(`Empty response.data.data for ${url}: ${JSON.stringify(response.data)}`);
+      return false;
+    }
+
+    const resolvedLeaves: Map<string, string> = new Map(<[string, string][]>Object.entries(response.data.data.data));
+    const tree = this.sortedMerkleTreeFactory.apply(resolvedLeaves);
+    const root = tree.getRoot();
+
+    if (root != mongoBlock.root) {
+      this.logger.warn(
+        `Validator: ${url} returned non matching tree data; consensus = ${mongoBlock.root} & validator = ${root}`
+      );
+      return false;
+    }
+
+    this.logger.info(`Resolving leaves from: ${url}`);
+    const [, , updatedLeaves] = await Promise.all([
+      this.updateBlock(mongoBlock, response.data.data),
+      this.updateNumericFCD(mongoBlock, response.data.data.numericFcdKeys),
+      this.updateLeaves(resolvedLeaves, tree, mongoBlock.blockId),
+    ]);
+
+    this.logger.info(
+      `Syncing finished side block with ${updatedLeaves.length} leaves and votes: ${JSON.stringify(
+        response.data.data.votes
+      )}`
+    );
+
+    this.logger.info(`Block ${mongoBlock.blockId} has finished with status: ${mongoBlock.status}`);
+
+    return true;
+  };
+
+  private updateBlock = async (block: IBlock, data: BlockFromPegasus): Promise<IBlock> => {
+    const votesMap = new Map<string, string>();
+    const voters = Object.keys(data.votes);
+
+    voters.forEach((voter: string) => {
+      votesMap.set(voter, data.votes[voter]);
+    });
+
+    return block.updateOne({
+      minter: data.minter,
+      staked: data.staked,
+      power: data.power,
+      votes: votesMap,
+      voters: voters,
+      anchor: data.anchor,
+    });
+  };
 
   private updateNumericFCD = async (block: IBlock, numericFcdKeys: string[]): Promise<IFCD[]> => {
     if (numericFcdKeys.length === 0) {
@@ -104,12 +128,43 @@ class LeavesSynchronizer {
       values.map((value, i) =>
         FCD.findOneAndUpdate(
           { _id: numericFcdKeys[i] },
-          { dataTimestamp: new Date(timestamps[i].toNumber() * 1000), value: converters.fcdValueToNumber(value) },
+          { dataTimestamp: new Date(timestamps[i] * 1000), value: converters.fcdValueToNumber(value) },
           { new: true, upsert: true }
         )
       )
     );
   };
-}
 
+  private updateLeaves = async (
+    resolvedLeaves: Map<string, string>,
+    tree: SortedMerkleTree,
+    blockId: number
+  ): Promise<void[]> => {
+    return Promise.all(
+      [...resolvedLeaves.entries()].map(async ([key, value]: [string, string]) => {
+        const proof = tree.getProofForKey(key);
+        const leaf = await this.createLeaf(proof, blockId, key, value);
+        this.logger.info(`Created new leaf: ${leaf._id}/${leaf.blockId}, ${key} => ${value}`);
+      })
+    );
+  };
+
+  private createLeaf = async (proof: string[], blockId: number, key: string, value: string): Promise<ILeaf> => {
+    return Leaf.findOneAndUpdate(
+      {
+        _id: `block::${blockId}::leaf::${key}`,
+        blockId: blockId.toString(10),
+        key: key,
+      },
+      {
+        value: value,
+        proof: proof,
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
+  };
+}
 export default LeavesSynchronizer;

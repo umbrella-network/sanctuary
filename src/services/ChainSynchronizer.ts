@@ -19,7 +19,7 @@ class ChainSynchronizer {
         _id: `chain::${currentChain.address}`,
         address: currentChain.address,
         blocksCountOffset: blocksCountOffset,
-        timestamp: new Date(),
+        dataTimestamp: new Date(),
       });
 
       this.logger.info(`Detected new contract: ${currentChain.address}`);

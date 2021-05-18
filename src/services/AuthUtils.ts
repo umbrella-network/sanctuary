@@ -12,6 +12,7 @@ export type ApiKeyFromAuthHeaderInterface =
 @injectable()
 export class AuthUtils {
   async verifyApiKey(request: Request, response: Response): Promise<ApiKeyFromAuthHeaderInterface> {
+    // TODO just for testing - REMOVE IT WHEN MERGING
     return { apiKey: <IApiKey>{ projectId: '1', key: '1' } };
 
     const apiKeyVerificationResult = await this.verifyApiKeyFromAuthHeader(request.headers.authorization);

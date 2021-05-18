@@ -11,7 +11,11 @@ class BlocksController {
   router: express.Application;
 
   constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
-    this.router = express().get('/', this.index).get('/:id', this.show).get('/:id/leaves', this.leaves);
+    this.router = express()
+      .get('/', this.index)
+      .get('/latest', this.latest)
+      .get('/:id', this.show)
+      .get('/:id/leaves', this.leaves);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
@@ -31,10 +35,16 @@ class BlocksController {
     const blocks = await Block.find({ status: BlockStatus.Finalized })
       .skip(offset)
       .limit(limit)
-      .sort({ height: -1 })
+      .sort({ blockId: -1 })
       .exec();
 
     response.send(blocks);
+  };
+
+  latest = async (request: Request, response: Response): Promise<void> => {
+    const block = await Block.findOne().sort({ blockId: -1 });
+
+    response.send({ data: block });
   };
 
   show = async (request: Request, response: Response): Promise<void> => {
@@ -48,7 +58,15 @@ class BlocksController {
       projectId: apiKeyVerificationResult.apiKey.projectId,
     });
 
-    const block = await Block.findById(request.params.id);
+    let blockId = -1;
+
+    try {
+      blockId = parseInt(request.params.id, 10);
+    } catch (_) {
+      // ignore
+    }
+
+    const [block] = await Block.find({ blockId });
     response.send({ data: block });
   };
 
