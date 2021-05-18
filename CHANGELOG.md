@@ -10,9 +10,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - support storing only latest FCDs
+- support optimised Chain storage
+
+### Removed
+- delete all deprecated blocks
 
 ### Fixed
 - do not mark the latest block as failed right away, when can't get leaves from validators, retry when it happens
+- re-check past blocks based on last saved blockId, not base by current blockId
 
 ## [0.3.3] - 2021-05-10
 ### Added

@@ -67,10 +67,10 @@ describe('Getting blocks', () => {
 
   it('returns only finalized blocks', async () => {
     await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', height: 1, status: 'new'},
-      { ...inputForBlockModel, _id: 'block::2', height: 2, status: 'completed'},
-      { ...inputForBlockModel, _id: 'block::3', height: 3, status: 'failed'},
-      { ...inputForBlockModel, _id: 'block::4', height: 4, status: 'finalized'},
+      { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new'},
+      { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'completed'},
+      { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed'},
+      { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized'},
     ]);
 
     const blocksResponse = await appAxios.get('/blocks', { headers: { authorization: `Bearer ${apiKey}` } });
@@ -81,10 +81,10 @@ describe('Getting blocks', () => {
 
   it('returns blocks sorted in descending order by their height', async () => {
     await Block.create([
-      { ...inputForBlockModel, _id: 'block::4', height: 4 },
-      { ...inputForBlockModel, _id: 'block::1', height: 1 },
-      { ...inputForBlockModel, _id: 'block::3', height: 3 },
-      { ...inputForBlockModel, _id: 'block::2', height: 2 },
+      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
+      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
     ]);
 
 
@@ -98,16 +98,16 @@ describe('Getting blocks', () => {
         return;
       }
 
-      expect(block.height).to.be.lessThan(blocks[i - 1].height as number);
+      expect(block.blockId).to.be.lessThan(blocks[i - 1].blockId as number);
     });
   });
 
   it('returns blocks respecting limit and offset parameters', async () => {
     await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', height: 1 },
-      { ...inputForBlockModel, _id: 'block::2', height: 2 },
-      { ...inputForBlockModel, _id: 'block::3', height: 3 },
-      { ...inputForBlockModel, _id: 'block::4', height: 4 },
+      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
     ]);
 
     const blocksResponse = await appAxios.get('/blocks', { params: { limit: 2, offset: 1 }, headers: { authorization: `Bearer ${apiKey}` } });
@@ -120,10 +120,10 @@ describe('Getting blocks', () => {
 
   it('returns block by it\'s id', async () => {
     await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', height: 1 },
-      { ...inputForBlockModel, _id: 'block::2', height: 2 },
-      { ...inputForBlockModel, _id: 'block::3', height: 3 },
-      { ...inputForBlockModel, _id: 'block::4', height: 4 },
+      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
     ]);
 
     const blockResponse = await appAxios.get('/blocks/block::3', { params: { limit: 2, offset: 1 }, headers: { authorization: `Bearer ${apiKey}` } });
@@ -135,10 +135,10 @@ describe('Getting blocks', () => {
 
   it('returns leaves for a block', async () => {
     await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', height: 1 },
-      { ...inputForBlockModel, _id: 'block::2', height: 2 },
-      { ...inputForBlockModel, _id: 'block::3', height: 3 },
-      { ...inputForBlockModel, _id: 'block::4', height: 4 },
+      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
     ]);
 
     await Leaf.create([
