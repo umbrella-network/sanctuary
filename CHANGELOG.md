@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Added
 - added statsd support and reporting of controller requests
+- reverting blocks
 
 ### Changed
 - support storing only latest FCDs
 - support optimised Chain storage
+- use merkle tree from SDK
 
 ### Removed
 - delete all deprecated blocks

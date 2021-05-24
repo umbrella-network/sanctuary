@@ -12,7 +12,7 @@ import Block from '../../src/models/Block';
 import Leaf from '../../src/models/Leaf';
 import SortedMerkleTreeFactory from '../../src/services/SortedMerkleTreeFactory';
 import moxios from 'moxios';
-import {LeafType, LeafValueCoder} from '@umb-network/toolbox';
+import {LeafValueCoder} from '@umb-network/toolbox';
 import {expect} from 'chai';
 import {inputForBlockModel} from '../fixtures/inputForBlockModel';
 import ChainContract from '../../src/contracts/ChainContract';
@@ -58,11 +58,11 @@ describe('LeavesSynchronizer', () => {
     timestamp: new Date(),
     staked: '1',
     data: {
-      'ETH-USD': '0x' + LeafValueCoder.encode(100, LeafType.TYPE_FLOAT).toString('hex'),
+      'ETH-USD': '0x' + LeafValueCoder.encode(100).toString('hex'),
     },
     votes: {'0xa': '1'},
-    numericFcdKeys: ['ETH-USD'],
-    numericFcdValues: [1700.5632],
+    fcdKeys: ['ETH-USD'],
+    fcdValues: [1700.5632],
     power: '3',
     blockId: 2,
     root: '0x321',
@@ -120,7 +120,7 @@ describe('LeavesSynchronizer', () => {
         data: {
           ...blockFromPegasus,
           data: {
-            'ETH-USD': '0x' + LeafValueCoder.encode(10, LeafType.TYPE_FLOAT).toString('hex'),
+            'ETH-USD': '0x' + LeafValueCoder.encode(10).toString('hex'),
           },
         }
       }
@@ -144,7 +144,7 @@ describe('LeavesSynchronizer', () => {
     const block = await Block.create(inputForBlockModel);
 
     mockedChainContract.resolveValidators.returns(resolveValidators(chainStatus));
-    mockedChainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [BigNumber.from('17005632')]] as any));
+    mockedChainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [17005632]]));
 
     moxios.install();
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/blockId\/.+/, {
@@ -166,7 +166,7 @@ describe('LeavesSynchronizer', () => {
     mockedChainContract.resolveFCDs.resolves(([[BigNumber.from(999)], [BigNumber.from('17005632')]] as any));
 
     const treeData = {
-      'ETH-USD': '0x' + LeafValueCoder.encode(100, LeafType.TYPE_FLOAT).toString('hex'),
+      'ETH-USD': '0x' + LeafValueCoder.encode(100).toString('hex'),
     };
 
     moxios.install();

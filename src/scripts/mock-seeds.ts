@@ -2,7 +2,7 @@ import '../boot';
 import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { ethers } from 'ethers';
-import { LeafType, LeafValueCoder } from '@umb-network/toolbox';
+import { LeafValueCoder } from '@umb-network/toolbox';
 
 const exampleKeys = ['ABS-XYZ', 'XYZ-ABS', 'QWERTY-ABS', 'ABS-QWERTY', 'QWERTY-XYZ', 'XYZ-QWERTY'];
 
@@ -43,7 +43,7 @@ async function main() {
         _id: `leaf::${block._id}::${key}`,
         blockId: block._id,
         key: key,
-        value: '0x' + LeafValueCoder.encode(12345, LeafType.TYPE_FLOAT),
+        value: '0x' + LeafValueCoder.encode(12345),
         proof: [ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234')],
       });
 

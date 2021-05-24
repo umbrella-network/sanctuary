@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { HexStringWith0x } from '../types/HexStringWith0x';
+import { HexStringWith0x } from '../types/custom';
 
 export interface ILeaf extends Document {
   blockId: string;

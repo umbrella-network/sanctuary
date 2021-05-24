@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { BigNumber, Contract } from 'ethers';
-import { ABI, ContractRegistry, converters } from '@umb-network/toolbox';
+import { ABI, ContractRegistry, LeafKeyCoder } from '@umb-network/toolbox';
 import { Logger } from 'winston';
 
 import Settings from '../types/Settings';
@@ -69,7 +69,7 @@ class ChainContract {
   }
 
   async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
-    return this.setContract(chainAddress).contract.getCurrentValues(keys.map(converters.strToBytes32));
+    return this.setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
   }
 
   private async _assertContract(): Promise<void> {
