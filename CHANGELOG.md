@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [1.0.0] - 2021-05-24
+
 ### Added
 - added statsd support and reporting of controller requests
 - reverting blocks
@@ -19,7 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - do not mark the latest block as failed right away, when can't get leaves from validators, retry when it happens
-- re-check past blocks based on last saved blockId, not base by current blockId
+- re-check past blocks based on last saved blockId, not base on current blockId
 
 ## [0.3.3] - 2021-05-10
 ### Added
