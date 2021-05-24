@@ -10,6 +10,7 @@ import { ethers } from 'ethers';
 import { BlockStatus } from '../types/BlockStatuses';
 import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
+import RevertedBlockResolver from './RevertedBlockResolver';
 
 @injectable()
 class BlockSynchronizer {
@@ -17,6 +18,7 @@ class BlockSynchronizer {
   @inject(ChainContract) private chainContract!: ChainContract;
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
   @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
+  @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
   async apply(): Promise<void> {
     const [[chainAddress, chainStatus], earliestChainOffset, lastSavedBlockId] = await Promise.all([
@@ -24,6 +26,10 @@ class BlockSynchronizer {
       this.getEarliestChainOffset(),
       this.getLastSavedBlockId(),
     ]);
+
+    if ((await this.reveredBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId)) > 0) {
+      return;
+    }
 
     const loopBack = this.calculateLookBack(earliestChainOffset, lastSavedBlockId, chainStatus.nextBlockId);
 

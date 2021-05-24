@@ -8,9 +8,8 @@ import axios from 'axios';
 import { BlockFromPegasus } from '../types/BlockFromPegasus';
 import ChainContract from '../contracts/ChainContract';
 import FCD, { IFCD } from '../models/FCD';
-import { converters } from '@umb-network/toolbox';
+import { LeafValueCoder, SortedMerkleTree } from '@umb-network/toolbox';
 import { ChainStatus } from '../types/ChainStatus';
-import SortedMerkleTree from '../lib/SortedMerkleTree';
 import { Validator } from '../types/Validator';
 
 @injectable()
@@ -84,7 +83,7 @@ class LeavesSynchronizer {
     this.logger.info(`Resolving leaves from: ${url}`);
     const [, , updatedLeaves] = await Promise.all([
       this.updateBlock(mongoBlock, response.data.data),
-      this.updateNumericFCD(mongoBlock, response.data.data.numericFcdKeys),
+      this.updateFCD(mongoBlock, response.data.data.fcdKeys),
       this.updateLeaves(resolvedLeaves, tree, mongoBlock.blockId),
     ]);
 
@@ -117,18 +116,18 @@ class LeavesSynchronizer {
     });
   };
 
-  private updateNumericFCD = async (block: IBlock, numericFcdKeys: string[]): Promise<IFCD[]> => {
-    if (numericFcdKeys.length === 0) {
+  private updateFCD = async (block: IBlock, fcdKeys: string[]): Promise<IFCD[]> => {
+    if (fcdKeys.length === 0) {
       return [];
     }
 
-    const [values, timestamps] = await this.chainContract.resolveFCDs(block.chainAddress, numericFcdKeys);
+    const [values, timestamps] = await this.chainContract.resolveFCDs(block.chainAddress, fcdKeys);
 
     return Promise.all(
       values.map((value, i) =>
         FCD.findOneAndUpdate(
-          { _id: numericFcdKeys[i] },
-          { dataTimestamp: new Date(timestamps[i] * 1000), value: converters.fcdValueToNumber(value) },
+          { _id: fcdKeys[i] },
+          { dataTimestamp: new Date(timestamps[i] * 1000), value: LeafValueCoder.decode(value.toHexString()) },
           { new: true, upsert: true }
         )
       )
@@ -144,7 +143,7 @@ class LeavesSynchronizer {
       [...resolvedLeaves.entries()].map(async ([key, value]: [string, string]) => {
         const proof = tree.getProofForKey(key);
         const leaf = await this.createLeaf(proof, blockId, key, value);
-        this.logger.info(`Created new leaf: ${leaf._id}/${leaf.blockId}, ${key} => ${value}`);
+        this.logger.debug(`Created new leaf: ${leaf._id}/${leaf.blockId}, ${key} => ${value}`);
       })
     );
   };

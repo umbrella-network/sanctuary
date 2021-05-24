@@ -1,6 +1,6 @@
 {
   "name": "sanctuary",
-  "version": "1.0.0-beta.8",
+  "version": "1.0.0-beta.10",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
@@ -12,6 +12,7 @@
     "compile": "tsc -p .",
     "prettier": "prettier --config .prettierrc 'src/**/*.ts' --check",
     "prettier:format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "format": "npm run lint:fix && npm run prettier:format",
     "copy:assets": "cpx 'src/**/*.{graphql,html,png,json}' dist",
     "start:dev": "tsnd --respawn src/server.ts",
     "start:dev:worker": "tsnd --respawn src/worker.ts",
@@ -58,7 +59,7 @@
   },
   "dependencies": {
     "@typegoose/typegoose": "^7.4.1",
-    "@umb-network/toolbox": "2.0.0-alpha.7",
+    "@umb-network/toolbox": "2.0.0-alpha.22",
     "axios": "^0.20.0",
     "bcrypt": "^5.0.0",
     "bullmq": "^1.9.0",
