@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.0.0] - 2021-05-24
+
+### Added
+- added statsd support and reporting of controller requests
+- reverting blocks
+
+### Changed
+- support storing only latest FCDs
+- support optimised Chain storage
+- use merkle tree from SDK
+
+### Removed
+- delete all deprecated blocks
+
+### Fixed
+- do not mark the latest block as failed right away, when can't get leaves from validators, retry when it happens
+- re-check past blocks based on last saved blockId, not base on current blockId
+
 ## [0.3.3] - 2021-05-10
 ### Added
 - Update Makefile

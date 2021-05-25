@@ -1,14 +1,30 @@
 import { injectable } from 'inversify';
+import * as jwt from 'jsonwebtoken';
+import { Request, Response } from 'express';
 import ApiKey from '../models/ApiKey';
 import { IApiKey } from '../models/ApiKey';
 import Token from '../types/Token';
-import * as jwt from 'jsonwebtoken';
+
+export type ApiKeyFromAuthHeaderInterface =
+  | { apiKey: IApiKey; errorMessage?: void }
+  | { apiKey?: void; errorMessage: string };
 
 @injectable()
 export class AuthUtils {
-  async verifyApiKeyFromAuthHeader(
-    authorizationHeader?: string
-  ): Promise<{ apiKey: IApiKey; errorMessage?: void } | { apiKey?: void; errorMessage: string }> {
+  async verifyApiKey(request: Request, response: Response): Promise<ApiKeyFromAuthHeaderInterface> {
+    // TODO just for testing - REMOVE IT WHEN MERGING
+    return { apiKey: <IApiKey>{ projectId: '1', key: '1' } };
+
+    const apiKeyVerificationResult = await this.verifyApiKeyFromAuthHeader(request.headers.authorization);
+
+    if (!apiKeyVerificationResult.apiKey) {
+      response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
+    }
+
+    return apiKeyVerificationResult;
+  }
+
+  async verifyApiKeyFromAuthHeader(authorizationHeader?: string): Promise<ApiKeyFromAuthHeaderInterface> {
     if (!authorizationHeader) {
       return { errorMessage: 'No authorization header' };
     }

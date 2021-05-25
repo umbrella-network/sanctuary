@@ -27,6 +27,16 @@ describe('BlockSynchronizer', () => {
     const config = loadTestEnv();
     mongoose.set('useFindAndModify', false);
     await mongoose.connect(config.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true});
+
+    await ChainInstance.findOneAndUpdate({address: '0x321'}, {
+      address: '0x321',
+      blocksCountOffset: 0,
+      dataTimestamp: new Date()
+    },
+    {
+      new: true,
+      upsert: true,
+    });
   });
 
   beforeEach(async () => {
@@ -50,98 +60,87 @@ describe('BlockSynchronizer', () => {
 
     // Clearing DB before each test
     await Block.deleteMany({});
+
+    mockedChainContract.resolveStatus.resolves([
+      '0x321',
+      {
+        blockNumber: BigNumber.from(1),
+        timePadding: 100,
+        lastBlockId: 10,
+        nextBlockId: 10,
+        nextLeader: '0x111',
+        validators: ['0x111'],
+        locations: ['abc'],
+        lastDataTimestamp: 162345,
+        powers: [BigNumber.from(333)],
+        staked: BigNumber.from(222),
+      },
+    ]);
   });
 
   after(async () => {
     await Block.deleteMany({});
+    await ChainInstance.deleteMany({});
     await mongoose.connection.close();
   });
 
   it('marks ten new blocks as "new" and saves to DB', async () => {
-    mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
     mockedChainContract.resolveBlockData.resolves(arbitraryBlockFromChain);
     mockedChainInstanceResolver.apply.resolves(new ChainInstance({address: '0x321'}));
 
     await blockSynchronizer.apply();
 
-    const blocks: any[] = await Block.find({});
+    let blocks: any[] = await Block.find({});
 
     expect(blocks.length).to.be.equal(11);
 
     blocks
-      .sort((a, b) => a.height - b.height)
+      .sort((a, b) => a.blockId - b.blockId)
       .forEach((block, i) => {
         expect(block).to.have.property('status', 'new');
-        expect(block).to.have.property('height', i + 1);
-        expect(block).to.have.property('_id', `block::${block.height}`);
+        expect(block).to.have.property('blockId', i);
+        expect(block).to.have.property('_id', `block::${block.blockId}`);
       });
-  });
 
-  it('marks new blocks as "completed"', async () => {
-    mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
-    mockedChainContract.resolveBlockData.resolves(arbitraryBlockFromChain);
-    mockedChainInstanceResolver.apply.resolves(new ChainInstance({address: '0x321'}));
-    mockedChainContract.resolveBlockVoters.resolves(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']);
-    mockedChainContract.resolveBlockVotes.resolves(BigNumber.from('1000000000000000000'));
-
-    await blockSynchronizer.apply();
+    mockedLeavesSynchronizer.apply.resolves(true);
     await blockSynchronizer.apply();
 
-    const blocks: any[] = await Block.find({});
+    blocks = await Block.find({});
 
     expect(blocks.length).to.be.equal(11);
 
     blocks
-      .sort((a, b) => a.height - b.height)
+      .sort((a, b) => a.blockId - b.blockId)
       .forEach((block, i) => {
         expect(block).to.have.property('status', 'completed');
-        expect(block).to.have.property('height', i + 1);
-        expect(block).to.have.property('_id', `block::${block.height}`);
+        expect(block).to.have.property('blockId', i);
+        expect(block).to.have.property('_id', `block::${block.blockId}`);
       });
-  });
-
-  it('marks completed blocks as "finalized" if leaves synchronization finished successfully', async () => {
-    mockedLeavesSynchronizer.apply.resolves(true);
-    mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
-    mockedChainContract.resolveBlockData.resolves(arbitraryBlockFromChain);
-    mockedChainInstanceResolver.apply.resolves(new ChainInstance({address: '0x321'}));
-    mockedChainContract.resolveBlockVoters.resolves(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']);
-    mockedChainContract.resolveBlockVotes.resolves(BigNumber.from('1000000000000000000'));
-
-    await blockSynchronizer.apply();
-
-    await blockSynchronizer.apply();
 
     await blockSynchronizer.apply();
 
     expect(mockedLeavesSynchronizer.apply.callCount).to.be.equal(11);
 
-    const blocks: any[] = await Block.find({});
+    blocks = await Block.find({});
 
     expect(blocks.length).to.be.equal(11);
 
     blocks
-      .sort((a, b) => a.height - b.height)
+      .sort((a, b) => a.blockId - b.blockId)
       .forEach((block, i) => {
         expect(block).to.have.property('status', 'finalized');
-        expect(block).to.have.property('height', i + 1);
-        expect(block).to.have.property('_id', `block::${i + 1}`);
+        expect(block).to.have.property('blockId', i);
+        expect(block).to.have.property('_id', `block::${block.blockId}`);
       });
   });
 
   it('marks completed blocks as "failed" if leaves synchronization finished unsuccessfully', async () => {
-    mockedLeavesSynchronizer.apply.resolves(null);
-    mockedChainContract.getBlockHeight.resolves(BigNumber.from(11));
+    mockedLeavesSynchronizer.apply.resolves(false);
     mockedChainContract.resolveBlockData.resolves(arbitraryBlockFromChain);
     mockedChainInstanceResolver.apply.resolves(new ChainInstance({address: '0x321'}));
-    mockedChainContract.resolveBlockVoters.resolves(['0xA405324F4b6EB7Bc76f1964489b3769cfc71445F']);
-    mockedChainContract.resolveBlockVotes.resolves(BigNumber.from('1000000000000000000'));
-
 
     await blockSynchronizer.apply();
-
     await blockSynchronizer.apply();
-
     await blockSynchronizer.apply();
 
     expect(mockedLeavesSynchronizer.apply.callCount).to.be.equal(11);
@@ -151,11 +150,11 @@ describe('BlockSynchronizer', () => {
     expect(blocks.length).to.be.equal(11);
 
     blocks
-      .sort((a, b) => a.height - b.height)
+      .sort((a, b) => a.blockId - b.blockId)
       .forEach((block, i) => {
-        expect(block).to.have.property('status', 'failed');
-        expect(block).to.have.property('height', i + 1);
-        expect(block).to.have.property('_id', `block::${i + 1}`);
+        expect(block).to.have.property('status', 'failed', `block ${i}`);
+        expect(block).to.have.property('blockId', i);
+        expect(block).to.have.property('_id', `block::${block.blockId}`);
       });
   });
 });

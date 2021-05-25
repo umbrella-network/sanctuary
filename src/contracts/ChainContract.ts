@@ -1,11 +1,13 @@
 import { inject, injectable } from 'inversify';
 import { BigNumber, Contract } from 'ethers';
-import { ABI, ContractRegistry } from '@umb-network/toolbox';
+import { ABI, ContractRegistry, LeafKeyCoder } from '@umb-network/toolbox';
 import { Logger } from 'winston';
 
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
-import { ChainBlockData } from '../models/ChainBlockData';
+import { ChainBlockData, ChainFCDsData } from '../models/ChainBlockData';
+import { Validator } from '../types/Validator';
+import { ChainStatus } from '../types/ChainStatus';
 
 @injectable()
 class ChainContract {
@@ -33,12 +35,22 @@ class ChainContract {
     return this.setContract(chainAddress);
   }
 
-  setContract = (chainAddress: string): ChainContract => {
-    this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.provider);
-    return this;
-  };
+  async resolveStatus(): Promise<[address: string, status: ChainStatus]> {
+    const chain = await this.resolveContract();
+    return Promise.all([chain.contract.address, chain.contract.getStatus()]);
+  }
 
-  async blocksCountOffset(): Promise<BigNumber> {
+  resolveValidators(chainStatus: ChainStatus): Validator[] {
+    return chainStatus.validators.map((address, i) => {
+      return {
+        id: address,
+        location: chainStatus.locations[i],
+        power: chainStatus.powers[i],
+      };
+    });
+  }
+
+  async blocksCountOffset(): Promise<number> {
     await this._assertContract();
     return this.contract.blocksCountOffset();
   }
@@ -47,31 +59,17 @@ class ChainContract {
     return this.contract.address;
   }
 
-  async getBlockHeight(): Promise<BigNumber> {
+  async getBlockId(): Promise<BigNumber> {
     await this._assertContract();
-    return this.contract.getBlockHeight();
+    return this.contract.getBlockId();
   }
 
-  async getBlockVoters(height: number): Promise<string[]> {
-    await this._assertContract();
-    return this.contract.getBlockVoters(height);
+  async resolveBlockData(chainAddress: string, blockId: number): Promise<ChainBlockData> {
+    return this.setContract(chainAddress).contract.blocks(blockId);
   }
 
-  async resolveBlockVoters(chainAddress: string, height: number): Promise<string[]> {
-    return this.setContract(chainAddress).getBlockVoters(height);
-  }
-
-  async getBlockVotes(blockHeight: number, voter: string): Promise<BigNumber> {
-    await this._assertContract();
-    return this.contract.getBlockVotes(blockHeight, voter);
-  }
-
-  async resolveBlockVotes(chainAddress: string, blockHeight: number, voter: string): Promise<BigNumber> {
-    return this.setContract(chainAddress).getBlockVotes(blockHeight, voter);
-  }
-
-  async resolveBlockData(chainAddress: string, blockHeight: number): Promise<ChainBlockData> {
-    return this.setContract(chainAddress).contract.getBlockData(blockHeight);
+  async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
+    return this.setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
   }
 
   private async _assertContract(): Promise<void> {
@@ -79,6 +77,11 @@ class ChainContract {
       await this.resolveContract();
     }
   }
+
+  private setContract = (chainAddress: string): ChainContract => {
+    this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.provider);
+    return this;
+  };
 }
 
 export default ChainContract;

@@ -5,10 +5,12 @@ import Block, { IBlock } from '../models/Block';
 import Leaf from '../models/Leaf';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
 import { ChainBlockData, ChainBlockDataExtended } from '../models/ChainBlockData';
-import { IChainInstance } from '../models/ChainInstance';
-import { BigNumber, ethers } from 'ethers';
+import ChainInstance, { IChainInstance } from '../models/ChainInstance';
+import { ethers } from 'ethers';
 import { BlockStatus } from '../types/BlockStatuses';
 import { ChainInstanceResolver } from './ChainInstanceResolver';
+import { ChainStatus } from '../types/ChainStatus';
+import RevertedBlockResolver from './RevertedBlockResolver';
 
 @injectable()
 class BlockSynchronizer {
@@ -16,16 +18,29 @@ class BlockSynchronizer {
   @inject(ChainContract) private chainContract!: ChainContract;
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
   @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
+  @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
   async apply(): Promise<void> {
-    const currentContract = await this.chainContract.resolveContract();
-    const currentBlockHeight = (await currentContract.getBlockHeight()).toNumber();
+    const [[chainAddress, chainStatus], earliestChainOffset, lastSavedBlockId] = await Promise.all([
+      this.chainContract.resolveStatus(),
+      this.getEarliestChainOffset(),
+      this.getLastSavedBlockId(),
+    ]);
+
+    if ((await this.reveredBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId)) > 0) {
+      return;
+    }
+
+    const loopBack = this.calculateLookBack(earliestChainOffset, lastSavedBlockId, chainStatus.nextBlockId);
 
     this.logger.info(
-      `Synchronizing blocks starting at current height: ${currentBlockHeight} based on current chain ${this.chainContract.address()}`
+      `Synchronizing blocks for ${chainStatus.nextBlockId}, loopback=${loopBack}, current chain ${chainAddress}`
     );
 
-    const onChainBlocksData: ChainBlockDataExtended[] = await this.mintedBlocksFromChain(currentBlockHeight, 10);
+    const onChainBlocksData: ChainBlockDataExtended[] = await this.mintedBlocksFromChain(
+      chainStatus.nextBlockId,
+      loopBack
+    );
 
     this.logger.debug(`got ${onChainBlocksData.length} onChainBlocks`);
 
@@ -33,28 +48,50 @@ class BlockSynchronizer {
 
     this.logger.debug(`updated ${mongoBlocks.length} mongoBlocks`);
 
-    const [leavesSynchronizers, blockIds] = await this.processBlocks(mongoBlocks, onChainBlocksData);
+    const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatus, mongoBlocks, onChainBlocksData);
 
-    this.logger.info(`Synchronizing leaves for completed blocks: ${blockIds.join(',')}`);
+    if (blockIds.length > 0) {
+      this.logger.info(`Synchronizing leaves for completed blocks: ${blockIds.join(',')}`);
+      await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
+    }
+  }
 
-    await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
+  private calculateLookBack(earliestChainOffset: number, lastSavedBlockId: number, currentBlockId: number): number {
+    if (earliestChainOffset < 0) {
+      throw Error('looks like there is no Chain Instance');
+    }
+
+    if (lastSavedBlockId === 0) {
+      return currentBlockId - earliestChainOffset;
+    }
+
+    return Math.min(currentBlockId - earliestChainOffset, currentBlockId - lastSavedBlockId + 10);
+  }
+
+  private async getLastSavedBlockId(): Promise<number> {
+    const lastSavedBlock = await Block.find({}).limit(1).sort({ blockId: -1 }).exec();
+    return lastSavedBlock[0] ? lastSavedBlock[0].blockId : 0;
+  }
+
+  private async getEarliestChainOffset(): Promise<number> {
+    const offsets = await ChainInstance.find({}).limit(1).sort({ blocksCountOffset: 1 }).exec();
+    return offsets[0] ? offsets[0].blocksCountOffset : -1;
   }
 
   private getMongoBlocks(onChainBlocksData: ChainBlockDataExtended[]): Promise<IBlock[]> {
     return Promise.all(
       onChainBlocksData.map((onChainBlockData) => {
-        const timestamp = new Date(onChainBlockData.timestamp.toNumber() * 1000);
+        const dataTimestamp = new Date(onChainBlockData.dataTimestamp * 1000);
 
         return Block.findOneAndUpdate(
           {
-            _id: `block::${onChainBlockData.height}`,
-            height: onChainBlockData.height,
+            _id: `block::${onChainBlockData.blockId}`,
+            blockId: onChainBlockData.blockId,
           },
           {
             chainAddress: onChainBlockData.chainInstance.address,
-            anchor: onChainBlockData.anchor.toString(),
             root: onChainBlockData.root,
-            timestamp,
+            dataTimestamp: dataTimestamp,
           },
           {
             new: true,
@@ -65,61 +102,67 @@ class BlockSynchronizer {
     );
   }
 
-  private async updateSynchronizedBlocks(leavesSynchronizers: boolean[], blockIds: string[]): Promise<IBlock[]> {
+  private async updateSynchronizedBlocks(
+    leavesSynchronizers: (boolean | null)[],
+    blockIds: string[]
+  ): Promise<IBlock[]> {
     return Promise.all(
-      leavesSynchronizers.map((success: boolean, i: number) =>
-        Block.findOneAndUpdate(
-          { _id: blockIds[i] },
-          {
-            status: success ? BlockStatus.Finalized : BlockStatus.Failed,
-          },
-          {
-            new: false,
-            upsert: true,
-          }
+      leavesSynchronizers
+        .filter((success: boolean) => success !== null)
+        .map((success: boolean, i: number) =>
+          Block.findOneAndUpdate(
+            { _id: blockIds[i] },
+            {
+              status: success ? BlockStatus.Finalized : BlockStatus.Failed,
+            },
+            {
+              new: false,
+              upsert: true,
+            }
+          )
         )
-      )
     );
   }
 
   private async processBlocks(
+    chainStatus: ChainStatus,
     mongoBlocks: IBlock[],
     onChainBlocksData: ChainBlockDataExtended[]
-  ): Promise<[Promise<boolean>[], string[]]> {
-    const leavesSynchronizers: Promise<boolean>[] = [];
+  ): Promise<[leavesSynchronizersSuccesses: Promise<boolean | null>[], blockIds: string[]]> {
+    const leavesSynchronizers: Promise<boolean | null>[] = [];
     const blockIds: string[] = [];
 
     await Promise.all(
       <Promise<never>[]>mongoBlocks.map((mongoBlock: IBlock, i: number) => {
         this.logger.debug(
-          `Block ${mongoBlock.id} with height: ${mongoBlock.height} and anchor: ${mongoBlock.anchor} and timestamp: ${mongoBlock.timestamp} and status: ${mongoBlock.status}`
+          `Block ${mongoBlock._id} with dataTimestamp: ${mongoBlock.dataTimestamp} and status: ${mongoBlock.status}`
         );
 
         switch (mongoBlock.status) {
           case undefined:
-            this.logger.info(`New block detected: ${mongoBlock.id}`);
+            this.logger.info(`New block detected: ${mongoBlock._id}`);
             mongoBlock.status = BlockStatus.New;
             return mongoBlock.save();
 
           case BlockStatus.New:
             if (onChainBlocksData[i].root !== ethers.constants.HashZero) {
-              return this.syncFinished(onChainBlocksData[i], mongoBlock.id);
+              return this.syncFinished(onChainBlocksData[i], mongoBlock._id);
             }
 
-            this.logger.info(`Block is not just finished: ${mongoBlock.id}`);
+            this.logger.info(`Block is not just finished: ${mongoBlock._id}`);
             return;
 
           case BlockStatus.Completed:
-            this.logger.info(`Synchronizing leaves for completed block: ${mongoBlock.height}`);
-            blockIds.push(mongoBlock.id);
-            leavesSynchronizers.push(this.leavesSynchronizer.apply(mongoBlock.id));
+            this.logger.info(`Start synchronizing leaves for completed block: ${mongoBlock.blockId}`);
+            blockIds.push(mongoBlock._id);
+            leavesSynchronizers.push(this.leavesSynchronizer.apply(chainStatus, mongoBlock._id));
             return;
 
           case BlockStatus.Finalized:
           case BlockStatus.Failed:
             if (mongoBlock.root != onChainBlocksData[i].root) {
               this.logger.warn(
-                `Invalid ROOT for block height ${mongoBlock.height}. Expected ${onChainBlocksData[i].root} but have ${mongoBlock.root} Reverting`
+                `Invalid ROOT for blockId ${mongoBlock.blockId}. Expected ${onChainBlocksData[i].root} but have ${mongoBlock.root} Reverting`
               );
               return this.revertBlock(mongoBlock._id);
             }
@@ -135,24 +178,26 @@ class BlockSynchronizer {
     return [leavesSynchronizers, blockIds];
   }
 
-  private async mintedBlocksFromChain(blockHeight: number, lookBack = 10): Promise<ChainBlockDataExtended[]> {
+  private async mintedBlocksFromChain(currentBlockId: number, lookBack = 10): Promise<ChainBlockDataExtended[]> {
     const awaitChainInstances: Promise<IChainInstance | undefined>[] = [];
 
-    for (let height = blockHeight - lookBack; height <= blockHeight; height++) {
-      awaitChainInstances.push(this.chainInstanceResolver.apply(height));
+    for (let blockId = currentBlockId - lookBack; blockId <= currentBlockId; blockId++) {
+      awaitChainInstances.push(this.chainInstanceResolver.apply(blockId));
     }
 
     const chainInstances = await Promise.all(awaitChainInstances);
 
-    const data = chainInstances.map((chainInstance: IChainInstance, i: number) =>
-      this.chainContract.resolveBlockData(chainInstance.address, blockHeight - lookBack + i)
-    );
+    const data = chainInstances
+      .filter((instance) => !!instance)
+      .map((chainInstance: IChainInstance, i: number) =>
+        this.chainContract.resolveBlockData(chainInstance.address, currentBlockId - lookBack + i)
+      );
 
     return (await Promise.all(data)).map(
       (blockData: ChainBlockData, i: number) =>
         <ChainBlockDataExtended>{
           ...blockData,
-          height: blockHeight - lookBack + i,
+          blockId: currentBlockId - lookBack + i,
           chainInstance: chainInstances[i],
         }
     );
@@ -164,48 +209,17 @@ class BlockSynchronizer {
 
   private async syncFinished(blockData: ChainBlockDataExtended, id: string): Promise<IBlock | void> {
     const block = await Block.findOne({ _id: id });
-    const height = block.height;
+    const blockId = block.blockId;
 
     const status = blockData.root == ethers.constants.HashZero ? BlockStatus.Failed : BlockStatus.Completed;
 
     if (status === BlockStatus.Failed) {
-      this.logger.info(`Block ${height} has finished: ${blockData} with status: ${block.status}`);
-      return block.updateOne({ status: status });
+      this.logger.info(`Block ${blockId} [${JSON.stringify(blockData)}] has finished with status: ${block.status}`);
     }
 
-    const voters = await this.chainContract.resolveBlockVoters(blockData.chainInstance.address, height);
-    const votes = await this.getVotes(blockData.chainInstance, height, voters);
-
-    this.logger.info(`Syncing finished side block with votes: ${JSON.stringify([...votes.entries()])}`);
-    this.logger.info(`Block ${height} has finished: ${blockData} with status: ${block.status}`);
-
-    return block.updateOne({
-      status: status,
-      root: blockData.root,
-      minter: blockData.minter,
-      staked: blockData.staked.toString(),
-      power: blockData.power.toString(),
-      voters: voters,
-      votes,
-    });
-  }
-
-  private async getVotes(
-    chainInstance: IChainInstance,
-    blockHeight: number,
-    voters: string[]
-  ): Promise<Map<string, string>> {
-    const votes: BigNumber[] = await Promise.all(
-      voters.map((voter) => this.chainContract.resolveBlockVotes(chainInstance.address, blockHeight, voter))
-    );
-
-    const votesMap = new Map<string, string>();
-
-    voters.forEach((voter, i) => {
-      votesMap.set(voter, votes[i].toString());
-    });
-
-    return votesMap;
+    return block.updateOne({ status: status });
+    // TODO when we switch to archive node, we can pull all data about voters, powers etc
+    // atm we will pull it from validators as this is the easiest way
   }
 }
 

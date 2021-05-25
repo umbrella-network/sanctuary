@@ -4,22 +4,30 @@ import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
 import { BlockStatus } from '../types/BlockStatuses';
+import StatsDClient from '../lib/StatsDClient';
 
 @injectable()
 class BlocksController {
   router: express.Application;
 
   constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
-    this.router = express().get('/', this.index).get('/:id', this.show).get('/:id/leaves', this.leaves);
+    this.router = express()
+      .get('/', this.index)
+      .get('/latest', this.latest)
+      .get('/:id', this.show)
+      .get('/:id/leaves', this.leaves);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
+    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
 
     if (!apiKeyVerificationResult.apiKey) {
-      response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
+
+    StatsDClient?.increment('sanctuary.blocks-controller.index', undefined, {
+      projectId: apiKeyVerificationResult.apiKey.projectId,
+    });
 
     const offset: number = parseInt(<string>request.query.offset || '0');
     const limit: number = Math.min(parseInt(<string>request.query.limit || '100', 10), 100);
@@ -27,31 +35,51 @@ class BlocksController {
     const blocks = await Block.find({ status: BlockStatus.Finalized })
       .skip(offset)
       .limit(limit)
-      .sort({ height: -1 })
+      .sort({ blockId: -1 })
       .exec();
 
     response.send(blocks);
   };
 
+  latest = async (request: Request, response: Response): Promise<void> => {
+    const block = await Block.findOne().sort({ blockId: -1 });
+
+    response.send({ data: block });
+  };
+
   show = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
+    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
 
     if (!apiKeyVerificationResult.apiKey) {
-      response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
 
-    const block = await Block.findById(request.params.id);
+    StatsDClient?.increment('sanctuary.blocks-controller.show', undefined, {
+      projectId: apiKeyVerificationResult.apiKey.projectId,
+    });
+
+    let blockId = -1;
+
+    try {
+      blockId = parseInt(request.params.id, 10);
+    } catch (_) {
+      // ignore
+    }
+
+    const [block] = await Block.find({ blockId });
     response.send({ data: block });
   };
 
   leaves = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKeyFromAuthHeader(request.headers.authorization);
+    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
 
     if (!apiKeyVerificationResult.apiKey) {
-      response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
       return;
     }
+
+    StatsDClient?.increment('sanctuary.blocks-controller.leaves', undefined, {
+      projectId: apiKeyVerificationResult.apiKey.projectId,
+    });
 
     const leaves = await Leaf.find({ blockId: request.params.id });
     response.send(leaves);

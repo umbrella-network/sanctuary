@@ -1,18 +1,18 @@
 import { injectable } from 'inversify';
-import SortedMerkleTree from '../lib/SortedMerkleTree';
-import { remove0x } from '../utils/remove-0x';
+import { KeyValuePairs } from '../types/custom';
+import { remove0x } from '@umb-network/toolbox/dist/utils/helpers';
+import { SortedMerkleTree } from '@umb-network/toolbox';
 
 @injectable()
 class SortedMerkleTreeFactory {
   apply(data: Map<string, string>): SortedMerkleTree {
-    const treeData = Array.from(data.keys())
+    const treeData: KeyValuePairs = {};
+
+    Array.from(data.keys())
       .sort()
-      .map((key) => {
-        const value = data.get(key);
-        const converted = Buffer.from(remove0x(value), 'hex');
-        return { [key]: converted };
-      })
-      .reduce((acc, v) => ({ ...acc, ...v }), {});
+      .forEach((key) => {
+        treeData[key] = Buffer.from(remove0x(data.get(key)), 'hex');
+      });
 
     return new SortedMerkleTree(treeData);
   }

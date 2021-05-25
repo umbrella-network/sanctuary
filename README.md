@@ -1,8 +1,7 @@
 # Description
 
-Retrieves raw block leaves from Umbrella sidechain blocks.
-Displays information about the leaves and allows users to retrieve Merkle proofs.
-Provides an API for retrieving block leaves and Merkle proofs.
+Retrieves raw block leaves from Umbrella sidechain blocks. Displays information about the leaves and allows users to
+retrieve Merkle proofs. Provides an API for retrieving block leaves and Merkle proofs.
 
 # Setup
 
@@ -70,13 +69,32 @@ $ npm run start
 
 # API
 
+### FCDs
+
+#### Request
+
+```
+GET /fcds
+```
+
+#### Response
+
+```json
+[
+  {
+    "_id": "GVol-BTC-IV-28days",
+    "__v": 0,
+    "dataTimestamp": "2020-05-16T09:23:42.000Z",
+    "value": 89.19
+  }
+]
+```
+
 ## Blocks
 
 This endpoint returns a set of blocks along with some basic information about those blocks.
 
 ### Index
-
-#### Request
 
 ```
 GET /blocks
@@ -87,20 +105,25 @@ GET /blocks
 ```json
 [
   {
-    "staked": 1000000000000000000,
-    "power": 1000000000000000000,
-    "voters": ["0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F"],
-    "votes": {},
-    "numericFcdKeys": ["eth-eur", "eth-usd"],
-    "numericFcdValues": [481.92, 587.56],
-    "_id": "block::83",
-    "height": 83,
+    "staked": "7000000000000000000",
+    "power": "5000000000000000000",
+    "voters": [
+      "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0",
+      "0xDc3eBc37DA53A644D67E5E3b5BA4EEF88D969d5C"
+    ],
+    "votes": {
+      "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0": "2000000000000000000",
+      "0xDc3eBc37DA53A644D67E5E3b5BA4EEF88D969d5C": "3000000000000000000"
+    },
+    "_id": "block::115237",
+    "blockId": 115237,
     "__v": 1,
-    "anchor": 1179,
-    "timestamp": "2020-12-17T22:02:02.000Z",
+    "chainAddress": "0x9f3b01F0521efe0622CA0c14A0e237FdCd61cB89",
+    "dataTimestamp": "2021-05-16T09:36:53.000Z",
+    "root": "0xc4c3fde3ecda88791cf3a8f8e1d0f4bb1d77db6a788e6759469d556e7a28e39e",
     "status": "finalized",
-    "minter": "0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F",
-    "root": "0xf6991e5c6d1e6e3100fa8e39f9ab9c9edc9c8d6be4a561c772626448b0e64ef9"
+    "anchor": "24867044",
+    "minter": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
   }
 ]
 ```
@@ -110,7 +133,7 @@ GET /blocks
 #### Request
 
 ```
-GET /blocks/:id
+GET /blocks/:blockId
 ```
 
 #### Response
@@ -118,26 +141,25 @@ GET /blocks/:id
 ```json
 {
   "data": {
-    "staked": 1234,
-    "power": 1234,
+    "staked": "7000000000000000000",
+    "power": "5000000000000000000",
     "voters": [
-      "0xea674fdde714fd979de3edf0f56aa9716b898ec8",
-      "0x829bd824b016326a401d083b33d092293333a830",
-      "0x09ab1303d3ccaf5f018cd511146b07a240c70294",
-      "0xb3b7874f13387d44a3398d298b075b7a3505d8d4"
+      "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0",
+      "0xDc3eBc37DA53A644D67E5E3b5BA4EEF88D969d5C"
     ],
     "votes": {
-      "0xA405324F4b6EB7Bc76f1964489b3769cfc71445F": 200
+      "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0": "2000000000000000000",
+      "0xDc3eBc37DA53A644D67E5E3b5BA4EEF88D969d5C": "3000000000000000000"
     },
-    "numericFcdKeys": ["eth-eur", "eth-usd"],
-    "_id": "block::624",
-    "height": 22,
+    "_id": "block::115237",
+    "blockId": 115237,
     "__v": 1,
-    "anchor": 12345,
-    "timestamp": "2011-10-05T14:48:00.000Z",
+    "chainAddress": "0x9f3b01F0521efe0622CA0c14A0e237FdCd61cB89",
+    "dataTimestamp": "2021-05-16T09:36:53.000Z",
+    "root": "0xc4c3fde3ecda88791cf3a8f8e1d0f4bb1d77db6a788e6759469d556e7a28e39e",
     "status": "finalized",
-    "minter": "0xf541c3cd1d2df407fb9bb52b3489fc2aaeedd97e",
-    "root": "0xf8b72d93bb187e4adad3bbb423b261eb334d1fbdbe021cb248386ad7e39da9df"
+    "anchor": "24867044",
+    "minter": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
   }
 }
 ```
@@ -149,7 +171,7 @@ This endpoint returns a set of leaves, along with their raw values and Merkle pr
 #### Request
 
 ```
-GET /blocks/:block_id/leaves
+GET /blocks/:blockId/leaves
 ```
 
 #### Response
@@ -162,8 +184,8 @@ GET /blocks/:block_id/leaves
       "0xcdd0583f1cb502639d5087d4437b3a21b20355be2bbf7082ebe1283f8c77ee22",
       "0x90af39449c1e937a408ad7a401eb39eef589ae5193ef6095e4470447459ee6e0"
     ],
-    "_id": "leaf::block::624::aave-usd",
-    "blockId": "block::624",
+    "_id": "block::624::leaf::aave-usd",
+    "blockId": "624",
     "key": "aave-usd",
     "__v": 0,
     "value": "84.68"
@@ -205,7 +227,7 @@ This endpoint returns the latest block height and proofs for a given set of leaf
 #### Request
 
 ```
-GET /proofs/?keys[]=eth-usd&keys[]=uni-usd
+GET /proofs/?keys[]=ETH-USD
 ```
 
 #### Response
@@ -214,47 +236,44 @@ GET /proofs/?keys[]=eth-usd&keys[]=uni-usd
 {
   "data": {
     "block": {
-      "staked": 1000000000000000000,
-      "power": 1000000000000000000,
-      "voters": ["0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F"],
-      "votes": {},
-      "numericFcdKeys": ["eth-eur", "eth-usd"],
-      "_id": "block::83",
-      "height": 83,
+      "staked": "7000000000000000000",
+      "power": "5000000000000000000",
+      "voters": [
+        "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0",
+        "0xDc3eBc37DA53A644D67E5E3b5BA4EEF88D969d5C"
+      ],
+      "votes": {
+        "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0": "2000000000000000000",
+        "0xDc3eBc37DA53A644D67E5E3b5BA4EEF88D969d5C": "3000000000000000000"
+      },
+      "_id": "block::115241",
+      "blockId": 115241,
       "__v": 1,
-      "anchor": 1179,
-      "timestamp": "2020-12-17T22:02:02.000Z",
+      "chainAddress": "0x9f3b01F0521efe0622CA0c14A0e237FdCd61cB89",
+      "dataTimestamp": "2021-05-16T09:40:53.000Z",
+      "root": "0x9fac1100dd3939a8c57b64c99e6eecdee5218c876ec97104e16f87227edc7461",
       "status": "finalized",
-      "minter": "0xa5D5DaBfbB1d64A60c62f637e292DBfC22Fd8f4F",
-      "root": "0xf6991e5c6d1e6e3100fa8e39f9ab9c9edc9c8d6be4a561c772626448b0e64ef9"
+      "anchor": "24867103",
+      "minter": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
     },
-    "keys": ["eth-usd", "uni-usd"],
+    "keys": [
+      "ETH-USD"
+    ],
     "leaves": [
       {
         "proof": [
-          "0xb8def062e729cfa9912911218432bbe1452fe2e107a869598842e8eb56d509c7",
-          "0x9f2e284919ed27ceb25dc6847c24fb8ae631aaf50155ee064515228940054bde",
-          "0x32b45f1179b88e642617a9273fe14d8acc64348a95ebb7bee47f25437cf175cc",
-          "0xbb62bdf01dd462e30412c455aa2127156a240b1ffd5c1b0e6eb18aca2e86a925"
+          "0x7f587efdda07f7aae142ec3804575a9dee1af8aaeae354b3ace5f0605d4f67ed",
+          "0x902643fc249442ffb5a987228c31d9bd191dbf60f854124fe1e1f1c23d47e3f5",
+          "0x1eeea1e595459312fbf0be336129d35ef487866dde2e234842cddfa3654a3e57",
+          "0x3e2d397b89ff9c144bc1d0af8dc0ab047cc92be94f95c51630ee709615478bf2",
+          "0x68ac0fd289e870e2b75126b5755c5e540f6f56df61cd43e178e9351064fddd3d",
+          "0x161ebd85d6bd6f5b9f607e7c658bd55d792c6b7d472f6dbdcc052b7a265d1a96"
         ],
-        "_id": "leaf::block::624::eth-usd",
-        "blockId": "block::624",
-        "key": "eth-usd",
+        "_id": "block::115241::leaf::ETH-USD",
+        "blockId": "115241",
+        "key": "ETH-USD",
         "__v": 0,
-        "value": "639.96"
-      },
-      {
-        "proof": [
-          "0x060e2662dd6c848fb19c5cea1ca6e6efd13c4d1041455c7eafba31e1b0137b53",
-          "0x3391f2345d36ea23e57be3755d5c33324381ddd9a1784edd9e8867ac8b35b8d4",
-          "0x88d03fe3e31745950a09b8f1dbde81239332e3e28aee0760f4fbbb5ff2fc2564",
-          "0xbb62bdf01dd462e30412c455aa2127156a240b1ffd5c1b0e6eb18aca2e86a925"
-        ],
-        "_id": "leaf::block::624::uni-usd",
-        "blockId": "block::624",
-        "key": "uni-usd",
-        "__v": 0,
-        "value": "3.645"
+        "value": "0x7b89ee01ff03"
       }
     ]
   }

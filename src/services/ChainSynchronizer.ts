@@ -18,8 +18,8 @@ class ChainSynchronizer {
       await ChainInstance.create({
         _id: `chain::${currentChain.address}`,
         address: currentChain.address,
-        blocksCountOffset: blocksCountOffset.toNumber(),
-        timestamp: new Date(),
+        blocksCountOffset: blocksCountOffset,
+        dataTimestamp: new Date(),
       });
 
       this.logger.info(`Detected new contract: ${currentChain.address}`);

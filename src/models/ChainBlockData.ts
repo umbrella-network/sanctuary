@@ -1,16 +1,20 @@
 import { BigNumber } from 'ethers';
 import { IChainInstance } from './ChainInstance';
 
+export interface ChainFCDData {
+  dataTimestamp: number;
+  value: string;
+}
+
+export type ChainFCDsData = [values: BigNumber[], timestamps: number[]];
+
 export interface ChainBlockData {
-  anchor: BigNumber;
-  timestamp: BigNumber;
   root: string;
-  minter: string;
-  staked: BigNumber;
-  power: BigNumber;
+  dataTimestamp: number;
+  affidavit: BigNumber;
 }
 
 export interface ChainBlockDataExtended extends ChainBlockData {
   chainInstance: IChainInstance;
-  height: number;
+  blockId: number;
 }
