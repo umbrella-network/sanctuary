@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - added Added reporting of synchronization errors to NewRelic
 
+## [1.0.1] - 2021-05-25
+### Changed
+- make `/fcds` endpoint public (no key check)
+- Improve tests execution and cleanup
+- Ensure Prod build is not executed if tests failed
+- Add develop workflow for the E2E testing (SDK and Reff App)
+- Add Badges for actions and Argocd
+
+### Fixed
+- turn back on API key check
+
 ## [1.0.0] - 2021-05-24
 
 ### Added
