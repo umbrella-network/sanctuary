@@ -21,7 +21,13 @@ abstract class BasicWorker {
   }
 
   get queue(): Bull.Queue {
-    return (this.#queue ||= new Queue(this.queueName, { connection: this.connection }));
+    return (this.#queue ||= new Queue(this.queueName, { 
+      connection: this.connection,
+      defaultJobOptions: {
+        removeOnComplete: true, 
+        removeOnFail: true
+      }
+    }));
   }
 
   get worker(): Bull.Worker {

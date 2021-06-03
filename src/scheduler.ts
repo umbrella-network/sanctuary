@@ -8,9 +8,6 @@ import Settings from './types/Settings';
   const blockSynchronizerWorker = Application.get(BlockSynchronizerWorker);
 
   setInterval(async () => {
-    await blockSynchronizerWorker.enqueue({}, {
-      removeOnComplete: true,
-      removeOnFail: true
-    });
+    await blockSynchronizerWorker.enqueue({});
   }, settings.jobs.blockCreation.interval);
 })();
