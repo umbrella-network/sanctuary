@@ -4,7 +4,7 @@ export interface IBlock extends Document {
   chainAddress: string;
   blockId: number;
   status: string;
-  anchor: string;
+  anchor: number;
   dataTimestamp: Date;
   root: string;
   minter: string;
@@ -19,17 +19,18 @@ const BlockSchema: Schema = new Schema({
   chainAddress: { type: String, required: true, unique: false },
   blockId: { type: Number, required: true, unique: true },
   status: { type: String, required: false },
-  anchor: { type: String, required: false },
-  dataTimestamp: { type: Date, required: false },
-  root: { type: String, required: false },
-  minter: { type: String, required: false },
-  staked: { type: String, required: false, default: 0 },
-  power: { type: String, required: false, default: 0 },
+  anchor: { type: Number, required: true },
+  dataTimestamp: { type: Date, required: true },
+  root: { type: String, required: true },
+  minter: { type: String, required: true },
+  staked: { type: String, required: true },
+  power: { type: String, required: true },
   voters: { type: [String], required: false, default: [] },
   votes: { type: Map, required: false, default: {} },
 });
 
 BlockSchema.index({ blockId: -1 });
+BlockSchema.index({ blockId: 1 });
 BlockSchema.index({ status: 1 });
 
 export default mongoose.model<IBlock>('Block', BlockSchema);

@@ -15,23 +15,45 @@ import ChainInstance from '../../src/models/ChainInstance';
 import {expect} from 'chai';
 import {arbitraryBlockFromChain} from '../fixtures/arbitraryBlockFromChain';
 import {ChainInstanceResolver} from '../../src/services/ChainInstanceResolver';
+import Blockchain from '../../src/lib/Blockchain';
+import settings from '../../src/config/settings';
+import {randomBlocks} from '../fixtures/inputForBlockModel';
+import {BlockStatus} from '../../src/types/blocks';
 
 describe('BlockSynchronizer', () => {
   let container: Container;
   let mockedChainContract: sinon.SinonStubbedInstance<ChainContract>;
   let mockedChainInstanceResolver: sinon.SinonStubbedInstance<ChainInstanceResolver>;
   let mockedLeavesSynchronizer: sinon.SinonStubbedInstance<LeavesSynchronizer>;
+  let mockedBlockchain: sinon.SinonStubbedInstance<Blockchain>;
   let blockSynchronizer: BlockSynchronizer;
+  const chainAddress = '0xA6f3317483048B095691b8a8CE0C57077a378689';
+
+  const resolveChainStatus = (blockNumber: BigNumber, lastBlockId = 10, nextBlockId = 10) => mockedChainContract.resolveStatus.resolves([
+    chainAddress,
+    {
+      blockNumber,
+      timePadding: 100,
+      lastBlockId,
+      nextBlockId,
+      nextLeader: '0x111',
+      validators: ['0x111'],
+      locations: ['abc'],
+      lastDataTimestamp: 162345,
+      powers: [BigNumber.from(333)],
+      staked: BigNumber.from(222),
+    },
+  ]);
 
   before(async () => {
     const config = loadTestEnv();
     mongoose.set('useFindAndModify', false);
     await mongoose.connect(config.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true});
 
-    await ChainInstance.findOneAndUpdate({address: '0x321'}, {
-      address: '0x321',
+    await ChainInstance.findOneAndUpdate({address: chainAddress}, {
+      address: chainAddress,
       blocksCountOffset: 0,
-      dataTimestamp: new Date()
+      anchor: 9
     },
     {
       new: true,
@@ -43,10 +65,14 @@ describe('BlockSynchronizer', () => {
     container = new Container({autoBindInjectable: true});
 
     // Mocking dependencies and adding them to the container
+    mockedBlockchain = sinon.createStubInstance(Blockchain);
     mockedChainContract = sinon.createStubInstance(ChainContract);
     mockedChainInstanceResolver = sinon.createStubInstance(ChainInstanceResolver);
     mockedLeavesSynchronizer = sinon.createStubInstance(LeavesSynchronizer);
+
     container.bind<Logger>('Logger').toConstantValue(mockedLogger);
+    container.bind('Settings').toConstantValue(settings);
+    container.bind(Blockchain).toConstantValue(mockedBlockchain);
     container.bind(ChainContract).toConstantValue(mockedChainContract as unknown as ChainContract);
     container.bind(ChainInstanceResolver).toConstantValue(mockedChainInstanceResolver as unknown as ChainInstanceResolver);
     container.bind(LeavesSynchronizer).toConstantValue(mockedLeavesSynchronizer as unknown as LeavesSynchronizer);
@@ -61,21 +87,9 @@ describe('BlockSynchronizer', () => {
     // Clearing DB before each test
     await Block.deleteMany({});
 
-    mockedChainContract.resolveStatus.resolves([
-      '0x321',
-      {
-        blockNumber: BigNumber.from(1),
-        timePadding: 100,
-        lastBlockId: 10,
-        nextBlockId: 10,
-        nextLeader: '0x111',
-        validators: ['0x111'],
-        locations: ['abc'],
-        lastDataTimestamp: 162345,
-        powers: [BigNumber.from(333)],
-        staked: BigNumber.from(222),
-      },
-    ]);
+    await Promise.all(randomBlocks.map(async (block) => {
+      return Block.findOneAndUpdate({_id: block._id}, block, {new: true, upsert: true});
+    }));
   });
 
   after(async () => {
@@ -84,77 +98,82 @@ describe('BlockSynchronizer', () => {
     await mongoose.connection.close();
   });
 
-  it('marks ten new blocks as "new" and saves to DB', async () => {
+  it('will not proceed if new block is not detected', async () => {
     mockedChainContract.resolveBlockData.resolves(arbitraryBlockFromChain);
-    mockedChainInstanceResolver.apply.resolves(new ChainInstance({address: '0x321'}));
+    mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
+    resolveChainStatus(BigNumber.from(10)); // no new blocks
 
     await blockSynchronizer.apply();
-
-    let blocks: any[] = await Block.find({});
-
-    expect(blocks.length).to.be.equal(11);
-
-    blocks
-      .sort((a, b) => a.blockId - b.blockId)
-      .forEach((block, i) => {
-        expect(block).to.have.property('status', 'new');
-        expect(block).to.have.property('blockId', i);
-        expect(block).to.have.property('_id', `block::${block.blockId}`);
-      });
-
-    mockedLeavesSynchronizer.apply.resolves(true);
-    await blockSynchronizer.apply();
-
-    blocks = await Block.find({});
-
-    expect(blocks.length).to.be.equal(11);
-
-    blocks
-      .sort((a, b) => a.blockId - b.blockId)
-      .forEach((block, i) => {
-        expect(block).to.have.property('status', 'completed');
-        expect(block).to.have.property('blockId', i);
-        expect(block).to.have.property('_id', `block::${block.blockId}`);
-      });
-
-    await blockSynchronizer.apply();
-
-    expect(mockedLeavesSynchronizer.apply.callCount).to.be.equal(11);
-
-    blocks = await Block.find({});
-
-    expect(blocks.length).to.be.equal(11);
-
-    blocks
-      .sort((a, b) => a.blockId - b.blockId)
-      .forEach((block, i) => {
-        expect(block).to.have.property('status', 'finalized');
-        expect(block).to.have.property('blockId', i);
-        expect(block).to.have.property('_id', `block::${block.blockId}`);
-      });
+    const blocks = await Block.find({status: BlockStatus.Finalized});
+    expect(blocks.length).to.be.equal(1);
   });
 
-  it('marks completed blocks as "failed" if leaves synchronization finished unsuccessfully', async () => {
-    mockedLeavesSynchronizer.apply.resolves(false);
-    mockedChainContract.resolveBlockData.resolves(arbitraryBlockFromChain);
-    mockedChainInstanceResolver.apply.resolves(new ChainInstance({address: '0x321'}));
+  it('it will revert block when detect invalid root', async () => {
+    mockedChainContract.resolveBlockData.resolves({
+      ...arbitraryBlockFromChain,
+      root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
+    });
+    mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
+    resolveChainStatus(BigNumber.from(11)); // new blocks
+
+    const blocksBefore: any[] = await Block.find({});
+    expect(blocksBefore.length).to.be.equal(3);
 
     await blockSynchronizer.apply();
-    await blockSynchronizer.apply();
-    await blockSynchronizer.apply();
-
-    expect(mockedLeavesSynchronizer.apply.callCount).to.be.equal(11);
 
     const blocks: any[] = await Block.find({});
+    expect(blocks.length).to.be.equal(2);
+  });
 
-    expect(blocks.length).to.be.equal(11);
+  it('it will finalize completed blocks on successful synchronization', async () => {
+    mockedChainContract.resolveBlockData.resolves({
+      ...arbitraryBlockFromChain,
+      root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
+    });
+    mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
+    resolveChainStatus(BigNumber.from(11)); // new blocks
+    mockedLeavesSynchronizer.apply.resolves(true);
 
-    blocks
-      .sort((a, b) => a.blockId - b.blockId)
-      .forEach((block, i) => {
-        expect(block).to.have.property('status', 'failed', `block ${i}`);
-        expect(block).to.have.property('blockId', i);
-        expect(block).to.have.property('_id', `block::${block.blockId}`);
-      });
+    await blockSynchronizer.apply();
+    const blocks: any[] = await Block.find({status: BlockStatus.Finalized});
+
+    expect(blocks.length).to.be.equal(2);
+  });
+
+  it('it will fail completed blocks on failed synchronization', async () => {
+    mockedChainContract.resolveBlockData.resolves({
+      ...arbitraryBlockFromChain,
+      root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
+    });
+    mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
+    resolveChainStatus(BigNumber.from(11)); // new blocks
+    mockedLeavesSynchronizer.apply.resolves(false);
+
+    await blockSynchronizer.apply();
+    const finalized: any[] = await Block.find({status: BlockStatus.Finalized});
+    const failed: any[] = await Block.find({status: BlockStatus.Failed});
+
+    expect(finalized.length).to.be.equal(1);
+    expect(failed.length).to.be.equal(1);
+  });
+
+
+  it('it will retry on last block', async () => {
+    mockedChainContract.resolveBlockData.resolves({
+      ...arbitraryBlockFromChain,
+      root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
+    });
+    mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
+    resolveChainStatus(BigNumber.from(11), 2, 3); // new blocks
+    mockedLeavesSynchronizer.apply.resolves(null);
+
+    await blockSynchronizer.apply();
+    const finalized: any[] = await Block.find({status: BlockStatus.Finalized});
+    const failed: any[] = await Block.find({status: BlockStatus.Failed});
+    const completed: any[] = await Block.find({status: BlockStatus.Completed});
+
+    expect(finalized.length).to.be.equal(1);
+    expect(failed.length).to.be.equal(0);
+    expect(completed.length).to.be.equal(1);
   });
 });

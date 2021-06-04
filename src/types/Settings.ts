@@ -11,7 +11,12 @@ type Settings = {
   mongodb: {
     url: string;
   };
+  app: {
+    blockSyncBatchSize: number;
+  };
   blockchain: {
+    scanBatchSize: number;
+    confirmations: number;
     provider: {
       url: string;
     };
