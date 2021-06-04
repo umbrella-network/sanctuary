@@ -1,5 +1,6 @@
 import Bull from 'bullmq';
 import { Logger } from 'winston';
+import newrelic from 'newrelic';
 import { inject, injectable } from 'inversify';
 import BlockSynchronizer from '../services/BlockSynchronizer';
 import BasicWorker from './BasicWorker';
@@ -21,6 +22,7 @@ class BlockSynchronizerWorker extends BasicWorker {
     try {
       await this.blockSynchronizer.apply();
     } catch (e) {
+      newrelic.noticeError(e);
       this.logger.error(e);
     }
   };
