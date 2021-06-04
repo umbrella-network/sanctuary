@@ -24,29 +24,41 @@ class BlockSynchronizer {
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
   async apply(): Promise<void> {
-    const [[chainAddress, chainStatus], [lastSavedBlockId, lastSavedAnchor]] = await Promise.all([
-      this.chainContract.resolveStatus(),
-      BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
-    ]);
+    try {
+      const [[chainAddress, chainStatus], [lastSavedBlockId, lastSavedAnchor]] = await Promise.all([
+        this.chainContract.resolveStatus(),
+        BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
+      ]);
 
-    if (!(await this.canProceed(chainStatus, lastSavedBlockId, lastSavedAnchor))) {
-      return;
-    }
+      if (!(await this.canProceed(chainStatus, lastSavedBlockId, lastSavedAnchor))) {
+        return;
+      }
 
-    this.logger.info(`Synchronizing blocks for ${chainStatus.nextBlockId}, current chain ${chainAddress}`);
+      this.logger.info(`Synchronizing blocks for ${chainStatus.nextBlockId}, current chain ${chainAddress}`);
 
-    const mongoBlocks = await this.getMongoBlocksToSynchronize();
+      const mongoBlocks = await this.getMongoBlocksToSynchronize();
 
-    this.logger.debug(`got ${mongoBlocks.length} mongoBlocks to synchronize`);
+      this.logger.info(`got ${mongoBlocks.length} mongoBlocks to synchronize`);
 
-    const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatus, mongoBlocks);
+      const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatus, mongoBlocks);
 
-    const syncResults = await Promise.all(leavesSynchronizers);
-    this.logger.info(`processed blocks: ${blockIds.join(',')} with results: ${syncResults}`);
+      this.logger.info(`processing blocks done: ${blockIds.join(',')}`);
 
-    if (blockIds.length > 0) {
-      const saved = await this.updateSynchronizedBlocks(syncResults, blockIds);
-      this.logger.info(`saved blocks: ${saved.map((b) => b.id)}`);
+      let syncResults;
+      try {
+        syncResults = await Promise.all(leavesSynchronizers);
+      } catch (e) {
+        this.logger.error('[101]' + e.message, e);
+      }
+
+      this.logger.info(`syncing results: ${syncResults}`);
+
+      if (blockIds.length > 0) {
+        const saved = await this.updateSynchronizedBlocks(syncResults, blockIds);
+        this.logger.info(`saved blocks: ${saved.map((b) => b.id)}`);
+      }
+    } catch (e) {
+      this.logger.error('[99]' + e.message, e);
     }
   }
 
@@ -106,6 +118,8 @@ class BlockSynchronizer {
         .map((success: boolean, i: number) => {
           const status = success ? BlockStatus.Finalized : BlockStatus.Failed;
 
+          this.logger.info(`updateSynchronizedBlocks ${blockIds[i]}: ${status}`);
+
           if (!success) {
             this.logger.error(`Block ${blockIds[i]}: ${status}`);
           }
@@ -138,7 +152,7 @@ class BlockSynchronizer {
           return;
         }
 
-        this.logger.debug(
+        this.logger.info(
           `Processing block ${mongoBlock._id} with dataTimestamp: ${mongoBlock.dataTimestamp} and status: ${mongoBlock.status}`
         );
 
@@ -151,6 +165,8 @@ class BlockSynchronizer {
 
           case BlockStatus.Finalized:
           case BlockStatus.Failed:
+            this.logger.info(`pulling onChainBlocksData for ${mongoBlock.blockId}: ${mongoBlock.chainAddress}`);
+
             // eslint-disable-next-line no-case-declarations
             const onChainBlocksData = await this.chainContract.resolveBlockData(
               mongoBlock.chainAddress,
