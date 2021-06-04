@@ -16,6 +16,10 @@ class ValidatorRegistryContract {
   }
 
   async resolveContract(): Promise<Contract> {
+    console.log(
+      'this.settings.blockchain.contracts.registry.address',
+      this.settings.blockchain.contracts.registry.address
+    );
     if (!this.registry) {
       this.registry = new ContractRegistry(
         this.blockchain.provider,
@@ -24,6 +28,8 @@ class ValidatorRegistryContract {
     }
 
     const address = await this.registry.getAddress(this.settings.blockchain.contracts.validatorRegistry.name);
+    console.log('resolved chain address:', address);
+
     return new Contract(address, ABI.validatorRegistryAbi, this.blockchain.provider);
   }
 

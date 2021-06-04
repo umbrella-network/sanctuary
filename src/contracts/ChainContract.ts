@@ -24,6 +24,11 @@ class ChainContract {
   }
 
   async resolveContract(): Promise<ChainContract> {
+    console.log(
+      '(2) this.settings.blockchain.contracts.registry.address',
+      this.settings.blockchain.contracts.registry.address
+    );
+
     if (!this.registry) {
       this.registry = new ContractRegistry(
         this.blockchain.provider,
@@ -32,6 +37,7 @@ class ChainContract {
     }
 
     const chainAddress = await this.registry.getAddress(this.settings.blockchain.contracts.chain.name);
+    console.log('(2) resolved chain address:', chainAddress);
     return this.setContract(chainAddress);
   }
 
@@ -83,6 +89,7 @@ class ChainContract {
   }
 
   private setContract = (chainAddress: string): ChainContract => {
+    console.log('setContract=', chainAddress);
     this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.provider);
     return this;
   };
