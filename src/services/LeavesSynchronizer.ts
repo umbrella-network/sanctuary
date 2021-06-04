@@ -4,13 +4,14 @@ import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
 import Block, { IBlock } from '../models/Block';
 import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
-import axios from 'axios';
-import { BlockFromPegasus } from '../types/BlockFromPegasus';
+import { BlockFromPegasus } from '../types/blocks';
 import ChainContract from '../contracts/ChainContract';
 import FCD, { IFCD } from '../models/FCD';
 import { LeafValueCoder, SortedMerkleTree } from '@umb-network/toolbox';
 import { ChainStatus } from '../types/ChainStatus';
 import { Validator } from '../types/Validator';
+import * as url from 'url';
+import { callRetry } from '../utils/callRetry';
 
 @injectable()
 class LeavesSynchronizer {
@@ -25,17 +26,21 @@ class LeavesSynchronizer {
     this.logger.info(`Synchronizing leaves for block: ${mongoBlock._id}`);
 
     let success = false;
+    await Leaf.deleteMany({ blockId: mongoBlock.blockId });
 
-    // TODO we can create task for sorting validators in a way, so we have high change of hit minter
-    // sorting order should be based on how leader is selected
-    const validators = this.chainContract.resolveValidators(chainStatus);
+    // lets do a call to minter first
+    const validators = this.validatorsList(chainStatus, mongoBlock.minter);
 
     for (const validator of validators) {
       if (!validator.location) {
         continue;
       }
 
-      success = await this.syncLeavesFromValidator(validator, mongoBlock);
+      try {
+        success = await this.syncLeavesFromValidator(validator, mongoBlock);
+      } catch (e) {
+        this.logger.error(e);
+      }
 
       if (success) {
         break;
@@ -47,73 +52,71 @@ class LeavesSynchronizer {
       success = null;
     }
 
-    this.logger.info(`Leaf syncing ran with success: ${success}`);
+    this.logger.info(`Leaf syncing for ${mongoBlock.blockId} ran with success: ${success}`);
     return success;
   }
 
+  private validatorsList(chainStatus: ChainStatus, minter: string): Validator[] {
+    // lets do a call to minter first
+    return this.chainContract
+      .resolveValidators(chainStatus)
+      .sort((a, b) => (a.id === minter ? -1 : b.id === minter ? 1 : 0));
+  }
+
   private syncLeavesFromValidator = async (validator: Validator, mongoBlock: IBlock): Promise<boolean> => {
-    if (!validator.location) {
+    const urlForBlockId = url.parse(`${validator.location}/blocks/blockId/${mongoBlock.blockId}`).href;
+    this.logger.info(`Resolving leaves from: ${urlForBlockId}`);
+
+    const blockFromPegasus = await this.blockFromValidator(validator, mongoBlock.blockId);
+
+    if (!blockFromPegasus) {
       return false;
     }
 
-    const url = new URL(`${validator.location}/blocks/blockId/${mongoBlock.blockId}`);
-    const response = await axios.get<{ data: BlockFromPegasus }>(url.toString());
-
-    if (response.status != 200) {
-      this.logger.warn(`Validator ${url} responded with status: ${response.status}`);
-      return false;
-    }
-
-    if (!response.data || response.data.data === null) {
-      this.logger.warn(`Empty response.data.data for ${url}: ${JSON.stringify(response.data)}`);
-      return false;
-    }
-
-    const resolvedLeaves: Map<string, string> = new Map(<[string, string][]>Object.entries(response.data.data.data));
+    const resolvedLeaves: Map<string, string> = new Map(<[string, string][]>Object.entries(blockFromPegasus.data));
     const tree = this.sortedMerkleTreeFactory.apply(resolvedLeaves);
     const root = tree.getRoot();
 
     if (root != mongoBlock.root) {
       this.logger.warn(
-        `Validator: ${url} returned non matching tree data; consensus = ${mongoBlock.root} & validator = ${root}`
+        `Validator: ${urlForBlockId} returned non matching tree data; consensus = ${mongoBlock.root} & validator = ${root}`
       );
+
       return false;
     }
 
-    this.logger.info(`Resolving leaves from: ${url}`);
-    const [, , updatedLeaves] = await Promise.all([
-      this.updateBlock(mongoBlock, response.data.data),
-      this.updateFCD(mongoBlock, response.data.data.fcdKeys),
+    const [, updatedLeaves] = await Promise.all([
+      this.updateFCD(mongoBlock, blockFromPegasus.fcdKeys),
       this.updateLeaves(resolvedLeaves, tree, mongoBlock.blockId),
     ]);
 
     this.logger.info(
-      `Syncing finished side block with ${updatedLeaves.length} leaves and votes: ${JSON.stringify(
-        response.data.data.votes
-      )}`
+      `Resolving finished with ${updatedLeaves.length} leaves and votes: ${Object.keys(blockFromPegasus.votes).length}`
     );
-
-    this.logger.info(`Block ${mongoBlock.blockId} has finished with status: ${mongoBlock.status}`);
 
     return true;
   };
 
-  private updateBlock = async (block: IBlock, data: BlockFromPegasus): Promise<IBlock> => {
-    const votesMap = new Map<string, string>();
-    const voters = Object.keys(data.votes);
+  private blockFromValidator = async (validator: Validator, blockId: number): Promise<BlockFromPegasus | undefined> => {
+    const urlForBlockId = url.parse(`${validator.location}/blocks/blockId/${blockId}`).href;
 
-    voters.forEach((voter: string) => {
-      votesMap.set(voter, data.votes[voter]);
-    });
+    try {
+      const response = await callRetry(urlForBlockId);
 
-    return block.updateOne({
-      minter: data.minter,
-      staked: data.staked,
-      power: data.power,
-      votes: votesMap,
-      voters: voters,
-      anchor: data.anchor,
-    });
+      if (response.status != 200) {
+        this.logger.warn(`Validator ${urlForBlockId} responded with status: ${response.status}`);
+        return;
+      }
+
+      if (!response.data || response.data.data === null) {
+        this.logger.warn(`Empty response.data.data for ${urlForBlockId}: ${JSON.stringify(response.data)}`);
+        return;
+      }
+
+      return (response.data.data as unknown) as BlockFromPegasus;
+    } catch (e) {
+      this.logger.warn(`Error for block request ${urlForBlockId}: ${e.message}`);
+    }
   };
 
   private updateFCD = async (block: IBlock, fcdKeys: string[]): Promise<IFCD[]> => {
@@ -143,7 +146,7 @@ class LeavesSynchronizer {
       [...resolvedLeaves.entries()].map(async ([key, value]: [string, string]) => {
         const proof = tree.getProofForKey(key);
         const leaf = await this.createLeaf(proof, blockId, key, value);
-        this.logger.debug(`Created new leaf: ${leaf._id}/${leaf.blockId}, ${key} => ${value}`);
+        this.logger.silly(`Created new leaf: ${leaf._id}/${leaf.blockId}, ${key} => ${value}`);
       })
     );
   };
@@ -152,7 +155,7 @@ class LeavesSynchronizer {
     return Leaf.findOneAndUpdate(
       {
         _id: `block::${blockId}::leaf::${key}`,
-        blockId: blockId.toString(10),
+        blockId: blockId,
         key: key,
       },
       {
@@ -166,4 +169,5 @@ class LeavesSynchronizer {
     );
   };
 }
+
 export default LeavesSynchronizer;

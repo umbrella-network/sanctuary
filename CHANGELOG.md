@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.1.0] - 2021-06-04
+
+### Added
+- `BlockResolverWroker`
+- db migrations
+- retries on timeout
+- do first call for leaves to block minter
+
+### Changed
+- pull consensus data from blockchain
+
+### Fixed
+- do not stuck on blocks when validators calls for data fail
+
 ## [1.0.1] - 2021-05-25
 ### Changed
 - make `/fcds` endpoint public (no key check)

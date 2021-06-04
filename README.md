@@ -1,16 +1,16 @@
 ## Status DEVELOP
 [![tests](https://github.com/umbrella-network/sanctuary/actions/workflows/tests.yml/badge.svg?branch=develop)](https://github.com/umbrella-network/sanctuary/actions/workflows/tests.yml)
 
-* `sanctuary-bsc-01`: ![sanctuary-bsc-01-dev](https://argocd.dev.umb.network/api/badge?name=sanctuary-bsc-01-dev)
-* `sanctuary-eth-01`: ![sanctuary-eth-01-dev](https://argocd.dev.umb.network/api/badge?name=sanctuary-eth-01-dev)
+* `sanctuary-bsc-01`: ![sanctuary-bsc-01-dev](https://argocd.dev.umb.network/api/badge?name=sanctuary-bsc-01-dev&revision=true)
+* `sanctuary-eth-01`: ![sanctuary-eth-01-dev](https://argocd.dev.umb.network/api/badge?name=sanctuary-eth-01-dev&revision=true)
 
 ## Status PROD
 
 [![tests](https://github.com/umbrella-network/sanctuary/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/umbrella-network/sanctuary/actions/workflows/tests.yml)
 [![ci](https://github.com/umbrella-network/sanctuary/actions/workflows/cicd.yml/badge.svg?branch=main)](https://github.com/umbrella-network/sanctuary/actions/workflows/cicd.yml)
 
-* `sanctuary-bsc-01`: ![sanctuary-bsc01](https://argocd.umb.network/api/badge?name=sanctuary-bsc01)
-* `sanctuary-eth-01`: ![sanctuary-eth01](https://argocd.umb.network/api/badge?name=sanctuary-eth01)
+* `sanctuary-bsc-01`: ![sanctuary-bsc01](https://argocd.umb.network/api/badge?name=sanctuary-bsc01&revision=true)
+* `sanctuary-eth-01`: ![sanctuary-eth01](https://argocd.umb.network/api/badge?name=sanctuary-eth01&revision=true)
 
 # Description
 
@@ -48,6 +48,7 @@ npm run start:dev:scheduler
 
 # Worker
 npm run start:dev:worker -- --worker BlockSynchronizerWorker
+npm run start:dev:worker -- --worker BlockResolverWorker
 
 # Server
 npm run start:dev
