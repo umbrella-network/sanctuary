@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
-import { BlockStatus } from '../types/BlockStatuses';
+import { BlockStatus } from '../types/blocks';
 import StatsDClient from '../lib/StatsDClient';
 
 @injectable()
@@ -25,15 +25,11 @@ class ProofsController {
       projectId: apiKeyVerificationResult.apiKey.projectId,
     });
 
-    const last3 = await Block.find({ status: BlockStatus.Finalized }).sort({ blockId: -1 }).limit(3);
     const block = await Block.findOne({ status: BlockStatus.Finalized }).sort({ blockId: -1 }).limit(1);
-
-    console.log('last3', last3);
-    console.log(block);
 
     if (block) {
       const keys = (request.query.keys || []) as string[];
-      const leaves = await Leaf.find({ blockId: block.blockId.toString(), key: { $in: keys } });
+      const leaves = await Leaf.find({ blockId: block.blockId, key: { $in: keys } });
       response.send({ data: { block, keys, leaves } });
     } else {
       response.send({ data: {} });

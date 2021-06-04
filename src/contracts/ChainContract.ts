@@ -72,6 +72,10 @@ class ChainContract {
     return this.setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
   }
 
+  async resolveBlocksCountOffset(chainAddress: string): Promise<number> {
+    return this.setContract(chainAddress).contract.blocksCountOffset();
+  }
+
   private async _assertContract(): Promise<void> {
     if (!this.contract) {
       await this.resolveContract();

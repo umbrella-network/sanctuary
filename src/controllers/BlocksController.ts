@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
-import { BlockStatus } from '../types/BlockStatuses';
+import { BlockStatus } from '../types/blocks';
 import StatsDClient from '../lib/StatsDClient';
 
 @injectable()
@@ -32,7 +32,7 @@ class BlocksController {
     const offset: number = parseInt(<string>request.query.offset || '0');
     const limit: number = Math.min(parseInt(<string>request.query.limit || '100', 10), 100);
 
-    const blocks = await Block.find({ status: BlockStatus.Finalized })
+    const blocks = await Block.find({ status: { $in: [BlockStatus.Finalized] } })
       .skip(offset)
       .limit(limit)
       .sort({ blockId: -1 })
@@ -81,7 +81,7 @@ class BlocksController {
       projectId: apiKeyVerificationResult.apiKey.projectId,
     });
 
-    const leaves = await Leaf.find({ blockId: request.params.id });
+    const leaves = await Leaf.find({ blockId: parseInt(request.params.id, 10) });
     response.send(leaves);
   };
 }

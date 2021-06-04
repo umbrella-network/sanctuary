@@ -1,25 +1,27 @@
 import Bull from 'bullmq';
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
-import BlockSynchronizer from '../services/BlockSynchronizer';
+import NewBlocksResolver from '../services/NewBlocksResolver';
 import BasicWorker from './BasicWorker';
 import Settings from '../types/Settings';
 import ChainSynchronizer from '../services/ChainSynchronizer';
 
 @injectable()
-class BlockSynchronizerWorker extends BasicWorker {
+class BlockResolverWorker extends BasicWorker {
   @inject('Logger') logger!: Logger;
   @inject('Settings') settings!: Settings;
-  @inject(BlockSynchronizer) blockSynchronizer!: BlockSynchronizer;
+  @inject(NewBlocksResolver) newBlocksResolver!: NewBlocksResolver;
   @inject(ChainSynchronizer) chainSynchronizer!: ChainSynchronizer;
 
   apply = async (job: Bull.Job): Promise<void> => {
     if (this.isStale(job)) return;
 
-    this.logger.info(`Running BlockSynchronizerWorker at ${new Date().toISOString()}`);
+    this.logger.info(`Running BlockResolverWorker at ${new Date().toISOString()}`);
 
     try {
-      await this.blockSynchronizer.apply();
+      // this is in sequence on purpose - if we can't synchronise chain we should not synchronise blocks
+      await this.chainSynchronizer.apply();
+      await this.newBlocksResolver.apply();
     } catch (e) {
       this.logger.error(e);
     }
@@ -31,4 +33,4 @@ class BlockSynchronizerWorker extends BasicWorker {
   };
 }
 
-export default BlockSynchronizerWorker;
+export default BlockResolverWorker;

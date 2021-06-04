@@ -6,7 +6,7 @@ const settings: Settings = {
   port: parseInt(process.env.PORT || '3000'),
   jobs: {
     blockCreation: {
-      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '1000'),
+      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '1000', 10),
     },
   },
   redis: {
@@ -15,7 +15,12 @@ const settings: Settings = {
   mongodb: {
     url: process.env.MONGODB_URL || 'mongodb://localhost:27017/sanctuary',
   },
+  app: {
+    blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '5', 10),
+  },
   blockchain: {
+    scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '100', 10),
+    confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
     provider: {
       url: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
     },

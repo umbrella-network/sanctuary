@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { HexStringWith0x } from '../types/custom';
 
 export interface ILeaf extends Document {
-  blockId: string;
+  blockId: number;
   key: string;
   value: HexStringWith0x;
   proof: string[];
@@ -11,7 +11,7 @@ export interface ILeaf extends Document {
 const LeafSchema: Schema = new Schema(
   {
     _id: { type: String, required: true },
-    blockId: { type: String, required: true },
+    blockId: { type: Number, required: true },
     key: { type: String, required: true },
     value: { type: String, required: true },
     proof: { type: [String], required: true },
