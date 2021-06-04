@@ -41,9 +41,12 @@ class BlockSynchronizer {
 
     const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatus, mongoBlocks);
 
+    const syncResults = await Promise.all(leavesSynchronizers);
+    this.logger.info(`processed blocks: ${blockIds.join(',')} with results: ${syncResults}`);
+
     if (blockIds.length > 0) {
-      this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
-      await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
+      const saved = await this.updateSynchronizedBlocks(syncResults, blockIds);
+      this.logger.info(`saved blocks: ${saved.map((b) => b.id)}`);
     }
   }
 
