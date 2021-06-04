@@ -19,7 +19,7 @@ import ChainContract from '../../src/contracts/ChainContract';
 import FCD from '../../src/models/FCD';
 import {ChainStatus} from '../../src/types/ChainStatus';
 import {Validator} from '../../src/types/Validator';
-import {BlockFromPegasus} from '../../src/types/BlockFromPegasus';
+import {BlockFromPegasus} from '../../src/types/blocks';
 
 const resolveValidators = (chainStatus: ChainStatus): Validator[] => {
   return chainStatus.validators.map((address, i) => {
@@ -188,7 +188,7 @@ describe('LeavesSynchronizer', () => {
     const [leaf] = leaves;
 
     expect(leaf).to.have.property('_id', 'block::1::leaf::ETH-USD');
-    expect(leaf).to.have.property('blockId', '1');
+    expect(leaf).to.have.property('blockId', 1);
     expect(leaf).to.have.property('key', 'ETH-USD');
     expect(leaf).to.have.property('value', treeData['ETH-USD']);
 
