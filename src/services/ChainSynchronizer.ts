@@ -73,9 +73,7 @@ class ChainSynchronizer {
   }
 
   private async scanForEvents(fromBlock: number, toBlock: number): Promise<LogRegistered[]> {
-    this.logger.info(
-      `Checking for new chain ${fromBlock} - ${toBlock} (${this.settings.blockchain.contracts.registry.address})`
-    );
+    this.logger.info(`Checking for new chain ${fromBlock} - ${toBlock}`);
     // event LogRegistered(address indexed destination, bytes32 name);
     const registry: Contract = new Contract(
       this.settings.blockchain.contracts.registry.address,

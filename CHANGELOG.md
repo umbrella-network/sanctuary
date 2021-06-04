@@ -8,7 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.1.3] - 2021-06-04
 ### Added
-- logs for debug all contract addresses
+- report errors to NewRelic
+
+### Changed
+- clean up debugging code
+- execute migrations once before scheduling workers
+
+### Fixed
+- verify block for required fields
 
 ## [1.1.2] - 2021-06-04
 ### Added
