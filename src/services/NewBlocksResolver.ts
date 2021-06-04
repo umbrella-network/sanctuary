@@ -81,9 +81,10 @@ class NewBlocksResolver {
       this.logger.error(`There is no Chain for anchors: ${fromBlock} - ${toBlockNumber}`);
     }
 
-    const chains: Contract[] = uniqueChainsInstances.map(
-      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchain.provider)
-    );
+    const chains: Contract[] = uniqueChainsInstances.map((instance) => {
+      console.log('instance.address=', instance.address);
+      return new Contract(instance.address, ABI.chainAbi, this.blockchain.provider);
+    });
 
     return Promise.all([
       this.getChainsLogMintEvents(chains, fromBlock, toBlockNumber),
