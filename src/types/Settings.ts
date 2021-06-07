@@ -38,6 +38,7 @@ type Settings = {
   };
   version: string;
   environment?: string;
+  feedsFile: string;
 };
 
 export default Settings;
