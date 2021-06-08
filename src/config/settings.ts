@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
 import Settings from '../types/Settings';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../../package.json');
+
+dotenv.config();
 
 const settings: Settings = {
   port: parseInt(process.env.PORT || '3000'),
@@ -42,6 +45,8 @@ const settings: Settings = {
   },
   environment: process.env.ENVIRONMENT || process.env.NODE_ENV,
   version: packageJson.version,
+  feedsFile:
+    process.env.FEEDS_FILE || 'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feeds.yaml',
 };
 
 export default settings;
