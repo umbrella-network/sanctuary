@@ -105,6 +105,22 @@ GET /fcds
 ]
 ```
 
+### L2Ds (Layer 2 Data Keys)
+
+#### Request
+
+```
+GET /l2ds
+```
+
+#### Response
+
+```json
+[
+  "UMB-USD", "UMB-USDT", "UMB-EUR"
+]
+```
+
 ## Blocks
 
 This endpoint returns a set of blocks along with some basic information about those blocks.
