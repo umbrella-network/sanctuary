@@ -19,7 +19,7 @@ const settings: Settings = {
     url: process.env.MONGODB_URL || 'mongodb://localhost:27017/sanctuary',
   },
   app: {
-    blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '5', 10),
+    blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '15', 10),
   },
   blockchain: {
     scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '100', 10),

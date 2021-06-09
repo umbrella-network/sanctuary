@@ -1,5 +1,6 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
+import newrelic from 'newrelic';
 import { ABI } from '@umb-network/toolbox';
 import ChainContract from '../contracts/ChainContract';
 import { Contract, Event, EventFilter } from 'ethers';
@@ -78,7 +79,7 @@ class NewBlocksResolver {
     const uniqueChainsInstances = this.chainInstanceResolver.uniqueInstances(chainsInstancesForIds);
 
     if (!uniqueChainsInstances.length) {
-      this.logger.error(`There is no Chain for anchors: ${fromBlock} - ${toBlockNumber}`);
+      this.noticeError(`There is no Chain for anchors: ${fromBlock} - ${toBlockNumber}`);
     }
 
     const chains: Contract[] = uniqueChainsInstances.map(
@@ -192,11 +193,16 @@ class NewBlocksResolver {
           });
         } catch (e) {
           if (!e.message.includes('E11000')) {
-            this.logger.error(e);
+            this.noticeError(e);
           }
         }
       })
     );
+  }
+
+  private noticeError(err: string): void {
+    newrelic.noticeError(Error(err));
+    this.logger.error(err);
   }
 }
 
