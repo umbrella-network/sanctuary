@@ -5,6 +5,7 @@ import NewBlocksResolver from '../services/NewBlocksResolver';
 import BasicWorker from './BasicWorker';
 import Settings from '../types/Settings';
 import ChainSynchronizer from '../services/ChainSynchronizer';
+import newrelic from 'newrelic';
 
 @injectable()
 class BlockResolverWorker extends BasicWorker {
@@ -23,8 +24,11 @@ class BlockResolverWorker extends BasicWorker {
       await this.chainSynchronizer.apply();
       await this.newBlocksResolver.apply();
     } catch (e) {
+      newrelic.noticeError(e);
       this.logger.error(e);
     }
+
+    this.logger.info(`BlockResolverWorker finished at ${new Date().toISOString()}`);
   };
 
   isStale = (job: Bull.Job): boolean => {

@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import ChainInstance, { IChainInstance } from '../models/ChainInstance';
+import newrelic from 'newrelic';
 
 @injectable()
 export class ChainInstanceResolver {
@@ -30,7 +31,7 @@ export class ChainInstanceResolver {
 
   private checkIfFounded(founded: (IChainInstance | undefined)[], ids: number[]) {
     founded.forEach((instance, i) => {
-      !instance && this.logger.error(`Can't resolve chain instance for id: ${ids[i]}`);
+      !instance && this.noticeError(`Can't resolve chain instance for id: ${ids[i]}`);
     });
   }
 
@@ -57,4 +58,9 @@ export class ChainInstanceResolver {
 
   private sortDesc = (a: IChainInstance, b: IChainInstance): number =>
     a.anchor === b.anchor ? b.blocksCountOffset - a.blocksCountOffset : b.anchor - a.anchor;
+
+  private noticeError(err: string): void {
+    newrelic.noticeError(Error(err));
+    this.logger.error(err);
+  }
 }

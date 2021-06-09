@@ -1,5 +1,6 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
+import newrelic from 'newrelic';
 import ChainContract from '../contracts/ChainContract';
 import Block, { IBlock } from '../models/Block';
 import Leaf from '../models/Leaf';
@@ -24,41 +25,30 @@ class BlockSynchronizer {
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
   async apply(): Promise<void> {
-    try {
-      const [[chainAddress, chainStatus], [lastSavedBlockId, lastSavedAnchor]] = await Promise.all([
-        this.chainContract.resolveStatus(),
-        BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
-      ]);
+    const [[chainAddress, chainStatus], [lastSavedBlockId, lastSavedAnchor]] = await Promise.all([
+      this.chainContract.resolveStatus(),
+      BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
+    ]);
 
-      if (!(await this.canProceed(chainStatus, lastSavedBlockId, lastSavedAnchor))) {
-        return;
-      }
+    if (!(await this.canProceed(chainStatus, lastSavedBlockId, lastSavedAnchor))) {
+      return;
+    }
 
-      this.logger.info(`Synchronizing blocks for ${chainStatus.nextBlockId}, current chain ${chainAddress}`);
+    this.logger.info(`Synchronizing blocks for ${chainStatus.nextBlockId}, current chain ${chainAddress}`);
 
-      const mongoBlocks = await this.getMongoBlocksToSynchronize();
+    const mongoBlocks = await this.getMongoBlocksToSynchronize();
 
-      this.logger.info(`got ${mongoBlocks.length} mongoBlocks to synchronize`);
+    this.logger.debug(`got ${mongoBlocks.length} mongoBlocks to synchronize`);
 
-      const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatus, mongoBlocks);
+    if (!(await this.verifyBlocks(mongoBlocks))) {
+      return;
+    }
 
-      this.logger.info(`processing blocks done: ${blockIds.join(',')}`);
+    const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatus, mongoBlocks);
 
-      let syncResults;
-      try {
-        syncResults = await Promise.all(leavesSynchronizers);
-      } catch (e) {
-        this.logger.error('[101]' + e.message, e);
-      }
-
-      this.logger.info(`syncing results: ${syncResults}`);
-
-      if (blockIds.length > 0) {
-        const saved = await this.updateSynchronizedBlocks(syncResults, blockIds);
-        this.logger.info(`saved blocks: ${saved.map((b) => b.id)}`);
-      }
-    } catch (e) {
-      this.logger.error('[99]' + e.message, e);
+    if (blockIds.length > 0) {
+      this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
+      await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
     }
   }
 
@@ -118,10 +108,8 @@ class BlockSynchronizer {
         .map((success: boolean, i: number) => {
           const status = success ? BlockStatus.Finalized : BlockStatus.Failed;
 
-          this.logger.info(`updateSynchronizedBlocks ${blockIds[i]}: ${status}`);
-
           if (!success) {
-            this.logger.error(`Block ${blockIds[i]}: ${status}`);
+            this.noticeError(`Block ${blockIds[i]}: ${status}`);
           }
 
           return Block.findOneAndUpdate(
@@ -138,6 +126,28 @@ class BlockSynchronizer {
     );
   }
 
+  private async verifyBlocks(mongoBlocks: IBlock[]): Promise<boolean> {
+    let verified = true;
+
+    await Promise.all(
+      mongoBlocks.map((mongoBlock: IBlock) => {
+        switch (mongoBlock.status) {
+          case BlockStatus.Finalized:
+          case BlockStatus.Failed:
+            if (!BlockSynchronizer.brokenBlock(mongoBlock)) {
+              return;
+            }
+
+            this.noticeError(`Invalid Block found: ${JSON.stringify(mongoBlock)}. Removing.`);
+            verified = false;
+            return Block.deleteOne({ _id: mongoBlock._id });
+        }
+      })
+    );
+
+    return verified;
+  }
+
   private async processBlocks(
     chainStatus: ChainStatus,
     mongoBlocks: IBlock[]
@@ -152,7 +162,7 @@ class BlockSynchronizer {
           return;
         }
 
-        this.logger.info(
+        this.logger.debug(
           `Processing block ${mongoBlock._id} with dataTimestamp: ${mongoBlock.dataTimestamp} and status: ${mongoBlock.status}`
         );
 
@@ -165,8 +175,6 @@ class BlockSynchronizer {
 
           case BlockStatus.Finalized:
           case BlockStatus.Failed:
-            this.logger.info(`pulling onChainBlocksData for ${mongoBlock.blockId}: ${mongoBlock.chainAddress}`);
-
             // eslint-disable-next-line no-case-declarations
             const onChainBlocksData = await this.chainContract.resolveBlockData(
               mongoBlock.chainAddress,
@@ -185,7 +193,7 @@ class BlockSynchronizer {
             return;
 
           default:
-            this.logger.error(`Block ${mongoBlock._id} with odd status: ${mongoBlock.status}`);
+            this.noticeError(`Block ${mongoBlock._id} with odd status: ${mongoBlock.status}`);
             return;
         }
       })
@@ -194,11 +202,20 @@ class BlockSynchronizer {
     return [leavesSynchronizers, blockIds];
   }
 
+  private static brokenBlock(block: IBlock): boolean {
+    return block.blockId === undefined || block.chainAddress === undefined;
+  }
+
   private static async revertBlocks(
     blockId: number
   ): Promise<({ ok?: number; n?: number } & { deletedCount?: number })[]> {
     const condition = { blockId: { $gte: blockId } };
     return Promise.all([Block.deleteMany(condition), Leaf.deleteMany(condition)]);
+  }
+
+  private noticeError(err: string): void {
+    newrelic.noticeError(Error(err));
+    this.logger.error(err);
   }
 }
 
