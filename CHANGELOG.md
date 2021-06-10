@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [1.2.1] - 2021-06-10
 ### Fixed
 - revert `/fcds` endpoint because FE uses it
+- do not save empty FCDs
 
 ## [1.2.0] - 2021-06-10
 

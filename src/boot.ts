@@ -7,6 +7,7 @@ import 'newrelic';
 import 'reflect-metadata';
 import './config/initMongoDB';
 import initMongoDB from './config/initMongoDB';
+import Migrations from './services/Migrations';
 
 (async () => {
   if (process.env.NODE_ENV === 'testing') {
@@ -19,4 +20,5 @@ import initMongoDB from './config/initMongoDB';
   const { default: settings } = await require('./config/settings');
 
   await initMongoDB(settings);
+  await Migrations.apply();
 })();
