@@ -84,6 +84,27 @@ $ npm run start
 
 # API
 
+### FCDs
+
+#### Request
+
+ ```
+GET /fcds
+ ```
+
+#### Response
+
+ ```json
+[
+  {
+    "_id": "GVol-BTC-IV-28days",
+    "__v": 0,
+    "dataTimestamp": "2020-05-16T09:23:42.000Z",
+    "value": 89.19
+  }
+]
+```
+
 ### Keys
 
 #### FCDs Request
