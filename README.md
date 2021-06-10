@@ -84,25 +84,30 @@ $ npm run start
 
 # API
 
-### FCDs
+### Keys
 
-#### Request
+#### FCDs Request
 
 ```
-GET /fcds
+GET /keys/fcds
 ```
 
 #### Response
 
 ```json
-[
-  {
-    "_id": "GVol-BTC-IV-28days",
-    "__v": 0,
-    "dataTimestamp": "2020-05-16T09:23:42.000Z",
-    "value": 89.19
-  }
-]
+["ETH-USD","BTC-USD"]
+```
+
+#### Layer 2 Data Keys
+
+```
+GET /keys/layer2
+```
+
+#### Response
+
+```json
+[ "GVol-BTC-IV-28days" ]
 ```
 
 ## Blocks
@@ -199,40 +204,13 @@ GET /blocks/:blockId/leaves
       "0xcdd0583f1cb502639d5087d4437b3a21b20355be2bbf7082ebe1283f8c77ee22",
       "0x90af39449c1e937a408ad7a401eb39eef589ae5193ef6095e4470447459ee6e0"
     ],
-    "_id": "block::624::leaf::aave-usd",
+    "_id": "block::624::leaf::AAVE-USD",
     "blockId": "624",
-    "key": "aave-usd",
+    "key": "AAVE-USD",
     "__v": 0,
     "value": "84.68"
   }
 ]
-```
-
-## Keys
-
-This endpoint returns a full list of configured Merkle tree leaf keys.
-
-#### Request
-
-```
-GET /keys
-```
-
-#### Response
-
-```json
-{
-  "data": [
-    {
-      "id": "eth-usd",
-      "name": "ETH-USD [Spot]",
-      "sourceUrl": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD",
-      "leafLabel": "eth-usd",
-      "valuePath": "$.USD",
-      "discrepancy": 0.1
-    }
-  ]
-}
 ```
 
 ### Proofs

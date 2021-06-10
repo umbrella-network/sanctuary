@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 
 ### Added
-- added Added reporting of synchronization errors to NewRelic
+- added reporting of synchronization errors to NewRelic
   
+### Changed
+- use FCD keys from feeds to synchronize data from blockchain
+
+### Removed
+- remove consensus data from validator response type
+
 ## [1.1.3] - 2021-06-04
 ### Added
 - report errors to NewRelic

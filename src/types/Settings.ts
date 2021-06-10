@@ -13,6 +13,8 @@ type Settings = {
   };
   app: {
     blockSyncBatchSize: number;
+    feedsFile: string;
+    feedsOnChain: string;
   };
   blockchain: {
     scanBatchSize: number;
@@ -38,7 +40,6 @@ type Settings = {
   };
   version: string;
   environment?: string;
-  feedsFile: string;
 };
 
 export default Settings;

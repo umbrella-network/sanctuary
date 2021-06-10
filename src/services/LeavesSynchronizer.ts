@@ -7,15 +7,17 @@ import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import { BlockFromPegasus } from '../types/blocks';
 import ChainContract from '../contracts/ChainContract';
 import FCD, { IFCD } from '../models/FCD';
-import { LeafValueCoder, SortedMerkleTree } from '@umb-network/toolbox';
+import { LeafValueCoder, loadFeeds, SortedMerkleTree } from '@umb-network/toolbox';
 import { ChainStatus } from '../types/ChainStatus';
 import { Validator } from '../types/Validator';
 import * as url from 'url';
 import { callRetry } from '../utils/callRetry';
+import Settings from '../types/Settings';
 
 @injectable()
 class LeavesSynchronizer {
   @inject('Logger') private logger!: Logger;
+  @inject('Settings') private readonly settings: Settings;
   @inject(ChainContract) private chainContract!: ChainContract;
   @inject(ValidatorRegistryContract) private validatorRegistryContract!: ValidatorRegistryContract;
   @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
@@ -86,13 +88,11 @@ class LeavesSynchronizer {
     }
 
     const [, updatedLeaves] = await Promise.all([
-      this.updateFCD(mongoBlock, blockFromPegasus.fcdKeys),
+      this.updateFCD(mongoBlock),
       this.updateLeaves(resolvedLeaves, tree, mongoBlock.blockId),
     ]);
 
-    this.logger.info(
-      `Resolving finished with ${updatedLeaves.length} leaves and votes: ${Object.keys(blockFromPegasus.votes).length}`
-    );
+    this.logger.info(`Resolving finished with ${updatedLeaves.length} leaves and votes: ${mongoBlock.votes.size}`);
 
     return true;
   };
@@ -119,7 +119,8 @@ class LeavesSynchronizer {
     }
   };
 
-  private updateFCD = async (block: IBlock, fcdKeys: string[]): Promise<IFCD[]> => {
+  private updateFCD = async (block: IBlock): Promise<IFCD[]> => {
+    const fcdKeys: string[] = [...Object.keys(await loadFeeds(this.settings.app.feedsOnChain))];
     if (fcdKeys.length === 0) {
       return [];
     }
