@@ -19,7 +19,12 @@ const settings: Settings = {
     url: process.env.MONGODB_URL || 'mongodb://localhost:27017/sanctuary',
   },
   app: {
-    blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '15', 10),
+    blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '5', 10),
+    feedsFile:
+      process.env.FEEDS_FILE || 'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feeds.yaml',
+    feedsOnChain:
+      process.env.FEEDS_ON_CHAIN_FILE ||
+      'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feedsOnChain.yaml',
   },
   blockchain: {
     scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '100', 10),
@@ -45,8 +50,6 @@ const settings: Settings = {
   },
   environment: process.env.ENVIRONMENT || process.env.NODE_ENV,
   version: packageJson.version,
-  feedsFile:
-    process.env.FEEDS_FILE || 'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feeds.yaml',
 };
 
 export default settings;

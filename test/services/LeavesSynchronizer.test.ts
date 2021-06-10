@@ -20,6 +20,7 @@ import FCD from '../../src/models/FCD';
 import {ChainStatus} from '../../src/types/ChainStatus';
 import {Validator} from '../../src/types/Validator';
 import {BlockFromPegasus} from '../../src/types/blocks';
+import settings from '../../src/config/settings';
 
 const resolveValidators = (chainStatus: ChainStatus): Validator[] => {
   return chainStatus.validators.map((address, i) => {
@@ -53,17 +54,10 @@ describe('LeavesSynchronizer', () => {
   const blockFromPegasus: BlockFromPegasus = {
     _id: 'block::2',
     mintedAt: new Date(),
-    minter: '0xa',
-    anchor: '1',
     timestamp: new Date(),
-    staked: '1',
     data: {
       'ETH-USD': '0x' + LeafValueCoder.encode(100).toString('hex'),
     },
-    votes: {'0xa': '1'},
-    fcdKeys: ['ETH-USD'],
-    fcdValues: [1700.5632],
-    power: '3',
     blockId: 2,
     root: '0x321',
   };
@@ -76,6 +70,7 @@ describe('LeavesSynchronizer', () => {
 
   beforeEach(async () => {
     moxios.uninstall();
+    settings.app.feedsOnChain = 'test/fixtures/feeds-example.yaml';
 
     container = new Container({autoBindInjectable: true});
 
@@ -83,6 +78,7 @@ describe('LeavesSynchronizer', () => {
     mockedChainContract = sinon.createStubInstance(ChainContract);
     mockedValidatorRegistryContract = sinon.createStubInstance(ValidatorRegistryContract);
     container.bind('Logger').toConstantValue(mockedLogger);
+    container.bind('Settings').toConstantValue(settings);
     container.bind(ChainContract).toConstantValue(mockedChainContract as unknown as ChainContract);
     container.bind(ValidatorRegistryContract).toConstantValue(mockedValidatorRegistryContract as unknown as ValidatorRegistryContract);
     container.bind(SortedMerkleTreeFactory).toSelf();
