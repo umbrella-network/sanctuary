@@ -1,7 +1,7 @@
 import Bull from 'bullmq';
 import { Logger } from 'winston';
-import { inject, injectable } from 'inversify';
 import newrelic from 'newrelic';
+import { inject, injectable } from 'inversify';
 import BlockSynchronizer from '../services/BlockSynchronizer';
 import BasicWorker from './BasicWorker';
 import Settings from '../types/Settings';

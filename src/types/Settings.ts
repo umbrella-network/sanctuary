@@ -13,6 +13,8 @@ type Settings = {
   };
   app: {
     blockSyncBatchSize: number;
+    feedsFile: string;
+    feedsOnChain: string;
   };
   blockchain: {
     scanBatchSize: number;
