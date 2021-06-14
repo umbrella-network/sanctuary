@@ -4,9 +4,12 @@ import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
 import BlockResolverWorker from './workers/BlockResolverWorker';
 import MetricsWorker from './workers/MetricsWorker';
 import Settings from './types/Settings';
+import { Logger } from 'winston';
+import newrelic from 'newrelic';
 
 (async (): Promise<void> => {
   const settings: Settings = Application.get('Settings');
+  const logger: Logger = Application.get('Logger');
   const blockSynchronizerWorker = Application.get(BlockSynchronizerWorker);
   const blockResolverWorker = Application.get(BlockResolverWorker);
   const metricsWorker = Application.get(MetricsWorker);
@@ -16,10 +19,20 @@ import Settings from './types/Settings';
   }, settings.jobs.metricsReporting.interval);
 
   setInterval(async () => {
-    await blockSynchronizerWorker.enqueue({});
+    try {
+      await blockSynchronizerWorker.enqueue({});
+    } catch (e) {
+      newrelic.noticeError(e);
+      logger.error(e);
+    }
   }, settings.jobs.blockCreation.interval);
 
   setInterval(async () => {
-    await blockResolverWorker.enqueue({});
+    try {
+      await blockResolverWorker.enqueue({});
+    } catch (e) {
+      newrelic.noticeError(e);
+      logger.error(e);
+    }
   }, settings.jobs.blockCreation.interval);
 })();
