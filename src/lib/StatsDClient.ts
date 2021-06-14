@@ -1,10 +1,10 @@
 /* eslint-disable */
 const SDC = require('statsd-client');
-const newRelicLabels = process.env.NEW_RELIC_LABELS;
+const { NEW_RELIC_LABELS } = process.env;
 
-let tags: { [key: string]: any } = {};
-tags = newRelicLabels.split(';').reduce((nrTags, tag) => {
-  var t = tag.split(':');
+let tags: { [key: string]: string } = {};
+tags = NEW_RELIC_LABELS.split(';').reduce((nrTags, tag) => {
+  const t = tag.split(':');
   nrTags[t[0]] = t[1];
   return nrTags;
 }, tags);
