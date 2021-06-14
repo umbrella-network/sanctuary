@@ -1,6 +1,6 @@
-import {inject, injectable} from 'inversify';
+import { inject, injectable } from 'inversify';
 import ChainContract from '../contracts/ChainContract';
-import {Logger} from 'winston';
+import { Logger } from 'winston';
 import StatsDClient from '../lib/StatsDClient';
 
 @injectable()

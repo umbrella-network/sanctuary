@@ -1,6 +1,6 @@
 import Bull from 'bullmq';
-import {Logger} from 'winston';
-import {inject, injectable} from 'inversify';
+import { Logger } from 'winston';
+import { inject, injectable } from 'inversify';
 
 import BlockMintedReporter from '../services/BlockMintedReporter';
 import BasicWorker from './BasicWorker';
