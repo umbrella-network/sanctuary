@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Fixed
 - worker's jobs are now deleted from redis when completed
+  
+## [1.2.3] - 2021-06-16
+### Fixed
+- ensure we collect FCDs correctly
 
 ## [1.2.2] - 2021-06-14
 ### Fixed
