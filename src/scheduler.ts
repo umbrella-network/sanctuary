@@ -15,12 +15,24 @@ import newrelic from 'newrelic';
   const metricsWorker = Application.get(MetricsWorker);
 
   setInterval(async () => {
-    await metricsWorker.enqueue({});
+    await metricsWorker.enqueue(
+      {},
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
   }, settings.jobs.metricsReporting.interval);
 
   setInterval(async () => {
     try {
-      await blockSynchronizerWorker.enqueue({});
+      await blockSynchronizerWorker.enqueue(
+        {},
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
     } catch (e) {
       newrelic.noticeError(e);
       logger.error(e);
@@ -29,7 +41,13 @@ import newrelic from 'newrelic';
 
   setInterval(async () => {
     try {
-      await blockResolverWorker.enqueue({});
+      await blockResolverWorker.enqueue(
+        {},
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
     } catch (e) {
       newrelic.noticeError(e);
       logger.error(e);
