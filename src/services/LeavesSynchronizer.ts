@@ -128,15 +128,17 @@ class LeavesSynchronizer {
     const [values, timestamps] = await this.chainContract.resolveFCDs(block.chainAddress, fcdKeys);
 
     return Promise.all(
-      values
-        .filter((value, i) => timestamps[i] > 0)
-        .map((value, i) =>
-          FCD.findOneAndUpdate(
-            { _id: fcdKeys[i] },
-            { dataTimestamp: new Date(timestamps[i] * 1000), value: LeafValueCoder.decode(value.toHexString()) },
-            { new: true, upsert: true }
-          )
-        )
+      values.map((value, i) => {
+        if (timestamps[i] == 0) {
+          return;
+        }
+
+        return FCD.findOneAndUpdate(
+          { _id: fcdKeys[i] },
+          { dataTimestamp: new Date(timestamps[i] * 1000), value: LeafValueCoder.decode(value.toHexString()) },
+          { new: true, upsert: true }
+        );
+      })
     );
   };
 
