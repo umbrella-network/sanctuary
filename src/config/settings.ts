@@ -12,7 +12,7 @@ const settings: Settings = {
       interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '1000', 10),
     },
     metricsReporting: {
-      interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000'),
+      interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
     },
   },
   redis: {
@@ -30,7 +30,7 @@ const settings: Settings = {
       'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feedsOnChain.yaml',
   },
   blockchain: {
-    scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '100', 10),
+    scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '1000', 10),
     confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
     provider: {
       url: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
