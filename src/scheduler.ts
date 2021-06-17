@@ -2,6 +2,7 @@ import './boot';
 import Application from './lib/Application';
 import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
 import BlockResolverWorker from './workers/BlockResolverWorker';
+import MetricsWorker from './workers/MetricsWorker';
 import Settings from './types/Settings';
 import { Logger } from 'winston';
 import newrelic from 'newrelic';
@@ -11,10 +12,27 @@ import newrelic from 'newrelic';
   const logger: Logger = Application.get('Logger');
   const blockSynchronizerWorker = Application.get(BlockSynchronizerWorker);
   const blockResolverWorker = Application.get(BlockResolverWorker);
+  const metricsWorker = Application.get(MetricsWorker);
+
+  setInterval(async () => {
+    await metricsWorker.enqueue(
+      {},
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
+  }, settings.jobs.metricsReporting.interval);
 
   setInterval(async () => {
     try {
-      await blockSynchronizerWorker.enqueue({});
+      await blockSynchronizerWorker.enqueue(
+        {},
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
     } catch (e) {
       newrelic.noticeError(e);
       logger.error(e);
@@ -23,7 +41,13 @@ import newrelic from 'newrelic';
 
   setInterval(async () => {
     try {
-      await blockResolverWorker.enqueue({});
+      await blockResolverWorker.enqueue(
+        {},
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
     } catch (e) {
       newrelic.noticeError(e);
       logger.error(e);
