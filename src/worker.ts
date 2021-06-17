@@ -3,6 +3,7 @@ import yargs from 'yargs';
 import Application from './lib/Application';
 import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
 import BlockResolverWorker from './workers/BlockResolverWorker';
+import MetricsWorker from './workers/MetricsWorker';
 
 const argv = yargs(process.argv.slice(2)).options({
   worker: { type: 'string', demandOption: true },
@@ -16,6 +17,11 @@ switch (argv.worker) {
 
   case 'BlockResolverWorker': {
     Application.get(BlockResolverWorker).start();
+    break;
+  }
+
+  case 'MetricsWorker': {
+    Application.get(MetricsWorker).start();
     break;
   }
 }
