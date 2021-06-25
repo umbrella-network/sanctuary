@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [1.2.5] - 2021-06-17
+### Fixed
+- Fix `ChainSynchronizer` and `NewBlocksResolver` batch pulls
+
 ## [1.2.4] - 2021-06-17
 ### Fixed
 - worker's jobs are now deleted from redis when completed

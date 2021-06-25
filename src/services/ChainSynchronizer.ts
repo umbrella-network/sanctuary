@@ -9,6 +9,7 @@ import Settings from '../types/Settings';
 import { LogRegistered } from '../types/events';
 import { CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
 import { ChainStatus } from '../types/ChainStatus';
+import { CreateBatchRanges } from './CreateBatchRanges';
 
 @injectable()
 class ChainSynchronizer {
@@ -22,13 +23,21 @@ class ChainSynchronizer {
     await this.synchronizeChains(status);
   }
 
-  private async synchronizeChains(chainStatus: ChainStatus): Promise<IChainInstance[]> {
+  private async synchronizeChains(chainStatus: ChainStatus): Promise<void> {
     const [fromBlock, toBlock] = await ChainSynchronizer.calculateBlockNumberRange(chainStatus);
+    this.logger.info(`Synchronizing Chains for blocks ${fromBlock} - ${toBlock}`);
 
-    if (fromBlock >= toBlock) {
-      return [];
+    const ranges = CreateBatchRanges.apply(fromBlock, toBlock, this.settings.blockchain.scanBatchSize);
+    const queue = [];
+
+    for (const [batchFrom, batchTo] of ranges) {
+      queue.push(this.synchronizeChainsForBatch(batchFrom, batchTo));
     }
 
+    await Promise.all(queue);
+  }
+
+  private async synchronizeChainsForBatch(fromBlock: number, toBlock: number): Promise<IChainInstance[]> {
     const events = await this.scanForEvents(fromBlock, toBlock);
     const offsets = await this.resolveOffsets(events.map((event) => event.destination));
 
@@ -36,7 +45,7 @@ class ChainSynchronizer {
 
     return Promise.all(
       events.map((logRegistered, i) => {
-        this.logger.info(`Detected new Chain contract: ${logRegistered.destination}`);
+        this.logger.info(`Detected new Chain contract: ${logRegistered.destination} at ${logRegistered.anchor}`);
 
         return ChainInstance.findOneAndUpdate(
           {

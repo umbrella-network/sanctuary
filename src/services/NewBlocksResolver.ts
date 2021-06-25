@@ -12,6 +12,7 @@ import Blockchain from '../lib/Blockchain';
 import { LogMint, LogVoter } from '../types/events';
 import Block, { IBlock } from '../models/Block';
 import BlockSynchronizer from './BlockSynchronizer';
+import { CreateBatchRanges } from './CreateBatchRanges';
 
 @injectable()
 class NewBlocksResolver {
@@ -27,59 +28,54 @@ class NewBlocksResolver {
       BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
-    const [logMintEvents, logVoteEvents] = await this.resolveBatchOfEvents(chainStatus, lastAnchor);
+    await this.resolveBlockEvents(chainStatus, lastAnchor);
+  }
+
+  private async resolveBlockEvents(chainStatus: ChainStatus, lastAnchor: number): Promise<void> {
+    const ranges = CreateBatchRanges.apply(
+      lastAnchor,
+      chainStatus.blockNumber.toNumber(),
+      this.settings.blockchain.scanBatchSize
+    );
+
+    // must be sync execution!
+    for (const [batchFrom, batchTo] of ranges) {
+      await this.resolveBatchOfEvents(batchFrom, batchTo);
+    }
+  }
+
+  private async resolveBatchOfEvents(fromBlock: number, toBlock: number): Promise<void> {
+    const [logMintEvents, logVoteEvents] = await this.getChainLogsEvents(fromBlock, toBlock);
 
     if (!logMintEvents.length) {
-      this.logger.info('No blocks since anchor', { lastAnchor });
       return;
     }
 
+    this.logger.info(`Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
     await this.saveNewBlocks(await this.processEvents(logMintEvents, logVoteEvents));
   }
 
-  private async resolveBatchOfEvents(
-    chainStatus: ChainStatus,
-    lastAnchor: number
-  ): Promise<[logMint: Event[], logVote: Event[]]> {
-    let logMintEvents: Event[];
-    let logVoteEvents: Event[];
-    let lastCheckedAnchor = lastAnchor;
-
-    do {
-      [logMintEvents, logVoteEvents, lastCheckedAnchor] = await this.getChainLogsEvents(
-        lastCheckedAnchor,
-        chainStatus.blockNumber.toNumber()
-      );
-    } while (!logMintEvents.length && chainStatus.blockNumber.gt(lastCheckedAnchor));
-
-    return [logMintEvents, logVoteEvents];
-  }
-
   private async getChainLogsEvents(
-    fromBlock: number,
-    currentBlock: number
-  ): Promise<[logMint: Event[], logVote: Event[], lastCheckedAnchor: number]> {
-    if (fromBlock >= currentBlock) {
-      return [[], [], currentBlock];
+    fromBlockNumber: number,
+    toBlockNumber: number
+  ): Promise<[logMint: Event[], logVote: Event[]]> {
+    if (fromBlockNumber >= toBlockNumber) {
+      return [[], []];
     }
-
-    const { scanBatchSize } = this.settings.blockchain;
-
-    const toBlockNumber = currentBlock - fromBlock > scanBatchSize ? fromBlock + scanBatchSize : currentBlock;
 
     const anchors: number[] = [];
 
-    for (let i = fromBlock; i < toBlockNumber; i++) {
+    for (let i = fromBlockNumber; i < toBlockNumber; i++) {
       anchors.push(i);
     }
 
-    this.logger.info('Scanning for new blocks', { fromBlock, toBlock: toBlockNumber });
+    this.logger.info('Scanning for new blocks', { fromBlock: fromBlockNumber, toBlock: toBlockNumber });
 
     const chainsInstancesForIds = await this.chainInstanceResolver.byAnchor(anchors);
     const uniqueChainsInstances = this.chainInstanceResolver.uniqueInstances(chainsInstancesForIds);
 
     if (!uniqueChainsInstances.length) {
-      this.noticeError(`There is no Chain for anchors: ${fromBlock} - ${toBlockNumber}`);
+      this.noticeError(`There is no Chain for anchors: ${fromBlockNumber} - ${toBlockNumber}`);
     }
 
     const chains: Contract[] = uniqueChainsInstances.map(
@@ -87,9 +83,8 @@ class NewBlocksResolver {
     );
 
     return Promise.all([
-      this.getChainsLogMintEvents(chains, fromBlock, toBlockNumber),
-      this.getChainsLogVoterEvents(chains, fromBlock, toBlockNumber),
-      toBlockNumber,
+      this.getChainsLogMintEvents(chains, fromBlockNumber, toBlockNumber),
+      this.getChainsLogVoterEvents(chains, fromBlockNumber, toBlockNumber),
     ]);
   }
 
