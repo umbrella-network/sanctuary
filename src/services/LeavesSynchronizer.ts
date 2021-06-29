@@ -135,7 +135,10 @@ class LeavesSynchronizer {
 
         return FCD.findOneAndUpdate(
           { _id: fcdKeys[i] },
-          { dataTimestamp: new Date(timestamps[i] * 1000), value: LeafValueCoder.decode(value.toHexString()) },
+          {
+            dataTimestamp: new Date(timestamps[i] * 1000),
+            value: LeafValueCoder.decode(value.toHexString(), fcdKeys[i]),
+          },
           { new: true, upsert: true }
         );
       })

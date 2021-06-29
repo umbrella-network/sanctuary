@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IFCD extends Document {
-  value: number;
+  value: number | string;
   dataTimestamp: Date;
   chainAddress: string;
 }
@@ -9,7 +9,7 @@ export interface IFCD extends Document {
 const FCDSchema: Schema = new Schema({
   _id: { type: String, required: true },
   chainAddress: { type: String, required: true, unique: false },
-  value: { type: Number, required: true },
+  value: { type: String, required: true },
   dataTimestamp: { type: Date, required: true },
 });
 

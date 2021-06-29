@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [2.0.0] - 2021-06-29
+### Added
+- add support for `FIXED` type
+
+### Fixed
+- Ensure `ChainSynchronizer` not scanning same blocks multiple times
+
 ## [1.2.5] - 2021-06-17
 ### Fixed
 - Fix `ChainSynchronizer` and `NewBlocksResolver` batch pulls

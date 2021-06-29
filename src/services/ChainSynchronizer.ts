@@ -10,6 +10,7 @@ import { LogRegistered } from '../types/events';
 import { CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
 import { ChainStatus } from '../types/ChainStatus';
 import { CreateBatchRanges } from './CreateBatchRanges';
+import Block from '../models/Block';
 
 @injectable()
 class ChainSynchronizer {
@@ -77,8 +78,13 @@ class ChainSynchronizer {
   }
 
   private static async getLastSavedAnchor(): Promise<number> {
-    const instance = await ChainInstance.find({}).limit(1).sort({ anchor: -1 }).exec();
-    return instance[0] ? instance[0].anchor : -1;
+    const blocks = await Block.find({}).limit(1).sort({ anchor: -1 }).exec();
+    if (blocks.length) {
+      return blocks[0] ? blocks[0].anchor : -1;
+    }
+
+    const chains = await ChainInstance.find({}).limit(1).sort({ anchor: -1 }).exec();
+    return chains[0] ? chains[0].anchor : -1;
   }
 
   private async scanForEvents(fromBlock: number, toBlock: number): Promise<LogRegistered[]> {
