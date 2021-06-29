@@ -56,7 +56,7 @@ describe('LeavesSynchronizer', () => {
     mintedAt: new Date(),
     timestamp: new Date(),
     data: {
-      'ETH-USD': '0x' + LeafValueCoder.encode(100).toString('hex'),
+      'ETH-USD': '0x' + LeafValueCoder.encode(100, 'ETH-USD').toString('hex'),
     },
     blockId: 2,
     root: '0x321',
@@ -116,7 +116,7 @@ describe('LeavesSynchronizer', () => {
         data: {
           ...blockFromPegasus,
           data: {
-            'ETH-USD': '0x' + LeafValueCoder.encode(10).toString('hex'),
+            'ETH-USD': '0x' + LeafValueCoder.encode(10, 'ETH-USD').toString('hex'),
           },
         }
       }
@@ -162,7 +162,7 @@ describe('LeavesSynchronizer', () => {
     mockedChainContract.resolveFCDs.resolves(([[BigNumber.from(999)], [BigNumber.from('17005632')]] as any));
 
     const treeData = {
-      'ETH-USD': '0x' + LeafValueCoder.encode(100).toString('hex'),
+      'ETH-USD': '0x' + LeafValueCoder.encode(100,'ETH-USD').toString('hex'),
     };
 
     moxios.install();
@@ -188,6 +188,6 @@ describe('LeavesSynchronizer', () => {
     expect(leaf).to.have.property('key', 'ETH-USD');
     expect(leaf).to.have.property('value', treeData['ETH-USD']);
 
-    expect(fcds[0]).to.have.property('value', 999e-18);
+    expect(fcds[0]).to.have.property('value', '9.99e-16');
   });
 });
