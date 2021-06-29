@@ -43,7 +43,7 @@ async function main() {
         _id: `leaf::${block._id}::${key}`,
         blockId: block._id,
         key: key,
-        value: '0x' + LeafValueCoder.encode(12345),
+        value: '0x' + LeafValueCoder.encode(12345, ''),
         proof: [ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234'), ethers.utils.keccak256('0x1234')],
       });
 
