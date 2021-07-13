@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [2.0.1] - 2021-07-13
+
+### Added
+
+- Add SANDBOX workflow
+
 ## [2.0.0] - 2021-06-29
 ### Added
 - add support for `FIXED` type
