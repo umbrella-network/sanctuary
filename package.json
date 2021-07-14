@@ -1,6 +1,6 @@
 {
   "name": "sanctuary",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
@@ -59,6 +59,8 @@
     "typescript": "~4.0.3"
   },
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.14.0",
+    "@influxdata/influxdb-client-apis": "^1.14.0",
     "@typegoose/typegoose": "~7.4.1",
     "@umb-network/toolbox": "~3.0.0-alpha.2",
     "axios": "~0.21.1",
