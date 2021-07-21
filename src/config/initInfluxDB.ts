@@ -41,3 +41,5 @@ export default async function initInfluxDB(): Promise<void> {
       console.log('\nFinished ERROR');
     });
 }
+
+initInfluxDB();
