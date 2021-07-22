@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import ApiKey from '../models/ApiKey';
 import { IApiKey } from '../models/ApiKey';
 import Token from '../types/Token';
-import APIUsageRepository from './analytics/APIUsageRepository';
+import UsageMetricsRepository from './analytics/UsageMetricsRepository';
 
 export type ApiKeyFromAuthHeaderInterface =
   | { apiKey: IApiKey; errorMessage?: void }
@@ -20,10 +20,15 @@ export class AuthUtils {
     }
 
     if (apiKeyVerificationResult.apiKey) {
-      APIUsageRepository.register({
-        apiKey: request.headers.authorization.replace('Bearer ', ''),
-        route: request.baseUrl,
-      });
+      const apiKey = request.headers.authorization.replace('Bearer ', '');
+      const {
+        route: { path },
+        method,
+        baseUrl,
+      } = request;
+      const route = `${baseUrl}${path}`;
+
+      UsageMetricsRepository.register(apiKey, route, method);
     }
 
     return apiKeyVerificationResult;

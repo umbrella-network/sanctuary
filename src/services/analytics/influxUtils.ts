@@ -1,14 +1,11 @@
 import { InfluxDB, HttpError } from '@influxdata/influxdb-client';
 import { OrgsAPI, BucketsAPI } from '@influxdata/influxdb-client-apis';
-
-import { settings } from '../../config/initInfluxDB';
-
-const { org } = settings.influxDB;
+import { Point } from '@influxdata/influxdb-client';
 
 /**
  * If bucket name does not exist, it'll create one.
  */
-export async function eraseBucket(influxConn: InfluxDB, bucketName: string) {
+export async function eraseBucket(influxConn: InfluxDB, org: string, bucketName: string) {
   const orgsAPI = new OrgsAPI(influxConn);
 
   const organizations = await orgsAPI.getOrgs({ org });
@@ -33,4 +30,26 @@ export async function eraseBucket(influxConn: InfluxDB, bucketName: string) {
 
   const bucket = await bucketsAPI.postBuckets({ body: { orgID, name: bucketName, retentionRules: [] } });
   return bucket;
+}
+
+export function registerPoint(point: Point, influxConnection: InfluxDB, org: string, bucket: string): void {
+  const writeApi = influxConnection.getWriteApi(org, bucket, 'ms');
+
+  writeApi.writePoint(point);
+
+  writeApi.close();
+}
+
+export async function collectRowsFromQuery(
+  query: string,
+  influxConnection: InfluxDB,
+  org: string,
+  bucketName: string
+): Promise<any[]> {
+  const queryApi = influxConnection.getQueryApi(org);
+  const fluxQuery = `from(bucket:"${bucketName}")${query}`;
+
+  const rows = await queryApi.collectRows(fluxQuery);
+
+  return rows;
 }

@@ -1,21 +1,10 @@
 import { InfluxDB } from '@influxdata/influxdb-client';
+import Settings from '../types/Settings';
 import { IsOnboarding, SetupAPI } from '@influxdata/influxdb-client-apis';
 
-export const settings = {
-  influxDB: {
-    url: 'http://localhost:8086',
-    org: 'sanctuary',
-    username: 'sanctuary',
-    password: 'veryStrongPassword',
-    bucket: 'sanctuary',
-    token: 'sanctuary:veryStrongPassword'
-  },
-};
-
-const { url, org, bucket, username, password, token } = settings.influxDB;
-
-export default async function initInfluxDB(): Promise<void> {
-  const setupAPI = new SetupAPI(new InfluxDB({ url: url }));
+export default async function initInfluxDB(settings: Settings): Promise<void> {
+  const { url, org, bucket, username, password, token } = settings.influxDB;
+  const setupAPI = new SetupAPI(new InfluxDB({ url }));
 
   setupAPI
     .getSetup()
@@ -27,7 +16,7 @@ export default async function initInfluxDB(): Promise<void> {
             bucket,
             username,
             password,
-            token
+            token,
           },
         });
         console.log(`InfluxDB '${url}' is now onboarded.`);
@@ -41,5 +30,3 @@ export default async function initInfluxDB(): Promise<void> {
       console.log('\nFinished ERROR');
     });
 }
-
-initInfluxDB();

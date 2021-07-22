@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Added
 - add influxDB to save API Key usage
+- /usage-metrics endpoint for API usage histogram
 
 ## [2.0.1] - 2021-07-13
 

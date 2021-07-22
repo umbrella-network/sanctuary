@@ -1,5 +1,5 @@
 import { InfluxDB } from '@influxdata/influxdb-client';
-import { settings } from '../../config/initInfluxDB';
+import settings from '../../config/settings';
 
 const { url, token } = settings.influxDB;
 

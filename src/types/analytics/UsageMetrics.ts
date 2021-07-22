@@ -1,4 +1,7 @@
 export default interface UsageMetrics {
   time: string;
-  amount: number;
+  apiKey?: string;
+  amount?: number;
+  route?: string;
+  method?: string;
 }

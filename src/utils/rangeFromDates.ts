@@ -1,23 +1,30 @@
-import { differenceInHours, addHours } from 'date-fns';
+import { add } from 'date-fns';
+import { LONG_NOTATION_FOR_MEASURE, removeMillisecondsFromIsoDate } from './time';
+import { uniq } from 'lodash';
+import { EVERY_N_FOR_PERIOD } from './analytics/usageMetricsUtils';
 
-export const rangeFromDates = (start: string, end: string, sliceEvery: number): Array<string> => {
-  const differenceBetweenDates = differenceInHours(new Date(end), new Date(start));
-  const amountOfTimeSlices = Math.ceil(differenceBetweenDates / sliceEvery) + 1;
+export const rangeFromDates = (start: string, end: string, period: string): Array<string> => {
+  if (start === end) {
+    return [removeMillisecondsFromIsoDate(new Date(end))];
+  }
 
-  const range = new Array(amountOfTimeSlices).fill(undefined).map((_, slice) => {
+  const { every, everyMeasure, bins } = EVERY_N_FOR_PERIOD[period];
+  const addMeasure = LONG_NOTATION_FOR_MEASURE[everyMeasure];
+
+  const range = new Array(bins).fill(undefined).map((_, slice) => {
     const isFirstSlice = slice === 0;
-    const isLastSlice = slice === amountOfTimeSlices - 1;
+    const isLastSlice = slice === bins - 1;
 
     if (isFirstSlice) {
-      return start;
+      return removeMillisecondsFromIsoDate(new Date(start));
     }
 
     if (isLastSlice) {
-      return end;
+      return removeMillisecondsFromIsoDate(new Date(end));
     }
 
-    return addHours(new Date(start), slice * sliceEvery).toISOString().slice(0, -5)+"Z";
+    return removeMillisecondsFromIsoDate(add(new Date(start), { [addMeasure]: slice * every }));
   });
 
-  return range;
+  return uniq(range);
 };
