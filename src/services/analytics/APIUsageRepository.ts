@@ -1,8 +1,8 @@
 import { Point } from '@influxdata/influxdb-client';
 import UsageData from '../../types/analytics/UsageData';
 import UsageMetrics from '../../types/analytics/UsageMetrics';
-import { rangeFromDates } from '../../utils/rangeFromDates';
-import { assignMetricsToRange } from '../../utils/assignMetricsToRange';
+import { EVERY_N_FOR_PERIOD, validatePeriodHours } from '../../utils/analytics/usageMetricsUtils';
+import { parseUsageMetrics } from '../../utils/analytics/parseUsageMetrics';
 import { settings } from '../../config/initInfluxDB';
 
 import influxConn from './influxConnection';
@@ -10,8 +10,6 @@ import influxConn from './influxConnection';
 const { org, bucket } = settings.influxDB;
 
 const MEASUREMENT_NAME = 'apiUsage';
-
-type periodHours = 1 | 12 | 24 | 48;
 
 export default class APIUsageRepository {
   static register(data: UsageData): void {
@@ -27,43 +25,30 @@ export default class APIUsageRepository {
     writeApi.close();
   }
 
-  static async retrieve(apiKeys: Array<string>, periodHours: periodHours): Promise<UsageMetrics[]> {
+  static async retrieveUsageMetrics(apiKeys: Array<string>, period: string): Promise<UsageMetrics[]> {
+    validatePeriodHours(period);
+
     const queryApi = influxConn.getQueryApi(org);
 
+    const { every, everyMeasure } = EVERY_N_FOR_PERIOD[period];
+
     const fluxQuery = `from(bucket:"${bucket}")
-      |> range(start: -30d)
+      |> range(start: -${period})
       |> filter(fn: (r) => contains(value: r.apiKey, set: ${JSON.stringify(apiKeys)}))
       |> sort(desc: true)
       |> aggregateWindow(
         column: "_time",
-        every: ${periodHours}h,
+        every: ${every}${everyMeasure},
         fn: unique,
         createEmpty: true,
       )
       |> group(columns: ["_time"])
         |> count()`;
 
-    try {
-      const rows = await queryApi.collectRows(fluxQuery);
+    const rows = await queryApi.collectRows(fluxQuery);
 
-      const rawUsageMetrics = rows.map((row: any) => {
-        const usageMetric: UsageMetrics = {
-          time: row._time,
-          amount: row._value,
-        };
+    const usageMetrics = parseUsageMetrics(rows, period);
 
-        return usageMetric;
-      });
-
-      const startingTime = rawUsageMetrics[0].time;
-      const endingTime = rawUsageMetrics[rawUsageMetrics.length - 1].time;
-
-      const dateRange = rangeFromDates(startingTime, endingTime, periodHours);
-      const usageMetrics = assignMetricsToRange(rawUsageMetrics, dateRange);
-
-      return usageMetrics;
-    } catch (err) {
-      console.error(err);
-    }
+    return usageMetrics;
   }
 }

@@ -10,6 +10,7 @@ import BlocksController from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
 import AuthController from '../controllers/AuthController';
 import UsersController from '../controllers/UsersController';
+import UsageMetricsController from '../controllers/UsageMetricsController';
 import Settings from '../types/Settings';
 import ApiKeysController from '../controllers/ApiKeysController';
 import ProjectsController from '../controllers/ProjectsController';
@@ -33,6 +34,7 @@ class Server {
     @inject(ProofsController) proofsController: ProofsController,
     @inject(AuthController) authController: AuthController,
     @inject(UsersController) usersController: UsersController,
+    @inject(UsageMetricsController) usageMetricsController: UsageMetricsController,
     @inject(ApiKeysController) apiKeyController: ApiKeysController,
     @inject(ProjectsController) projectsController: ProjectsController,
     @inject(WalletAuthController) walletAuthController: WalletAuthController,
@@ -52,6 +54,7 @@ class Server {
       .use('/keys', keysController.router)
       .use('/proofs', proofsController.router)
       .use('/users', usersController.router)
+      .use('/usage-metrics', usageMetricsController.router)
       .use('/auth', authController.router)
       .use('/api-keys', apiKeyController.router)
       .use('/projects', projectsController.router)

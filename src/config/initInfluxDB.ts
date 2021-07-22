@@ -8,7 +8,7 @@ export const settings = {
     username: 'sanctuary',
     password: 'veryStrongPassword',
     bucket: 'sanctuary',
-    token: 'sanctuary:veryStrongPassword'
+    token: 'sanctuary:veryStrongPassword',
   },
 };
 
@@ -27,7 +27,7 @@ export default async function initInfluxDB(): Promise<void> {
             bucket,
             username,
             password,
-            token
+            token,
           },
         });
         console.log(`InfluxDB '${url}' is now onboarded.`);
