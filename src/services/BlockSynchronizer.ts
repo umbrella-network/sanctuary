@@ -6,7 +6,6 @@ import Block, { IBlock } from '../models/Block';
 import Leaf from '../models/Leaf';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
 import ChainInstance from '../models/ChainInstance';
-import { BigNumber } from 'ethers';
 import { BlockStatus } from '../types/blocks';
 import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
@@ -25,18 +24,22 @@ class BlockSynchronizer {
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
   async apply(): Promise<void> {
-    const [[chainAddress, chainStatus], [lastSavedBlockId, lastSavedAnchor]] = await Promise.all([
+    const [[chainAddress, chainStatus], [lastSavedBlockId]] = await Promise.all([
       this.chainContract.resolveStatus(),
       BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
-    if (!(await this.canProceed(chainStatus, lastSavedBlockId, lastSavedAnchor))) {
+    if ((await this.reveredBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId)) > 0) {
       return;
     }
 
     this.logger.info(`Synchronizing blocks for ${chainStatus.nextBlockId}, current chain ${chainAddress}`);
 
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
+
+    if (!mongoBlocks.length) {
+      return;
+    }
 
     this.logger.debug(`got ${mongoBlocks.length} mongoBlocks to synchronize`);
 
@@ -57,22 +60,6 @@ class BlockSynchronizer {
     return lastSavedBlock[0]
       ? [lastSavedBlock[0].blockId, lastSavedBlock[0].anchor + 1]
       : [0, await BlockSynchronizer.getLowestChainAnchor()];
-  }
-
-  private async canProceed(
-    chainStatus: ChainStatus,
-    lastSavedBlockId: number,
-    lastSavedAnchor: number
-  ): Promise<boolean> {
-    if ((await this.reveredBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId)) > 0) {
-      return false;
-    }
-
-    return BlockSynchronizer.newBlockDetected(chainStatus.blockNumber, lastSavedAnchor);
-  }
-
-  private static newBlockDetected(currentBlockchainBlockNumber: BigNumber, lastSavedAnchor: number): boolean {
-    return !lastSavedAnchor || currentBlockchainBlockNumber.gt(lastSavedAnchor);
   }
 
   private static async getLowestChainAnchor(): Promise<number> {
