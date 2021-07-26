@@ -98,16 +98,6 @@ describe('BlockSynchronizer', () => {
     await mongoose.connection.close();
   });
 
-  it('will not proceed if new block is not detected', async () => {
-    mockedChainContract.resolveBlockData.resolves(arbitraryBlockFromChain);
-    mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
-    resolveChainStatus(BigNumber.from(10)); // no new blocks
-
-    await blockSynchronizer.apply();
-    const blocks = await Block.find({status: BlockStatus.Finalized});
-    expect(blocks.length).to.be.equal(1);
-  });
-
   it('it will revert block when detect invalid root', async () => {
     mockedChainContract.resolveBlockData.resolves({
       ...arbitraryBlockFromChain,
