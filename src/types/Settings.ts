@@ -20,6 +20,7 @@ type Settings = {
     feedsOnChain: string;
   };
   blockchain: {
+    startBlockNumber: number;
     scanBatchSize: number;
     confirmations: number;
     provider: {
