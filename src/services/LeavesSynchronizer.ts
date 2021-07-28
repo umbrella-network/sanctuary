@@ -69,22 +69,39 @@ class LeavesSynchronizer {
     const urlForBlockId = url.parse(`${validator.location}/blocks/blockId/${mongoBlock.blockId}`).href;
     this.logger.info(`Resolving leaves from: ${urlForBlockId}`);
 
-    const blockFromPegasus = await this.blockFromValidator(validator, mongoBlock.blockId);
+    const blocksFromPegasus = await this.blocksFromValidator(validator, mongoBlock.blockId);
 
-    if (!blockFromPegasus) {
+    if (!blocksFromPegasus || !blocksFromPegasus.length) {
       return false;
     }
 
+    for (const blockFromPegasus of blocksFromPegasus) {
+      const [success, root] = await this.processBlockFromValidator(blockFromPegasus, mongoBlock);
+
+      if (success) {
+        return true;
+      }
+
+      this.logger.warn('Validator returned non matching tree data', {
+        urlForBlockId,
+        consensus: mongoBlock.root,
+        validator: root,
+      });
+    }
+
+    return false;
+  };
+
+  private processBlockFromValidator = async (
+    blockFromPegasus: BlockFromPegasus,
+    mongoBlock: IBlock
+  ): Promise<[boolean, string]> => {
     const resolvedLeaves: Map<string, string> = new Map(<[string, string][]>Object.entries(blockFromPegasus.data));
     const tree = this.sortedMerkleTreeFactory.apply(resolvedLeaves);
     const root = tree.getRoot();
 
     if (root != mongoBlock.root) {
-      this.logger.warn(
-        `Validator: ${urlForBlockId} returned non matching tree data; consensus = ${mongoBlock.root} & validator = ${root}`
-      );
-
-      return false;
+      return [false, root];
     }
 
     const [, updatedLeaves] = await Promise.all([
@@ -94,10 +111,13 @@ class LeavesSynchronizer {
 
     this.logger.info(`Resolving finished with ${updatedLeaves.length} leaves and votes: ${mongoBlock.votes.size}`);
 
-    return true;
+    return [true, root];
   };
 
-  private blockFromValidator = async (validator: Validator, blockId: number): Promise<BlockFromPegasus | undefined> => {
+  private blocksFromValidator = async (
+    validator: Validator,
+    blockId: number
+  ): Promise<BlockFromPegasus[] | undefined> => {
     const urlForBlockId = url.parse(`${validator.location}/blocks/blockId/${blockId}`).href;
 
     try {
@@ -113,7 +133,12 @@ class LeavesSynchronizer {
         return;
       }
 
-      return (response.data.data as unknown) as BlockFromPegasus;
+      // to be backwards compatible
+      if (!response.data.dataLength) {
+        return [(response.data.data as unknown) as BlockFromPegasus];
+      }
+
+      return (response.data.data as unknown) as BlockFromPegasus[];
     } catch (e) {
       this.logger.warn(`Error for block request ${urlForBlockId}: ${e.message}`);
     }

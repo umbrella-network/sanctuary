@@ -6,14 +6,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [2.1.0] - 2021-07-27
+### Added
+- add starting block number for scanning for `Chain`
+
+### Changed
+- Support array of blocks returned from validators
+
 ## [2.0.2] - 2021-07-14
 ### Changed
 - speed up worker by checking if there are block to sync in db instead of waiting for new minted block
 
 ## [2.0.1] - 2021-07-13
-
 ### Added
-
 - Add SANDBOX workflow
 
 ## [2.0.0] - 2021-06-29

@@ -30,6 +30,7 @@ const settings: Settings = {
       'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feedsOnChain.yaml',
   },
   blockchain: {
+    startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
     scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '1000', 10),
     confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
     provider: {
