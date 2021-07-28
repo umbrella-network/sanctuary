@@ -33,7 +33,7 @@ class BlockSynchronizer {
       return;
     }
 
-    this.logger.info(`Synchronizing blocks for ${chainStatus.nextBlockId}, current chain ${chainAddress}`);
+    this.logger.info(`Synchronizing blocks at blockId ${chainStatus.nextBlockId}, current chain ${chainAddress}`);
 
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
 

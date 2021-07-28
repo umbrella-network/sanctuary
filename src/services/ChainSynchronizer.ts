@@ -25,7 +25,10 @@ class ChainSynchronizer {
   }
 
   private async synchronizeChains(chainStatus: ChainStatus): Promise<void> {
-    const [fromBlock, toBlock] = await ChainSynchronizer.calculateBlockNumberRange(chainStatus);
+    const [fromBlock, toBlock] = await ChainSynchronizer.calculateBlockNumberRange(
+      chainStatus,
+      this.settings.blockchain.startBlockNumber
+    );
     this.logger.info(`Synchronizing Chains for blocks ${fromBlock} - ${toBlock}`);
 
     const ranges = CreateBatchRanges.apply(fromBlock, toBlock, this.settings.blockchain.scanBatchSize);
@@ -70,9 +73,15 @@ class ChainSynchronizer {
     return Promise.all(chainAddresses.map((address) => this.chainContract.resolveBlocksCountOffset(address)));
   }
 
-  private static async calculateBlockNumberRange(chainStatus: ChainStatus): Promise<[number, number]> {
+  private static async calculateBlockNumberRange(
+    chainStatus: ChainStatus,
+    startBlockNumber: number
+  ): Promise<[number, number]> {
     const lastAnchor = await ChainSynchronizer.getLastSavedAnchor();
-    const lookBack = Math.max(0, chainStatus.blockNumber.sub(100000).toNumber());
+    const lookBack = Math.max(
+      0,
+      startBlockNumber < 0 ? chainStatus.blockNumber.sub(100000).toNumber() : startBlockNumber
+    );
     const fromBlock = lastAnchor > 0 ? lastAnchor : lookBack;
     return [fromBlock + 1, chainStatus.blockNumber.toNumber()];
   }
