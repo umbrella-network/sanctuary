@@ -5,7 +5,7 @@ import Blockchain from '../lib/Blockchain';
 import { ContractRegistry, ABI } from '@umb-network/toolbox';
 
 @injectable()
-class ValidatorRegistryContract {
+class StakingBankContract {
   registry!: ContractRegistry;
   settings!: Settings;
   blockchain!: Blockchain;
@@ -23,8 +23,8 @@ class ValidatorRegistryContract {
       );
     }
 
-    const address = await this.registry.getAddress(this.settings.blockchain.contracts.validatorRegistry.name);
-    return new Contract(address, ABI.validatorRegistryAbi, this.blockchain.provider);
+    const address = await this.registry.getAddress(this.settings.blockchain.contracts.stakingBank.name);
+    return new Contract(address, ABI.stakingBankAbi, this.blockchain.provider);
   }
 
   async validators(id: string): Promise<utils.Result> {
@@ -32,4 +32,4 @@ class ValidatorRegistryContract {
   }
 }
 
-export default ValidatorRegistryContract;
+export default StakingBankContract;

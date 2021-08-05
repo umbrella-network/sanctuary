@@ -33,7 +33,7 @@ type Settings = {
       registry: {
         address: string;
       };
-      validatorRegistry: {
+      stakingBank: {
         name: string;
       };
     };
