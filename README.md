@@ -31,6 +31,7 @@ Setup a dotenv file (`.env`) with local configuration values. Example:
 PORT=3000 # HTTP port the server will listen to.
 REGISTRY_CONTRACT_ADDRESS=0xABCD1234
 BLOCKCHAIN_PROVIDER_URL=https://kovan.infura.io/v3/:id # Leave it empty if running locally
+INFLUX_URL= #Optional to connect to an existing influxDB instance. If in local development, leave this blank to use default values
 ```
 
 # Commands

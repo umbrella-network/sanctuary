@@ -146,8 +146,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/APIKey"
-components:
-  securitySchemes:
+  "/usage-metrics":
+    get:
+      summary: Get all API keys usage metrics
+      security:
+        - bearerAuth: []
+      parameters:
+      - in: "query"
+        name: "projectId"
+        description: "Project by which to get API usage metrics."
+        schema:
+          type: "string"
+      - in: "query"
+        name: "period"
+        required: false
+        description: "Period to assort histogram bins"
+        schema:
+          type: string
+          enum: ['1h', '12h', '24h', '48h', '1w', '1mo']
+      responses:
+        "200":
+          description: "Usage Metrics"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/UsageMetrics"
     bearerAuth:
       type: http
       scheme: bearer
@@ -255,3 +280,19 @@ components:
           type: "string"
           format: "date-time"
           description: "Expiration for the API key."
+    UsageMetrics:
+      type: "object"
+      properties:
+        time:
+          type: "string"
+          format: "date-time"
+          description: "Usage date."
+        amount:
+          type: number
+          description: "Amount of API hits on bin"
+        apiKey:
+          type: "string"
+          description: "API Key."
+        route:
+          type: "string"
+          description: "Route accessed by API key"
