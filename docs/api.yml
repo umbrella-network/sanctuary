@@ -173,6 +173,8 @@ paths:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/UsageMetrics"
+components:
+  securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
