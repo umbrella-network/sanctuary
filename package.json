@@ -1,6 +1,6 @@
 {
   "name": "sanctuary",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
@@ -12,6 +12,7 @@
     "compile": "tsc -p .",
     "prettier": "prettier --config .prettierrc 'src/**/*.ts' --check",
     "prettier:format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "lint:prettier": "eslint ./src/**/*.ts ./test/**/*.ts --fix && prettier --config .prettierrc 'src/**/*.ts' --write",
     "format": "npm run lint:fix && npm run prettier:format",
     "copy:assets": "cpx 'src/**/*.{graphql,html,png,json}' dist",
     "start:dev": "tsnd --respawn src/server.ts",
@@ -22,6 +23,7 @@
     "start:worker": "node dist/worker.js",
     "start:scheduler": "node dist/scheduler.js",
     "test": "cross-env NODE_ENV=testing mocha --require ts-node/register --ui bdd 'test/**/*.test.ts'",
+    "test:watch": "cross-env NODE_ENV=testing mocha --watch --require ts-node/register --ui bdd 'test/**/*.test.ts'",
     "test:e2e:only-tests": "cross-env NODE_ENV=testing mocha --require ts-node/register --ui bdd 'test/**/*.e2e.ts'",
     "test:e2e": "start-server-and-test 'cross-env NODE_ENV=testing npm run start:dev' http://localhost:3003/health test:e2e:only-tests"
   },
@@ -59,8 +61,11 @@
     "typescript": "~4.0.3"
   },
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.14.0",
+    "@influxdata/influxdb-client-apis": "^1.14.0",
     "@typegoose/typegoose": "~7.4.1",
-    "@umb-network/toolbox": "~3.0.0-alpha.2",
+    "@types/lodash": "^4.2.0",
+    "@umb-network/toolbox": "~4.0.0-alpha.0",
     "axios": "~0.21.1",
     "bcrypt": "~5.0.0",
     "bullmq": "~1.34.0",
@@ -68,6 +73,7 @@
     "cors": "~2.8.5",
     "cpx": "~1.5.0",
     "crypto-random-string": "~3.3.0",
+    "date-fns": "^2.22.1",
     "dotenv": "~8.2.0",
     "ethers": "~5.3.0",
     "express": "~4.17.1",

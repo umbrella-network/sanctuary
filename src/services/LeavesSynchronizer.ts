@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
-import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
+import StakingBankContract from '../contracts/StakingBankContract';
 import Block, { IBlock } from '../models/Block';
 import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
@@ -19,7 +19,7 @@ class LeavesSynchronizer {
   @inject('Logger') private logger!: Logger;
   @inject('Settings') private readonly settings: Settings;
   @inject(ChainContract) private chainContract!: ChainContract;
-  @inject(ValidatorRegistryContract) private validatorRegistryContract!: ValidatorRegistryContract;
+  @inject(StakingBankContract) private stakingBankContract!: StakingBankContract;
   @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
 
   async apply(chainStatus: ChainStatus, mongoBlockId: string): Promise<boolean | null> {

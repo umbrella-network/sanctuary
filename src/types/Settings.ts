@@ -33,7 +33,7 @@ type Settings = {
       registry: {
         address: string;
       };
-      validatorRegistry: {
+      stakingBank: {
         name: string;
       };
     };
@@ -44,6 +44,14 @@ type Settings = {
   };
   version: string;
   environment?: string;
+  influxDB: {
+    url: string;
+    org: string;
+    username: string;
+    password: string;
+    bucket: string;
+    token: string;
+  };
 };
 
 export default Settings;

@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import {Container} from 'inversify';
 import {mockedLogger} from '../mocks/logger';
 import LeavesSynchronizer from '../../src/services/LeavesSynchronizer';
-import ValidatorRegistryContract from '../../src/contracts/ValidatorRegistryContract';
+import StakingBankContract from '../../src/contracts/StakingBankContract';
 import sinon from 'sinon';
 import {BigNumber, ethers} from 'ethers';
 import mongoose from 'mongoose';
@@ -35,7 +35,7 @@ const resolveValidators = (chainStatus: ChainStatus): Validator[] => {
 describe('LeavesSynchronizer', () => {
   let container: Container;
   let mockedChainContract: sinon.SinonStubbedInstance<ChainContract>;
-  let mockedValidatorRegistryContract: sinon.SinonStubbedInstance<ValidatorRegistryContract>;
+  let mockedValidatorRegistryContract: sinon.SinonStubbedInstance<StakingBankContract>;
   let leavesSynchronizer: LeavesSynchronizer;
 
   const chainStatus: ChainStatus = {
@@ -76,11 +76,11 @@ describe('LeavesSynchronizer', () => {
 
     // Mocking dependencies and adding them to the container
     mockedChainContract = sinon.createStubInstance(ChainContract);
-    mockedValidatorRegistryContract = sinon.createStubInstance(ValidatorRegistryContract);
+    mockedValidatorRegistryContract = sinon.createStubInstance(StakingBankContract);
     container.bind('Logger').toConstantValue(mockedLogger);
     container.bind('Settings').toConstantValue(settings);
     container.bind(ChainContract).toConstantValue(mockedChainContract as unknown as ChainContract);
-    container.bind(ValidatorRegistryContract).toConstantValue(mockedValidatorRegistryContract as unknown as ValidatorRegistryContract);
+    container.bind(StakingBankContract).toConstantValue(mockedValidatorRegistryContract as unknown as StakingBankContract);
     container.bind(SortedMerkleTreeFactory).toSelf();
 
     // Adding LeavesSynchronizer to the container

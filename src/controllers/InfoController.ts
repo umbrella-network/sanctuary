@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import Settings from '../types/Settings';
 import ChainContract from '../contracts/ChainContract';
-import ValidatorRegistryContract from '../contracts/ValidatorRegistryContract';
+import StakingBankContract from '../contracts/StakingBankContract';
 import Blockchain from '../lib/Blockchain';
 
 @injectable()
@@ -11,7 +11,7 @@ class InfoController {
 
   constructor(
     @inject('Settings') private readonly settings: Settings,
-    @inject(ValidatorRegistryContract) private readonly validatorRegistryContract: ValidatorRegistryContract,
+    @inject(StakingBankContract) private readonly stakingBankContract: StakingBankContract,
     @inject(Blockchain) private readonly blockchain: Blockchain,
     @inject(ChainContract) private readonly chainContract: ChainContract
   ) {
@@ -35,7 +35,7 @@ class InfoController {
 
     response.send({
       contractRegistryAddress: this.settings.blockchain.contracts.registry.address,
-      validatorRegistryAddress: (await this.validatorRegistryContract.resolveContract()).address,
+      stakingBankAddress: (await this.stakingBankContract.resolveContract()).address,
       chainContractAddress,
       version: this.settings.version,
       environment: this.settings.environment,

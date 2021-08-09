@@ -43,8 +43,8 @@ const settings: Settings = {
       registry: {
         address: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
-      validatorRegistry: {
-        name: 'ValidatorRegistry',
+      stakingBank: {
+        name: 'StakingBank',
       },
     },
   },
@@ -54,6 +54,14 @@ const settings: Settings = {
   },
   environment: process.env.ENVIRONMENT || process.env.NODE_ENV,
   version: packageJson.version,
+  influxDB: {
+    url: process.env.INFLUX_URL || 'http://localhost:8086',
+    org: process.env.INFLUX_ORG || 'sanctuary',
+    username: process.env.INFLUX_USERNAME || 'admin',
+    password: process.env.INFLUX_PASSWORD || 'password',
+    bucket: process.env.INFLUX_BUCKET || 'sanctuary',
+    token: process.env.INFLUX_TOKEN || 'localDevToken',
+  },
 };
 
 export default settings;
