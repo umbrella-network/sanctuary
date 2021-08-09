@@ -43,8 +43,8 @@ const settings: Settings = {
       registry: {
         address: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
-      validatorRegistry: {
-        name: 'ValidatorRegistry',
+      stakingBank: {
+        name: 'StakingBank',
       },
     },
   },

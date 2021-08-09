@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - add influxDB to save API Key usage
 - /usage-metrics endpoint for API usage histogram
 
+## [3.0.0] - 2021-08-07
+### Changed
+- `ValidatorRegistry` becomes `StakingBank`
+
 ## [2.1.0] - 2021-07-27
 ### Added
 - add starting block number for scanning for `Chain`
