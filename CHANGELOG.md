@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - add influxDB to save API Key usage
 - /usage-metrics endpoint for API usage histogram
+- monitor number of l2d pairs
 
 ## [3.0.0] - 2021-08-07
 ### Changed
