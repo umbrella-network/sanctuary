@@ -42,6 +42,7 @@ describe('BlockSynchronizer', () => {
       lastDataTimestamp: 162345,
       powers: [BigNumber.from(333)],
       staked: BigNumber.from(222),
+      minSignatures: 1,
     },
   ]);
 
