@@ -49,6 +49,7 @@ describe('LeavesSynchronizer', () => {
     lastDataTimestamp: 1,
     powers: [BigNumber.from(1)],
     staked: BigNumber.from(1),
+    minSignatures: 1,
   };
 
   const blockFromPegasus: BlockFromPegasus = {
