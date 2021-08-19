@@ -7,6 +7,9 @@ type Settings = {
     metricsReporting: {
       interval: number;
     };
+    crossChainSynchronization: {
+      lockTTL: number;
+    };
   };
   redis: {
     url: string;
