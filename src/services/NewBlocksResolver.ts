@@ -48,11 +48,12 @@ class NewBlocksResolver {
     const [logMintEvents, logVoteEvents] = await this.getChainLogsEvents(fromBlock, toBlock);
 
     if (!logMintEvents.length) {
+      this.logger.warn(`No logMintEvents for blocks ${fromBlock} - ${toBlock}`);
       return;
     }
 
     this.logger.info(`Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
-    await this.saveNewBlocks(await this.processEvents(logMintEvents, logVoteEvents));
+    await this.saveNewBlocks((await this.processEvents(logMintEvents, logVoteEvents)).filter((e) => e != undefined));
   }
 
   private async getChainLogsEvents(
@@ -124,6 +125,12 @@ class NewBlocksResolver {
         .map(async (event) => {
           const logMint = NewBlocksResolver.toLogMint(event);
           const logVoters = logVotersByBlockId.get(logMint.blockId);
+
+          if (!logVoters) {
+            this.logger.error(`LogVoters does not exist for blockId ${logMint.blockId}`);
+            return undefined;
+          }
+
           const votes: Map<string, string> = new Map<string, string>();
           const blockData = await this.chainContract.resolveBlockData(logMint.chain, logMint.blockId);
 
