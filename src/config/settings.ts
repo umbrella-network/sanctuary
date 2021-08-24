@@ -14,8 +14,9 @@ const settings: Settings = {
     metricsReporting: {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
     },
-    crossChainSynchronization: {
-      lockTTL: parseInt(process.env.CROSS_CHAIN_SYNCHRONIZATION_LOCK_TTL || '1000')
+    foreignChainSynchronization: {
+      interval: parseInt(process.env.FOREIGN_CHAIN_SYNCHRONIZATION_INTERVAL || '1000'),
+      lockTTL: parseInt(process.env.FOREIGN_CHAIN_SYNCHRONIZATION_LOCK_TTL || '1000')
     }
   },
   redis: {

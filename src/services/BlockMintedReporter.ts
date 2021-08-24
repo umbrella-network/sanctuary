@@ -1,11 +1,12 @@
 import { inject, injectable } from 'inversify';
 import ChainContract from '../contracts/ChainContract';
 import { Logger } from 'winston';
-import StatsDClient from '../lib/StatsDClient';
+import StatsdClient from 'statsd-client';
 
 @injectable()
 class BlockMintedReporter {
   @inject('Logger') logger!: Logger;
+  @inject('StatsdClient') statsdClient?: StatsdClient;
   @inject(ChainContract) chainContract!: ChainContract;
 
   async call(): Promise<void> {
@@ -13,7 +14,7 @@ class BlockMintedReporter {
     const [, chainStatus] = await this.chainContract.resolveStatus();
     const delta = timestamp - chainStatus.lastDataTimestamp;
     this.logger.debug(`Last minted block time: ${chainStatus.lastDataTimestamp}, block delta time: ${delta}`);
-    StatsDClient?.gauge('LastMintedBlockDeltaTime', delta);
+    this.statsdClient?.gauge('LastMintedBlockDeltaTime', delta);
   }
 }
 

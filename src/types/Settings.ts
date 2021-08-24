@@ -7,7 +7,8 @@ type Settings = {
     metricsReporting: {
       interval: number;
     };
-    crossChainSynchronization: {
+    foreignChainSynchronization: {
+      interval: number;
       lockTTL: number;
     };
   };

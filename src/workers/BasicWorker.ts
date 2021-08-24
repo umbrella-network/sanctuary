@@ -3,6 +3,11 @@ import { inject, injectable } from 'inversify';
 import IORedis from 'ioredis';
 import Settings from '../types/Settings';
 
+export type WorkerType = {
+  start (): void;
+  enqueue <T>(params: T, opts?: Bull.JobsOptions): Promise<Bull.Job<T>>;
+}
+
 @injectable()
 abstract class BasicWorker {
   connection: IORedis.Redis;
@@ -12,8 +17,8 @@ abstract class BasicWorker {
 
   abstract apply(job: Bull.Job): Promise<void>;
 
-  constructor(@inject('Settings') settings: Settings) {
-    this.connection = new IORedis(settings.redis.url);
+  constructor(@inject('Redis') connection: IORedis.Redis) {
+    this.connection = connection;
   }
 
   get queueName(): string {
@@ -29,7 +34,7 @@ abstract class BasicWorker {
   }
 
   enqueue = async <T>(params: T, opts?: Bull.JobsOptions): Promise<Bull.Job<T>> => {
-    return this.queue.add(this.constructor.name, params, opts);
+    return this.queue.add(this.queueName, params, opts);
   };
 
   start = (): void => {

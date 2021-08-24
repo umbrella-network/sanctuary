@@ -9,11 +9,11 @@ tags = NEW_RELIC_LABELS.split(';').reduce((nrTags, tag) => {
   return nrTags;
 }, tags);
 
-const StatsDClient = process.env.STATSD_URL
+const statsDClient = process.env.STATSD_URL
   ? new SDC({
       host: process.env.STATSD_URL,
       tags: tags,
     })
   : null;
 
-export default StatsDClient;
+export default statsDClient;
