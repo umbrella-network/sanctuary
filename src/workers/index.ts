@@ -1,10 +1,10 @@
-import { ForeignChainSynchronizationWorker } from './ForeignChainSynchronizationWorker';
+import { ForeignChainReplicationWorker } from './ForeignChainReplicationWorker';
 import BlockResolverWorker from './BlockResolverWorker';
 import BlockSynchronizerWorker from './BlockSynchronizerWorker';
 import MetricsWorker from './MetricsWorker';
 
 export {
-  ForeignChainSynchronizationWorker,
+  ForeignChainReplicationWorker,
   BlockResolverWorker,
   BlockSynchronizerWorker,
   MetricsWorker

@@ -7,9 +7,11 @@ type Settings = {
     metricsReporting: {
       interval: number;
     };
-    foreignChainSynchronization: {
-      interval: number;
-      lockTTL: number;
+    foreignChainReplication: {
+      ethereum: {
+        interval: number;
+        lockTTL: number;
+      }
     };
   };
   redis: {

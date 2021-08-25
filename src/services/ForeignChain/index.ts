@@ -1,3 +1,3 @@
-export { ForeignBlockSynchronizer } from './ForeignBlockSynchronizer';
-export { EthereumBlockSynchronizer } from './EthereumBlockSynchronizer';
-export { IForeignBlockSynchronizer } from './IForeignBlockSynchronizer';
+export { ForeignBlockReplicator } from './ForeignBlockReplicator';
+export { EthereumBlockReplicator } from './EthereumBlockReplicator';
+export { IForeignBlockReplicator } from './IForeignBlockReplicator';

@@ -3,7 +3,7 @@ import Application from './lib/Application';
 import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
 import BlockResolverWorker from './workers/BlockResolverWorker';
 import MetricsWorker from './workers/MetricsWorker';
-import { ForeignChainSynchronizationWorker } from './workers';
+import { ForeignChainReplicationWorker } from './workers';
 import Settings from './types/Settings';
 import { Logger } from 'winston';
 import newrelic from 'newrelic';
@@ -14,13 +14,17 @@ import newrelic from 'newrelic';
   const blockSynchronizerWorker = Application.get(BlockSynchronizerWorker);
   const blockResolverWorker = Application.get(BlockResolverWorker);
   const metricsWorker = Application.get(MetricsWorker);
-  const foreignChainSynchronizationWorker = Application.get(ForeignChainSynchronizationWorker);
+  const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
 
-  foreignChainSynchronizationWorker.enqueue(
-    {},
+  foreignChainReplicationWorker.enqueue(
+    {
+      foreignChainId: 'ethereum',
+      lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
+      interval: settings.jobs.foreignChainReplication.ethereum.interval
+    },
     {
       repeat: {
-        every: foreignChainSynchronizationWorker.interval,
+        every: settings.jobs.foreignChainReplication.ethereum.interval,
         limit: 1
       }
     }
