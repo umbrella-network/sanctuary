@@ -41,6 +41,7 @@ const settings: Settings = {
     confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
     provider: {
       url: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
+      privateKey: process.env.REPLICATOR_PRIVATE_KEY as string,
     },
     contracts: {
       chain: {
@@ -53,6 +54,11 @@ const settings: Settings = {
         name: 'StakingBank',
       },
     },
+    transactions: {
+      waitForBlockTime: parseInt(process.env.WAIT_FOR_BLOCK_TIME || '1000'),
+      minGasPrice: parseInt(process.env.MIN_GAS_PRICE || '5000000000', 10),
+      maxGasPrice: parseInt(process.env.MAX_GAS_PRICE || '10000000000', 10),
+    }
   },
   auth: {
     tokenExpiry: 60 * 60 * 24 * 7, // 1 week
