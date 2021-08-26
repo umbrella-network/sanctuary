@@ -19,7 +19,7 @@ export class ForeignChainReplicator {
   ) {
     this.replicators = {
       ethereum: ethereumBlockReplicator
-    }
+    };
   }
 
   apply = async (props: ForeignChainReplicatorProps): Promise<void> => {

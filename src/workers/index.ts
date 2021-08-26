@@ -8,4 +8,4 @@ export {
   BlockResolverWorker,
   BlockSynchronizerWorker,
   MetricsWorker
-}
+};

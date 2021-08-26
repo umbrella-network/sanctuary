@@ -1,8 +1,8 @@
-import { inject } from 'inversify';
-import Block, { IBlock } from '../../models/Block';
-import ForeignBlock, { IForeignBlock } from '../../models/ForeignBlock';
-import { ForeignChainStatus } from '../../types/ForeignChainStatus';
-import { IForeignBlockReplicator } from './IForeignBlockReplicator';
+import {inject} from 'inversify';
+import Block, {IBlock} from '../../models/Block';
+import ForeignBlock, {IForeignBlock} from '../../models/ForeignBlock';
+import {ForeignChainStatus} from '../../types/ForeignChainStatus';
+import {IForeignBlockReplicator} from './IForeignBlockReplicator';
 import {ForeignChainContract} from '../../contracts/ForeignChainContract';
 import {Logger} from 'winston';
 import {BlockStatus} from '../../types/blocks';
@@ -30,7 +30,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   }
 
   getStatus = async (): Promise<ForeignChainStatus> => this.foreignChainContract.resolveStatus<ForeignChainStatus>();
-  
+
   resolveSynchronizableBlocks = async (status: ForeignChainStatus): Promise<IBlock[]> => {
     if (!await this.canMint(status, Math.floor(Date.now() / 1000))) {
       return [];
@@ -53,41 +53,30 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   }
 
   synchronize = async (blocks: IBlock[], status: ForeignChainStatus): Promise<IBlock[]> => {
-    if (!blocks.length) {
-      return [];
-    }
-    
     // atm we assume we doing one block at a time
     const [block] = blocks;
 
     try {
-      const receipt = await this.replicateBlock(
-        block.dataTimestamp,
-        block.root,
-        [],
-        [],
-        block.blockId,
-        status
-      );
+      // TODO read last FCDs directly from chain
+      const receipt = await this.replicateBlock(block.dataTimestamp, block.root, [], [], block.blockId, status);
 
       if (!receipt) {
         return [];
       }
 
-      if (receipt.status !== 1) {
-        newrelic.recordCustomEvent(FailedTransactionEvent, {
-          transactionHash: receipt.transactionHash,
-        });
-
+      if (receipt.status === 1) {
         return blocks;
       }
+
+      newrelic.recordCustomEvent(FailedTransactionEvent, {
+        transactionHash: receipt.transactionHash,
+      });
     } catch (_) {
       // errors are logged in replicateBlock()
     }
 
     return [];
   }
-
 
   private canMint = async (chainStatus: ForeignChainStatus, dataTimestamp: number): Promise<boolean> => {
     const [ready, error] = this.chainReadyForNewBlock(chainStatus, dataTimestamp);
@@ -115,12 +104,12 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return [true, undefined];
   };
 
-  private latestForeignBlock = async (): Promise<IForeignBlock> => ForeignBlock.findOne().sort({ blockId: -1 });
+  private latestForeignBlock = async (): Promise<IForeignBlock> => ForeignBlock.findOne().sort({blockId: -1});
 
   private blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => Block.find({
     status: BlockStatus.Finalized,
     dataTimestamp: {$gt: this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding)},
-  }).sort({ blockId: -1 }).limit(1);
+  }).sort({blockId: -1}).limit(1);
 
   private verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {
     if (!blocks.length) {

@@ -4,7 +4,7 @@ import Settings from '../types/Settings';
 import ChainContract from '../contracts/ChainContract';
 import StakingBankContract from '../contracts/StakingBankContract';
 import Blockchain from '../lib/Blockchain';
-import {ChainStatus} from "../types/ChainStatus";
+import {ChainStatus} from '../types/ChainStatus';
 
 @injectable()
 class InfoController {
