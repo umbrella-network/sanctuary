@@ -1,6 +1,7 @@
 import { BigNumber } from 'ethers';
 
-export interface ChainStatus {
+export type ChainStatus = {
+  chainAddress: string;
   blockNumber: BigNumber;
   timePadding: number;
   lastDataTimestamp: number;

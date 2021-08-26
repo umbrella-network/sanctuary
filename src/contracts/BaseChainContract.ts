@@ -33,9 +33,9 @@ export class BaseChainContract {
     return this.setContract(chainAddress);
   }
 
-  async resolveStatus<T>(): Promise<[address: string, status: T]> {
+  async resolveStatus<T>(): Promise<T> {
     const chain = await this.resolveContract();
-    return Promise.all([chain.contract.address, chain.contract.getStatus()]);
+    return {chainAddress: chain.contract.address, ...(await chain.contract.getStatus())};
   }
 
   async blocksCountOffset(): Promise<number> {

@@ -4,6 +4,7 @@ import Settings from '../types/Settings';
 import ChainContract from '../contracts/ChainContract';
 import StakingBankContract from '../contracts/StakingBankContract';
 import Blockchain from '../lib/Blockchain';
+import {ChainStatus} from "../types/ChainStatus";
 
 @injectable()
 class InfoController {
@@ -19,12 +20,12 @@ class InfoController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    let chainContractAddress, network, status;
+    let network, status: ChainStatus | Error;
 
     try {
-      [chainContractAddress, status] = await this.chainContract.resolveStatus();
+      status = await this.chainContract.resolveStatus();
     } catch (e) {
-      chainContractAddress = e;
+      status = e;
     }
 
     try {
@@ -36,7 +37,6 @@ class InfoController {
     response.send({
       contractRegistryAddress: this.settings.blockchain.contracts.registry.address,
       stakingBankAddress: (await this.stakingBankContract.resolveContract()).address,
-      chainContractAddress,
       version: this.settings.version,
       environment: this.settings.environment,
       network,

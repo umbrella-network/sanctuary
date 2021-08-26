@@ -23,8 +23,8 @@ class NewBlocksResolver {
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
 
   async apply(): Promise<void> {
-    const [[, chainStatus], [, lastAnchor]] = await Promise.all([
-      this.chainContract.resolveStatus(),
+    const [chainStatus, [, lastAnchor]] = await Promise.all([
+      this.chainContract.resolveStatus<ChainStatus>(),
       BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
