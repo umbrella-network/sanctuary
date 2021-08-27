@@ -27,9 +27,9 @@ export class ForeignChainReplicator {
       const { foreignChainId } = props;
       const replicator = this.replicators[foreignChainId];
       const foreignChainStatus = await replicator.getStatus();
-      const blocks = await replicator.resolveSynchronizableBlocks(foreignChainStatus);
-      const replicatedBlocks = await replicator.synchronize(blocks, foreignChainStatus);
-      await this.commit(replicatedBlocks, foreignChainId);
+      const blocks = await replicator.resolveSynchronizableBlocks(foreignChainStatus, currentTime);
+      const synchronizedBlocks = await replicator.synchronize(blocks, foreignChainStatus);
+      await this.commit(synchronizedBlocks, foreignChainId);
     } catch (e) {
       this.logger.error(e);
     }

@@ -31,8 +31,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   getStatus = async (): Promise<ForeignChainStatus> => this.foreignChainContract.resolveStatus<ForeignChainStatus>();
 
-  resolveSynchronizableBlocks = async (status: ForeignChainStatus): Promise<IBlock[]> => {
-    if (!await this.canMint(status, Math.floor(Date.now() / 1000))) {
+  resolveSynchronizableBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
+    if (!await this.canMint(status, currentDate.getTime())) {
       return [];
     }
 
