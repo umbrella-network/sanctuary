@@ -1,23 +1,32 @@
 import {inject} from 'inversify';
+import {Logger} from 'winston';
+import newrelic from 'newrelic';
+
+import {FeedValue} from '@umb-network/toolbox/dist/types/Feed';
+import {LeafKeyCoder, LeafValueCoder} from '@umb-network/toolbox';
+import {TransactionRequest} from '@ethersproject/abstract-provider/src.ts/index';
+
 import Block, {IBlock} from '../../models/Block';
 import ForeignBlock, {IForeignBlock} from '../../models/ForeignBlock';
+import FCD from '../../models/FCD';
+
 import {ForeignChainStatus} from '../../types/ForeignChainStatus';
-import {IForeignBlockReplicator} from './IForeignBlockReplicator';
-import {ForeignChainContract} from '../../contracts/ForeignChainContract';
-import {Logger} from 'winston';
 import {BlockStatus} from '../../types/blocks';
-import {FeedValue} from '@umb-network/toolbox/dist/types/Feed';
+
+import {ForeignChainContract} from '../../contracts/ForeignChainContract';
+import ChainContract from '../../contracts/ChainContract';
+
+import {IForeignBlockReplicator} from './IForeignBlockReplicator';
 import {TxSender} from '../TxSender';
-import {LeafKeyCoder, LeafValueCoder} from '@umb-network/toolbox';
 import Settings from '../../types/Settings';
 import Blockchain from '../../lib/Blockchain';
-import {TransactionRequest} from '@ethersproject/abstract-provider/src.ts/index';
-import newrelic from 'newrelic';
 import {FailedTransactionEvent} from '../../constants/ReportedMetricsEvents';
+import {ChainFCDsData} from '../../models/ChainBlockData';
 
 export abstract class ForeignBlockReplicator implements IForeignBlockReplicator {
   @inject('Logger') protected logger!: Logger;
   @inject(ForeignChainContract) foreignChainContract: ForeignChainContract;
+  @inject(ChainContract) chainContract: ChainContract;
 
   txSender!: TxSender
   settings!: Settings;
@@ -57,8 +66,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const [block] = blocks;
 
     try {
-      // TODO read last FCDs directly from chain
-      const receipt = await this.replicateBlock(block.dataTimestamp, block.root, [], [], block.blockId, status);
+      const {keys, values} = await this.fetchFCDs(block);
+      const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
 
       if (!receipt) {
         return [];
@@ -177,5 +186,23 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   private static isNonceError(e: Error): boolean {
     return e.message.includes('nonce has already been used');
+  }
+
+  private async fetchFCDs(block: IBlock): Promise<{ keys: string[], values: FeedValue[] }> {
+    const keys: string[] = [];
+    const values: FeedValue[] = [];
+
+    const allKeys = (await FCD.find()).map(item => item._id);
+    
+    const [fcdsValues, fcdsTimestamps] = <ChainFCDsData>await this.chainContract.resolveFCDs(block.chainAddress, allKeys);
+
+    fcdsTimestamps.forEach((timestamp, i) => {
+      if (timestamp >= block.dataTimestamp.getTime()) {
+        keys.push(allKeys[i]);
+        values.push(fcdsValues[i]._hex);
+      }
+    });
+    
+    return {keys, values};
   }
 }
