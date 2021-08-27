@@ -31,6 +31,7 @@ type Settings = {
     confirmations: number;
     provider: {
       url: string;
+      privateKey: string;
     };
     contracts: {
       chain: {
@@ -43,6 +44,11 @@ type Settings = {
         name: string;
       };
     };
+    transactions: {
+      waitForBlockTime: number
+      minGasPrice: number;
+      maxGasPrice: number;
+    }
   };
   auth: {
     tokenExpiry: number;

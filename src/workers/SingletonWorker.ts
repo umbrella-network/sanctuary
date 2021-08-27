@@ -24,7 +24,7 @@ export abstract class SingletonWorker extends BasicWorker {
     const isStale = age > ageLimit;
     if (!isStale) return false;
 
-    this.logger.info(`Job ${job.id} is stale - discarding...`)
+    this.logger.info(`Job ${job.id} is stale - discarding...`);
     return true;
   };
 

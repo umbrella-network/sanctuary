@@ -24,8 +24,8 @@ class BlockSynchronizer {
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
   async apply(): Promise<void> {
-    const [[chainAddress, chainStatus], [lastSavedBlockId]] = await Promise.all([
-      this.chainContract.resolveStatus(),
+    const [chainStatus, [lastSavedBlockId]] = await Promise.all([
+      this.chainContract.resolveStatus<ChainStatus>(),
       BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
@@ -33,7 +33,7 @@ class BlockSynchronizer {
       return;
     }
 
-    this.logger.info(`Synchronizing blocks at blockId ${chainStatus.nextBlockId}, current chain ${chainAddress}`);
+    this.logger.info(`Synchronizing blocks at blockId ${chainStatus.nextBlockId}`);
 
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
 

@@ -20,7 +20,7 @@ class ChainSynchronizer {
   @inject(Blockchain) private blockchain!: Blockchain;
 
   async apply(): Promise<void> {
-    const [, status] = await this.chainContract.resolveStatus();
+    const status = await this.chainContract.resolveStatus<ChainStatus>();
     await this.synchronizeChains(status);
   }
 

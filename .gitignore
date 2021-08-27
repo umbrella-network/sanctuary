@@ -4,7 +4,7 @@ node_modules
 newrelic_agent.log
 tmp
 .idea
-*.env
+*.env*
 !example.env
 *.pem
 .DS_STORE
