@@ -23,7 +23,7 @@ export class ForeignChainReplicationWorker extends SingletonWorker {
   private execute = async (foreignChainId: string): Promise<void> => {
     try {
       this.logger.info('Starting Foreign Chain Block Synchronization...');
-      await this.replicator.apply({ foreignChainId, currentTime: new Date() });
+      await this.replicator.apply({ foreignChainId });
       this.logger.info('Foreign Chain Block Replication Complete');
     } catch (e) {
       this.logger.error(e);

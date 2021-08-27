@@ -16,6 +16,7 @@ import newrelic from 'newrelic';
   const metricsWorker = Application.get(MetricsWorker);
   const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
 
+  // schedule Ethereum replicator
   foreignChainReplicationWorker.enqueue(
     {
       foreignChainId: 'ethereum',
