@@ -3,6 +3,7 @@ import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
 import { IBlock } from '../models/Block';
 import { EthereumBlockReplicator, IForeignBlockReplicator } from './ForeignChain';
+import { ReplicationStatus } from './ForeignChain/ForeignBlockReplicator';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -27,17 +28,19 @@ export class ForeignChainReplicator {
       const { foreignChainId } = props;
       const replicator = this.replicators[foreignChainId];
       const foreignChainStatus = await replicator.getStatus();
-      const blocks = await replicator.resolveSynchronizableBlocks(foreignChainStatus, currentTime);
-      const synchronizedBlocks = await replicator.synchronize(blocks, foreignChainStatus);
-      await this.commit(synchronizedBlocks, foreignChainId);
+      const blocks = await replicator.resolvePendingBlocks(foreignChainStatus, new Date());
+      const replicationStatus = await replicator.replicate(blocks, foreignChainStatus);
+      await this.commit(replicationStatus, foreignChainId);
     } catch (e) {
       this.logger.error(e);
     }
   }
 
-  private commit = async (blocks: IBlock[], foreignChainId: string): Promise<void> => {
-    for (let block of blocks) {
-      let foreignBlock = this.foreignBlockFactory.fromBlock({ block, foreignChainId });
+  private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string): Promise<void> => {
+    for (let i = 0; i < replicationStatus.blocks.length; i++) {
+      let block = replicationStatus.blocks[i];
+      let anchor = replicationStatus.anchors[i];
+      let foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, foreignChainId });
       foreignBlock.save();
     }
   }

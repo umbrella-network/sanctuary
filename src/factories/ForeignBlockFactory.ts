@@ -6,6 +6,7 @@ import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 export type FromBlockProps = {
   block: IBlock;
   foreignChainId: string;
+  anchor: number;
 }
 
 @injectable()
@@ -14,6 +15,8 @@ export class ForeignBlockFactory {
     const foreignBlock = new ForeignBlock();
     foreignBlock.id = uuid();
     foreignBlock.parentId = props.block.id;
+    foreignBlock.blockId = props.block.blockId;
+    foreignBlock.anchor = props.anchor;
     foreignBlock.foreignChainId = props.foreignChainId;
     return foreignBlock;
   }

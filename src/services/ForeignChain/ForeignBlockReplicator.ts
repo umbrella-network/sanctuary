@@ -23,6 +23,12 @@ import Blockchain from '../../lib/Blockchain';
 import {FailedTransactionEvent} from '../../constants/ReportedMetricsEvents';
 import {ChainFCDsData} from '../../models/ChainBlockData';
 
+export type ReplicationStatus = {
+  blocks?: IBlock[];
+  anchors?: number[];
+  errors?: string[];
+}
+
 export abstract class ForeignBlockReplicator implements IForeignBlockReplicator {
   @inject('Logger') protected logger!: Logger;
   @inject(ForeignChainContract) foreignChainContract: ForeignChainContract;
@@ -40,7 +46,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   getStatus = async (): Promise<ForeignChainStatus> => this.foreignChainContract.resolveStatus<ForeignChainStatus>();
 
-  resolveSynchronizableBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
+  resolvePendingBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
     if (!await this.canMint(status, currentDate.getTime())) {
       return [];
     }
@@ -61,7 +67,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return blocks;
   }
 
-  synchronize = async (blocks: IBlock[], status: ForeignChainStatus): Promise<IBlock[]> => {
+  replicate = async (blocks: IBlock[], status: ForeignChainStatus): Promise<ReplicationStatus> => {
     // atm we assume we doing one block at a time
     const [block] = blocks;
 
@@ -69,12 +75,15 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       const {keys, values} = await this.fetchFCDs(block);
       const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
 
-      if (!receipt) {
-        return [];
-      }
+      // this is when the replication failed
+      if (!receipt) return { errors: ["Something happened :("] };
 
+      // YAY
       if (receipt.status === 1) {
-        return blocks;
+        return {
+          blocks: [block],
+          anchors: [receipt.blockNumber]
+        };
       }
 
       newrelic.recordCustomEvent(FailedTransactionEvent, {
@@ -84,7 +93,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       // errors are logged in replicateBlock()
     }
 
-    return [];
+    return { errors: ["Transaction Failed"] };
   }
 
   private canMint = async (chainStatus: ForeignChainStatus, dataTimestamp: number): Promise<boolean> => {

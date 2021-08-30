@@ -13,9 +13,9 @@ describe('BasicWorker', () => {
   container.bind<IORedis.Redis>('Redis').toConstantValue(connection);
   let worker = container.get(TestWorker);
 
-  let mockQueue = mock(Queue);
-  Object.setPrototypeOf(Queue, (name: string, opts?: QueueOptions) => mockQueue);
-  worker.queue
+  // let mockQueue = mock(Queue);
+  // Object.setPrototypeOf(Queue, (name: string, opts?: QueueOptions) => mockQueue);
+  // worker.queue
   // when(worker.queue).thenReturn(mockQueue);
 
   describe('#queueName', () => {
@@ -24,19 +24,18 @@ describe('BasicWorker', () => {
     })
   })
 
-  describe('#start', () => {
-    beforeAll(() => {
-      // when(worker.start()).thenReturn(void);
-    })
+  // describe('#start', () => {
+  //   beforeAll(() => {
+  //     // when(worker.start()).thenReturn(void);
+  //   })
     
-    it('starts the worker', () => {
-      console.log(worker.queue);
-      // worker.enqueue({});
-      // verify(mockQueue.add).called();
-      // worker.start();
-      // verify(connection.start()).called();
-    })
-  })
+  //   it('starts the worker', () => {
+  //     // worker.enqueue({});
+  //     // verify(mockQueue.add).called();
+  //     // worker.start();
+  //     // verify(connection.start()).called();
+  //   })
+  // })
 })
 function beforeAll(arg0: () => void) {
   throw new Error('Function not implemented.');
