@@ -1,7 +1,7 @@
 import './boot';
 import yargs from 'yargs';
 import Application from './lib/Application';
-import * as workers from './workers';
+import { BlockResolverWorker, BlockSynchronizerWorker, ForeignChainReplicationWorker, MetricsWorker } from './workers';
 
 const argv = yargs(process.argv.slice(2)).options({
   worker: { type: 'string', demandOption: true },
@@ -9,22 +9,22 @@ const argv = yargs(process.argv.slice(2)).options({
 
 switch (argv.worker) {
   case 'ForeignChainSynchronizationWorker': {
-    Application.get(workers.ForeignChainSynchronizationWorker).start();
+    Application.get(ForeignChainReplicationWorker).start();
     break;
   }
 
   case 'BlockSynchronizerWorker': {
-    Application.get(workers.BlockSynchronizerWorker).start();
+    Application.get(BlockSynchronizerWorker).start();
     break;
   }
 
   case 'BlockResolverWorker': {
-    Application.get(workers.BlockResolverWorker).start();
+    Application.get(BlockResolverWorker).start();
     break;
   }
 
   case 'MetricsWorker': {
-    Application.get(workers.MetricsWorker).start();
+    Application.get(MetricsWorker).start();
     break;
   }
 }
