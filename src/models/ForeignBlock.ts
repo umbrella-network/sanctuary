@@ -14,13 +14,11 @@ const ForeignBlockSchema = new Schema({
   parentId: { type: mongoose.Types.ObjectId, required: true },
   anchor: { type: Number, required: true },
   foreignChainId: { type: String, required: true },
-  blockId: { type: Number, required: true, unique: true },
+  blockId: { type: Number, required: true },
 }, {
   timestamps: true
 });
 
 ForeignBlockSchema.index({ parentId: 1 });
-ForeignBlockSchema.index({ blockId: -1 });
-ForeignBlockSchema.index({ blockId: 1 });
-ForeignBlockSchema.index({ status: 1 });
+ForeignBlockSchema.index({ blockId: 1, foreignChainId: 1 }, { unique: true });
 export default mongoose.model<IForeignBlock>('ForeignBlock', ForeignBlockSchema);
