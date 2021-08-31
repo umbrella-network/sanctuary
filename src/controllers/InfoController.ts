@@ -29,13 +29,13 @@ class InfoController {
     }
 
     try {
-      network = await this.blockchain.provider.getNetwork();
+      network = await this.blockchain.getProvider().getNetwork();
     } catch (e) {
       network = e;
     }
 
     response.send({
-      contractRegistryAddress: this.settings.blockchain.contracts.registry.address,
+      contractRegistryAddress: this.blockchain.getContractRegistryAddress(),
       stakingBankAddress: (await this.stakingBankContract.resolveContract()).address,
       version: this.settings.version,
       environment: this.settings.environment,

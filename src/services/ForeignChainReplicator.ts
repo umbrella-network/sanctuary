@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
-import { IBlock } from '../models/Block';
 import { EthereumBlockReplicator, IForeignBlockReplicator } from './ForeignChain';
 import { ReplicationStatus } from './ForeignChain/ForeignBlockReplicator';
 
@@ -38,9 +37,9 @@ export class ForeignChainReplicator {
 
   private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string): Promise<void> => {
     for (let i = 0; i < replicationStatus.blocks.length; i++) {
-      let block = replicationStatus.blocks[i];
-      let anchor = replicationStatus.anchors[i];
-      let foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, foreignChainId });
+      const block = replicationStatus.blocks[i];
+      const anchor = replicationStatus.anchors[i];
+      const foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, foreignChainId });
       foreignBlock.save();
     }
   }

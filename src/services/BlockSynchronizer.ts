@@ -79,7 +79,7 @@ class BlockSynchronizer {
       status: { $in: [BlockStatus.Finalized, BlockStatus.Failed] },
     })
       .sort({ blockId: -1 })
-      .limit(this.settings.blockchain.confirmations)
+      .limit(this.blockchain.getBlockchainSettings().confirmations)
       .exec();
 
     return blocksInProgress.concat(blocksToConfirm);

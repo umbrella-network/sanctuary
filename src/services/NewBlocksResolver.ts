@@ -35,7 +35,7 @@ class NewBlocksResolver {
     const ranges = CreateBatchRanges.apply(
       lastAnchor,
       chainStatus.blockNumber.toNumber(),
-      this.settings.blockchain.scanBatchSize
+      this.blockchain.getBlockchainSettings().scanBatchSize
     );
 
     // must be sync execution!
@@ -79,7 +79,7 @@ class NewBlocksResolver {
     }
 
     const chains: Contract[] = uniqueChainsInstances.map(
-      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchain.provider)
+      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchain.getProvider())
     );
 
     return Promise.all([

@@ -36,28 +36,35 @@ const settings: Settings = {
       'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feedsOnChain.yaml',
   },
   blockchain: {
-    startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
-    scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '1000', 10),
-    confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
-    provider: {
-      url: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
-      privateKey: process.env.REPLICATOR_PRIVATE_KEY as string,
-    },
     contracts: {
       chain: {
         name: 'Chain',
-      },
-      registry: {
-        address: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
       stakingBank: {
         name: 'StakingBank',
       },
     },
-    transactions: {
-      waitForBlockTime: parseInt(process.env.WAIT_FOR_BLOCK_TIME || '1000'),
-      minGasPrice: parseInt(process.env.MIN_GAS_PRICE || '5000000000', 10),
-      maxGasPrice: parseInt(process.env.MAX_GAS_PRICE || '10000000000', 10),
+    replicatorPrivateKey: process.env.ETH_REPLICATOR_PRIVATE_KEY as string,
+    homeChainId: 'bsc',
+    multichain: {
+      bsc: {
+        startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
+        scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
+        contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
+      },
+      eth: {
+        startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
+        confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
+        contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
+        transactions: {
+          waitForBlockTime: parseInt(process.env.ETH_WAIT_FOR_BLOCK_TIME || '1000'),
+          minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '5000000000', 10),
+          maxGasPrice: parseInt(process.env.ETH_MAX_GAS_PRICE || '10000000000', 10),
+        }
+      }
     }
   },
   auth: {

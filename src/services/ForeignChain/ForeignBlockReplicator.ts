@@ -34,14 +34,16 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   @inject(ForeignChainContract) foreignChainContract: ForeignChainContract;
   @inject(ChainContract) chainContract: ChainContract;
 
-  txSender!: TxSender
-  settings!: Settings;
-  blockchain!: Blockchain;
+  private chainId!: string
+  private txSender!: TxSender
+  private settings!: Settings;
+  private blockchain!: Blockchain;
 
-  constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
+  constructor(chainId: string, @inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
+    this.chainId = chainId;
     this.settings = settings;
     this.blockchain = blockchain;
-    this.txSender = new TxSender(this.blockchain.wallet, this.logger, this.settings.blockchain.transactions.waitForBlockTime);
+    this.txSender = new TxSender(this.blockchain.wallets[chainId], this.logger, this.blockchain.getBlockchainSettings(chainId).transactions.waitForBlockTime);
   }
 
   getStatus = async (): Promise<ForeignChainStatus> => this.foreignChainContract.resolveStatus<ForeignChainStatus>();
@@ -171,7 +173,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         tr
       );
 
-    const {minGasPrice, maxGasPrice} = this.settings.blockchain.transactions;
+    const {minGasPrice, maxGasPrice} = this.blockchain.getBlockchainSettings(this.chainId).transactions;
     const transaction = (tr: TransactionRequest) => this.txSender.apply(fn, minGasPrice, maxGasPrice, chainStatus.timePadding, tr);
 
     try {

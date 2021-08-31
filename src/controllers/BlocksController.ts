@@ -4,7 +4,6 @@ import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
 import { BlockStatus } from '../types/blocks';
-import StatsDClient from '../lib/statsDClient';
 import StatsdClient from 'statsd-client';
 
 @injectable()

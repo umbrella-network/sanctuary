@@ -11,12 +11,14 @@ import { ChainBlockData, ChainFCDsData } from '../models/ChainBlockData';
 export class BaseChainContract {
   @inject('Logger') protected logger!: Logger;
 
-  registry!: ContractRegistry;
-  settings!: Settings;
-  blockchain!: Blockchain;
+  protected chainId!: string;
+  protected registry!: ContractRegistry;
+  protected settings!: Settings;
+  protected blockchain!: Blockchain;
   contract!: Contract;
 
-  constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
+  constructor(chainId: string, @inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
+    this.chainId = chainId;
     this.settings = settings;
     this.blockchain = blockchain;
   }
@@ -24,8 +26,8 @@ export class BaseChainContract {
   async resolveContract(): Promise<BaseChainContract> {
     if (!this.registry) {
       this.registry = new ContractRegistry(
-        this.blockchain.provider,
-        this.settings.blockchain.contracts.registry.address
+        this.blockchain.getProvider(this.chainId),
+        this.blockchain.getContractRegistryAddress(this.chainId)
       );
     }
 
@@ -71,7 +73,7 @@ export class BaseChainContract {
   }
 
   protected setContract = (chainAddress: string): BaseChainContract => {
-    this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.provider);
+    this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.getProvider(this.chainId));
     return this;
   };
 }
