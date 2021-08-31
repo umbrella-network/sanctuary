@@ -5,7 +5,6 @@ import ChainContract from '../contracts/ChainContract';
 import ChainInstance, { IChainInstance } from '../models/ChainInstance';
 import Blockchain from '../lib/Blockchain';
 import {Contract, Event} from 'ethers';
-import Settings from '../types/Settings';
 import { LogRegistered } from '../types/events';
 import { CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
 import { CreateBatchRanges } from './CreateBatchRanges';
@@ -17,14 +16,9 @@ class ChainSynchronizer {
   @inject(ChainContract) private chainContract!: ChainContract;
   @inject(Blockchain) private blockchain!: Blockchain;
 
-  private settings!: Settings
   private blockchainKey!: string;
 
-  constructor(@inject('Settings') settings: Settings) {
-    this.settings = settings;
-  }
-
-  async apply(blockchainKey = this.settings.blockchain.homeChainId): Promise<void> {
+  async apply(blockchainKey: string): Promise<void> {
     this.blockchainKey = blockchainKey;
 
     const blockNumber = await this.blockchain.getBlockNumber();
