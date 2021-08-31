@@ -21,8 +21,6 @@ class BlockResolverWorker extends BasicWorker {
 
     try {
       // this is in sequence on purpose - if we can't synchronise chain we should not synchronise blocks
-      // TODO we need to call `this.chainSynchronizer.apply();` for every blockchain (home + all foreign)
-      //  the setting this service uses must be configurable for each blockchain
       await this.chainSynchronizer.apply();
       await this.newBlocksResolver.apply();
     } catch (e) {

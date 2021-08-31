@@ -58,7 +58,7 @@ const settings: Settings = {
         startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
         confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
-        contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
+        contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS || '0xED523550170D4f0092FD5E19eaD84f4b7ab3ea97',
         transactions: {
           waitForBlockTime: parseInt(process.env.ETH_WAIT_FOR_BLOCK_TIME || '1000'),
           minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '5000000000', 10),
