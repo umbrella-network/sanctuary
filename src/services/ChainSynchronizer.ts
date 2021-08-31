@@ -1,37 +1,43 @@
 import { Logger } from 'winston';
 import { ABI } from '@umb-network/toolbox';
-import { inject, injectable } from 'inversify';
+import {inject, injectable} from 'inversify';
 import ChainContract from '../contracts/ChainContract';
 import ChainInstance, { IChainInstance } from '../models/ChainInstance';
 import Blockchain from '../lib/Blockchain';
-import { Contract, Event } from 'ethers';
-import Settings from '../types/Settings';
+import {Contract, Event} from 'ethers';
 import { LogRegistered } from '../types/events';
 import { CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
-import { ChainStatus } from '../types/ChainStatus';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import Block from '../models/Block';
 
 @injectable()
 class ChainSynchronizer {
   @inject('Logger') private logger!: Logger;
-  @inject('Settings') settings!: Settings;
   @inject(ChainContract) private chainContract!: ChainContract;
   @inject(Blockchain) private blockchain!: Blockchain;
 
-  async apply(): Promise<void> {
-    const status = await this.chainContract.resolveStatus<ChainStatus>();
-    await this.synchronizeChains(status);
+  private blockchainKey!: string;
+
+  async apply(blockchainKey: string): Promise<void> {
+    this.blockchainKey = blockchainKey;
+
+    const blockNumber = await this.blockchain.getBlockNumber();
+    await this.synchronizeChains(blockNumber);
   }
 
-  private async synchronizeChains(chainStatus: ChainStatus): Promise<void> {
+  private async synchronizeChains(currentBlockNumber: number): Promise<void> {
     const [fromBlock, toBlock] = await ChainSynchronizer.calculateBlockNumberRange(
-      chainStatus,
-      this.settings.blockchain.startBlockNumber
+      this.blockchain.getBlockchainSettings(this.blockchainKey).startBlockNumber, currentBlockNumber,
     );
+
     this.logger.info(`Synchronizing Chains for blocks ${fromBlock} - ${toBlock}`);
 
-    const ranges = CreateBatchRanges.apply(fromBlock, toBlock, this.settings.blockchain.scanBatchSize);
+    const ranges = CreateBatchRanges.apply(
+      fromBlock,
+      toBlock,
+      this.blockchain.getBlockchainSettings(this.blockchainKey).scanBatchSize
+    );
+
     const queue = [];
 
     for (const [batchFrom, batchTo] of ranges) {
@@ -74,16 +80,16 @@ class ChainSynchronizer {
   }
 
   private static async calculateBlockNumberRange(
-    chainStatus: ChainStatus,
-    startBlockNumber: number
+    startBlockNumber: number,
+    endBlockNumber: number,
   ): Promise<[number, number]> {
     const lastAnchor = await ChainSynchronizer.getLastSavedAnchor();
     const lookBack = Math.max(
       0,
-      startBlockNumber < 0 ? chainStatus.blockNumber.sub(100000).toNumber() : startBlockNumber
+      startBlockNumber < 0 ? endBlockNumber - startBlockNumber : startBlockNumber
     );
     const fromBlock = lastAnchor > 0 ? lastAnchor : lookBack;
-    return [fromBlock + 1, chainStatus.blockNumber.toNumber()];
+    return [fromBlock + 1, endBlockNumber];
   }
 
   private static async getLastSavedAnchor(): Promise<number> {
@@ -100,9 +106,9 @@ class ChainSynchronizer {
     this.logger.info(`Checking for new chain ${fromBlock} - ${toBlock}`);
     // event LogRegistered(address indexed destination, bytes32 name);
     const registry: Contract = new Contract(
-      this.settings.blockchain.contracts.registry.address,
+      this.blockchain.getContractRegistryAddress(this.blockchainKey),
       ABI.registryAbi,
-      this.blockchain.provider
+      this.blockchain.getProvider(this.blockchainKey)
     );
 
     const filter = registry.filters.LogRegistered();

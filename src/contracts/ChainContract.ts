@@ -9,7 +9,7 @@ import {BaseChainContract} from './BaseChainContract';
 @injectable()
 class ChainContract extends BaseChainContract {
   constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
-    super(settings, blockchain);
+    super(settings.blockchain.homeChainId, settings, blockchain);
   }
   
   resolveValidators(chainStatus: ChainStatus): Validator[] {

@@ -1,3 +1,16 @@
+export type BlockchainSettings = {
+  startBlockNumber: number;
+  scanBatchSize?: number; // only for home blockchain, to scan for new blocks
+  confirmations: number;
+  providerUrl: string
+  contractRegistryAddress: string;
+  transactions?: {
+    waitForBlockTime: number
+    minGasPrice: number;
+    maxGasPrice: number;
+  },
+}
+
 type Settings = {
   port: number;
   jobs: {
@@ -26,28 +39,19 @@ type Settings = {
     feedsOnChain: string;
   };
   blockchain: {
-    startBlockNumber: number;
-    scanBatchSize: number;
-    confirmations: number;
-    provider: {
-      url: string;
-      privateKey: string;
-    };
     contracts: {
       chain: {
         name: string;
-      };
-      registry: {
-        address: string;
       };
       stakingBank: {
         name: string;
       };
     };
-    transactions: {
-      waitForBlockTime: number
-      minGasPrice: number;
-      maxGasPrice: number;
+    replicatorPrivateKey: string;
+    homeChainId: string;
+    multichain: {
+      bsc: BlockchainSettings;
+      eth: BlockchainSettings;
     }
   };
   auth: {

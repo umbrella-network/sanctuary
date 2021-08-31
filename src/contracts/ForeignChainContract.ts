@@ -12,8 +12,9 @@ import {TransactionRequest} from '@ethersproject/abstract-provider/src.ts/index'
 
 @injectable()
 export class ForeignChainContract extends BaseChainContract {
-  constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
-    super(settings, blockchain);
+  constructor(chainId: string, @inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
+    super(chainId, settings, blockchain);
+    this.chainId = chainId;
   }
 
   async submit(
@@ -26,12 +27,12 @@ export class ForeignChainContract extends BaseChainContract {
   ): Promise<TransactionResponse> {
     return (await this.resolveContract())
       .contract
-      .connect(this.blockchain.wallet)
+      .connect(this.blockchain.wallets[this.chainId])
       .submit(dataTimestamp, root, keys, values, blockId, transactionRequest);
   }
 
   protected setContract = (chainAddress: string): ForeignChainContract => {
-    this.contract = new Contract(chainAddress, abi, this.blockchain.provider);
+    this.contract = new Contract(chainAddress, abi, this.blockchain.getProvider(this.chainId));
     return this;
   };
 }

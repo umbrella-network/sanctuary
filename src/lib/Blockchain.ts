@@ -1,24 +1,43 @@
 import { inject, injectable } from 'inversify';
-import Settings from '../types/Settings';
+import Settings, {BlockchainSettings} from '../types/Settings';
 import {ethers, Wallet} from 'ethers';
-import { BaseProvider } from '@ethersproject/providers';
 
 @injectable()
 class Blockchain {
-  provider: ethers.providers.Provider;
-  wallet: Wallet;
+  settings!: Settings;
+  providers: Record<string, ethers.providers.Provider>
+  wallets: Record<string, Wallet>;
 
   constructor(@inject('Settings') settings: Settings) {
-    this.provider = this.getProvider(settings.blockchain.provider.url);
-    this.wallet = new Wallet(settings.blockchain.provider.privateKey, this.provider);
+    this.settings = settings;
+
+    Object.keys(settings.blockchain.multichain).forEach(key => {
+      const blockchainSettings = (<Record<string, BlockchainSettings>>settings.blockchain.multichain)[key];
+
+      this.providers[key] = ethers.providers.getDefaultProvider(blockchainSettings.providerUrl);
+      this.wallets[key] = new Wallet(settings.blockchain.replicatorPrivateKey, this.providers[key]);
+    });
   }
 
-  getProvider(url: string): BaseProvider {
-    return ethers.providers.getDefaultProvider(url);
+  getProvider(chainId = this.settings.blockchain.homeChainId): ethers.providers.Provider {
+    return this.providers[chainId];
   }
 
-  async getLastNonce(): Promise<number> {
-    return this.wallet.getTransactionCount('latest');
+  async getLastNonce(chainId = this.settings.blockchain.homeChainId): Promise<number> {
+    return this.wallets[chainId].getTransactionCount('latest');
+  }
+
+  async getBlockNumber(chainId = this.settings.blockchain.homeChainId): Promise<number> {
+    return this.providers[chainId].getBlockNumber();
+  }
+
+  getContractRegistryAddress(chainId = this.settings.blockchain.homeChainId): string {
+    const blockchainSettings = (<Record<string, BlockchainSettings>>this.settings.blockchain.multichain)[chainId];
+    return blockchainSettings.contractRegistryAddress;
+  }
+
+  getBlockchainSettings(chainId = this.settings.blockchain.homeChainId): BlockchainSettings {
+    return (<Record<string, BlockchainSettings>>this.settings.blockchain.multichain)[chainId];
   }
 }
 
