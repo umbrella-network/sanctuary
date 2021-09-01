@@ -22,6 +22,11 @@ export class BaseChainContract {
     this.blockchain = blockchain;
   }
 
+  setChainId = (chainId: string): BaseChainContract => {
+    this.chainId = chainId;
+    return this;
+  };
+
   async resolveContract(): Promise<BaseChainContract> {
     if (!this.registry) {
       this.registry = new ContractRegistry(

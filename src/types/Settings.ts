@@ -1,6 +1,6 @@
 export type BlockchainSettings = {
   startBlockNumber: number;
-  scanBatchSize?: number; // only for home blockchain, to scan for new blocks
+  scanBatchSize: number;
   confirmations: number;
   providerUrl: string
   contractRegistryAddress: string;
@@ -51,7 +51,7 @@ type Settings = {
     homeChainId: string;
     multichain: {
       bsc: BlockchainSettings;
-      eth: BlockchainSettings;
+      ethereum: BlockchainSettings;
     }
   };
   auth: {
