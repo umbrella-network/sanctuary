@@ -11,14 +11,13 @@ import { ChainBlockData, ChainFCDsData } from '../models/ChainBlockData';
 export class BaseChainContract {
   @inject('Logger') protected logger!: Logger;
 
-  protected chainId!: string;
+  chainId!: string;
   protected registry!: ContractRegistry;
   protected settings!: Settings;
   protected blockchain!: Blockchain;
   contract!: Contract;
 
-  constructor(chainId: string, @inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
-    this.chainId = chainId;
+  constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
     this.settings = settings;
     this.blockchain = blockchain;
   }

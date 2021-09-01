@@ -17,7 +17,7 @@ import newrelic from 'newrelic';
   const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
 
   // schedule Ethereum replicator
-  foreignChainReplicationWorker.enqueue(
+  await foreignChainReplicationWorker.enqueue(
     {
       foreignChainId: 'ethereum',
       lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,

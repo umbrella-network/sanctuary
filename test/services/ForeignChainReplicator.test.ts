@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
-import { EthereumBlockReplicator, IForeignBlockReplicator } from '../../src/services/ForeignChain';
+import { EthereumBlockReplicator, IForeignBlockReplicator } from '../../src/services/foreign-chain';
 import { ForeignChainStatus } from '../../src/types/ForeignChainStatus';
 import { resolvableInstance } from '../helpers/resolvableInstance';
 import { IBlock } from '@umb-network/toolbox/dist/models/ChainBlock';
@@ -39,12 +39,12 @@ describe('ForeignChainReplicator', () => {
 //   EthereumBlockReplicator,
 //   ForeignBlockReplicator,
 //   IForeignBlockReplicator
-// } from '../../src/services/ForeignChain';
+// } from '../../src/services/foreign-chain';
 // import { ForeignChainReplicator } from '../../src/services/ForeignChainReplicator';
 // import { ForeignBlockFactory } from '../../src/factories/ForeignBlockFactory';
 // import { IBlock } from '../../src/models/Block';
 // import { ForeignChainStatus } from '../../src/types/ForeignChainStatus';
-// import { ReplicationStatus } from '../../src/services/ForeignChain/ForeignBlockReplicator';
+// import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
 // import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
 // import { Logger } from 'winston';
 //

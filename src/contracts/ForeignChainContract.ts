@@ -12,11 +12,6 @@ import {TransactionRequest} from '@ethersproject/abstract-provider/src.ts/index'
 
 @injectable()
 export class ForeignChainContract extends BaseChainContract {
-  constructor(chainId: string, @inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
-    super(chainId, settings, blockchain);
-    this.chainId = chainId;
-  }
-
   async submit(
     dataTimestamp: number,
     root: string,

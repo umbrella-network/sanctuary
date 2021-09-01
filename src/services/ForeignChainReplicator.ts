@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
-import { EthereumBlockReplicator, IForeignBlockReplicator } from './ForeignChain';
-import { ReplicationStatus } from './ForeignChain/ForeignBlockReplicator';
+import { EthereumBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
+import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -11,7 +11,7 @@ export type ForeignChainReplicatorProps = {
 @injectable()
 export class ForeignChainReplicator {
   private readonly replicators: { [key: string]: IForeignBlockReplicator };
-  @inject('Logger') private logger!: Logger;
+  @inject('Logger') logger!: Logger;
   @inject(ForeignBlockFactory) foreignBlockFactory: ForeignBlockFactory;
 
   constructor(

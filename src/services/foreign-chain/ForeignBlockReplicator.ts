@@ -1,4 +1,4 @@
-import {inject, injectable} from 'inversify';
+import { inject, injectable, postConstruct } from 'inversify';
 import {Logger} from 'winston';
 import newrelic from 'newrelic';
 
@@ -34,17 +34,19 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   @inject('Logger') protected logger!: Logger;
   @inject(ForeignChainContract) foreignChainContract: ForeignChainContract;
   @inject(ChainContract) chainContract: ChainContract;
+  @inject('Settings') settings: Settings;
+  @inject(Blockchain) blockchain: Blockchain;
 
-  private chainId!: string
+  readonly chainId!: string;
   private txSender!: TxSender
-  private settings!: Settings;
-  private blockchain!: Blockchain;
 
-  constructor(chainId: string, @inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
-    this.chainId = chainId;
-    this.settings = settings;
-    this.blockchain = blockchain;
-    this.txSender = new TxSender(this.blockchain.wallets[chainId], this.logger, this.blockchain.getBlockchainSettings(chainId).transactions.waitForBlockTime);
+  @postConstruct()
+  private setup() {
+    this.txSender = new TxSender(
+      this.blockchain.wallets[this.chainId],
+      this.logger,
+      this.blockchain.getBlockchainSettings(this.chainId).transactions.waitForBlockTime
+    );
   }
 
   // getStatus = async (): Promise<ForeignChainStatus> => this.foreignChainContract.resolveStatus<ForeignChainStatus>();
@@ -82,7 +84,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
 
       // this is when the replication failed
-      if (!receipt) return { errors: ["Something happened :("] };
+      if (!receipt) return { errors: ['Something happened :('] };
 
       // YAY
       if (receipt.status === 1) {

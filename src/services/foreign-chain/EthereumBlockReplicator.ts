@@ -3,6 +3,7 @@ import { ForeignBlockReplicator } from '.';
 
 @injectable()
 export class EthereumBlockReplicator extends ForeignBlockReplicator {
+  readonly chainId = 'eth';
   // our multi-chain approach is based on AI/magic, we don't need code to make it work
 
   /*

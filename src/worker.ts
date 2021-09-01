@@ -8,7 +8,7 @@ const argv = yargs(process.argv.slice(2)).options({
 }).argv;
 
 switch (argv.worker) {
-  case 'ForeignChainSynchronizationWorker': {
+  case 'ForeignChainReplicationWorker': {
     Application.get(ForeignChainReplicationWorker).start();
     break;
   }
