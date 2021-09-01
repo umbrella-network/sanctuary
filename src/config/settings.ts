@@ -16,8 +16,8 @@ const settings: Settings = {
     },
     foreignChainReplication: {
       ethereum: {
-        interval: parseInt(process.env.ETHEREUM_REPLICATION_INTERVAL || '1000'),
-        lockTTL: parseInt(process.env.ETHEREUM_REPLICATION_LOCK_TTL || '1000')
+        interval: parseInt(process.env.ETHEREUM_REPLICATION_INTERVAL || '10000'),
+        lockTTL: parseInt(process.env.ETHEREUM_REPLICATION_LOCK_TTL || '9000')
       }
     }
   },

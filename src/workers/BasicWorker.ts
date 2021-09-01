@@ -1,7 +1,6 @@
 import Bull, { Queue, Worker } from 'bullmq';
 import { inject, injectable } from 'inversify';
 import IORedis from 'ioredis';
-import Settings from '../types/Settings';
 
 export type WorkerType = {
   start (): void;
