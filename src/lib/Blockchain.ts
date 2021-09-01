@@ -5,8 +5,8 @@ import {ethers, Wallet} from 'ethers';
 @injectable()
 class Blockchain {
   settings!: Settings;
-  providers: Record<string, ethers.providers.Provider>
-  wallets: Record<string, Wallet>;
+  providers: Record<string, ethers.providers.Provider> = {};
+  wallets: Record<string, Wallet> = {};
 
   constructor(@inject('Settings') settings: Settings) {
     this.settings = settings;
