@@ -1,4 +1,4 @@
-import {inject} from 'inversify';
+import {inject, injectable} from 'inversify';
 import {Logger} from 'winston';
 import newrelic from 'newrelic';
 
@@ -29,6 +29,7 @@ export type ReplicationStatus = {
   errors?: string[];
 }
 
+@injectable()
 export abstract class ForeignBlockReplicator implements IForeignBlockReplicator {
   @inject('Logger') protected logger!: Logger;
   @inject(ForeignChainContract) foreignChainContract: ForeignChainContract;
