@@ -37,33 +37,33 @@ import { QueueScheduler } from 'bullmq';
   //   );
   // }, settings.jobs.metricsReporting.interval);
   //
-  // setInterval(async () => {
-  //   try {
-  //     await blockSynchronizerWorker.enqueue(
-  //       {},
-  //       {
-  //         removeOnComplete: true,
-  //         removeOnFail: true,
-  //       }
-  //     );
-  //   } catch (e) {
-  //     newrelic.noticeError(e);
-  //     logger.error(e);
-  //   }
-  // }, settings.jobs.blockCreation.interval);
-  //
-  // setInterval(async () => {
-  //   try {
-  //     await blockResolverWorker.enqueue(
-  //       {},
-  //       {
-  //         removeOnComplete: true,
-  //         removeOnFail: true,
-  //       }
-  //     );
-  //   } catch (e) {
-  //     newrelic.noticeError(e);
-  //     logger.error(e);
-  //   }
-  // }, settings.jobs.blockCreation.interval);
+  setInterval(async () => {
+    try {
+      await blockSynchronizerWorker.enqueue(
+        {},
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
+    } catch (e) {
+      newrelic.noticeError(e);
+      logger.error(e);
+    }
+  }, settings.jobs.blockCreation.interval);
+
+  setInterval(async () => {
+    try {
+      await blockResolverWorker.enqueue(
+        {},
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
+    } catch (e) {
+      newrelic.noticeError(e);
+      logger.error(e);
+    }
+  }, settings.jobs.blockCreation.interval);
 })();

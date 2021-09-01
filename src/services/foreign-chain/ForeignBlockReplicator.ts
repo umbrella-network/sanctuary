@@ -47,9 +47,10 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       this.logger,
       this.blockchain.getBlockchainSettings(this.chainId).transactions.waitForBlockTime
     );
+
+    this.foreignChainContract.setChainId(this.chainId);
   }
 
-  // getStatus = async (): Promise<ForeignChainStatus> => this.foreignChainContract.resolveStatus<ForeignChainStatus>();
   async getStatus(): Promise<ForeignChainStatus> {
     return this.foreignChainContract.resolveStatus<ForeignChainStatus>();
   }
@@ -67,9 +68,13 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     const lastForeignBlock = await this.latestForeignBlock();
 
+    if (status.lastDataTimestamp === 0) {
+      return blocks;
+    }
+
     if (lastForeignBlock.blockId !== status.lastBlockId) {
       // in theory this can happen if we submit block but mongo will not be able to save it
-      this.logger.error(`Huston we have a problem: block ${status.lastBlockId} is not present in mongo`);
+      this.logger.error(`Houston we have a problem: block ${status.lastBlockId} is not present in DB`);
     }
 
     return blocks;
@@ -101,7 +106,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       // errors are logged in replicateBlock()
     }
 
-    return { errors: ["Transaction Failed"] };
+    return { errors: ['Transaction Failed'] };
   }
 
   private canMint = async (chainStatus: ForeignChainStatus, dataTimestamp: number): Promise<boolean> => {
@@ -145,13 +150,13 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     const [block] = blocks;
 
-    if (!(block.blockId > chainStatus.lastBlockId)) {
-      this.logger.error(`block ${block.blockId} already replicated`);
+    if (block.blockId <= chainStatus.lastBlockId) {
+      this.logger.error(`[${this.chainId}] block ${block.blockId} already replicated`);
       return false;
     }
 
-    if (!(block.dataTimestamp > this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding))) {
-      this.logger.info(`block ${block.blockId} will be skipped because of padding`);
+    if (this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding) > block.dataTimestamp) {
+      this.logger.info(`[${this.chainId}] block ${block.blockId} will be skipped because of padding`);
       return false;
     }
 
@@ -171,7 +176,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   ) => {
     const fn = (tr: TransactionRequest) =>
       this.foreignChainContract.submit(
-        dataTimestamp.getTime(),
+        dataTimestamp.getTime() / 1000,
         root,
         keys.map(LeafKeyCoder.encode),
         values.map((v, i) => LeafValueCoder.encode(v, keys[i])),
@@ -210,6 +215,11 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const values: FeedValue[] = [];
 
     const allKeys = (await FCD.find()).map(item => item._id);
+
+    if (!allKeys.length) {
+      this.logger.warn(`[${this.chainId}] No FCDs found for replication`);
+      return {keys, values};
+    }
     
     const [fcdsValues, fcdsTimestamps] = <ChainFCDsData>await this.chainContract.resolveFCDs(block.chainAddress, allKeys);
 

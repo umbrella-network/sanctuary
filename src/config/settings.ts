@@ -55,7 +55,7 @@ const settings: Settings = {
         contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
       ethereum: {
-        startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '27012070', 10),
+        startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ETH_BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
