@@ -6,7 +6,7 @@ import StatsdClient from 'statsd-client';
 
 @injectable()
 class BlockLeafCountReporter {
-  @inject('StatsDClient') statsDClient?: StatsdClient;
+  @inject('StatsdClient') statsDClient?: StatsdClient;
 
   async call(): Promise<void> {
     const { blockId } = await Block.findOne({ status: BlockStatus.Finalized }).sort({ blockId: -1 });
