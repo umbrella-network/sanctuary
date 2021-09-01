@@ -46,7 +46,10 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     this.txSender = new TxSender(this.blockchain.wallets[chainId], this.logger, this.blockchain.getBlockchainSettings(chainId).transactions.waitForBlockTime);
   }
 
-  getStatus = async (): Promise<ForeignChainStatus> => this.foreignChainContract.resolveStatus<ForeignChainStatus>();
+  // getStatus = async (): Promise<ForeignChainStatus> => this.foreignChainContract.resolveStatus<ForeignChainStatus>();
+  async getStatus(): Promise<ForeignChainStatus> {
+    return this.foreignChainContract.resolveStatus<ForeignChainStatus>();
+  }
 
   resolvePendingBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
     if (!await this.canMint(status, currentDate.getTime())) {

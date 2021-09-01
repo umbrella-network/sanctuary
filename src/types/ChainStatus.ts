@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 
 export type ChainStatus = {
-  chainAddress: string;
+  chainAddress?: string;
   blockNumber: BigNumber;
   timePadding: number;
   lastDataTimestamp: number;

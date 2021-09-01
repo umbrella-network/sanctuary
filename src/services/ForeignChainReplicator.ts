@@ -10,7 +10,7 @@ export type ForeignChainReplicatorProps = {
 
 @injectable()
 export class ForeignChainReplicator {
-  private replicators: { [key: string]: IForeignBlockReplicator };
+  private readonly replicators: { [key: string]: IForeignBlockReplicator };
   @inject('Logger') private logger!: Logger;
   @inject(ForeignBlockFactory) foreignBlockFactory: ForeignBlockFactory;
 
@@ -40,7 +40,7 @@ export class ForeignChainReplicator {
       const block = replicationStatus.blocks[i];
       const anchor = replicationStatus.anchors[i];
       const foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, foreignChainId });
-      foreignBlock.save();
+      await foreignBlock.save();
     }
   }
 }
