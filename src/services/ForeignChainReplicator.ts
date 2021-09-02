@@ -1,8 +1,8 @@
-import { inject, injectable } from 'inversify';
-import { Logger } from 'winston';
-import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
-import { EthereumBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
-import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
+import {inject, injectable} from 'inversify';
+import {Logger} from 'winston';
+import {ForeignBlockFactory} from '../factories/ForeignBlockFactory';
+import {EthereumBlockReplicator, IForeignBlockReplicator} from './foreign-chain';
+import {ReplicationStatus} from './foreign-chain/ForeignBlockReplicator';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -24,7 +24,7 @@ export class ForeignChainReplicator {
 
   apply = async (props: ForeignChainReplicatorProps): Promise<void> => {
     try {
-      const { foreignChainId } = props;
+      const {foreignChainId} = props;
       const replicator = this.replicators[foreignChainId];
       const foreignChainStatus = await replicator.getStatus();
       const blocks = await replicator.resolvePendingBlocks(foreignChainStatus, new Date());
@@ -36,10 +36,14 @@ export class ForeignChainReplicator {
   }
 
   private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string): Promise<void> => {
+    if (!replicationStatus.blocks && !replicationStatus.errors) {
+      return;
+    }
+
     for (let i = 0; i < replicationStatus.blocks.length; i++) {
       const block = replicationStatus.blocks[i];
       const anchor = replicationStatus.anchors[i];
-      const foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, foreignChainId });
+      const foreignBlock = this.foreignBlockFactory.fromBlock({block, anchor, foreignChainId});
       await foreignBlock.save();
     }
   }

@@ -22,6 +22,8 @@ import Settings from '../../types/Settings';
 import Blockchain from '../../lib/Blockchain';
 import {FailedTransactionEvent} from '../../constants/ReportedMetricsEvents';
 import {ChainFCDsData} from '../../models/ChainBlockData';
+import {ChainStatus} from "../../types/ChainStatus";
+import RevertedBlockResolver from "../RevertedBlockResolver";
 
 export type ReplicationStatus = {
   blocks?: IBlock[];
@@ -36,6 +38,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   @inject(ChainContract) chainContract: ChainContract;
   @inject('Settings') settings: Settings;
   @inject(Blockchain) blockchain: Blockchain;
+  @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
+
 
   readonly chainId!: string;
   private txSender!: TxSender
@@ -56,7 +60,13 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   }
 
   resolvePendingBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
-    if (!await this.canMint(status, currentDate.getTime())) {
+    if (!this.canMint(status, currentDate.getTime())) {
+      return [];
+    }
+
+    const lastForeignBlock = await this.latestForeignBlock();
+
+    if (await this.checkForRevertedBlocks(status, lastForeignBlock)) {
       return [];
     }
 
@@ -66,21 +76,23 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       return [];
     }
 
-    const lastForeignBlock = await this.latestForeignBlock();
-
     if (status.lastDataTimestamp === 0) {
       return blocks;
     }
 
-    if (lastForeignBlock.blockId !== status.lastBlockId) {
+    if (!lastForeignBlock || lastForeignBlock.blockId !== status.lastId) {
       // in theory this can happen if we submit block but mongo will not be able to save it
-      this.logger.error(`Houston we have a problem: block ${status.lastBlockId} is not present in DB`);
+      this.logger.error(`[${this.chainId}] Houston we have a problem: block ${status.lastId} is not present in DB`);
     }
 
     return blocks;
   }
 
   replicate = async (blocks: IBlock[], status: ForeignChainStatus): Promise<ReplicationStatus> => {
+    if (!blocks.length) {
+      return {};
+    }
+
     // atm we assume we doing one block at a time
     const [block] = blocks;
 
@@ -109,7 +121,17 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return { errors: ['Transaction Failed'] };
   }
 
-  private canMint = async (chainStatus: ForeignChainStatus, dataTimestamp: number): Promise<boolean> => {
+  private async checkForRevertedBlocks(status: ForeignChainStatus, lastForeignBlock: IForeignBlock): Promise<boolean> {
+    if (!lastForeignBlock) {
+      return false;
+    }
+
+    if ((await this.reveredBlockResolver.apply(lastForeignBlock.blockId, status.nextBlockId)) > 0) {
+      return true;
+    }
+  }
+
+  private canMint = (chainStatus: ForeignChainStatus, dataTimestamp: number): boolean => {
     const [ready, error] = this.chainReadyForNewBlock(chainStatus, dataTimestamp);
     error && this.logger.info(error);
     return ready;
@@ -120,13 +142,13 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     newDataTimestamp: number,
   ): [ready: boolean, error: string | undefined] => {
     if (chainStatus.lastDataTimestamp + chainStatus.timePadding > newDataTimestamp) {
-      return [false, `skipping ${chainStatus.nextBlockId.toString()}: waiting for next round`];
+      return [false, `[${this.chainId}] skipping ${chainStatus.nextBlockId.toString()}: waiting for next round`];
     }
 
     if (newDataTimestamp <= chainStatus.lastDataTimestamp) {
       return [
         false,
-        `skipping ${chainStatus.nextBlockId.toString()}, can NOT submit older data ${
+        `[${this.chainId}] skipping ${chainStatus.nextBlockId.toString()}, can NOT submit older data ${
           chainStatus.lastDataTimestamp
         } vs ${newDataTimestamp}`,
       ];
@@ -144,13 +166,13 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   private verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {
     if (!blocks.length) {
-      this.logger.info('nothing to replicate yet');
+      this.logger.info(`[${this.chainId}] nothing to replicate yet`);
       return false;
     }
 
     const [block] = blocks;
 
-    if (block.blockId <= chainStatus.lastBlockId) {
+    if (block.blockId <= chainStatus.lastId) {
       this.logger.error(`[${this.chainId}] block ${block.blockId} already replicated`);
       return false;
     }
