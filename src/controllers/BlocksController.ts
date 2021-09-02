@@ -4,10 +4,12 @@ import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
 import { BlockStatus } from '../types/blocks';
-import StatsDClient from '../lib/StatsDClient';
+import StatsdClient from 'statsd-client';
 
 @injectable()
 class BlocksController {
+  @inject('StatsdClient') statsdClient?: StatsdClient;
+
   router: express.Application;
 
   constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
@@ -25,7 +27,7 @@ class BlocksController {
       return;
     }
 
-    StatsDClient?.increment('sanctuary.blocks-controller.index', undefined, {
+    this.statsdClient?.increment('sanctuary.blocks-controller.index', undefined, {
       projectId: apiKeyVerificationResult.apiKey.projectId,
     });
 
@@ -54,7 +56,7 @@ class BlocksController {
       return;
     }
 
-    StatsDClient?.increment('sanctuary.blocks-controller.show', undefined, {
+    this.statsdClient?.increment('sanctuary.blocks-controller.show', undefined, {
       projectId: apiKeyVerificationResult.apiKey.projectId,
     });
 
@@ -77,7 +79,7 @@ class BlocksController {
       return;
     }
 
-    StatsDClient?.increment('sanctuary.blocks-controller.leaves', undefined, {
+    this.statsdClient?.increment('sanctuary.blocks-controller.leaves', undefined, {
       projectId: apiKeyVerificationResult.apiKey.projectId,
     });
 

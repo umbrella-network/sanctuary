@@ -1,3 +1,16 @@
+export type BlockchainSettings = {
+  startBlockNumber: number;
+  scanBatchSize: number;
+  confirmations: number;
+  providerUrl: string
+  contractRegistryAddress: string;
+  transactions?: {
+    waitForBlockTime: number
+    minGasPrice: number;
+    maxGasPrice: number;
+  },
+}
+
 type Settings = {
   port: number;
   jobs: {
@@ -7,8 +20,11 @@ type Settings = {
     metricsReporting: {
       interval: number;
     };
-    crossChainSynchronization: {
-      lockTTL: number;
+    foreignChainReplication: {
+      ethereum: {
+        interval: number;
+        lockTTL: number;
+      }
     };
   };
   redis: {
@@ -23,23 +39,20 @@ type Settings = {
     feedsOnChain: string;
   };
   blockchain: {
-    startBlockNumber: number;
-    scanBatchSize: number;
-    confirmations: number;
-    provider: {
-      url: string;
-    };
     contracts: {
       chain: {
         name: string;
-      };
-      registry: {
-        address: string;
       };
       stakingBank: {
         name: string;
       };
     };
+    replicatorPrivateKey: string;
+    homeChainId: string;
+    multichain: {
+      bsc: BlockchainSettings;
+      ethereum: BlockchainSettings;
+    }
   };
   auth: {
     tokenExpiry: number;

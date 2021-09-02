@@ -18,13 +18,13 @@ class StakingBankContract {
   async resolveContract(): Promise<Contract> {
     if (!this.registry) {
       this.registry = new ContractRegistry(
-        this.blockchain.provider,
-        this.settings.blockchain.contracts.registry.address
+        this.blockchain.getProvider(),
+        this.blockchain.getContractRegistryAddress()
       );
     }
 
     const address = await this.registry.getAddress(this.settings.blockchain.contracts.stakingBank.name);
-    return new Contract(address, ABI.stakingBankAbi, this.blockchain.provider);
+    return new Contract(address, ABI.stakingBankAbi, this.blockchain.getProvider());
   }
 
   async validators(id: string): Promise<utils.Result> {

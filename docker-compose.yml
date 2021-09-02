@@ -1,0 +1,18 @@
+version : "3.8"
+services:
+  mongodb:
+    image: mongo
+    container_name: sanctuary-mongo
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./tmp/mongodb:/data/db
+    ports:
+      - "27017:27017"
+  redis:
+    image: redis
+    volumes:
+      - ./tmp/redis:/data
+    ports:
+      - "6379:6379"

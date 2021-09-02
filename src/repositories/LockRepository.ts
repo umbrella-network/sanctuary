@@ -4,7 +4,7 @@ import IORedis from 'ioredis';
 @injectable()
 class LockRepository {
   @inject('Redis')
-  private connection: IORedis.Redis;
+  connection: IORedis.Redis;
 
   acquire = async (lockId: string, ttl: number): Promise<boolean> => {
     const res = await this.connection.set(this.getLockKey(lockId), 1, 'NX', 'PX', ttl);

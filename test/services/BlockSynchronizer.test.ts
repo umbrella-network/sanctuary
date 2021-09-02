@@ -29,7 +29,7 @@ describe('BlockSynchronizer', () => {
   let blockSynchronizer: BlockSynchronizer;
   const chainAddress = '0xA6f3317483048B095691b8a8CE0C57077a378689';
 
-  const resolveChainStatus = (blockNumber: BigNumber, lastBlockId = 10, nextBlockId = 10) => mockedChainContract.resolveStatus.resolves([
+  const resolveChainStatus = async (blockNumber: BigNumber, lastBlockId = 10, nextBlockId = 10) => await mockedChainContract.resolveStatus.resolves([
     chainAddress,
     {
       blockNumber,
@@ -105,7 +105,7 @@ describe('BlockSynchronizer', () => {
       root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
     });
     mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
-    resolveChainStatus(BigNumber.from(11)); // new blocks
+    await resolveChainStatus(BigNumber.from(11)); // new blocks
 
     const blocksBefore: any[] = await Block.find({});
     expect(blocksBefore.length).to.be.equal(3);
@@ -122,7 +122,7 @@ describe('BlockSynchronizer', () => {
       root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
     });
     mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
-    resolveChainStatus(BigNumber.from(11)); // new blocks
+    await resolveChainStatus(BigNumber.from(11)); // new blocks
     mockedLeavesSynchronizer.apply.resolves(true);
 
     await blockSynchronizer.apply();
@@ -137,7 +137,7 @@ describe('BlockSynchronizer', () => {
       root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
     });
     mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
-    resolveChainStatus(BigNumber.from(11)); // new blocks
+    await resolveChainStatus(BigNumber.from(11)); // new blocks
     mockedLeavesSynchronizer.apply.resolves(false);
 
     await blockSynchronizer.apply();
@@ -155,7 +155,7 @@ describe('BlockSynchronizer', () => {
       root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
     });
     mockedChainInstanceResolver.byBlockId.resolves([new ChainInstance({address: chainAddress})]);
-    resolveChainStatus(BigNumber.from(11), 2, 3); // new blocks
+    await resolveChainStatus(BigNumber.from(11), 2, 3); // new blocks
     mockedLeavesSynchronizer.apply.resolves(null);
 
     await blockSynchronizer.apply();
