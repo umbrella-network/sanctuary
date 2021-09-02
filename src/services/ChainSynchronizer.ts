@@ -108,7 +108,7 @@ class ChainSynchronizer {
   }
   
   private async getLastBlock(): Promise<IBlock | IForeignBlock | undefined> {
-    if (this.chainId === this.settings.blockchain.homeChainId) {
+    if (this.chainId === this.settings.blockchain.homeChain.chainId) {
       const blocks = await Block.find({}).limit(1).sort({anchor: -1}).exec();
       return blocks.length ? blocks[0] : undefined;
     }

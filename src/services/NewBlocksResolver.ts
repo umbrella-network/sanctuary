@@ -24,7 +24,7 @@ class NewBlocksResolver {
   @inject(BlockSynchronizer) blockSynchronizer!: BlockSynchronizer;
 
   async apply(): Promise<void> {
-    this.chainInstanceResolver.setup(this.settings.blockchain.homeChainId);
+    this.chainInstanceResolver.setup(this.settings.blockchain.homeChain.chainId);
 
     const [chainStatus, [, lastAnchor]] = await Promise.all([
       this.chainContract.resolveStatus<ChainStatus>(),

@@ -59,6 +59,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return this.foreignChainContract.resolveStatus<ForeignChainStatus>();
   }
 
+  // we need to wait for confirmations before we replicate block
   resolvePendingBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
     if (!this.canMint(status, currentDate.getTime())) {
       return [];
@@ -159,10 +160,17 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   private latestForeignBlock = async (): Promise<IForeignBlock> => ForeignBlock.findOne().sort({blockId: -1});
 
-  private blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => Block.find({
-    status: BlockStatus.Finalized,
-    dataTimestamp: {$gt: this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding)},
-  }).sort({blockId: -1}).limit(1);
+  private blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
+    const homeChainConfirmations = this.settings.blockchain.homeChain.replicationConfirmations;
+    const homeBlockNumber = await this.blockchain.getBlockNumber();
+    const safeAnchor = homeBlockNumber - homeChainConfirmations;
+
+    return Block.find({
+      status: BlockStatus.Finalized,
+      dataTimestamp: {$gt: this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding)},
+      anchor: {$lte: safeAnchor }
+    }).sort({blockId: -1}).limit(1);
+  }
 
   private verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {
     if (!blocks.length) {

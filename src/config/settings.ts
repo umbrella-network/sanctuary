@@ -45,8 +45,11 @@ const settings: Settings = {
       },
     },
     replicatorPrivateKey: process.env.REPLICATOR_PRIVATE_KEY as string,
-    homeChainId: 'bsc',
-    multichain: {
+    homeChain: {
+      chainId: 'bsc',
+      replicationConfirmations: parseInt(process.env.HOME_REPLICATION_CONFIRMATIONS || '20', 10),
+    },
+    foreignChain: {
       bsc: {
         startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '10000', 10),

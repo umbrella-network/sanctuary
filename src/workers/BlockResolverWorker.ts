@@ -21,7 +21,7 @@ class BlockResolverWorker extends BasicWorker {
 
     try {
       // this is in sequence on purpose - if we can't synchronise chain we should not synchronise blocks
-      await this.chainSynchronizer.apply(this.settings.blockchain.homeChainId);
+      await this.chainSynchronizer.apply(this.settings.blockchain.homeChain.chainId);
       await this.newBlocksResolver.apply();
     } catch (e) {
       newrelic.noticeError(e);
