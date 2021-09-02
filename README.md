@@ -48,7 +48,9 @@ npx tsc -p . | node ./dist/scripts/mock-seeds.js
 npm run start:dev:scheduler
 
 # Worker
+# BlockResolverWorker will scan for chains and for block events
 npm run start:dev:worker -- --worker BlockResolverWorker
+# BlockSynchronizerWorker will pull blocks data from validators
 npm run start:dev:worker -- --worker BlockSynchronizerWorker
 
 npm run start:dev:worker -- --worker ForeignChainReplicationWorker
