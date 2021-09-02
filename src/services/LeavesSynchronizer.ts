@@ -133,11 +133,6 @@ class LeavesSynchronizer {
         return;
       }
 
-      // to be backwards compatible
-      if (!response.data.dataLength) {
-        return [(response.data.data as unknown) as BlockFromPegasus];
-      }
-
       return (response.data.data as unknown) as BlockFromPegasus[];
     } catch (e) {
       this.logger.warn(`Error for block request ${urlForBlockId}: ${e.message}`);
