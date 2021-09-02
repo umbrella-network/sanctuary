@@ -54,7 +54,7 @@ class ChainSynchronizer {
     const events = await this.scanForEvents(fromBlock, toBlock);
     const offsets = await this.resolveOffsets(events.map((event) => event.destination));
 
-    this.logger.debug(`[${this.chainId}] got ${events.length} events for new Chain`);
+    this.logger.debug(`[${this.chainId}] got ${events.length} events for new Chain at ${fromBlock}-${toBlock}`);
 
     return Promise.all(
       events.map((logRegistered, i) => {

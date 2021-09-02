@@ -24,6 +24,8 @@ class BlockSynchronizer {
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
   async apply(): Promise<void> {
+    this.chainInstanceResolver.setup(this.settings.blockchain.homeChainId);
+
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
       this.chainContract.resolveStatus<ChainStatus>(),
       this.getLastSavedBlockIdAndStartAnchor(),
