@@ -48,7 +48,7 @@ class NewBlocksResolver {
     const [logMintEvents, logVoteEvents] = await this.getChainLogsEvents(fromBlock, toBlock);
 
     if (!logMintEvents.length) {
-      this.logger.warn(`No logMintEvents for blocks ${fromBlock} - ${toBlock}`);
+      this.logger.warn(`No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`);
       return;
     }
 
