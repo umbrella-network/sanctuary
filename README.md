@@ -297,7 +297,7 @@ GET /proofs/?keys[]=ETH-USD
 }
 ```
 
-## Kubectl cheats
+## Infrastructure deployments
 
 ```shell script
 # Deploy to dev
