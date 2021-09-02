@@ -82,6 +82,8 @@ class BlockSynchronizer {
       .limit(this.settings.blockchain.confirmations)
       .exec();
 
+    this.logger.info(`blocksInProgress: ${blocksInProgress}, ${blocksToConfirm}`);
+
     return blocksInProgress.concat(blocksToConfirm);
   }
 
