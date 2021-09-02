@@ -297,11 +297,16 @@ GET /proofs/?keys[]=ETH-USD
 }
 ```
 
-## Kubectl cheats
+## Infrastructure deployments
 
 ```shell script
-# set env variable
-kubectl set env deployment/sanctuary-worker REGISTRY_CONTRACT_ADDRESS='0x622c7725a8D1103E44F89341A6358A0e811Df0a5' --namespace staging
+# Deploy to dev
+make dev
 
-kubectl scale --replicas=1 deployment/sanctuary-worker --namespace staging
+# Deploy to dev bsc
+make dev-bsc
+
+# Deploy to dev eth
+make dev-eth
+
 ```
