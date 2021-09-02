@@ -5,6 +5,6 @@ export type ForeignChainStatus = {
   blockNumber: BigNumber;
   timePadding: number;
   lastDataTimestamp: number;
-  lastBlockId: number;
+  lastId: number;
   nextBlockId: number;
 }
