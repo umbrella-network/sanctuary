@@ -26,7 +26,7 @@ class BlockSynchronizer {
   async apply(): Promise<void> {
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
       this.chainContract.resolveStatus<ChainStatus>(),
-      BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
+      this.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
     if ((await this.reveredBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId)) > 0) {
@@ -55,15 +55,15 @@ class BlockSynchronizer {
     }
   }
 
-  static async getLastSavedBlockIdAndStartAnchor(): Promise<[number, number]> {
+  async getLastSavedBlockIdAndStartAnchor(): Promise<[number, number]> {
     const lastSavedBlock = await Block.find({}).sort({ blockId: -1 }).limit(1).exec();
     return lastSavedBlock[0]
       ? [lastSavedBlock[0].blockId, lastSavedBlock[0].anchor + 1]
-      : [0, await BlockSynchronizer.getLowestChainAnchor()];
+      : [0, await this.getLowestChainAnchor()];
   }
 
-  private static async getLowestChainAnchor(): Promise<number> {
-    const oldestChain = await ChainInstance.find({}).limit(1).sort({ blockId: 1 }).exec();
+  private async getLowestChainAnchor(): Promise<number> {
+    const oldestChain = await ChainInstance.find({chainId: this.settings.blockchain.homeChainId}).limit(1).sort({ blockId: 1 }).exec();
     return oldestChain[0].anchor;
   }
 
