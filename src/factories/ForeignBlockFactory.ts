@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import { uuid } from 'uuidv4';
 import { IBlock } from '../models/Block';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 
@@ -13,8 +12,7 @@ export type FromBlockProps = {
 export class ForeignBlockFactory {
   fromBlock = (props: FromBlockProps): IForeignBlock => {
     const foreignBlock = new ForeignBlock();
-    foreignBlock.id = uuid();
-    foreignBlock.parentId = props.block.id;
+    foreignBlock._id = props.block._id;
     foreignBlock.blockId = props.block.blockId;
     foreignBlock.anchor = props.anchor;
     foreignBlock.foreignChainId = props.foreignChainId;
