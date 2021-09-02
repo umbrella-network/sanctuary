@@ -62,7 +62,7 @@ const settings: Settings = {
         contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
         transactions: {
           waitForBlockTime: parseInt(process.env.ETH_WAIT_FOR_BLOCK_TIME || '1000'),
-          minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '5000000000', 10),
+          minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '2000000000', 10),
           maxGasPrice: parseInt(process.env.ETH_MAX_GAS_PRICE || '10000000000', 10),
         }
       }
