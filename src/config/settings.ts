@@ -49,14 +49,14 @@ const settings: Settings = {
     multichain: {
       bsc: {
         startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '10000', 10),
         confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
         contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
       ethereum: {
         startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        scanBatchSize: parseInt(process.env.ETH_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
         confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ETH_BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
         contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
