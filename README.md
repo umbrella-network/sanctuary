@@ -48,8 +48,10 @@ npx tsc -p . | node ./dist/scripts/mock-seeds.js
 npm run start:dev:scheduler
 
 # Worker
-npm run start:dev:worker -- --worker BlockSynchronizerWorker
 npm run start:dev:worker -- --worker BlockResolverWorker
+npm run start:dev:worker -- --worker BlockSynchronizerWorker
+
+npm run start:dev:worker -- --worker ForeignChainReplicationWorker
 
 # Server
 npm run start:dev
