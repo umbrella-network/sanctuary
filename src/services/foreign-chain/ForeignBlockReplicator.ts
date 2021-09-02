@@ -22,7 +22,6 @@ import Settings from '../../types/Settings';
 import Blockchain from '../../lib/Blockchain';
 import {FailedTransactionEvent} from '../../constants/ReportedMetricsEvents';
 import {ChainFCDsData} from '../../models/ChainBlockData';
-import {ChainStatus} from "../../types/ChainStatus";
 import RevertedBlockResolver from "../RevertedBlockResolver";
 
 export type ReplicationStatus = {
@@ -164,10 +163,12 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const homeChainConfirmations = this.settings.blockchain.homeChain.replicationConfirmations;
     const homeBlockNumber = await this.blockchain.getBlockNumber();
     const safeAnchor = homeBlockNumber - homeChainConfirmations;
+    const dataTimestamp = this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding);
 
+    this.logger.info(`[${this.chainId}] looking for blocks`, {dataTimestamp, safeAnchor});
     return Block.find({
       status: BlockStatus.Finalized,
-      dataTimestamp: {$gt: this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding)},
+      dataTimestamp: {$gt: dataTimestamp},
       anchor: {$lte: safeAnchor }
     }).sort({blockId: -1}).limit(1);
   }
