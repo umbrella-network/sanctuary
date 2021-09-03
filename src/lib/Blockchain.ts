@@ -26,6 +26,7 @@ class Blockchain {
         }
       } catch (e) {
         // lets not stop workers if some is not set up
+        this.logger.warn(`issues for ${key} blockchain setup`);
         this.logger.error(e);
       }
     });
