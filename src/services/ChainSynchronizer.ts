@@ -54,7 +54,7 @@ class ChainSynchronizer {
     const events = await this.scanForEvents(fromBlock, toBlock);
     const offsets = await this.resolveOffsets(events.map((event) => event.destination));
 
-    this.logger.debug(`[${this.chainId}] got ${events.length} events for new Chain`);
+    this.logger.debug(`[${this.chainId}] got ${events.length} events for new Chain at ${fromBlock}-${toBlock}`);
 
     return Promise.all(
       events.map((logRegistered, i) => {
@@ -108,7 +108,7 @@ class ChainSynchronizer {
   }
   
   private async getLastBlock(): Promise<IBlock | IForeignBlock | undefined> {
-    if (this.chainId === this.settings.blockchain.homeChainId) {
+    if (this.chainId === this.settings.blockchain.homeChain.chainId) {
       const blocks = await Block.find({}).limit(1).sort({anchor: -1}).exec();
       return blocks.length ? blocks[0] : undefined;
     }

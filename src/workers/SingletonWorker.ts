@@ -8,7 +8,7 @@ export abstract class SingletonWorker extends BasicWorker {
   @inject('Logger') logger!: Logger;
   @inject(LockRepository) lockRepository!: LockRepository;
 
-  synchronizeWork = async (lockId: string, ttl: number, work: Function): Promise<void> => {
+  synchronizeWork = async (lockId: string, ttl: number, work: () => void): Promise<void> => {
     let lockAcquired: boolean;
 
     try {

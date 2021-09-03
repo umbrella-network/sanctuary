@@ -22,8 +22,7 @@ import Settings from '../../types/Settings';
 import Blockchain from '../../lib/Blockchain';
 import {FailedTransactionEvent} from '../../constants/ReportedMetricsEvents';
 import {ChainFCDsData} from '../../models/ChainBlockData';
-import {ChainStatus} from "../../types/ChainStatus";
-import RevertedBlockResolver from "../RevertedBlockResolver";
+import RevertedBlockResolver from '../RevertedBlockResolver';
 
 export type ReplicationStatus = {
   blocks?: IBlock[];
@@ -39,7 +38,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   @inject('Settings') settings: Settings;
   @inject(Blockchain) blockchain: Blockchain;
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
-
 
   readonly chainId!: string;
   private txSender!: TxSender
@@ -94,6 +92,10 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     }
 
     // atm we assume we doing one block at a time
+    if (blocks.length > 1) {
+      return { errors: ['we supporting only one block at a time'] };
+    }
+
     const [block] = blocks;
 
     try {
@@ -101,7 +103,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
 
       // this is when the replication failed
-      if (!receipt) return { errors: ['Something happened :('] };
+      if (!receipt) {
+        return { errors: [`[${this.chainId}] Unable to send tx for blockId ${block.blockId}`] };
+      }
 
       // YAY
       if (receipt.status === 1) {
@@ -118,7 +122,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       // errors are logged in replicateBlock()
     }
 
-    return { errors: ['Transaction Failed'] };
+    return { errors: [`[${this.chainId}] Tx for blockId ${block.blockId} failed`]  };
   }
 
   private async checkForRevertedBlocks(status: ForeignChainStatus, lastForeignBlock: IForeignBlock): Promise<boolean> {
@@ -159,10 +163,21 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   private latestForeignBlock = async (): Promise<IForeignBlock> => ForeignBlock.findOne().sort({blockId: -1});
 
-  private blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => Block.find({
-    status: BlockStatus.Finalized,
-    dataTimestamp: {$gt: this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding)},
-  }).sort({blockId: -1}).limit(1);
+  private blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
+    // we need to wait for confirmations before we replicate block
+    const homeChainConfirmations = this.settings.blockchain.homeChain.replicationConfirmations;
+    const homeBlockNumber = await this.blockchain.getBlockNumber();
+    const safeAnchor = homeBlockNumber - homeChainConfirmations;
+    const dataTimestamp = this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding);
+
+    this.logger.info(`[${this.chainId}] looking for blocks`, {dataTimestamp, safeAnchor});
+
+    return Block.find({
+      status: BlockStatus.Finalized,
+      dataTimestamp: {$gt: dataTimestamp},
+      anchor: {$lte: safeAnchor }
+    }).sort({blockId: -1}).limit(1);
+  }
 
   private verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {
     if (!blocks.length) {
@@ -218,7 +233,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         }
 
         const lastNonce = await this.blockchain.getLastNonce();
-        this.logger.warn(`Submit tx with nonce ${lastNonce} failed. Retrying with ${lastNonce + 1}`);
+        this.logger.warn(`[${this.chainId}] Submit tx with nonce ${lastNonce} failed. Retrying with ${lastNonce + 1}`);
         return await transaction({...transactionRequest, nonce: lastNonce + 1});
       }
     } catch (e) {

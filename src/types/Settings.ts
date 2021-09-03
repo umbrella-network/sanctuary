@@ -48,8 +48,11 @@ type Settings = {
       };
     };
     replicatorPrivateKey: string;
-    homeChainId: string;
-    multichain: {
+    homeChain: {
+      chainId: string;
+      replicationConfirmations: number;
+    }
+    foreignChain: {
       bsc: BlockchainSettings;
       ethereum: BlockchainSettings;
     }

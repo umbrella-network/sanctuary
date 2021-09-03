@@ -1,5 +1,5 @@
 // TODO move this class to SDK and reuse in Pegasus and Sanctuary
-import {BigNumber, Wallet} from 'ethers';
+import {Wallet} from 'ethers';
 import {GasEstimator} from './GasEstimator';
 import {TransactionResponse, TransactionReceipt} from '@ethersproject/providers';
 import {GasPriceMetrics} from '../types/GasPriceMetrics';
@@ -51,7 +51,7 @@ export class TxSender {
     const txData = <TransactionRequest>{
       from: this.wallet.address,
       to: this.wallet.address,
-      value: BigNumber.from(0),
+      value: 0n,
       nonce: await this.wallet.getTransactionCount('latest'),
       gasLimit: 21000,
       gasPrice: Math.max(gasMetrics.estimation, prevGasPrice) * 2,
@@ -64,7 +64,7 @@ export class TxSender {
     const {tx, receipt} = await this.executeTx(fn, txData,timePadding * 1000);
 
     if (!receipt || receipt.status !== 1) {
-      this.logger.warn(`Canceling tx ${tx.hash} filed or still pending`);
+      this.logger.warn(`Canceling tx ${tx.hash}: filed or still pending`);
       return false;
     }
 
