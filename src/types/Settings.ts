@@ -52,7 +52,7 @@ type Settings = {
       chainId: string;
       replicationConfirmations: number;
     }
-    foreignChain: {
+    multiChains: {
       bsc: BlockchainSettings;
       ethereum: BlockchainSettings;
     }

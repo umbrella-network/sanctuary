@@ -1,11 +1,9 @@
-import { inject, injectable } from 'inversify';
+import {inject, injectable} from 'inversify';
 import Settings, {BlockchainSettings} from '../types/Settings';
 import {ethers, Wallet} from 'ethers';
-import {Logger} from "winston";
 
 @injectable()
 class Blockchain {
-  @inject('Logger') protected logger!: Logger;
   settings!: Settings;
   providers: Record<string, ethers.providers.Provider> = {};
   wallets: Record<string, Wallet> = {};
@@ -13,21 +11,19 @@ class Blockchain {
   constructor(@inject('Settings') settings: Settings) {
     this.settings = settings;
 
-    Object.keys(settings.blockchain.foreignChain).forEach(key => {
-      try {
-        const blockchainSettings = (<Record<string, BlockchainSettings>>settings.blockchain.foreignChain)[key];
+    const {replicatorPrivateKey} = settings.blockchain;
 
-        this.providers[key] = ethers.providers.getDefaultProvider(blockchainSettings.providerUrl);
+    Object.keys(settings.blockchain.multiChains).forEach(key => {
+      const blockchainSettings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[key];
 
-        const {replicatorPrivateKey} = settings.blockchain;
+      if (!blockchainSettings.providerUrl) {
+        return;
+      }
 
-        if (replicatorPrivateKey) {
-          this.wallets[key] = new Wallet(replicatorPrivateKey, this.providers[key]);
-        }
-      } catch (e) {
-        // lets not stop workers if some is not set up
-        this.logger.warn(`issues for ${key} blockchain setup`);
-        this.logger.error(e);
+      this.providers[key] = ethers.providers.getDefaultProvider(blockchainSettings.providerUrl);
+
+      if (replicatorPrivateKey) {
+        this.wallets[key] = new Wallet(replicatorPrivateKey, this.providers[key]);
       }
     });
   }
@@ -45,12 +41,12 @@ class Blockchain {
   }
 
   getContractRegistryAddress(chainId = this.settings.blockchain.homeChain.chainId): string {
-    const blockchainSettings = (<Record<string, BlockchainSettings>>this.settings.blockchain.foreignChain)[chainId];
+    const blockchainSettings = (<Record<string, BlockchainSettings>>this.settings.blockchain.multiChains)[chainId];
     return blockchainSettings.contractRegistryAddress;
   }
 
   getBlockchainSettings(chainId = this.settings.blockchain.homeChain.chainId): BlockchainSettings {
-    return (<Record<string, BlockchainSettings>>this.settings.blockchain.foreignChain)[chainId];
+    return (<Record<string, BlockchainSettings>>this.settings.blockchain.multiChains)[chainId];
   }
 }
 
