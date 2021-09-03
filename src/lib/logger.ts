@@ -9,8 +9,7 @@ const logger: Logger = winston.createLogger({
     colorize(),
     timestamp()
   ),
-  transports: [new winston.transports.Console()],
-  defaultMeta: true
+  transports: [new winston.transports.Console()]
 });
 
 export default logger;
