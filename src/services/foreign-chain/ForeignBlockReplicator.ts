@@ -54,13 +54,10 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   }
 
   async getStatus(): Promise<ForeignChainStatus> {
-    console.log('getStatus');
     return this.foreignChainContract.resolveStatus<ForeignChainStatus>();
   }
 
   resolvePendingBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
-    console.log(status, currentDate);
-
     if (!this.canMint(status, currentDate.getTime())) {
       return [];
     }
@@ -72,7 +69,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     }
 
     const blocks = await this.blocksForReplication(status);
-    console.log('got some blocks:', blocks.length);
 
     if (!this.verifyBlocksForReplication(blocks, status)) {
       return [];
@@ -91,7 +87,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   }
 
   replicate = async (blocks: IBlock[], status: ForeignChainStatus): Promise<ReplicationStatus> => {
-    console.log('blocks', blocks.length)
     if (!blocks.length) {
       return {};
     }
