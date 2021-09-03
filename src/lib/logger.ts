@@ -1,14 +1,8 @@
-import winston, { Logger, format } from 'winston';
-
-const { combine, timestamp, colorize } = format;
+import winston, { Logger } from 'winston';
 
 const logger: Logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  format: combine(
-    // errors({ stack: true }), // <-- use errors format
-    colorize(),
-    timestamp()
-  ),
+  format: winston.format.simple(),
   transports: [new winston.transports.Console()]
 });
 
