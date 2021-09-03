@@ -15,7 +15,12 @@ class Blockchain {
       const blockchainSettings = (<Record<string, BlockchainSettings>>settings.blockchain.foreignChain)[key];
 
       this.providers[key] = ethers.providers.getDefaultProvider(blockchainSettings.providerUrl);
-      this.wallets[key] = new Wallet(settings.blockchain.replicatorPrivateKey, this.providers[key]);
+
+      const {replicatorPrivateKey} = settings.blockchain;
+      
+      if (replicatorPrivateKey) {
+        this.wallets[key] = new Wallet(replicatorPrivateKey, this.providers[key]);
+      }
     });
   }
 
