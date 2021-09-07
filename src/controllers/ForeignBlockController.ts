@@ -44,7 +44,7 @@ export class ForeignBlockController {
   }
 
   async show(request: Request, response: Response): Promise<void> {
-    this.statsdClient?.increment(
+    await this.statsdClient?.increment(
       'sanctuary.foreign-blocks-controller.show',
       0,
       { projectId: request.params.currentProjectId }
