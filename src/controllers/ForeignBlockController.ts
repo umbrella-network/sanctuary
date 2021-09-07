@@ -1,6 +1,6 @@
 import { inject, injectable, postConstruct } from 'inversify';
 import StatsdClient from 'statsd-client';
-import express, { NextFunction, Request, Response, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import ForeignBlock from '../models/ForeignBlock';
 
@@ -12,13 +12,14 @@ export class ForeignBlockController {
   @inject(AuthenticationMiddleware)
   private authenticationMiddleware: AuthenticationMiddleware;
 
-  private router: Router;
+  router: Router;
 
   @postConstruct()
   setup(): void {
     this.router = Router()
       .use(this.authenticationMiddleware.apply)
-      .get('/', this.index);
+      .get('/', this.index)
+      .get('/:blockId', this.show);
   }
 
   async index(request: Request, response: Response): Promise<void> {
@@ -51,7 +52,7 @@ export class ForeignBlockController {
 
     const foreignChainId = <string> request.query.foreignChainId;
     const blockId = parseInt(<string> request.query.blockId);
-    const block = await ForeignBlock.findOne({ foreignChainId, blockId });
+    const block = await ForeignBlock.findOne({ foreignChainId, blockId }).exec();
 
     if (block) {
       response.send({ data: block });
