@@ -22,7 +22,7 @@ export class ForeignBlockController {
       .get('/:foreignChainId/:blockId', this.show);
   }
 
-  async index(request: Request, response: Response): Promise<void> {
+  index = async (request: Request, response: Response): Promise<void> => {
     await this.statsdClient?.increment(
       'sanctuary.foreign-blocks-controller.index',
       1,
@@ -44,7 +44,7 @@ export class ForeignBlockController {
     response.send(blocks);
   }
 
-  async show(request: Request, response: Response): Promise<void> {
+  show = async (request: Request, response: Response): Promise<void> => {
     await this.statsdClient?.increment(
       'sanctuary.foreign-blocks-controller.show',
       1,

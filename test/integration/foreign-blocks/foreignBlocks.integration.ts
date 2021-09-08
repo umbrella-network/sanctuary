@@ -3,6 +3,7 @@ import { foreignBlockFactory } from '../../mocks/factories/foreignBlockFactory';
 import ForeignBlock, { IForeignBlock } from '../../../src/models/ForeignBlock';
 import { loadTestEnv } from '../../helpers';
 import mongoose from 'mongoose';
+import axios from 'axios';
 
 describe('/foreign-blocks', async () => {
   const config = loadTestEnv();
@@ -16,7 +17,9 @@ describe('/foreign-blocks', async () => {
   });
 
   describe('GET /', async () => {
-    const operation = async () => await fetch('/foreign-blocks');
+    const http = axios.create({ baseURL: config.APP_URL });
+    const operation = async () => http.get('/foreign-blocks');
+
     let foreignBlocks: IForeignBlock[];
     let subject: any;
 
@@ -36,7 +39,7 @@ describe('/foreign-blocks', async () => {
     });
 
     it('returns foreign blocks', async () => {
-      const subject = (await operation()).json();
+      const subject = await operation();
       console.log(subject);
     });
   });
