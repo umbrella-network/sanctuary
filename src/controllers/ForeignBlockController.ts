@@ -32,9 +32,10 @@ export class ForeignBlockController {
     const foreignChainId = <string> request.query.foreignChainId;
     const offset = parseInt(<string> request.query.offset || '0');
     const limit = parseInt(<string> request.query.limit || '100');
+    const conditions = foreignChainId ? { foreignChainId } : {};
 
     const blocks = await ForeignBlock
-      .find({ foreignChainId })
+      .find(conditions)
       .skip(offset)
       .limit(limit)
       .sort({ blockId: -1 })

@@ -3,7 +3,7 @@ import { foreignBlockFactory } from '../../mocks/factories/foreignBlockFactory';
 import ForeignBlock, { IForeignBlock } from '../../../src/models/ForeignBlock';
 import { loadTestEnv } from '../../helpers';
 import mongoose from 'mongoose';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 describe('/foreign-blocks', async () => {
   const config = loadTestEnv();
@@ -21,7 +21,7 @@ describe('/foreign-blocks', async () => {
     const operation = async () => http.get('/foreign-blocks');
 
     let foreignBlocks: IForeignBlock[];
-    let subject: any;
+    let subject: AxiosResponse<any>;
 
     before(async () => {
       await ForeignBlock.deleteMany({});
@@ -39,8 +39,18 @@ describe('/foreign-blocks', async () => {
     });
 
     it('returns foreign blocks', async () => {
-      const subject = await operation();
-      console.log(subject);
+      subject = await operation();
+      const data = subject.data;
+
+      expect(data).to.be.an('array').with.length(3);
+
+      for (const block of data) {
+        const matchingForeignBlock = foreignBlocks.find((e) => e._id == block._id);
+        expect(matchingForeignBlock).to.exist;
+        expect(block.blockId).to.eq(matchingForeignBlock.blockId);
+        expect(block.foreignChainId).to.eq(matchingForeignBlock.foreignChainId);
+        expect(block.anchor).to.eq(matchingForeignBlock.anchor);
+      }
     });
   });
 });
