@@ -17,15 +17,15 @@ export class ForeignBlockController {
   @postConstruct()
   setup(): void {
     this.router = Router()
-      .use(this.authenticationMiddleware.apply)
+      // .use(this.authenticationMiddleware.apply)
       .get('/', this.index)
-      .get('/:blockId', this.show);
+      .get('/:foreignChainId/:blockId', this.show);
   }
 
   async index(request: Request, response: Response): Promise<void> {
     await this.statsdClient?.increment(
       'sanctuary.foreign-blocks-controller.index',
-      0,
+      1,
       { projectId: request.params.currentProjectId }
     );
 
@@ -40,13 +40,14 @@ export class ForeignBlockController {
       .sort({ blockId: -1 })
       .exec();
 
-    response.send({ data: blocks });
+    // consider changing to { data: blocks }
+    response.send(blocks);
   }
 
   async show(request: Request, response: Response): Promise<void> {
     await this.statsdClient?.increment(
       'sanctuary.foreign-blocks-controller.show',
-      0,
+      1,
       { projectId: request.params.currentProjectId }
     );
 
