@@ -36,7 +36,7 @@ export class AuthUtils {
       UsageMetricsRepository.register(apiKey.key, route, method);
     } catch (e) {
       console.log(e);
-    };
+    }
   }
 
   async verifyApiKeyFromAuthHeader(authorizationHeader?: string): Promise<ApiKeyFromAuthHeaderInterface> {

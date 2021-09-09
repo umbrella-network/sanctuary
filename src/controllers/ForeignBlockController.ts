@@ -46,14 +46,14 @@ export class ForeignBlockController {
   }
 
   show = async (request: Request, response: Response): Promise<void> => {
-    await this.statsdClient?.increment(
+    this.statsdClient?.increment(
       'sanctuary.foreign-blocks-controller.show',
       1,
       { projectId: request.params.currentProjectId }
     );
 
-    const foreignChainId = <string> request.query.foreignChainId;
-    const blockId = parseInt(<string> request.query.blockId);
+    const foreignChainId = <string> request.params.foreignChainId;
+    const blockId = parseInt(<string> request.params.blockId);
     const block = await ForeignBlock.findOne({ foreignChainId, blockId }).exec();
 
     if (block) {
