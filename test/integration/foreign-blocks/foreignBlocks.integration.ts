@@ -3,12 +3,10 @@ import { foreignBlockFactory } from '../../mocks/factories/foreignBlockFactory';
 import ForeignBlock, { IForeignBlock } from '../../../src/models/ForeignBlock';
 import { loadTestEnv } from '../../helpers';
 import mongoose from 'mongoose';
-import axios, { AxiosResponse } from 'axios';
-import { IUser } from '../../../src/models/User';
+import axios from 'axios';
 import { setupTestUser, teardownTestUser, TestUserHarness } from '../../helpers/authHelpers';
 
 describe('/foreign-blocks', async () => {
-  let user: IUser;
   let credentials: TestUserHarness;
   const config = loadTestEnv();
   const adapter = axios.create({ baseURL: config.APP_URL });
@@ -18,7 +16,6 @@ describe('/foreign-blocks', async () => {
     await teardownTestUser();
     await ForeignBlock.deleteMany({});
     credentials = await setupTestUser();
-    user = credentials.user;
   });
 
   after(async () => {
@@ -29,7 +26,6 @@ describe('/foreign-blocks', async () => {
 
   describe('GET /', async () => {
     let foreignBlocks: IForeignBlock[];
-    let subject: IForeignBlock[];
 
     const operation = async () => adapter.get('/foreign-blocks', {
       headers: {
@@ -66,7 +62,6 @@ describe('/foreign-blocks', async () => {
   describe('GET /:foreignChainId/:blockId', async () => {
     let foreignBlock: IForeignBlock;
     let subject: IForeignBlock;
-    const foreignChainId = 'ethereum';
 
     const operation = async (foreignChainId: string, blockId: number) =>
       adapter.get(
