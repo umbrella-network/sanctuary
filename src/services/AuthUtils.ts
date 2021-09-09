@@ -17,10 +17,15 @@ export class AuthUtils {
 
     if (!apiKeyVerificationResult.apiKey) {
       response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
+    } else {
+      await this.registerUsage(request, apiKeyVerificationResult.apiKey);
     }
 
-    if (apiKeyVerificationResult.apiKey) {
-      const apiKey = request.headers.authorization.replace('Bearer ', '');
+    return apiKeyVerificationResult;
+  }
+
+  async registerUsage(request: Request, apiKey: IApiKey): Promise<void> {
+    try {
       const {
         route: { path },
         method,
@@ -28,10 +33,10 @@ export class AuthUtils {
       } = request;
       const route = `${baseUrl}${path}`;
 
-      UsageMetricsRepository.register(apiKey, route, method);
-    }
-
-    return apiKeyVerificationResult;
+      UsageMetricsRepository.register(apiKey.key, route, method);
+    } catch (e) {
+      console.log(e);
+    };
   }
 
   async verifyApiKeyFromAuthHeader(authorizationHeader?: string): Promise<ApiKeyFromAuthHeaderInterface> {

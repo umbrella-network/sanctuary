@@ -7,7 +7,7 @@ export class AuthenticationMiddleware {
   @inject(AuthUtils)
   private authUtils: AuthUtils;
 
-  async apply(request: Request, response: Response, next: NextFunction): Promise<void> {
+  apply = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     const authentication = await this.authUtils.verifyApiKey(request, response);
     if (!authentication.apiKey) return response.status(403).end();
 

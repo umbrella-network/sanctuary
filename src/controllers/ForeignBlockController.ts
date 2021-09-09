@@ -17,7 +17,7 @@ export class ForeignBlockController {
   @postConstruct()
   setup(): void {
     this.router = Router()
-      // .use(this.authenticationMiddleware.apply)
+      .use(this.authenticationMiddleware.apply)
       .get('/', this.index)
       .get('/:foreignChainId/:blockId', this.show);
   }

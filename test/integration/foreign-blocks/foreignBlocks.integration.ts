@@ -4,21 +4,34 @@ import ForeignBlock, { IForeignBlock } from '../../../src/models/ForeignBlock';
 import { loadTestEnv } from '../../helpers';
 import mongoose from 'mongoose';
 import axios, { AxiosResponse } from 'axios';
+import { IUser } from '../../../src/models/User';
+import { setupTestUser, teardownTestUser, TestUserHarness } from '../../helpers/authHelpers';
 
 describe('/foreign-blocks', async () => {
+  let user: IUser;
+  let credentials: TestUserHarness;
   const config = loadTestEnv();
 
   before(async () => {
     await mongoose.connect(config.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+    await teardownTestUser();
+    credentials = await setupTestUser();
+    user = credentials.user;
   });
 
   after(async () => {
+    await teardownTestUser();
     await mongoose.connection.close();
   });
 
   describe('GET /', async () => {
-    const http = axios.create({ baseURL: config.APP_URL });
-    const operation = async () => http.get('/foreign-blocks');
+    const adapter = axios.create({ baseURL: config.APP_URL });
+
+    const operation = async () => adapter.get('/foreign-blocks', {
+      headers: {
+        authorization: `Bearer ${credentials.apiKey.key}`
+      }
+    });
 
     let foreignBlocks: IForeignBlock[];
     let subject: AxiosResponse<any>;
