@@ -3,6 +3,7 @@ import StatsdClient from 'statsd-client';
 import { Request, Response, Router } from 'express';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import ForeignBlock from '../models/ForeignBlock';
+import { ReplicatedBlockLoader } from '../services/ReplicatedBlockLoader';
 
 @injectable()
 export class ForeignBlockController {
@@ -11,6 +12,9 @@ export class ForeignBlockController {
 
   @inject(AuthenticationMiddleware)
   private authenticationMiddleware: AuthenticationMiddleware;
+
+  @inject(ReplicatedBlockLoader)
+  private loader: ReplicatedBlockLoader;
 
   router: Router;
 
@@ -32,16 +36,7 @@ export class ForeignBlockController {
     const foreignChainId = <string> request.query.foreignChainId;
     const offset = parseInt(<string> request.query.offset || '0');
     const limit = Math.min(parseInt(<string> request.query.limit || '100'), 100);
-    const conditions = foreignChainId ? { foreignChainId } : {};
-
-    const blocks = await ForeignBlock
-      .find(conditions)
-      .skip(offset)
-      .limit(limit)
-      .sort({ blockId: -1 })
-      .exec();
-
-    // consider changing to { data: blocks }
+    const blocks = await this.loader.find({ foreignChainId, offset, limit });
     response.send(blocks);
   }
 
