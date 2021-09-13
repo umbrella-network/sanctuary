@@ -23,6 +23,7 @@ export class ForeignBlockController {
     this.router = Router()
       .use(this.authenticationMiddleware.apply)
       .get('/', this.index)
+      .get('/:foreignChainId', this.index)
       .get('/:foreignChainId/:blockId', this.show);
   }
 
@@ -31,9 +32,9 @@ export class ForeignBlockController {
       projectId: request.params.currentProjectId,
     });
 
-    const foreignChainId = <string>request.query.foreignChainId;
-    const offset = parseInt(<string>request.query.offset || '0');
-    const limit = Math.min(parseInt(<string>request.query.limit || '100'), 100);
+    const foreignChainId = <string> (request.query.foreignChainId || request.params.foreignChainId);
+    const offset = parseInt(<string> request.query.offset || '0');
+    const limit = Math.min(parseInt(<string> request.query.limit || '100'), 100);
     const blocks = await this.blockRepository.findReplicatedBlocks({ foreignChainId, offset, limit });
     response.send(blocks);
   };
