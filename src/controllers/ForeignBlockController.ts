@@ -27,28 +27,24 @@ export class ForeignBlockController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    await this.statsdClient?.increment(
-      'sanctuary.foreign-blocks-controller.index',
-      1,
-      { projectId: request.params.currentProjectId }
-    );
+    await this.statsdClient?.increment('sanctuary.foreign-blocks-controller.index', 1, {
+      projectId: request.params.currentProjectId,
+    });
 
-    const foreignChainId = <string> request.query.foreignChainId;
-    const offset = parseInt(<string> request.query.offset || '0');
-    const limit = Math.min(parseInt(<string> request.query.limit || '100'), 100);
+    const foreignChainId = <string>request.query.foreignChainId;
+    const offset = parseInt(<string>request.query.offset || '0');
+    const limit = Math.min(parseInt(<string>request.query.limit || '100'), 100);
     const blocks = await this.blockRepository.findReplicatedBlocks({ foreignChainId, offset, limit });
     response.send(blocks);
-  }
+  };
 
   show = async (request: Request, response: Response): Promise<void> => {
-    this.statsdClient?.increment(
-      'sanctuary.foreign-blocks-controller.show',
-      1,
-      { projectId: request.params.currentProjectId }
-    );
+    this.statsdClient?.increment('sanctuary.foreign-blocks-controller.show', 1, {
+      projectId: request.params.currentProjectId,
+    });
 
-    const foreignChainId = <string> request.params.foreignChainId;
-    const blockId = parseInt(<string> request.params.blockId);
+    const foreignChainId = <string>request.params.foreignChainId;
+    const blockId = parseInt(<string>request.params.blockId);
     const block = await ForeignBlock.findOne({ foreignChainId, blockId }).exec();
 
     if (block) {
@@ -56,5 +52,5 @@ export class ForeignBlockController {
     } else {
       response.status(404);
     }
-  }
+  };
 }

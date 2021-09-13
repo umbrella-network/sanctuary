@@ -17,10 +17,7 @@ class StakingBankContract {
 
   async resolveContract(): Promise<Contract> {
     if (!this.registry) {
-      this.registry = new ContractRegistry(
-        this.blockchain.getProvider(),
-        this.blockchain.getContractRegistryAddress()
-      );
+      this.registry = new ContractRegistry(this.blockchain.getProvider(), this.blockchain.getContractRegistryAddress());
     }
 
     const address = await this.registry.getAddress(this.settings.blockchain.contracts.stakingBank.name);

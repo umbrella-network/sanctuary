@@ -1,9 +1,9 @@
 // TODO move this class to SDK and reuse in Pegasus and Sanctuary
-import {Wallet} from 'ethers';
-import {GasEstimator} from './GasEstimator';
-import {TransactionResponse, TransactionReceipt} from '@ethersproject/providers';
-import {GasPriceMetrics} from '../types/GasPriceMetrics';
-import {TransactionRequest} from '@ethersproject/abstract-provider/src.ts/index';
+import { Wallet } from 'ethers';
+import { GasEstimator } from './GasEstimator';
+import { TransactionResponse, TransactionReceipt } from '@ethersproject/providers';
+import { GasPriceMetrics } from '../types/GasPriceMetrics';
+import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
 
 interface ILogger {
   info(msg: string, meta?: Record<string, any>): void;
@@ -11,9 +11,9 @@ interface ILogger {
 }
 
 export class TxSender {
-  readonly logger!: ILogger
-  readonly wallet!: Wallet
-  readonly waitForBlockTime!: number
+  readonly logger!: ILogger;
+  readonly wallet!: Wallet;
+  readonly waitForBlockTime!: number;
 
   constructor(wallet: Wallet, logger: ILogger, waitForBlockTime = 500) {
     this.wallet = wallet;
@@ -33,7 +33,11 @@ export class TxSender {
 
     this.logger.info(`Submitting tx, gas metrics: ${GasEstimator.printable(gasMetrics)}`);
 
-    const {tx, receipt, timeoutMs} = await this.executeTx(fn, {gasPrice: gasMetrics.estimation, ...transactionRequest}, timePadding * 1000);
+    const { tx, receipt, timeoutMs } = await this.executeTx(
+      fn,
+      { gasPrice: gasMetrics.estimation, ...transactionRequest },
+      timePadding * 1000
+    );
 
     if (!receipt) {
       this.logger.warn(`canceling tx ${tx.hash}`);
@@ -45,9 +49,13 @@ export class TxSender {
     }
 
     return receipt;
-  }
+  };
 
-  private cancelPendingTransaction = async (prevGasPrice: number, timePadding: number, gasMetrics: GasPriceMetrics): Promise<boolean> => {
+  private cancelPendingTransaction = async (
+    prevGasPrice: number,
+    timePadding: number,
+    gasMetrics: GasPriceMetrics
+  ): Promise<boolean> => {
     const txData = <TransactionRequest>{
       from: this.wallet.address,
       to: this.wallet.address,
@@ -57,11 +65,11 @@ export class TxSender {
       gasPrice: Math.max(gasMetrics.estimation, prevGasPrice) * 2,
     };
 
-    this.logger.warn('Sending canceling tx', {nonce: txData.nonce, gasPrice: txData.gasPrice});
+    this.logger.warn('Sending canceling tx', { nonce: txData.nonce, gasPrice: txData.gasPrice });
 
     const fn = (tr: TransactionRequest) => this.wallet.sendTransaction(tr);
 
-    const {tx, receipt} = await this.executeTx(fn, txData,timePadding * 1000);
+    const { tx, receipt } = await this.executeTx(fn, txData, timePadding * 1000);
 
     if (!receipt || receipt.status !== 1) {
       this.logger.warn(`Canceling tx ${tx.hash}: filed or still pending`);
@@ -69,7 +77,7 @@ export class TxSender {
     }
 
     return receipt.status === 1;
-  }
+  };
 
   private waitUntilNextBlock = async (currentBlockNumber: number): Promise<number> => {
     // it would be nice to subscribe for blockNumber, but we forcing http for RPC
@@ -83,13 +91,13 @@ export class TxSender {
     }
 
     return newBlockNumber;
-  }
+  };
 
   private executeTx = async (
     fn: (tr: TransactionRequest) => Promise<TransactionResponse>,
     transactionRequest: TransactionRequest,
-    timeoutMs: number,
-  ): Promise<{tx: TransactionResponse; receipt: TransactionReceipt | undefined; timeoutMs: number}> => {
+    timeoutMs: number
+  ): Promise<{ tx: TransactionResponse; receipt: TransactionReceipt | undefined; timeoutMs: number }> => {
     const [currentBlockNumber, tx] = await Promise.all([this.wallet.provider.getBlockNumber(), fn(transactionRequest)]);
 
     // there is no point of doing any action on tx if block is not minted
@@ -97,8 +105,8 @@ export class TxSender {
 
     this.logger.info(`New block detected ${newBlockNumber}, waiting for tx to be minted.`);
 
-    return {tx, receipt: await Promise.race([tx.wait(), TxSender.txTimeout(timeoutMs)]), timeoutMs};
-  }
+    return { tx, receipt: await Promise.race([tx.wait(), TxSender.txTimeout(timeoutMs)]), timeoutMs };
+  };
 
   private static sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -106,7 +114,7 @@ export class TxSender {
     return new Promise<undefined>((resolve) =>
       setTimeout(async () => {
         resolve(undefined);
-      }, timeout),
+      }, timeout)
     );
   }
 }

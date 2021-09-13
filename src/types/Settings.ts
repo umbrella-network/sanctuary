@@ -2,14 +2,14 @@ export type BlockchainSettings = {
   startBlockNumber: number;
   scanBatchSize: number;
   confirmations: number;
-  providerUrl: string
+  providerUrl: string;
   contractRegistryAddress: string;
   transactions?: {
-    waitForBlockTime: number
+    waitForBlockTime: number;
     minGasPrice: number;
     maxGasPrice: number;
-  },
-}
+  };
+};
 
 type Settings = {
   port: number;
@@ -24,7 +24,7 @@ type Settings = {
       ethereum: {
         interval: number;
         lockTTL: number;
-      }
+      };
     };
   };
   redis: {
@@ -51,11 +51,11 @@ type Settings = {
     homeChain: {
       chainId: string;
       replicationConfirmations: number;
-    }
+    };
     multiChains: {
       bsc: BlockchainSettings;
       ethereum: BlockchainSettings;
-    }
+    };
   };
   auth: {
     tokenExpiry: number;

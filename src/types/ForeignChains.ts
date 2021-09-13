@@ -1,3 +1,3 @@
 export enum ForeignChains {
-  Ethereum = 'ethereum'
+  Ethereum = 'ethereum',
 }

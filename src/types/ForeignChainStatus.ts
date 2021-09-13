@@ -7,4 +7,4 @@ export type ForeignChainStatus = {
   lastDataTimestamp: number;
   lastId: number;
   nextBlockId: number;
-}
+};

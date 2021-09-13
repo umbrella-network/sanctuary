@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { ForeignBlockReplicator } from '.';
-import {ForeignChains} from '../../types/ForeignChains';
+import { ForeignChains } from '../../types/ForeignChains';
 
 @injectable()
 export class EthereumBlockReplicator extends ForeignBlockReplicator {

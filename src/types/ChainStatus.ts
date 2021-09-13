@@ -13,4 +13,4 @@ export type ChainStatus = {
   locations: string[];
   staked: BigNumber;
   minSignatures: number;
-}
+};

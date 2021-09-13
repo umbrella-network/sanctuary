@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 
 import { Validator } from '../types/Validator';
 import { ChainStatus } from '../types/ChainStatus';
-import {BaseChainContract} from './BaseChainContract';
+import { BaseChainContract } from './BaseChainContract';
 
 @injectable()
 class ChainContract extends BaseChainContract {

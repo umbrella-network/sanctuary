@@ -65,7 +65,10 @@ class BlockSynchronizer {
   }
 
   private async getLowestChainAnchor(): Promise<number> {
-    const oldestChain = await ChainInstance.find({chainId: this.settings.blockchain.homeChain.chainId}).limit(1).sort({ blockId: 1 }).exec();
+    const oldestChain = await ChainInstance.find({ chainId: this.settings.blockchain.homeChain.chainId })
+      .limit(1)
+      .sort({ blockId: 1 })
+      .exec();
     return oldestChain[0].anchor;
   }
 

@@ -7,7 +7,7 @@ import newrelic from 'newrelic';
 export class ChainInstanceResolver {
   @inject('Logger') private logger!: Logger;
 
-  private chainId!: string
+  private chainId!: string;
 
   setup(chainId: string): void {
     this.chainId = chainId;
@@ -42,7 +42,7 @@ export class ChainInstanceResolver {
   }
 
   private async sortedChainInstances(): Promise<IChainInstance[]> {
-    const chainInstances: IChainInstance[] = await ChainInstance.find({chainId: this.chainId});
+    const chainInstances: IChainInstance[] = await ChainInstance.find({ chainId: this.chainId });
     return chainInstances.sort((a, b) => this.sortDesc(a, b));
   }
 

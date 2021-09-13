@@ -7,7 +7,7 @@ export type FromBlockProps = {
   block: IBlock;
   foreignChainId: string;
   anchor: number;
-}
+};
 
 @injectable()
 export class ForeignBlockFactory {
@@ -18,5 +18,5 @@ export class ForeignBlockFactory {
     foreignBlock.blockId = props.block.blockId;
     foreignBlock.anchor = props.anchor;
     return foreignBlock;
-  }
+  };
 }

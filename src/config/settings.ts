@@ -17,9 +17,9 @@ const settings: Settings = {
     foreignChainReplication: {
       ethereum: {
         interval: parseInt(process.env.ETHEREUM_REPLICATION_INTERVAL || '10000'),
-        lockTTL: parseInt(process.env.ETHEREUM_REPLICATION_LOCK_TTL || '9000')
-      }
-    }
+        lockTTL: parseInt(process.env.ETHEREUM_REPLICATION_LOCK_TTL || '9000'),
+      },
+    },
   },
   redis: {
     url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
@@ -67,9 +67,9 @@ const settings: Settings = {
           waitForBlockTime: parseInt(process.env.ETH_WAIT_FOR_BLOCK_TIME || '1000'),
           minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '2000000000', 10),
           maxGasPrice: parseInt(process.env.ETH_MAX_GAS_PRICE || '10000000000', 10),
-        }
-      }
-    }
+        },
+      },
+    },
   },
   auth: {
     tokenExpiry: 60 * 60 * 24 * 7, // 1 week

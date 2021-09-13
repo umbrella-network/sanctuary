@@ -1,12 +1,12 @@
 import { injectable } from 'inversify';
 import { Contract } from 'ethers';
 
-import {BaseChainContract} from './BaseChainContract';
+import { BaseChainContract } from './BaseChainContract';
 
 // TODO this abi should came from SDK
 import abi from './ForeignChainAbi.json';
-import {TransactionResponse} from '@ethersproject/providers';
-import {TransactionRequest} from '@ethersproject/abstract-provider/src.ts/index';
+import { TransactionResponse } from '@ethersproject/providers';
+import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
 
 @injectable()
 export class ForeignChainContract extends BaseChainContract {
@@ -18,8 +18,7 @@ export class ForeignChainContract extends BaseChainContract {
     blockId: number,
     transactionRequest: TransactionRequest
   ): Promise<TransactionResponse> {
-    return (await this.resolveContract())
-      .contract
+    return (await this.resolveContract()).contract
       .connect(this.blockchain.wallets[this.chainId])
       .submit(dataTimestamp, root, keys, values, blockId, transactionRequest);
   }

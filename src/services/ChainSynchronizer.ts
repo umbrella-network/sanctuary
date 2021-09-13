@@ -1,16 +1,16 @@
 import { Logger } from 'winston';
 import { ABI } from '@umb-network/toolbox';
-import {inject, injectable} from 'inversify';
+import { inject, injectable } from 'inversify';
 import ChainContract from '../contracts/ChainContract';
 import ChainInstance, { IChainInstance } from '../models/ChainInstance';
 import Blockchain from '../lib/Blockchain';
-import {Contract, Event} from 'ethers';
+import { Contract, Event } from 'ethers';
 import { LogRegistered } from '../types/events';
 import { CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
 import { CreateBatchRanges } from './CreateBatchRanges';
-import Block, {IBlock} from '../models/Block';
+import Block, { IBlock } from '../models/Block';
 import Settings from '../types/Settings';
-import ForeignBlock, {IForeignBlock} from '../models/ForeignBlock';
+import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 
 @injectable()
 class ChainSynchronizer {
@@ -30,7 +30,8 @@ class ChainSynchronizer {
 
   private async synchronizeChains(currentBlockNumber: number): Promise<void> {
     const [fromBlock, toBlock] = await this.calculateBlockNumberRange(
-      this.blockchain.getBlockchainSettings(this.chainId).startBlockNumber, currentBlockNumber,
+      this.blockchain.getBlockchainSettings(this.chainId).startBlockNumber,
+      currentBlockNumber
     );
 
     this.logger.info(`[${this.chainId}] Synchronizing Chains for blocks ${fromBlock} - ${toBlock}`);
@@ -58,7 +59,9 @@ class ChainSynchronizer {
 
     return Promise.all(
       events.map((logRegistered, i) => {
-        this.logger.info(`[${this.chainId}] Detected new Chain contract: ${logRegistered.destination} at ${logRegistered.anchor}`);
+        this.logger.info(
+          `[${this.chainId}] Detected new Chain contract: ${logRegistered.destination} at ${logRegistered.anchor}`
+        );
 
         return ChainInstance.findOneAndUpdate(
           {
@@ -68,7 +71,7 @@ class ChainSynchronizer {
             anchor: logRegistered.anchor,
             address: logRegistered.destination,
             blocksCountOffset: offsets[i],
-            chainId: this.chainId
+            chainId: this.chainId,
           },
           {
             new: true,
@@ -80,40 +83,36 @@ class ChainSynchronizer {
   }
 
   private async resolveOffsets(chainAddresses: string[]): Promise<number[]> {
-    return Promise.all(chainAddresses.map((address) => this.chainContract.setChainId(this.chainId).resolveBlocksCountOffset(address)));
+    return Promise.all(
+      chainAddresses.map((address) => this.chainContract.setChainId(this.chainId).resolveBlocksCountOffset(address))
+    );
   }
 
-  private async calculateBlockNumberRange(
-    startBlockNumber: number,
-    endBlockNumber: number,
-  ): Promise<[number, number]> {
+  private async calculateBlockNumberRange(startBlockNumber: number, endBlockNumber: number): Promise<[number, number]> {
     const lastAnchor = await this.getLastSavedAnchor();
-    const lookBack = Math.max(
-      0,
-      startBlockNumber < 0 ? endBlockNumber + startBlockNumber : startBlockNumber
-    );
+    const lookBack = Math.max(0, startBlockNumber < 0 ? endBlockNumber + startBlockNumber : startBlockNumber);
     const fromBlock = lastAnchor > 0 ? lastAnchor : lookBack;
     return [fromBlock + 1, endBlockNumber];
   }
 
   private async getLastSavedAnchor(): Promise<number> {
     const lastBlock = await this.getLastBlock();
-    
+
     if (lastBlock) {
       return lastBlock.anchor ? lastBlock.anchor : -1;
     }
 
-    const chains = await ChainInstance.find({chainId: this.chainId}).limit(1).sort({ anchor: -1 }).exec();
+    const chains = await ChainInstance.find({ chainId: this.chainId }).limit(1).sort({ anchor: -1 }).exec();
     return chains[0] ? chains[0].anchor : -1;
   }
-  
+
   private async getLastBlock(): Promise<IBlock | IForeignBlock | undefined> {
     if (this.chainId === this.settings.blockchain.homeChain.chainId) {
-      const blocks = await Block.find({}).limit(1).sort({anchor: -1}).exec();
+      const blocks = await Block.find({}).limit(1).sort({ anchor: -1 }).exec();
       return blocks.length ? blocks[0] : undefined;
     }
 
-    const blocks = await ForeignBlock.find({foreignChainId: this.chainId}).limit(1).sort({anchor: -1}).exec();
+    const blocks = await ForeignBlock.find({ foreignChainId: this.chainId }).limit(1).sort({ anchor: -1 }).exec();
     return blocks.length ? blocks[0] : undefined;
   }
 

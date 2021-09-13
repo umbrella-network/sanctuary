@@ -6,15 +6,14 @@ type FindReplicatedBlockProps = {
   foreignChainId: string;
   offset: number;
   limit: number;
-}
+};
 
 @injectable()
 export class BlockRepository {
-  findReplicatedBlocks = async(props: FindReplicatedBlockProps): Promise<IBlock[]> => {
+  findReplicatedBlocks = async (props: FindReplicatedBlockProps): Promise<IBlock[]> => {
     const { foreignChainId, offset, limit } = props;
 
-    const foreignBlocks: IForeignBlock[] = await ForeignBlock
-      .find({ foreignChainId })
+    const foreignBlocks: IForeignBlock[] = await ForeignBlock.find({ foreignChainId })
       .skip(offset)
       .limit(limit)
       .sort({ blockId: -1 })
@@ -22,9 +21,8 @@ export class BlockRepository {
 
     const blockIds: number[] = foreignBlocks.map((fb) => fb.blockId);
 
-    return await Block
-      .find({ blockId: { $in: blockIds } })
+    return await Block.find({ blockId: { $in: blockIds } })
       .sort({ blockId: -1 })
       .exec();
-  }
+  };
 }

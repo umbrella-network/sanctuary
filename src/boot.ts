@@ -1,4 +1,3 @@
-
 import 'reflect-metadata';
 import './config/setupDotenv';
 import './config/setupNewrelic';

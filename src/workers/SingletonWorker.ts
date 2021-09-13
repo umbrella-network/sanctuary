@@ -17,7 +17,7 @@ export abstract class SingletonWorker extends BasicWorker {
     } finally {
       if (lockAcquired) await this.unlock(lockId);
     }
-  }
+  };
 
   isStale = (job: Bull.Job, ageLimit: number): boolean => {
     const age = new Date().getTime() - job.timestamp;

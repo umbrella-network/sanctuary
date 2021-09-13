@@ -1,11 +1,15 @@
-import {BlockWithTransactions} from '@ethersproject/abstract-provider';
-import {GasPriceMetrics} from '../types/GasPriceMetrics';
-import {BigNumber, ethers} from 'ethers';
+import { BlockWithTransactions } from '@ethersproject/abstract-provider';
+import { GasPriceMetrics } from '../types/GasPriceMetrics';
+import { BigNumber, ethers } from 'ethers';
 
 // TODO move this to SDK
 
 export class GasEstimator {
-  static async apply(provider: ethers.providers.Provider, minGasPrice: number, maxGasPrice: number): Promise<GasPriceMetrics> {
+  static async apply(
+    provider: ethers.providers.Provider,
+    minGasPrice: number,
+    maxGasPrice: number
+  ): Promise<GasPriceMetrics> {
     const block = await provider.getBlockWithTransactions('latest');
     const [metrics, prices] = GasEstimator.gasMetricsForBlock(block);
 
@@ -16,7 +20,7 @@ export class GasEstimator {
 
   static printable(metrics: GasPriceMetrics): string {
     return `estimation: ${GasEstimator.toGwei(metrics.estimation)} Gwei, min: ${GasEstimator.toGwei(
-      metrics.min,
+      metrics.min
     )} Gwei, max: ${GasEstimator.toGwei(metrics.max)} Gwei, avg: ${GasEstimator.toGwei(metrics.avg)} Gwei`;
   }
 
@@ -26,7 +30,7 @@ export class GasEstimator {
     let sum = 0;
     const prices: number[] = [];
 
-    block.transactions.forEach(({gasPrice}) => {
+    block.transactions.forEach(({ gasPrice }) => {
       if (!gasPrice) {
         return;
       }
@@ -46,17 +50,17 @@ export class GasEstimator {
     });
 
     if (!prices.length) {
-      return [{min: 0, max: 0, avg: 0, estimation: 0}, []];
+      return [{ min: 0, max: 0, avg: 0, estimation: 0 }, []];
     }
 
-    return [{min, max, avg: sum / prices.length, estimation: 0}, prices];
+    return [{ min, max, avg: sum / prices.length, estimation: 0 }, prices];
   }
 
   private static estimate = (
     minGasPrice: number,
     maxGasPrice: number,
     metrics: GasPriceMetrics,
-    prices: number[],
+    prices: number[]
   ): number => {
     if (prices.length < 2) {
       return minGasPrice;

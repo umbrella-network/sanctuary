@@ -4,7 +4,7 @@ export interface IChainInstance extends Document {
   address: string;
   blocksCountOffset: number;
   anchor: number;
-  chainId: string
+  chainId: string;
 }
 
 const ChainInstanceSchema: Schema = new Schema({

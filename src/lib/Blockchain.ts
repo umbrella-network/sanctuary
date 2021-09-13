@@ -1,6 +1,6 @@
-import {inject, injectable} from 'inversify';
-import Settings, {BlockchainSettings} from '../types/Settings';
-import {ethers, Wallet} from 'ethers';
+import { inject, injectable } from 'inversify';
+import Settings, { BlockchainSettings } from '../types/Settings';
+import { ethers, Wallet } from 'ethers';
 
 @injectable()
 class Blockchain {
@@ -11,9 +11,9 @@ class Blockchain {
   constructor(@inject('Settings') settings: Settings) {
     this.settings = settings;
 
-    const {replicatorPrivateKey} = settings.blockchain;
+    const { replicatorPrivateKey } = settings.blockchain;
 
-    Object.keys(settings.blockchain.multiChains).forEach(key => {
+    Object.keys(settings.blockchain.multiChains).forEach((key) => {
       const blockchainSettings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[key];
 
       if (!blockchainSettings.providerUrl) {

@@ -13,5 +13,5 @@ export class AuthenticationMiddleware {
 
     request.params['currentProjectId'] = authentication.apiKey.projectId;
     next();
-  }
+  };
 }

@@ -26,11 +26,7 @@ export class AuthUtils {
 
   async registerUsage(request: Request, apiKey: IApiKey): Promise<void> {
     try {
-      const {
-        path,
-        method,
-        baseUrl,
-      } = request;
+      const { path, method, baseUrl } = request;
 
       const route = `${baseUrl}${path}`;
       UsageMetricsRepository.register(apiKey.key, route, method);

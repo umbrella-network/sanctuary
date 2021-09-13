@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export type SynchronizationState = {
-  synchronizedAt: Date,
+  synchronizedAt: Date;
   chains: {
     [key: string]: string;
-  }
-}
+  };
+};
 
 export interface IBlock extends Document {
   chainAddress: string;
@@ -19,7 +19,7 @@ export interface IBlock extends Document {
   power: string;
   voters: Array<string>;
   votes: Map<string, string>;
-  synchronization?: SynchronizationState; 
+  synchronization?: SynchronizationState;
 }
 
 const BlockSchema: Schema = new Schema({

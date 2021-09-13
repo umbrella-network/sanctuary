@@ -17,14 +17,12 @@ import { QueueScheduler } from 'bullmq';
   const metricsWorker = Application.get(MetricsWorker);
   const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
 
-  setInterval(async() => {
-    await foreignChainReplicationWorker.enqueue(
-      {
-        foreignChainId: 'ethereum',
-        lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
-        interval: settings.jobs.foreignChainReplication.ethereum.interval
-      }
-    );
+  setInterval(async () => {
+    await foreignChainReplicationWorker.enqueue({
+      foreignChainId: 'ethereum',
+      lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
+      interval: settings.jobs.foreignChainReplication.ethereum.interval,
+    });
   }, settings.jobs.foreignChainReplication.ethereum.interval);
 
   // setInterval(async () => {

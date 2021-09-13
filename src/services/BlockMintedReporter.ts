@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import ChainContract from '../contracts/ChainContract';
-import {ChainStatus} from '../types/ChainStatus';
+import { ChainStatus } from '../types/ChainStatus';
 import { Logger } from 'winston';
 import StatsdClient from 'statsd-client';
 
