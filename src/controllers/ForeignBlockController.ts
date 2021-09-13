@@ -3,7 +3,7 @@ import StatsdClient from 'statsd-client';
 import { Request, Response, Router } from 'express';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import ForeignBlock from '../models/ForeignBlock';
-import { ReplicatedBlockLoader } from '../services/ReplicatedBlockLoader';
+import { BlockRepository } from '../repositories/BlockRepository';
 
 @injectable()
 export class ForeignBlockController {
@@ -13,8 +13,8 @@ export class ForeignBlockController {
   @inject(AuthenticationMiddleware)
   private authenticationMiddleware: AuthenticationMiddleware;
 
-  @inject(ReplicatedBlockLoader)
-  private loader: ReplicatedBlockLoader;
+  @inject(BlockRepository)
+  private blockRepository: BlockRepository;
 
   router: Router;
 
@@ -36,7 +36,7 @@ export class ForeignBlockController {
     const foreignChainId = <string> request.query.foreignChainId;
     const offset = parseInt(<string> request.query.offset || '0');
     const limit = Math.min(parseInt(<string> request.query.limit || '100'), 100);
-    const blocks = await this.loader.find({ foreignChainId, offset, limit });
+    const blocks = await this.blockRepository.findReplicatedBlocks({ foreignChainId, offset, limit });
     response.send(blocks);
   }
 

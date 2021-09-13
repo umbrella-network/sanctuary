@@ -25,7 +25,6 @@ export class AuthUtils {
   }
 
   async registerUsage(request: Request, apiKey: IApiKey): Promise<void> {
-    // console.log(request);
     try {
       const {
         route: { path },

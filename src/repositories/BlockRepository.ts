@@ -2,15 +2,15 @@ import { injectable } from 'inversify';
 import Block, { IBlock } from '../models/Block';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 
-type ReplicatedBlockLoaderProps = {
+type FindReplicatedBlockProps = {
   foreignChainId: string;
   offset: number;
   limit: number;
 }
 
 @injectable()
-export class ReplicatedBlockLoader {
-  find = async(props: ReplicatedBlockLoaderProps): Promise<IBlock[]> => {
+export class BlockRepository {
+  findReplicatedBlocks = async(props: FindReplicatedBlockProps): Promise<IBlock[]> => {
     const { foreignChainId, offset, limit } = props;
 
     const foreignBlocks: IForeignBlock[] = await ForeignBlock
