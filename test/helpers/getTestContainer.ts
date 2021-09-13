@@ -1,5 +1,5 @@
 import { Container } from 'inversify';
-import winston, { Logger } from 'winston';
+import winston from 'winston';
 
 export function getTestContainer(): Container {
   const logger = winston.createLogger({

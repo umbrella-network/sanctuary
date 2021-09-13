@@ -6,8 +6,8 @@ import { GasPriceMetrics } from '../types/GasPriceMetrics';
 import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
 
 interface ILogger {
-  info(msg: string, meta?: Record<string, any>): void;
-  warn(msg: string, meta?: Record<string, any>): void;
+  info(msg: string, meta?: Record<string, unknown>): void;
+  warn(msg: string, meta?: Record<string, unknown>): void;
 }
 
 export class TxSender {
