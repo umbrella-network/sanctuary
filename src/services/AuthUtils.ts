@@ -17,21 +17,26 @@ export class AuthUtils {
 
     if (!apiKeyVerificationResult.apiKey) {
       response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
-    }
-
-    if (apiKeyVerificationResult.apiKey) {
-      const apiKey = request.headers.authorization.replace('Bearer ', '');
-      const {
-        route: { path },
-        method,
-        baseUrl,
-      } = request;
-      const route = `${baseUrl}${path}`;
-
-      UsageMetricsRepository.register(apiKey, route, method);
+    } else {
+      await this.registerUsage(request, apiKeyVerificationResult.apiKey);
     }
 
     return apiKeyVerificationResult;
+  }
+
+  async registerUsage(request: Request, apiKey: IApiKey): Promise<void> {
+    try {
+      const {
+        path,
+        method,
+        baseUrl,
+      } = request;
+
+      const route = `${baseUrl}${path}`;
+      UsageMetricsRepository.register(apiKey.key, route, method);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   async verifyApiKeyFromAuthHeader(authorizationHeader?: string): Promise<ApiKeyFromAuthHeaderInterface> {
