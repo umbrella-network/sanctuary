@@ -20,10 +20,11 @@ class InfoController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    let network, status: ChainStatus | Error;
+    let network, status: ChainStatus | Error, chainContractAddress;
 
     try {
-      status = await this.chainContract.resolveStatus();
+      status = await this.chainContract.resolveStatus<ChainStatus>();
+      chainContractAddress = status.chainAddress;
     } catch (e) {
       status = e;
     }
@@ -37,6 +38,7 @@ class InfoController {
     response.send({
       contractRegistryAddress: this.blockchain.getContractRegistryAddress(),
       stakingBankAddress: (await this.stakingBankContract.resolveContract()).address,
+      chainContractAddress,
       version: this.settings.version,
       environment: this.settings.environment,
       network,

@@ -1,4 +1,4 @@
-import { inject, injectable } from 'inversify';
+import {inject, injectable} from 'inversify';
 import Settings, {BlockchainSettings} from '../types/Settings';
 import {ethers, Wallet} from 'ethers';
 
@@ -11,11 +11,20 @@ class Blockchain {
   constructor(@inject('Settings') settings: Settings) {
     this.settings = settings;
 
-    Object.keys(settings.blockchain.foreignChain).forEach(key => {
-      const blockchainSettings = (<Record<string, BlockchainSettings>>settings.blockchain.foreignChain)[key];
+    const {replicatorPrivateKey} = settings.blockchain;
+
+    Object.keys(settings.blockchain.multiChains).forEach(key => {
+      const blockchainSettings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[key];
+
+      if (!blockchainSettings.providerUrl) {
+        return;
+      }
 
       this.providers[key] = ethers.providers.getDefaultProvider(blockchainSettings.providerUrl);
-      this.wallets[key] = new Wallet(settings.blockchain.replicatorPrivateKey, this.providers[key]);
+
+      if (replicatorPrivateKey) {
+        this.wallets[key] = new Wallet(replicatorPrivateKey, this.providers[key]);
+      }
     });
   }
 
@@ -32,12 +41,12 @@ class Blockchain {
   }
 
   getContractRegistryAddress(chainId = this.settings.blockchain.homeChain.chainId): string {
-    const blockchainSettings = (<Record<string, BlockchainSettings>>this.settings.blockchain.foreignChain)[chainId];
+    const blockchainSettings = (<Record<string, BlockchainSettings>>this.settings.blockchain.multiChains)[chainId];
     return blockchainSettings.contractRegistryAddress;
   }
 
   getBlockchainSettings(chainId = this.settings.blockchain.homeChain.chainId): BlockchainSettings {
-    return (<Record<string, BlockchainSettings>>this.settings.blockchain.foreignChain)[chainId];
+    return (<Record<string, BlockchainSettings>>this.settings.blockchain.multiChains)[chainId];
   }
 }
 
