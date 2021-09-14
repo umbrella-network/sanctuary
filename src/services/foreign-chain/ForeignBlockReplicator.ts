@@ -69,6 +69,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     }
 
     const blocks = await this.blocksForReplication(status);
+    console.log('blocksForReplication', blocks);
 
     if (!this.verifyBlocksForReplication(blocks, status)) {
       return [];
