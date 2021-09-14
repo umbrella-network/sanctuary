@@ -13,18 +13,6 @@ export class ChainInstanceResolver {
     this.chainId = chainId;
   }
 
-  async byBlockId(blockIds: number[]): Promise<(IChainInstance | undefined)[]> {
-    const sortedInstances = await this.sortedChainInstances();
-
-    const founded = blockIds.map((blockId) =>
-      sortedInstances.find((chainInstance) => chainInstance.blocksCountOffset <= blockId)
-    );
-
-    this.checkIfFounded(founded, blockIds);
-
-    return founded;
-  }
-
   async byAnchor(anchors: number[]): Promise<(IChainInstance | undefined)[]> {
     const sortedInstances = await this.sortedChainInstances();
 
