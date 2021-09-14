@@ -7,6 +7,9 @@ import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
 import {ChainBlockData, ChainFCDsData} from '../models/ChainBlockData';
 
+// TODO this abi should came from SDK
+import abi from './ForeignChainAbi.json';
+
 @injectable()
 export class BaseChainContract {
   @inject('Logger') protected logger!: Logger;
@@ -23,14 +26,8 @@ export class BaseChainContract {
   }
 
   setChainId = (chainId: string): BaseChainContract => {
-    const resetRegistry = this.chainId != chainId;
     this.chainId = chainId;
-
-    console.log({resetRegistry});
-
-    resetRegistry && this.setupRegistry();
-
-    return this;
+    return this.setupRegistry();
   };
 
   async resolveContract(): Promise<BaseChainContract> {
@@ -39,11 +36,10 @@ export class BaseChainContract {
     }
 
     const chainAddress = await this.registry.getAddress(this.settings.blockchain.contracts.chain.name);
-    console.log({chainAddress});
     return this.setContract(chainAddress);
   }
 
-  setupRegistry(): BaseChainContract {
+  protected setupRegistry(): BaseChainContract {
     this.registry = new ContractRegistry(
       this.blockchain.getProvider(this.chainId),
       this.blockchain.getContractRegistryAddress(this.chainId)
@@ -54,7 +50,6 @@ export class BaseChainContract {
 
   async resolveStatus<T>(): Promise<T> {
     const chain = await this.resolveContract();
-    console.log(this.chainId)
     return {chainAddress: chain.contract.address, ...(await chain.contract.getStatus())};
   }
 
@@ -84,6 +79,10 @@ export class BaseChainContract {
     return this.setContract(chainAddress).contract.blocksCountOffset();
   }
 
+  isHomeChain(): boolean {
+    return this.chainId === this.settings.blockchain.homeChain.chainId;
+  }
+
   protected async _assertContract(): Promise<void> {
     if (!this.contract) {
       await this.resolveContract();
@@ -91,10 +90,8 @@ export class BaseChainContract {
   }
 
   protected setContract = (chainAddress: string): BaseChainContract => {
-    console.log(this.chainId);
-    
-    this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.getProvider(this.chainId));
-    console.log(this.contract.address);
+    const chainAbi = this.isHomeChain() ? ABI.chainAbi : abi;
+    this.contract = new Contract(chainAddress, chainAbi, this.blockchain.getProvider(this.chainId));
     return this;
   };
 }

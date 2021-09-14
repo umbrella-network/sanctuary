@@ -5,6 +5,7 @@ import ChainContract from '../contracts/ChainContract';
 import StakingBankContract from '../contracts/StakingBankContract';
 import Blockchain from '../lib/Blockchain';
 import { ChainStatus } from '../types/ChainStatus';
+import {ForeignChainStatus} from '../types/ForeignChainStatus';
 
 @injectable()
 class InfoController {
@@ -21,11 +22,10 @@ class InfoController {
 
   index = async (request: Request, response: Response): Promise<void> => {
     const chainId = <string>request.query.chainId;
-    console.log({chainId});
-    let network, status: ChainStatus | Error, chainContractAddress;
+    let network, status: (ChainStatus | ForeignChainStatus) | Error, chainContractAddress;
 
     try {
-      status = await this.chainContract.setChainId(chainId).resolveStatus<ChainStatus>();
+      status = await this.chainContract.setChainId(chainId).resolveStatus<ChainStatus | ForeignChainStatus>();
       chainContractAddress = status.chainAddress;
     } catch (e) {
       status = e;
@@ -39,7 +39,7 @@ class InfoController {
 
     response.send({
       contractRegistryAddress: this.blockchain.getContractRegistryAddress(chainId),
-      stakingBankAddress: (await this.stakingBankContract.resolveContract()).address,
+      stakingBankAddress: this.chainContract.isHomeChain() ? (await this.stakingBankContract.resolveContract()).address : 'N/A',
       chainContractAddress,
       version: this.settings.version,
       environment: this.settings.environment,
