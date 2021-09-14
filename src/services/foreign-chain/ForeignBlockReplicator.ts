@@ -69,7 +69,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     }
 
     const blocks = await this.blocksForReplication(status);
-    console.log('blocksForReplication', blocks);
 
     if (!this.verifyBlocksForReplication(blocks, status)) {
       return [];
@@ -88,7 +87,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   };
 
   replicate = async (blocks: IBlock[], status: ForeignChainStatus): Promise<ReplicationStatus> => {
-    console.log(status);
     if (!blocks.length) {
       return {};
     }
@@ -99,8 +97,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     }
 
     const [block] = blocks;
-
-    console.log('we have block');
 
     try {
       const { keys, values } = await this.fetchFCDs(block);
@@ -231,8 +227,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const transaction = (tr: TransactionRequest) =>
       this.txSender.apply(fn, minGasPrice, maxGasPrice, chainStatus.timePadding, tr);
 
-    console.log('try to send tx');
-
     try {
       try {
         return await transaction(transactionRequest);
@@ -261,8 +255,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const values: FeedValue[] = [];
 
     const allKeys = (await FCD.find()).map((item) => item._id);
-
-    console.log({allKeys});
 
     if (!allKeys.length) {
       this.logger.warn(`[${this.chainId}] No FCDs found for replication`);
