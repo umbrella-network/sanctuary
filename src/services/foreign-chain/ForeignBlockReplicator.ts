@@ -88,6 +88,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   };
 
   replicate = async (blocks: IBlock[], status: ForeignChainStatus): Promise<ReplicationStatus> => {
+    console.log(status);
     if (!blocks.length) {
       return {};
     }
@@ -98,6 +99,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     }
 
     const [block] = blocks;
+
+    console.log('we have block');
 
     try {
       const { keys, values } = await this.fetchFCDs(block);
@@ -228,6 +231,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const transaction = (tr: TransactionRequest) =>
       this.txSender.apply(fn, minGasPrice, maxGasPrice, chainStatus.timePadding, tr);
 
+    console.log('try to send tx');
+    
     try {
       try {
         return await transaction(transactionRequest);
