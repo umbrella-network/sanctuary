@@ -50,6 +50,19 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "deprecator",
+        "type": "address"
+      }
+    ],
+    "name": "LogDeprecation",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "executor",
         "type": "address"
       },
@@ -182,6 +195,19 @@
         "internalType": "contract IRegistry",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "deprecated",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -414,6 +440,19 @@
   },
   {
     "inputs": [],
+    "name": "isForeign",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "lastBlockId",
     "outputs": [
       {
@@ -483,6 +522,13 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "register",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -599,6 +645,13 @@
       }
     ],
     "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unregister",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

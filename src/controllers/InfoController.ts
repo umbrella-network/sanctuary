@@ -20,23 +20,25 @@ class InfoController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
+    const chainId = <string>request.query.chainId;
+    console.log({chainId});
     let network, status: ChainStatus | Error, chainContractAddress;
 
     try {
-      status = await this.chainContract.resolveStatus<ChainStatus>();
+      status = await this.chainContract.setChainId(chainId).resolveStatus<ChainStatus>();
       chainContractAddress = status.chainAddress;
     } catch (e) {
       status = e;
     }
 
     try {
-      network = await this.blockchain.getProvider().getNetwork();
+      network = await this.blockchain.getProvider(chainId).getNetwork();
     } catch (e) {
       network = e;
     }
 
     response.send({
-      contractRegistryAddress: this.blockchain.getContractRegistryAddress(),
+      contractRegistryAddress: this.blockchain.getContractRegistryAddress(chainId),
       stakingBankAddress: (await this.stakingBankContract.resolveContract()).address,
       chainContractAddress,
       version: this.settings.version,

@@ -1,11 +1,11 @@
-import { inject, injectable } from 'inversify';
-import { BigNumber, Contract } from 'ethers';
-import { ABI, ContractRegistry, LeafKeyCoder } from '@umb-network/toolbox';
-import { Logger } from 'winston';
+import {inject, injectable} from 'inversify';
+import {BigNumber, Contract} from 'ethers';
+import {ABI, ContractRegistry, LeafKeyCoder} from '@umb-network/toolbox';
+import {Logger} from 'winston';
 
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
-import { ChainBlockData, ChainFCDsData } from '../models/ChainBlockData';
+import {ChainBlockData, ChainFCDsData} from '../models/ChainBlockData';
 
 @injectable()
 export class BaseChainContract {
@@ -23,25 +23,39 @@ export class BaseChainContract {
   }
 
   setChainId = (chainId: string): BaseChainContract => {
+    const resetRegistry = this.chainId != chainId;
     this.chainId = chainId;
+
+    console.log({resetRegistry});
+
+    resetRegistry && this.setupRegistry();
+
     return this;
   };
 
   async resolveContract(): Promise<BaseChainContract> {
     if (!this.registry) {
-      this.registry = new ContractRegistry(
-        this.blockchain.getProvider(this.chainId),
-        this.blockchain.getContractRegistryAddress(this.chainId)
-      );
+      this.setupRegistry();
     }
 
     const chainAddress = await this.registry.getAddress(this.settings.blockchain.contracts.chain.name);
+    console.log({chainAddress});
     return this.setContract(chainAddress);
+  }
+
+  setupRegistry(): BaseChainContract {
+    this.registry = new ContractRegistry(
+      this.blockchain.getProvider(this.chainId),
+      this.blockchain.getContractRegistryAddress(this.chainId)
+    );
+
+    return this;
   }
 
   async resolveStatus<T>(): Promise<T> {
     const chain = await this.resolveContract();
-    return { chainAddress: chain.contract.address, ...(await chain.contract.getStatus()) };
+    console.log(this.chainId)
+    return {chainAddress: chain.contract.address, ...(await chain.contract.getStatus())};
   }
 
   async blocksCountOffset(): Promise<number> {
@@ -77,7 +91,10 @@ export class BaseChainContract {
   }
 
   protected setContract = (chainAddress: string): BaseChainContract => {
+    console.log(this.chainId);
+    
     this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.getProvider(this.chainId));
+    console.log(this.contract.address);
     return this;
   };
 }
