@@ -5,14 +5,14 @@ import { InfoRepository } from '../repositories/InfoRepository';
 @injectable()
 class InfoController {
   @inject(InfoRepository) infoRepository: InfoRepository;
-  private router: express.Router;
+  router: express.Router;
 
   constructor() {
     this.router = express.Router().get('/', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const chainId = <string> request.query.foreignChainId;
+    const chainId = <string> request.query.chainId;
     const info = await this.infoRepository.getInfo({ chainId });
     response.send(info);
   };

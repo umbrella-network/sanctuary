@@ -5,6 +5,7 @@ import Blockchain from '../lib/Blockchain';
 import ChainContract from '../contracts/ChainContract';
 import { ChainStatus } from '../types/ChainStatus';
 import { Network } from '@ethersproject/networks';
+import { ChainContractProvider } from '../factories/ChainContractFactory';
 
 type FullChainStatus = ChainStatus | Error;
 type NetworkStatus = Network | Error;
@@ -28,18 +29,17 @@ export class InfoRepository {
   @inject('Settings') private readonly settings: Settings;
   @inject(StakingBankContract) private readonly stakingBankContract: StakingBankContract;
   @inject(Blockchain) private readonly blockchain: Blockchain;
-  @inject(ChainContract) private readonly chainContract: ChainContract;
+  @inject('ChainContractProvider') chainContractProvider: ChainContractProvider;
 
   getInfo = async (props: GetInfoProps): Promise<Info> => {
     const chainId = props.chainId;
+    const chainContract = await this.chainContractProvider(chainId);
     const version = this.settings.version;
     const environment = this.settings.environment;
     const network = await this.getNetworkStatus();
-
-    // Should we getStatus for foreignChains to begin with?
-    const status = await this.getStatus();
+    const status = await this.getStatus(chainContract);
     const contractRegistryAddress = this.getContractRegistryAddress(chainId);
-    const chainContractAddress = this.getChainContractAddress(status, chainId);
+    const chainContractAddress = this.getChainContractAddress(status);
     let info: Info = { status, network, contractRegistryAddress, chainContractAddress, version, environment };
 
     if (!chainId) {
@@ -50,19 +50,17 @@ export class InfoRepository {
     return info;
   }
 
-  private getStatus = async(): Promise<FullChainStatus> => {
+  private getStatus = async(chainContract: ChainContract): Promise<FullChainStatus> => {
     try {
-      return await this.chainContract.resolveStatus<ChainStatus>();
+      return await chainContract.resolveStatus<ChainStatus>();
     } catch (e) {
       return e;
     }
   }
 
-  private getChainContractAddress = (status: FullChainStatus, chainId?: string): string | undefined => {
+  private getChainContractAddress = (status: FullChainStatus): string | undefined => {
     if (status.constructor.name != 'ChainStatus') return undefined;
-    if (!chainId) return (<ChainStatus> status).chainAddress;
-
-    // how do we get the chain address for a foreign chain?
+    return (<ChainStatus> status).chainAddress;
   }
 
   private getNetworkStatus = async(): Promise<NetworkStatus> => {
