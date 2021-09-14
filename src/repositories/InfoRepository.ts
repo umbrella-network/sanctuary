@@ -36,7 +36,7 @@ export class InfoRepository {
     const chainContract = await this.chainContractProvider(chainId);
     const version = this.settings.version;
     const environment = this.settings.environment;
-    const network = await this.getNetworkStatus();
+    const network = await this.getNetworkStatus(chainId);
     const status = await this.getStatus(chainContract);
     const contractRegistryAddress = this.getContractRegistryAddress(chainId);
     const chainContractAddress = this.getChainContractAddress(status);
@@ -63,9 +63,9 @@ export class InfoRepository {
     return (<ChainStatus> status).chainAddress;
   }
 
-  private getNetworkStatus = async(): Promise<NetworkStatus> => {
+  private getNetworkStatus = async (chainId?: string): Promise<NetworkStatus> => {
     try {
-      return await this.blockchain.getProvider().getNetwork();
+      return await this.blockchain.getProvider(chainId).getNetwork();
     } catch (e) {
       return e;
     }
