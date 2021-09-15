@@ -3,6 +3,7 @@ import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
 import { EthereumBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
+import { IForeignBlock } from '../models/ForeignBlock';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -48,7 +49,12 @@ export class ForeignChainReplicator {
       const block = replicationStatus.blocks[i];
       const anchor = replicationStatus.anchors[i];
       const foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, foreignChainId });
-      await foreignBlock.save();
+
+      try {
+        await foreignBlock.save();
+      } catch (e) {
+        this.logger.error(e);
+      }
     }
   };
 }
