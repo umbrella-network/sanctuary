@@ -1,9 +1,14 @@
-import winston, { Logger } from 'winston';
+import { Logger, createLogger, format, transports } from 'winston';
 
-const logger: Logger = winston.createLogger({
+const logger: Logger = createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.simple(),
-  transports: [new winston.transports.Console()],
+  format: format.combine(
+    format.errors({ stack: true }),
+    format.colorize(),
+    format.timestamp(),
+    format.prettyPrint()
+  ),
+  transports: [new transports.Console()],
 });
 
 export default logger;
