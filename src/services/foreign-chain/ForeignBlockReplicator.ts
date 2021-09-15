@@ -53,7 +53,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     this.foreignChainContract.setChainId(this.chainId);
   }
 
-  async getStatus(): Promise<ForeignChainStatus> {
+  getStatus = async (): Promise<ForeignChainStatus> => {
     return this.foreignChainContract.resolveStatus<ForeignChainStatus>();
   }
 
@@ -87,41 +87,22 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   };
 
   replicate = async (blocks: IBlock[], status: ForeignChainStatus): Promise<ReplicationStatus> => {
-    if (!blocks.length) {
-      return {};
-    }
-
-    // atm we assume we doing one block at a time
-    if (blocks.length > 1) {
-      return { errors: ['we supporting only one block at a time'] };
-    }
+    if (blocks.length > 1) return { errors: ['we support only one block at a time'] };
 
     const [block] = blocks;
+    const { keys, values } = await this.fetchFCDs(block);
+    const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
+    if (!receipt) return { errors: [`[${this.chainId}] Unable to send tx for blockId ${block.blockId}`] };
 
-    try {
-      const { keys, values } = await this.fetchFCDs(block);
-      const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
-
-      // this is when the replication failed
-      if (!receipt) {
-        return { errors: [`[${this.chainId}] Unable to send tx for blockId ${block.blockId}`] };
-      }
-
-      // YAY
-      if (receipt.status === 1) {
-        return {
-          blocks: [block],
-          anchors: [receipt.blockNumber],
-        };
-      }
-
-      newrelic.recordCustomEvent(FailedTransactionEvent, {
-        transactionHash: receipt.transactionHash,
-      });
-    } catch (_) {
-      // errors are logged in replicateBlock()
+    // YAY
+    if (receipt.status === 1) {
+      return {
+        blocks: [block],
+        anchors: [receipt.blockNumber],
+      };
     }
 
+    newrelic.recordCustomEvent(FailedTransactionEvent, { transactionHash: receipt.transactionHash });
     return { errors: [`[${this.chainId}] Tx for blockId ${block.blockId} failed`] };
   };
 

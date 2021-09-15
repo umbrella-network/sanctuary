@@ -1,4 +1,18 @@
-// import 'reflect-metadata';
+import 'reflect-metadata';
+import logger from '../../src/lib/logger';
+
+describe('ForeignChainReplicator', async () => {
+  it('logs errors', () => {
+    logger.info('test');
+
+    try {
+      throw new Error('ERROR');
+    } catch (e) {
+      logger.error(e);
+    }
+  });
+});
+
 // import { expect } from 'chai';
 // import { instance, mock, verify, when } from 'ts-mockito';
 // import { EthereumBlockReplicator, IForeignBlockReplicator } from '../../src/services/foreign-chain';

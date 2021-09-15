@@ -3,7 +3,6 @@ import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
 import { EthereumBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
-import { IForeignBlock } from '../models/ForeignBlock';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -36,12 +35,12 @@ export class ForeignChainReplicator {
 
   private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string): Promise<void> => {
     if (replicationStatus.errors) {
-      this.logger.error(`Block Replication Error - Errors: ${replicationStatus}`);
+      this.logger.error(`Block Replication Error - Errors: ${JSON.stringify(replicationStatus)}`);
       return;
     }
 
     if (!replicationStatus.blocks) {
-      this.logger.error(`Block Replication Error - Missing Blocks: ${replicationStatus}`);
+      this.logger.error(`Block Replication Error - Missing Blocks: ${JSON.stringify(replicationStatus)}`);
       return;
     }
 
