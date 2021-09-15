@@ -66,7 +66,8 @@ export class BaseChainContract {
   }
 
   async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
-    return this.setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
+    //we resolving from homechain always
+    return this.setChainId(this.settings.blockchain.homeChain.chainId).setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
   }
 
   async resolveBlocksCountOffset(chainAddress: string): Promise<number> {
