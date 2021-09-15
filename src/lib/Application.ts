@@ -11,6 +11,7 @@ import LockRepository from '../repositories/LockRepository';
 import buildRedisConnection from '../utils/buildRedisConnection';
 import StatsdClient from 'statsd-client';
 import statsdClient from './statsDClient';
+import { ChainContractFactory, ChainContractProvider } from '../factories/ChainContractFactory';
 
 class Application {
   private static _instance: Application;
@@ -26,6 +27,9 @@ class Application {
     this.container.bind<Blockchain>(Blockchain).toSelf().inSingletonScope();
     this.container.bind<AuthUtils>(AuthUtils).toSelf().inSingletonScope();
     this.container.bind(LockRepository).toSelf().inSingletonScope();
+
+    this.container.bind<ChainContractProvider>('ChainContractProvider')
+      .toProvider(ChainContractFactory.getProvider);
   }
 
   public static get instance(): Application {

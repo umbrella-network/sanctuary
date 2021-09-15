@@ -6,6 +6,8 @@ import { Logger } from 'winston';
 import Settings from '../types/Settings';
 import Blockchain from '../lib/Blockchain';
 import { ChainBlockData, ChainFCDsData } from '../models/ChainBlockData';
+// TODO this abi should came from SDK
+import abi from './ForeignChainAbi.json';
 
 @injectable()
 export class BaseChainContract {
@@ -41,7 +43,8 @@ export class BaseChainContract {
 
   async resolveStatus<T>(): Promise<T> {
     const chain = await this.resolveContract();
-    return { chainAddress: chain.contract.address, ...(await chain.contract.getStatus()) };
+    const status = await chain.contract.getStatus();
+    return { chainAddress: chain.contract.address, ...status };
   }
 
   async blocksCountOffset(): Promise<number> {
@@ -70,6 +73,10 @@ export class BaseChainContract {
     return this.setContract(chainAddress).contract.blocksCountOffset();
   }
 
+  isHomeChain(): boolean {
+    return this.chainId === this.settings.blockchain.homeChain.chainId;
+  }
+
   protected async _assertContract(): Promise<void> {
     if (!this.contract) {
       await this.resolveContract();
@@ -77,7 +84,8 @@ export class BaseChainContract {
   }
 
   protected setContract = (chainAddress: string): BaseChainContract => {
-    this.contract = new Contract(chainAddress, ABI.chainAbi, this.blockchain.getProvider(this.chainId));
+    const chainAbi = this.isHomeChain() ? ABI.chainAbi : abi;
+    this.contract = new Contract(chainAddress, chainAbi, this.blockchain.getProvider(this.chainId));
     return this;
   };
 }

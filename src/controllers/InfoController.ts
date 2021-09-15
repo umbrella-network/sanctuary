@@ -1,49 +1,20 @@
 import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
-import Settings from '../types/Settings';
-import ChainContract from '../contracts/ChainContract';
-import StakingBankContract from '../contracts/StakingBankContract';
-import Blockchain from '../lib/Blockchain';
-import { ChainStatus } from '../types/ChainStatus';
+import { InfoRepository } from '../repositories/InfoRepository';
 
 @injectable()
 class InfoController {
-  router: express.Application;
+  @inject(InfoRepository) infoRepository: InfoRepository;
+  router: express.Router;
 
-  constructor(
-    @inject('Settings') private readonly settings: Settings,
-    @inject(StakingBankContract) private readonly stakingBankContract: StakingBankContract,
-    @inject(Blockchain) private readonly blockchain: Blockchain,
-    @inject(ChainContract) private readonly chainContract: ChainContract
-  ) {
-    this.router = express().get('/', this.index);
+  constructor() {
+    this.router = express.Router().get('/', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    let network, status: ChainStatus | Error, chainContractAddress;
-
-    try {
-      status = await this.chainContract.resolveStatus<ChainStatus>();
-      chainContractAddress = status.chainAddress;
-    } catch (e) {
-      status = e;
-    }
-
-    try {
-      network = await this.blockchain.getProvider().getNetwork();
-    } catch (e) {
-      network = e;
-    }
-
-    response.send({
-      contractRegistryAddress: this.blockchain.getContractRegistryAddress(),
-      stakingBankAddress: (await this.stakingBankContract.resolveContract()).address,
-      chainContractAddress,
-      version: this.settings.version,
-      environment: this.settings.environment,
-      network,
-      status,
-    });
+    const chainId = <string> request.query.chainId;
+    const info = await this.infoRepository.getInfo({ chainId });
+    response.send(info);
   };
 }
 
