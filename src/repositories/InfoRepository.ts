@@ -59,7 +59,6 @@ export class InfoRepository {
   };
 
   private getChainContractAddress = (status: FullChainStatus): string | undefined => {
-    if (status.constructor.name != 'ChainStatus') return undefined;
     return (<ChainStatus>status).chainAddress;
   };
 
