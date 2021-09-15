@@ -18,11 +18,11 @@ export type Info = {
   contractRegistryAddress?: string;
   stakingBankAddress?: string;
   chainContractAddress?: string;
-}
+};
 
 export type GetInfoProps = {
   chainId?: string;
-}
+};
 
 @injectable()
 export class InfoRepository {
@@ -48,20 +48,20 @@ export class InfoRepository {
     }
 
     return info;
-  }
+  };
 
-  private getStatus = async(chainContract: ChainContract): Promise<FullChainStatus> => {
+  private getStatus = async (chainContract: ChainContract): Promise<FullChainStatus> => {
     try {
       return await chainContract.resolveStatus<ChainStatus>();
     } catch (e) {
       return e;
     }
-  }
+  };
 
   private getChainContractAddress = (status: FullChainStatus): string | undefined => {
     if (status.constructor.name != 'ChainStatus') return undefined;
-    return (<ChainStatus> status).chainAddress;
-  }
+    return (<ChainStatus>status).chainAddress;
+  };
 
   private getNetworkStatus = async (chainId?: string): Promise<NetworkStatus> => {
     try {
@@ -69,13 +69,11 @@ export class InfoRepository {
     } catch (e) {
       return e;
     }
-  }
+  };
 
   private getStakingBankAddress = async (): Promise<string> =>
-    (await this.stakingBankContract.resolveContract())
-      .address;
+    (await this.stakingBankContract.resolveContract()).address;
 
-  private getContractRegistryAddress = (chainId?: string): string => this
-    .blockchain
-    .getContractRegistryAddress(chainId);
+  private getContractRegistryAddress = (chainId?: string): string =>
+    this.blockchain.getContractRegistryAddress(chainId);
 }

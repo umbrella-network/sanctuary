@@ -50,7 +50,6 @@ class LeavesSynchronizer {
       success = null;
     }
 
-
     this.logger.info(`Leaf syncing for ${savedBlock.blockId} ran with success: ${success}`);
     return success;
   }

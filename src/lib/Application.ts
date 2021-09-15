@@ -28,8 +28,7 @@ class Application {
     this.container.bind<AuthUtils>(AuthUtils).toSelf().inSingletonScope();
     this.container.bind(LockRepository).toSelf().inSingletonScope();
 
-    this.container.bind<ChainContractProvider>('ChainContractProvider')
-      .toProvider(ChainContractFactory.getProvider);
+    this.container.bind<ChainContractProvider>('ChainContractProvider').toProvider(ChainContractFactory.getProvider);
   }
 
   public static get instance(): Application {

@@ -1,4 +1,13 @@
 import 'reflect-metadata';
+
+describe('ForeignChainReplicator', () => {
+  describe('#apply', async () => {
+    it('replicates blocks', async () => {
+      // TODO
+    });
+  });
+});
+
 // import logger from '../../src/lib/logger';
 //
 // describe('ForeignChainReplicator', async () => {

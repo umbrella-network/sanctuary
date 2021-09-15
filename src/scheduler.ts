@@ -7,7 +7,9 @@ import { ForeignChainReplicationWorker } from './workers';
 import Settings from './types/Settings';
 import { Logger } from 'winston';
 import newrelic from 'newrelic';
-import { QueueScheduler } from 'bullmq';
+import logger from './lib/logger';
+
+logger.info('Starting Scheduler...');
 
 (async (): Promise<void> => {
   const settings: Settings = Application.get('Settings');
@@ -25,16 +27,16 @@ import { QueueScheduler } from 'bullmq';
     });
   }, settings.jobs.foreignChainReplication.ethereum.interval);
 
-  // setInterval(async () => {
-  //   await metricsWorker.enqueue(
-  //     {},
-  //     {
-  //       removeOnComplete: true,
-  //       removeOnFail: true,
-  //     }
-  //   );
-  // }, settings.jobs.metricsReporting.interval);
-  //
+  setInterval(async () => {
+    await metricsWorker.enqueue(
+      {},
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
+  }, settings.jobs.metricsReporting.interval);
+
   setInterval(async () => {
     try {
       await blockSynchronizerWorker.enqueue(

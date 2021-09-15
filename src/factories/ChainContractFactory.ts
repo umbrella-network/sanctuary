@@ -14,5 +14,5 @@ export class ChainContractFactory {
       contract.setChainId(chainId);
       return contract;
     };
-  }
+  };
 }
