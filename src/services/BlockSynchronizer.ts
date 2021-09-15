@@ -27,7 +27,7 @@ class BlockSynchronizer {
     this.chainInstanceResolver.setup(this.settings.blockchain.homeChain.chainId);
 
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
-      this.chainContract.resolveStatus<ChainStatus>(),
+      this.chainContract.setChainId(this.settings.blockchain.homeChain.chainId).resolveStatus<ChainStatus>(),
       this.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
