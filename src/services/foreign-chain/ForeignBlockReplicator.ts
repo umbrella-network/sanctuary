@@ -87,6 +87,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   };
 
   replicate = async (blocks: IBlock[], status: ForeignChainStatus): Promise<ReplicationStatus> => {
+    if (blocks.length === 0) return {};
     if (blocks.length > 1) return { errors: ['we support only one block at a time'] };
 
     const [block] = blocks;

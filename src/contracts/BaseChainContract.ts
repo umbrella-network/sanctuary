@@ -14,7 +14,7 @@ export class BaseChainContract {
   @inject('Logger') protected logger!: Logger;
 
   chainId!: string;
-  protected registry!: ContractRegistry;
+  protected registry!: Contract;
   protected settings!: Settings;
   protected blockchain!: Blockchain;
   contract!: Contract;
@@ -30,14 +30,17 @@ export class BaseChainContract {
   };
 
   async resolveContract(): Promise<BaseChainContract> {
-    if (!this.registry) {
-      this.registry = new ContractRegistry(
+    const registryAddress = this.blockchain.getContractRegistryAddress(this.chainId);
+
+    if (!this.registry || this.registry.address !== registryAddress) {
+      this.registry = new Contract(
+        registryAddress,
+        ABI.registryAbi,
         this.blockchain.getProvider(this.chainId),
-        this.blockchain.getContractRegistryAddress(this.chainId)
       );
     }
 
-    const chainAddress = await this.registry.getAddress(this.settings.blockchain.contracts.chain.name);
+    const chainAddress = await this.registry.getAddressByString(this.settings.blockchain.contracts.chain.name);
     return this.setContract(chainAddress);
   }
 
@@ -66,7 +69,8 @@ export class BaseChainContract {
   }
 
   async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
-    return this.setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
+    //we resolving from homechain always
+    return this.setChainId(this.settings.blockchain.homeChain.chainId).setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
   }
 
   async resolveBlocksCountOffset(chainAddress: string): Promise<number> {

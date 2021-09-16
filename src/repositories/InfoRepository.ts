@@ -6,8 +6,9 @@ import ChainContract from '../contracts/ChainContract';
 import { ChainStatus } from '../types/ChainStatus';
 import { Network } from '@ethersproject/networks';
 import { ChainContractProvider } from '../factories/ChainContractFactory';
+import {ForeignChainStatus} from '../types/ForeignChainStatus';
 
-type FullChainStatus = ChainStatus | Error;
+type FullChainStatus = ChainStatus | ForeignChainStatus | Error;
 type NetworkStatus = Network | Error;
 
 export type Info = {
@@ -52,7 +53,7 @@ export class InfoRepository {
 
   private getStatus = async (chainContract: ChainContract): Promise<FullChainStatus> => {
     try {
-      return await chainContract.resolveStatus<ChainStatus>();
+      return await chainContract.resolveStatus<ChainStatus | ForeignChainStatus>();
     } catch (e) {
       return e;
     }
