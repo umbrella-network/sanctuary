@@ -31,6 +31,8 @@ export class BlockchainRepository {
     };
   }
 
+  # If the constructor above becomes way too complex, we should extract that into a BlockchainRepositoryFactory class
+
   */
 
   get(id: string): Blockchain | undefined {
