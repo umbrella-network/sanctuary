@@ -81,7 +81,7 @@ class ProjectsController {
       return;
     }
 
-    await project.remove();
+    await project.deleteOne();
     response.send();
   };
 }

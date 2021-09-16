@@ -12,7 +12,7 @@ class InfoController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const chainId = <string> request.query.chainId;
+    const chainId = <string>request.query.chainId;
     const info = await this.infoRepository.getInfo({ chainId });
     response.send(info);
   };

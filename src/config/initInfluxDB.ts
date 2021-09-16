@@ -1,5 +1,6 @@
 import { InfluxDB } from '@influxdata/influxdb-client';
 import Settings from '../types/Settings';
+import logger from '../lib/logger';
 import { IsOnboarding, SetupAPI } from '@influxdata/influxdb-client-apis';
 
 export default async function initInfluxDB(settings: Settings): Promise<void> {
@@ -19,14 +20,14 @@ export default async function initInfluxDB(settings: Settings): Promise<void> {
             token,
           },
         });
-        console.log(`InfluxDB '${url}' is now onboarded.`);
+        logger.debug(`InfluxDB '${url}' is now onboarded.`);
       } else {
-        console.log(`InfluxDB '${url}' has been already onboarded.`);
+        logger.debug(`InfluxDB '${url}' has been already onboarded.`);
       }
-      console.log('\nFinished SUCCESS');
+      logger.debug('Finished SUCCESS');
     })
     .catch((error: unknown) => {
-      console.error(error);
-      console.log('\nFinished ERROR');
+      logger.error(error);
+      logger.debug('Finished ERROR');
     });
 }
