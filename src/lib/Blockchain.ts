@@ -28,17 +28,17 @@ class Blockchain {
     });
   }
 
-  getProvider(chainId?: string ): ethers.providers.Provider {
+  getProvider(chainId?: string): ethers.providers.Provider {
     chainId ||= this.settings.blockchain.homeChain.chainId;
     return this.providers[chainId];
   }
 
-  async getLastNonce(chainId?: string ): Promise<number> {
+  async getLastNonce(chainId?: string): Promise<number> {
     chainId ||= this.settings.blockchain.homeChain.chainId;
     return this.wallets[chainId].getTransactionCount('latest');
   }
 
-  async getBlockNumber(chainId?: string ): Promise<number> {
+  async getBlockNumber(chainId?: string): Promise<number> {
     chainId ||= this.settings.blockchain.homeChain.chainId;
     return this.providers[chainId].getBlockNumber();
   }
@@ -47,10 +47,10 @@ class Blockchain {
     return this.getBlockchainSettings(chainId)?.contractRegistryAddress;
   }
 
-  getBlockchainSettings = (chainId?: string ): BlockchainSettings | undefined => {
+  getBlockchainSettings = (chainId?: string): BlockchainSettings | undefined => {
     chainId ||= this.settings.blockchain.homeChain.chainId;
     return (<Record<string, BlockchainSettings>>this.settings.blockchain.multiChains)[chainId];
-  }
+  };
 }
 
 export default Blockchain;

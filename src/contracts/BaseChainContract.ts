@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { BigNumber, Contract } from 'ethers';
-import { ABI, ContractRegistry, LeafKeyCoder } from '@umb-network/toolbox';
+import { ABI, LeafKeyCoder } from '@umb-network/toolbox';
 import { Logger } from 'winston';
 
 import Settings from '../types/Settings';
@@ -33,11 +33,7 @@ export class BaseChainContract {
     const registryAddress = this.blockchain.getContractRegistryAddress(this.chainId);
 
     if (!this.registry || this.registry.address !== registryAddress) {
-      this.registry = new Contract(
-        registryAddress,
-        ABI.registryAbi,
-        this.blockchain.getProvider(this.chainId),
-      );
+      this.registry = new Contract(registryAddress, ABI.registryAbi, this.blockchain.getProvider(this.chainId));
     }
 
     const chainAddress = await this.registry.getAddressByString(this.settings.blockchain.contracts.chain.name);
@@ -70,7 +66,9 @@ export class BaseChainContract {
 
   async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
     //we resolving from homechain always
-    return this.setChainId(this.settings.blockchain.homeChain.chainId).setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
+    return this.setChainId(this.settings.blockchain.homeChain.chainId)
+      .setContract(chainAddress)
+      .contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
   }
 
   async resolveBlocksCountOffset(chainAddress: string): Promise<number> {
