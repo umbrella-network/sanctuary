@@ -95,7 +95,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
     if (!receipt) return { errors: [`[${this.chainId}] Unable to send tx for blockId ${block.blockId}`] };
 
-    // YAY
     if (receipt.status === 1) {
       return {
         blocks: [block],
