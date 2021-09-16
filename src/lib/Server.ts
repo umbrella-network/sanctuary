@@ -62,8 +62,7 @@ class Server {
       .use('/api-keys', apiKeyController.router)
       .use('/projects', projectsController.router)
       .use('/wallet-auth', walletAuthController.router)
-      .use('/info', infoController.router)
-      .options('*', cors());
+      .use('/info', infoController.router);
 
     this.server = http.createServer(this.router);
   }

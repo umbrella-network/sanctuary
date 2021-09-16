@@ -11,12 +11,12 @@ export type FromBlockProps = {
 
 @injectable()
 export class ForeignBlockFactory {
-  fromBlock = (props: FromBlockProps): IForeignBlock => {
+  fromBlock (props: FromBlockProps): IForeignBlock {
     const foreignBlock = new ForeignBlock();
     foreignBlock._id = uuid();
     foreignBlock.foreignChainId = props.foreignChainId;
     foreignBlock.blockId = props.block.blockId;
     foreignBlock.anchor = props.anchor;
     return foreignBlock;
-  };
+  }
 }
