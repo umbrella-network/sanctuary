@@ -34,13 +34,10 @@ export class ForeignChainReplicator {
   };
 
   private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string): Promise<void> => {
+    if (!replicationStatus.blocks || replicationStatus.blocks.length == 0) return;
+
     if (replicationStatus.errors) {
       this.logger.error(`Block Replication Error - Errors: ${JSON.stringify(replicationStatus)}`);
-      return;
-    }
-
-    if (!replicationStatus.blocks) {
-      this.logger.error(`Block Replication Error - Missing Blocks: ${JSON.stringify(replicationStatus)}`);
       return;
     }
 
