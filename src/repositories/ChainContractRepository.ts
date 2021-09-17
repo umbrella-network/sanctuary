@@ -30,7 +30,7 @@ export class ChainContractRepository {
 
   get(id: string): ChainContract | ForeignChainContract {
     if (!this.collection[id]) {
-      throw Error(`Blockchain ${id} does not exists`);
+      console.warn(`[ChainContractRepository] Blockchain ${id} does not exists`);
     }
 
     return this.collection[id];

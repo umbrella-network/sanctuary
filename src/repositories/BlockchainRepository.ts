@@ -20,7 +20,7 @@ export class BlockchainRepository {
 
   get(id: string): Blockchain {
     if (!this.collection[id]) {
-      throw Error(`Blockchain ${id} does not exists`);
+      throw Error(`[BlockchainRepository] Blockchain ${id} does not exists`);
     }
 
     return this.collection[id];
