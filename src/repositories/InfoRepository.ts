@@ -35,7 +35,7 @@ export class InfoRepository {
 
   getInfo = async (props: GetInfoProps): Promise<Info> => {
     const chainId = props.chainId || this.settings.blockchain.homeChain.chainId;
-    const chainContract = await this.chainContractProvider(chainId);
+    const chainContract = await this.getChainContract(chainId);
     const version = this.settings.version;
     const environment = this.settings.environment;
     const network = await this.getNetworkStatus(chainId);
@@ -60,8 +60,20 @@ export class InfoRepository {
     }
   };
 
+  private getChainContract = async (chainId: string): Promise<ChainContract> => {
+    try {
+      return await this.chainContractProvider(chainId);
+    } catch (e) {
+      return e;
+    }
+  };
+
   private getChainContractAddress = (status: FullChainStatus): string | undefined => {
-    return (<ChainStatus>status).chainAddress;
+    try {
+      return (<ChainStatus>status).chainAddress;
+    } catch (e) {
+      return e.message;
+    }
   };
 
   private getNetworkStatus = async (chainId: string): Promise<{ name: string; id: number }> => {
@@ -69,13 +81,19 @@ export class InfoRepository {
       const network = await this.blockchainRepository.get(chainId).getProvider().getNetwork();
       return { name: network.name, id: network.chainId };
     } catch (e) {
-      return e;
+      return { name: e.message, id: -1 };
     }
   };
 
   private getStakingBankAddress = async (): Promise<string> =>
     (await this.stakingBankContract.resolveContract()).address;
 
-  private getContractRegistryAddress = (chainId: string): string =>
-    this.blockchainRepository.get(chainId).getContractRegistryAddress();
+  private getContractRegistryAddress = (chainId: string): string => {
+    try {
+      return this.blockchainRepository.get(chainId).getContractRegistryAddress();
+    } catch (e) {
+      return e.message;
+    }
+  }
+
 }

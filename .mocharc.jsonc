@@ -1,0 +1,4 @@
+{
+  "timeout": 200000,
+  "require": "ts-node/register"
+}
