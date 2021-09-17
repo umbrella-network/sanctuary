@@ -22,23 +22,32 @@ class BlockSynchronizer {
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
   @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
+  @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
+  @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
 
   private chainId!: string;
   private blockchain!: Blockchain;
   private chainContract!: ChainContract;
 
-  constructor(
-    @inject(BlockchainRepository) private blockchainRepository: BlockchainRepository,
-    @inject(ChainContractRepository) chainContractRepository: ChainContractRepository,
-    @inject('Settings') settings: Settings
-  ) {
-    this.chainId = settings.blockchain.homeChain.chainId;
-    this.blockchain = blockchainRepository.get(this.chainId);
-    this.chainContract = <ChainContract>chainContractRepository.get(this.chainId);
+  setup = (): void => {
+    if (this.chainId) {
+      return;
+    }
+
+    this.chainId = this.settings.blockchain.homeChain.chainId;
+    this.blockchain = this.blockchainRepository.get(this.chainId);
+
+    if (!this.blockchain.settings.contractRegistryAddress) {
+      // scheduler catch
+      return;
+    }
+
+    this.chainContract = <ChainContract>this.chainContractRepository.get(this.chainId);
+    this.chainInstanceResolver.setup(this.chainId);
   }
 
   apply = async (): Promise<void> => {
-    this.chainInstanceResolver.setup(this.chainId);
+    this.setup();
 
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
       this.chainContract.resolveStatus<ChainStatus>(),

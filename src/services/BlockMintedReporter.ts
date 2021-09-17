@@ -5,7 +5,7 @@ import { Logger } from 'winston';
 import StatsdClient from 'statsd-client';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { ForeignChainStatus } from '../types/ForeignChainStatus';
-import { ForeignChainContract } from '../contracts/ForeignChainContract';
+import {BaseChainContract} from '../contracts/BaseChainContract';
 
 @injectable()
 class BlockMintedReporter {
@@ -15,10 +15,19 @@ class BlockMintedReporter {
 
   call = async (chainId: string): Promise<void> => {
     const timestamp = Math.trunc(Date.now() / 1000);
-    const contract: ChainContract | ForeignChainContract = this.chainContractRepository.get(chainId);
+    let contract: BaseChainContract;
+
+    try {
+      contract = this.chainContractRepository.get(chainId);
+    } catch (e) {
+      // scheduler ??
+      console.log(e.message);
+      return;
+    }
+
     const chainStatus = await contract.resolveStatus<ChainStatus | ForeignChainStatus>();
     const delta = timestamp - chainStatus.lastDataTimestamp;
-    this.logger.debug(`Last minted block time: ${chainStatus.lastDataTimestamp}, block delta time: ${delta}`);
+    this.logger.debug(`[${chainId}] Last minted block time: ${chainStatus.lastDataTimestamp}, block delta time: ${delta}`);
     this.statsdClient?.gauge('LastMintedBlockDeltaTime', delta);
   };
 }

@@ -50,6 +50,11 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   private setup() {
     this.blockchain = this.blockchainRepository.get(this.chainId);
 
+    if (!this.blockchain.provider) {
+      // this post construct can be executed in scheduler
+      return;
+    }
+
     this.txSender = new TxSender(
       this.blockchain.wallet,
       this.logger,
