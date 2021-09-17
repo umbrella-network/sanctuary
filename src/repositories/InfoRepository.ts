@@ -36,7 +36,7 @@ export class InfoRepository {
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
 
   getInfo = async (props: GetInfoProps): Promise<Info> => {
-    const chainId = props.chainId || this.settings.blockchain.homeChain.chainId;
+    const chainId = props.chainId;
     const chainContract = await this.getChainContract(chainId);
     const version = this.settings.version;
     const environment = this.settings.environment;
