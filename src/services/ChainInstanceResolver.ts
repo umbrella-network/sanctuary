@@ -9,11 +9,12 @@ export class ChainInstanceResolver {
 
   private chainId!: string;
 
-  setup(chainId: string): void {
+  setup = (chainId: string): ChainInstanceResolver => {
     this.chainId = chainId;
-  }
+    return this;
+  };
 
-  async byAnchor(anchors: number[]): Promise<(IChainInstance | undefined)[]> {
+  byAnchor = async (anchors: number[]): Promise<(IChainInstance | undefined)[]> => {
     const sortedInstances = await this.sortedChainInstances();
 
     const founded = anchors.map((anchor) => sortedInstances.find((chainInstance) => chainInstance.anchor <= anchor));
@@ -21,18 +22,18 @@ export class ChainInstanceResolver {
     this.checkIfFounded(founded, anchors);
 
     return founded;
-  }
+  };
 
-  private checkIfFounded(founded: (IChainInstance | undefined)[], ids: number[]) {
+  private checkIfFounded = (founded: (IChainInstance | undefined)[], ids: number[]) => {
     founded.forEach((instance, i) => {
       !instance && this.noticeError(`Can't resolve chain instance for id: ${ids[i]}`);
     });
-  }
+  };
 
-  private async sortedChainInstances(): Promise<IChainInstance[]> {
+  private sortedChainInstances = async (): Promise<IChainInstance[]> => {
     const chainInstances: IChainInstance[] = await ChainInstance.find({ chainId: this.chainId });
     return chainInstances.sort((a, b) => this.sortDesc(a, b));
-  }
+  };
 
   uniqueInstances = (chainsInstances: IChainInstance[]): IChainInstance[] => {
     const uniqueInstances: Map<string, IChainInstance> = new Map<string, IChainInstance>();
@@ -53,8 +54,8 @@ export class ChainInstanceResolver {
   private sortDesc = (a: IChainInstance, b: IChainInstance): number =>
     a.anchor === b.anchor ? b.blocksCountOffset - a.blocksCountOffset : b.anchor - a.anchor;
 
-  private noticeError(err: string): void {
+  private noticeError = (err: string): void => {
     newrelic.noticeError(Error(err));
     this.logger.error(err);
-  }
+  };
 }

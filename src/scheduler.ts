@@ -8,6 +8,7 @@ import Settings from './types/Settings';
 import { Logger } from 'winston';
 import newrelic from 'newrelic';
 import logger from './lib/logger';
+import { ChainsIds } from './types/ChainsIds';
 
 logger.info('Starting Scheduler...');
 
@@ -22,16 +23,16 @@ logger.info('Starting Scheduler...');
   setInterval(async () => {
     await foreignChainReplicationWorker.enqueue(
       {
-        foreignChainId: 'ethereum',
-        lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
-        interval: settings.jobs.foreignChainReplication.ethereum.interval,
+        foreignChainId: ChainsIds.ETH,
+        lockTTL: settings.jobs.foreignChainReplication.eth.lockTTL,
+        interval: settings.jobs.foreignChainReplication.eth.interval,
       },
       {
         removeOnComplete: true,
         removeOnFail: true,
       }
     );
-  }, settings.jobs.foreignChainReplication.ethereum.interval);
+  }, settings.jobs.foreignChainReplication.eth.interval);
 
   setInterval(async () => {
     await metricsWorker.enqueue(

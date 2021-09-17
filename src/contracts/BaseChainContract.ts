@@ -1,93 +1,79 @@
-import { inject, injectable } from 'inversify';
-import { BigNumber, Contract } from 'ethers';
+import { inject } from 'inversify';
+import { Contract } from 'ethers';
 import { ABI, LeafKeyCoder } from '@umb-network/toolbox';
 import { Logger } from 'winston';
 
 import Settings from '../types/Settings';
-import Blockchain from '../lib/Blockchain';
+import { Blockchain } from '../lib/Blockchain';
 import { ChainBlockData, ChainFCDsData } from '../models/ChainBlockData';
 // TODO this abi should came from SDK
 import abi from './ForeignChainAbi.json';
 
-@injectable()
-export class BaseChainContract {
+export type BaseChainContractProps = {
+  blockchain: Blockchain;
+  settings: Settings;
+};
+
+export abstract class BaseChainContract {
   @inject('Logger') protected logger!: Logger;
 
-  chainId!: string;
   protected registry!: Contract;
   protected settings!: Settings;
   protected blockchain!: Blockchain;
   contract!: Contract;
 
-  constructor(@inject('Settings') settings: Settings, @inject(Blockchain) blockchain: Blockchain) {
-    this.settings = settings;
-    this.blockchain = blockchain;
+  constructor(props: BaseChainContractProps) {
+    this.blockchain = props.blockchain;
+    this.settings = props.settings;
+
+    const registryAddress = this.blockchain.getContractRegistryAddress();
+    this.registry = new Contract(registryAddress, ABI.registryAbi, this.blockchain.getProvider());
   }
 
-  setChainId = (chainId: string): BaseChainContract => {
-    this.chainId = chainId;
-    return this;
-  };
-
-  async resolveContract(): Promise<BaseChainContract> {
-    const registryAddress = this.blockchain.getContractRegistryAddress(this.chainId);
-
-    if (!this.registry || this.registry.address !== registryAddress) {
-      this.registry = new Contract(registryAddress, ABI.registryAbi, this.blockchain.getProvider(this.chainId));
-    }
-
+  resolveContract = async (): Promise<BaseChainContract> => {
     const chainAddress = await this.registry.getAddressByString(this.settings.blockchain.contracts.chain.name);
     return this.setContract(chainAddress);
-  }
+  };
 
-  async resolveStatus<T>(): Promise<T> {
+  resolveStatus = async <T>(): Promise<T> => {
     const chain = await this.resolveContract();
     const status = await chain.contract.getStatus();
     return { chainAddress: chain.contract.address, ...status };
-  }
+  };
 
-  async blocksCountOffset(): Promise<number> {
+  blocksCountOffset = async (): Promise<number> => {
     await this._assertContract();
     return this.contract.blocksCountOffset();
-  }
+  };
 
-  address(): string {
-    return this.contract.address;
-  }
+  address = (): string => this.contract.address;
 
-  async getBlockId(): Promise<BigNumber> {
-    await this._assertContract();
-    return this.contract.getBlockId();
-  }
-
-  async resolveBlockData(chainAddress: string, blockId: number): Promise<ChainBlockData> {
+  resolveBlockData = async (chainAddress: string, blockId: number): Promise<ChainBlockData> => {
     return this.setContract(chainAddress).contract.blocks(blockId);
-  }
+  };
 
-  async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
+  resolveFCDs = async (chainAddress: string, keys: string[]): Promise<ChainFCDsData> => {
     //we resolving from homechain always
-    return this.setChainId(this.settings.blockchain.homeChain.chainId)
-      .setContract(chainAddress)
-      .contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
-  }
+    if (!this.blockchain.isHomeChain) {
+      throw Error('I think we using this only to resolve FCD from home chain');
+    }
 
-  async resolveBlocksCountOffset(chainAddress: string): Promise<number> {
+    return this.setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
+  };
+
+  resolveBlocksCountOffset = async (chainAddress: string): Promise<number> => {
     return this.setContract(chainAddress).contract.blocksCountOffset();
-  }
+  };
 
-  isHomeChain(): boolean {
-    return this.chainId === this.settings.blockchain.homeChain.chainId;
-  }
-
-  protected async _assertContract(): Promise<void> {
+  protected _assertContract = async (): Promise<void> => {
     if (!this.contract) {
       await this.resolveContract();
     }
-  }
+  };
 
   protected setContract = (chainAddress: string): BaseChainContract => {
-    const chainAbi = this.isHomeChain() ? ABI.chainAbi : abi;
-    this.contract = new Contract(chainAddress, chainAbi, this.blockchain.getProvider(this.chainId));
+    const chainAbi = this.blockchain.isHomeChain ? ABI.chainAbi : abi;
+    this.contract = new Contract(chainAddress, chainAbi, this.blockchain.getProvider());
     return this;
   };
 }

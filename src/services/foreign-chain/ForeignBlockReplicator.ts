@@ -14,15 +14,17 @@ import { ForeignChainStatus } from '../../types/ForeignChainStatus';
 import { BlockStatus } from '../../types/blocks';
 
 import { ForeignChainContract } from '../../contracts/ForeignChainContract';
-import ChainContract from '../../contracts/ChainContract';
+import { ChainContract } from '../../contracts/ChainContract';
 
 import { IForeignBlockReplicator } from './IForeignBlockReplicator';
 import { TxSender } from '../TxSender';
 import Settings from '../../types/Settings';
-import Blockchain from '../../lib/Blockchain';
+import { Blockchain } from '../../lib/Blockchain';
 import { FailedTransactionEvent } from '../../constants/ReportedMetricsEvents';
 import { ChainFCDsData } from '../../models/ChainBlockData';
 import RevertedBlockResolver from '../RevertedBlockResolver';
+import { BlockchainRepository } from '../../repositories/BlockchainRepository';
+import { ChainContractRepository } from '../../repositories/ChainContractRepository';
 
 export type ReplicationStatus = {
   blocks?: IBlock[];
@@ -33,24 +35,31 @@ export type ReplicationStatus = {
 @injectable()
 export abstract class ForeignBlockReplicator implements IForeignBlockReplicator {
   @inject('Logger') protected logger!: Logger;
-  @inject(ForeignChainContract) foreignChainContract: ForeignChainContract;
-  @inject(ChainContract) chainContract: ChainContract;
+  @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
   @inject('Settings') settings: Settings;
-  @inject(Blockchain) blockchain: Blockchain;
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
+  @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
 
   readonly chainId!: string;
   private txSender!: TxSender;
+  private blockchain!: Blockchain;
+  private homeChainContract!: ChainContract;
+  private foreignChainContract!: ForeignChainContract;
 
   @postConstruct()
   private setup() {
+    this.blockchain = this.blockchainRepository.get(this.chainId);
+
     this.txSender = new TxSender(
-      this.blockchain.wallets[this.chainId],
+      this.blockchain.wallet,
       this.logger,
-      this.blockchain.getBlockchainSettings(this.chainId).transactions.waitForBlockTime
+      this.blockchain.settings.transactions.waitForBlockTime
     );
 
-    this.foreignChainContract.setChainId(this.chainId);
+    this.homeChainContract = <ChainContract>(
+      this.chainContractRepository.get(this.settings.blockchain.homeChain.chainId)
+    );
+    this.foreignChainContract = <ForeignChainContract>this.chainContractRepository.get(this.chainId);
   }
 
   getStatus = async (): Promise<ForeignChainStatus> => {
@@ -204,7 +213,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         tr
       );
 
-    const { minGasPrice, maxGasPrice } = this.blockchain.getBlockchainSettings(this.chainId).transactions;
+    const { minGasPrice, maxGasPrice } = this.blockchain.settings.transactions;
     const transaction = (tr: TransactionRequest) =>
       this.txSender.apply(fn, minGasPrice, maxGasPrice, chainStatus.timePadding, tr);
 
@@ -243,7 +252,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     }
 
     const [fcdsValues, fcdsTimestamps] = <ChainFCDsData>(
-      await this.chainContract.resolveFCDs(block.chainAddress, allKeys)
+      await this.homeChainContract.resolveFCDs(block.chainAddress, allKeys)
     );
 
     fcdsTimestamps.forEach((timestamp, i) => {
