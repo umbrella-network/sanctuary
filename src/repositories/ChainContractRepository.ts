@@ -17,10 +17,15 @@ export class ChainContractRepository {
     @inject('Settings') settings: Settings,
     @inject(BlockchainRepository) blockchainRepository: BlockchainRepository
   ) {
-    this.collection = {
-      bsc: new ChainContract({ blockchain: blockchainRepository.get(ChainsIds.BSC), settings }),
-      eth: new ForeignChainContract({ blockchain: blockchainRepository.get(ChainsIds.ETH), settings }),
-    };
+    const bsc = settings.blockchain.multiChains.bsc.providerUrl
+      ? new ChainContract({ blockchain: blockchainRepository.get(ChainsIds.BSC), settings })
+      : undefined;
+
+    const ethereum = settings.blockchain.multiChains.ethereum.providerUrl
+      ? new ForeignChainContract({ blockchain: blockchainRepository.get(ChainsIds.ETH), settings })
+      : undefined;
+
+    this.collection = {bsc, ethereum};
   }
 
   get(id: string): ChainContract | ForeignChainContract {

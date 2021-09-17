@@ -1,4 +1,4 @@
 export enum ChainsIds {
   BSC = 'bsc',
-  ETH = 'eth',
+  ETH = 'ethereum',
 }

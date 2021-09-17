@@ -21,7 +21,7 @@ type Settings = {
       interval: number;
     };
     foreignChainReplication: {
-      eth: {
+      ethereum: {
         interval: number;
         lockTTL: number;
       };
@@ -54,7 +54,7 @@ type Settings = {
     };
     multiChains: {
       bsc: BlockchainSettings;
-      eth: BlockchainSettings;
+      ethereum: BlockchainSettings;
     };
   };
   auth: {

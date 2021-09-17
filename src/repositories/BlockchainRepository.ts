@@ -14,7 +14,7 @@ export class BlockchainRepository {
   constructor(@inject('Settings') settings: Settings) {
     this.collection = {
       bsc: new Blockchain({ chainId: ChainsIds.BSC, settings }),
-      eth: new Blockchain({ chainId: ChainsIds.ETH, settings }),
+      ethereum: new Blockchain({ chainId: ChainsIds.ETH, settings }),
     };
   }
 

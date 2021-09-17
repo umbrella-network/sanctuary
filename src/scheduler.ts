@@ -24,15 +24,15 @@ logger.info('Starting Scheduler...');
     await foreignChainReplicationWorker.enqueue(
       {
         foreignChainId: ChainsIds.ETH,
-        lockTTL: settings.jobs.foreignChainReplication.eth.lockTTL,
-        interval: settings.jobs.foreignChainReplication.eth.interval,
+        lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
+        interval: settings.jobs.foreignChainReplication.ethereum.interval,
       },
       {
         removeOnComplete: true,
         removeOnFail: true,
       }
     );
-  }, settings.jobs.foreignChainReplication.eth.interval);
+  }, settings.jobs.foreignChainReplication.ethereum.interval);
 
   setInterval(async () => {
     await metricsWorker.enqueue(
