@@ -5,7 +5,7 @@ import Block, { IBlock } from '../models/Block';
 import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import { BlockFromPegasus } from '../types/blocks';
-import ChainContract from '../contracts/ChainContract';
+import { ChainContract } from '../contracts/ChainContract';
 import FCD, { IFCD } from '../models/FCD';
 import { LeafValueCoder, loadFeeds, SortedMerkleTree } from '@umb-network/toolbox';
 import { ChainStatus } from '../types/ChainStatus';
@@ -13,14 +13,23 @@ import { Validator } from '../types/Validator';
 import * as url from 'url';
 import { callRetry } from '../utils/callRetry';
 import Settings from '../types/Settings';
+import { ChainContractRepository } from '../repositories/ChainContractRepository';
 
 @injectable()
 class LeavesSynchronizer {
   @inject('Logger') private logger!: Logger;
   @inject('Settings') private readonly settings: Settings;
-  @inject(ChainContract) private chainContract!: ChainContract;
   @inject(StakingBankContract) private stakingBankContract!: StakingBankContract;
   @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
+
+  private chainContract!: ChainContract;
+
+  constructor(
+    @inject('Settings') settings: Settings,
+    @inject(ChainContractRepository) private chainContractRepository: ChainContractRepository
+  ) {
+    this.chainContract = <ChainContract>chainContractRepository.get(settings.blockchain.homeChain.chainId);
+  }
 
   async apply(chainStatus: ChainStatus, mongoBlockId: string): Promise<boolean | null> {
     let success = false;

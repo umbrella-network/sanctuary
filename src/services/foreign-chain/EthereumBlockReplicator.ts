@@ -1,10 +1,10 @@
 import { injectable } from 'inversify';
 import { ForeignBlockReplicator } from '.';
-import { ForeignChains } from '../../types/ForeignChains';
+import { ChainsIds } from '../../types/ChainsIds';
 
 @injectable()
 export class EthereumBlockReplicator extends ForeignBlockReplicator {
-  readonly chainId = ForeignChains.Ethereum;
+  readonly chainId = ChainsIds.ETH;
   // our multi-chain approach is based on AI/magic, we don't need code to make it work
 
   /*

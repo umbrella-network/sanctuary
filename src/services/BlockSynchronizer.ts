@@ -1,7 +1,7 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import newrelic from 'newrelic';
-import ChainContract from '../contracts/ChainContract';
+import { ChainContract } from '../contracts/ChainContract';
 import Block, { IBlock } from '../models/Block';
 import Leaf from '../models/Leaf';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
@@ -12,25 +12,36 @@ import { ChainStatus } from '../types/ChainStatus';
 import RevertedBlockResolver from './RevertedBlockResolver';
 import Settings from '../types/Settings';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
+import { ChainContractRepository } from '../repositories/ChainContractRepository';
+import { Blockchain } from '../lib/Blockchain';
 
 @injectable()
 class BlockSynchronizer {
   @inject('Logger') private logger!: Logger;
-  @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
   @inject('Settings') settings!: Settings;
-  @inject(ChainContract) private chainContract!: ChainContract;
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
   @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
   private chainId!: string;
+  private blockchain!: Blockchain;
+  private chainContract!: ChainContract;
+
+  constructor(
+    @inject(BlockchainRepository) private blockchainRepository: BlockchainRepository,
+    @inject(ChainContractRepository) chainContractRepository: ChainContractRepository,
+    @inject('Settings') settings: Settings
+  ) {
+    this.chainId = settings.blockchain.homeChain.chainId;
+    this.blockchain = blockchainRepository.get(this.chainId);
+    this.chainContract = <ChainContract>chainContractRepository.get(this.chainId);
+  }
 
   apply = async (): Promise<void> => {
-    this.chainId = this.settings.blockchain.homeChain.chainId;
     this.chainInstanceResolver.setup(this.chainId);
 
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
-      this.chainContract.setChainId(this.chainId).resolveStatus<ChainStatus>(),
+      this.chainContract.resolveStatus<ChainStatus>(),
       this.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
@@ -84,7 +95,7 @@ class BlockSynchronizer {
       status: { $in: [BlockStatus.Finalized, BlockStatus.Failed] },
     })
       .sort({ blockId: -1 })
-      .limit(this.blockchainRepository.get(this.chainId).settings.confirmations)
+      .limit(this.blockchain.settings.confirmations)
       .exec();
 
     return blocksInProgress.concat(blocksToConfirm);

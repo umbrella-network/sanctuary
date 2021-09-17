@@ -1,7 +1,6 @@
 import { Logger } from 'winston';
 import { ABI } from '@umb-network/toolbox';
 import { inject, injectable } from 'inversify';
-import ChainContract from '../contracts/ChainContract';
 import ChainInstance, { IChainInstance } from '../models/ChainInstance';
 import { Blockchain } from '../lib/Blockchain';
 import { Contract, Event } from 'ethers';
@@ -12,18 +11,22 @@ import Block, { IBlock } from '../models/Block';
 import Settings from '../types/Settings';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
+import { ChainContractRepository } from '../repositories/ChainContractRepository';
+import { BaseChainContract } from '../contracts/BaseChainContract';
 
 @injectable()
 class ChainSynchronizer {
   @inject('Logger') private logger!: Logger;
-  @inject(ChainContract) private chainContract!: ChainContract;
   @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
+  @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
   @inject('Settings') settings: Settings;
 
   private blockchain!: Blockchain;
+  private chainContract!: BaseChainContract;
 
   apply = async (chainId: string): Promise<void> => {
     this.blockchain = this.blockchainRepository.get(chainId);
+    this.chainContract = this.chainContractRepository.get(chainId);
 
     const blockNumber = await this.blockchain.getBlockNumber();
     await this.synchronizeChains(blockNumber);
@@ -82,8 +85,6 @@ class ChainSynchronizer {
   };
 
   private resolveOffsets = async (chainAddresses: string[]): Promise<number[]> => {
-    this.chainContract.setChainId(this.blockchain.chainId);
-
     return Promise.all(chainAddresses.map((address) => this.chainContract.resolveBlocksCountOffset(address)));
   };
 

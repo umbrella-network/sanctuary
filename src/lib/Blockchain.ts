@@ -1,6 +1,11 @@
 import Settings, { BlockchainSettings } from '../types/Settings';
 import { ethers, Wallet } from 'ethers';
 
+export type BlockchainProps = {
+  chainId: string;
+  settings: Settings;
+};
+
 export class Blockchain {
   readonly chainId!: string;
   readonly isHomeChain!: boolean;
@@ -8,7 +13,9 @@ export class Blockchain {
   readonly provider: ethers.providers.Provider;
   readonly wallet: Wallet;
 
-  constructor(chainId: string, settings: Settings) {
+  constructor(props: BlockchainProps) {
+    const { chainId, settings } = props;
+
     this.chainId = chainId;
     this.isHomeChain = chainId === settings.blockchain.homeChain.chainId;
     this.settings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[chainId];

@@ -2,7 +2,7 @@ import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import newrelic from 'newrelic';
 import { ABI } from '@umb-network/toolbox';
-import ChainContract from '../contracts/ChainContract';
+import { ChainContract } from '../contracts/ChainContract';
 import { Contract, Event, EventFilter } from 'ethers';
 import { BlockStatus, IEventBlock } from '../types/blocks';
 import { ChainInstanceResolver } from './ChainInstanceResolver';
@@ -13,15 +13,24 @@ import Block, { IBlock } from '../models/Block';
 import BlockSynchronizer from './BlockSynchronizer';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
+import { ChainContractRepository } from '../repositories/ChainContractRepository';
 
 @injectable()
 class NewBlocksResolver {
   @inject('Logger') private logger!: Logger;
   @inject('Settings') settings!: Settings;
-  @inject(ChainContract) private chainContract!: ChainContract;
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
   @inject(BlockSynchronizer) blockSynchronizer!: BlockSynchronizer;
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
+
+  private chainContract!: ChainContract;
+
+  constructor(
+    @inject(ChainContractRepository) chainContractRepository: ChainContractRepository,
+    @inject('Settings') settings: Settings
+  ) {
+    this.chainContract = <ChainContract>chainContractRepository.get(settings.blockchain.homeChain.chainId);
+  }
 
   apply = async (): Promise<void> => {
     this.chainInstanceResolver.setup(this.settings.blockchain.homeChain.chainId);

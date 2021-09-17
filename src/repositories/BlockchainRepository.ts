@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Blockchain } from '../lib/Blockchain';
 import Settings from '../types/Settings';
+import { ChainsIds } from '../types/ChainsIds';
 
 export type BlockchainCollection = {
   [key: string]: Blockchain;
@@ -12,8 +13,8 @@ export class BlockchainRepository {
 
   constructor(@inject('Settings') settings: Settings) {
     this.collection = {
-      bsc: new Blockchain('bsc', settings),
-      ethereum: new Blockchain('ethereum', settings),
+      bsc: new Blockchain({ chainId: ChainsIds.BSC, settings }),
+      eth: new Blockchain({ chainId: ChainsIds.ETH, settings }),
     };
   }
 

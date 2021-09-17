@@ -12,7 +12,7 @@ const settings: Settings = {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
     },
     foreignChainReplication: {
-      ethereum: {
+      eth: {
         interval: parseInt(process.env.ETHEREUM_REPLICATION_INTERVAL || '60000'),
         lockTTL: parseInt(process.env.ETHEREUM_REPLICATION_LOCK_TTL || '30000'),
       },
@@ -54,7 +54,7 @@ const settings: Settings = {
         providerUrl: process.env.BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
-      ethereum: {
+      eth: {
         startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.ETH_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
         confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),

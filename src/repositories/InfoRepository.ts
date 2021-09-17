@@ -1,22 +1,24 @@
 import { inject, injectable } from 'inversify';
 import Settings from '../types/Settings';
 import StakingBankContract from '../contracts/StakingBankContract';
-import ChainContract from '../contracts/ChainContract';
 import { ChainStatus } from '../types/ChainStatus';
-import { ChainContractProvider } from '../factories/ChainContractFactory';
 import { ForeignChainStatus } from '../types/ForeignChainStatus';
 import { BlockchainRepository } from './BlockchainRepository';
+import { ChainContractRepository } from './ChainContractRepository';
+import { BaseChainContract } from '../contracts/BaseChainContract';
 
 type FullChainStatus = ChainStatus | ForeignChainStatus | Error;
+
+type NetworkStatus = {
+  name: string;
+  id: number;
+};
 
 export type Info = {
   status: FullChainStatus;
   version: string;
   environment: string;
-  network: {
-    name: string;
-    id: number;
-  };
+  network: NetworkStatus;
   contractRegistryAddress?: string;
   stakingBankAddress?: string;
   chainContractAddress?: string;
@@ -31,7 +33,7 @@ export class InfoRepository {
   @inject('Settings') private readonly settings: Settings;
   @inject(StakingBankContract) private readonly stakingBankContract: StakingBankContract;
   @inject(BlockchainRepository) private readonly blockchainRepository: BlockchainRepository;
-  @inject('ChainContractProvider') chainContractProvider: ChainContractProvider;
+  @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
 
   getInfo = async (props: GetInfoProps): Promise<Info> => {
     const chainId = props.chainId || this.settings.blockchain.homeChain.chainId;
@@ -52,7 +54,7 @@ export class InfoRepository {
     return info;
   };
 
-  private getStatus = async (chainContract: ChainContract): Promise<FullChainStatus> => {
+  private getStatus = async (chainContract: BaseChainContract): Promise<FullChainStatus> => {
     try {
       return await chainContract.resolveStatus<ChainStatus | ForeignChainStatus>();
     } catch (e) {
@@ -60,9 +62,9 @@ export class InfoRepository {
     }
   };
 
-  private getChainContract = async (chainId: string): Promise<ChainContract> => {
+  private getChainContract = async (chainId: string): Promise<BaseChainContract> => {
     try {
-      return await this.chainContractProvider(chainId);
+      return await this.chainContractRepository.get(chainId);
     } catch (e) {
       return e;
     }
@@ -76,7 +78,7 @@ export class InfoRepository {
     }
   };
 
-  private getNetworkStatus = async (chainId: string): Promise<{ name: string; id: number }> => {
+  private getNetworkStatus = async (chainId: string): Promise<NetworkStatus> => {
     try {
       const network = await this.blockchainRepository.get(chainId).getProvider().getNetwork();
       return { name: network.name, id: network.chainId };
@@ -94,6 +96,5 @@ export class InfoRepository {
     } catch (e) {
       return e.message;
     }
-  }
-
+  };
 }

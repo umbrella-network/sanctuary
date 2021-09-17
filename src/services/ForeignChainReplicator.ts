@@ -16,7 +16,7 @@ export class ForeignChainReplicator {
 
   constructor(@inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator) {
     this.replicators = {
-      ethereum: ethereumBlockReplicator,
+      eth: ethereumBlockReplicator,
     };
   }
 
