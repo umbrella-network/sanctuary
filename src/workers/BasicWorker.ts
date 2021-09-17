@@ -37,7 +37,7 @@ abstract class BasicWorker {
       removeOnComplete: 100,
       removeOnFail: 100,
       stackTraceLimit: 100,
-      ...opts
+      ...opts,
     };
 
     return this.queue.add(this.queueName, params, jobOptions);

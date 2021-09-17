@@ -11,23 +11,26 @@ import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
 import RevertedBlockResolver from './RevertedBlockResolver';
 import Settings from '../types/Settings';
-import Blockchain from '../lib/Blockchain';
+import { BlockchainRepository } from '../repositories/BlockchainRepository';
 
 @injectable()
 class BlockSynchronizer {
   @inject('Logger') private logger!: Logger;
-  @inject(Blockchain) private blockchain!: Blockchain;
+  @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
   @inject('Settings') settings!: Settings;
   @inject(ChainContract) private chainContract!: ChainContract;
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
   @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
 
-  async apply(): Promise<void> {
-    this.chainInstanceResolver.setup(this.settings.blockchain.homeChain.chainId);
+  private chainId!: string;
+
+  apply = async (): Promise<void> => {
+    this.chainId = this.settings.blockchain.homeChain.chainId;
+    this.chainInstanceResolver.setup(this.chainId);
 
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
-      this.chainContract.setChainId(this.settings.blockchain.homeChain.chainId).resolveStatus<ChainStatus>(),
+      this.chainContract.setChainId(this.chainId).resolveStatus<ChainStatus>(),
       this.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
@@ -55,24 +58,21 @@ class BlockSynchronizer {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
       await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
     }
-  }
+  };
 
-  async getLastSavedBlockIdAndStartAnchor(): Promise<[number, number]> {
+  getLastSavedBlockIdAndStartAnchor = async (): Promise<[number, number]> => {
     const lastSavedBlock = await Block.find({}).sort({ blockId: -1 }).limit(1).exec();
     return lastSavedBlock[0]
       ? [lastSavedBlock[0].blockId, lastSavedBlock[0].anchor + 1]
       : [0, await this.getLowestChainAnchor()];
-  }
+  };
 
-  private async getLowestChainAnchor(): Promise<number> {
-    const oldestChain = await ChainInstance.find({ chainId: this.settings.blockchain.homeChain.chainId })
-      .limit(1)
-      .sort({ blockId: 1 })
-      .exec();
+  private getLowestChainAnchor = async (): Promise<number> => {
+    const oldestChain = await ChainInstance.find({ chainId: this.chainId }).limit(1).sort({ blockId: 1 }).exec();
     return oldestChain[0].anchor;
-  }
+  };
 
-  private async getMongoBlocksToSynchronize(): Promise<IBlock[]> {
+  private getMongoBlocksToSynchronize = async (): Promise<IBlock[]> => {
     const blocksInProgress = await Block.find({
       status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] },
     })
@@ -84,16 +84,16 @@ class BlockSynchronizer {
       status: { $in: [BlockStatus.Finalized, BlockStatus.Failed] },
     })
       .sort({ blockId: -1 })
-      .limit(this.blockchain.getBlockchainSettings().confirmations)
+      .limit(this.blockchainRepository.get(this.chainId).settings.confirmations)
       .exec();
 
     return blocksInProgress.concat(blocksToConfirm);
-  }
+  };
 
-  private async updateSynchronizedBlocks(
+  private updateSynchronizedBlocks = async (
     leavesSynchronizers: (boolean | null)[],
     blockIds: string[]
-  ): Promise<IBlock[]> {
+  ): Promise<IBlock[]> => {
     return Promise.all(
       leavesSynchronizers
         .filter((success: boolean) => success !== null)
@@ -116,9 +116,9 @@ class BlockSynchronizer {
           );
         })
     );
-  }
+  };
 
-  private async verifyBlocks(mongoBlocks: IBlock[]): Promise<boolean> {
+  private verifyBlocks = async (mongoBlocks: IBlock[]): Promise<boolean> => {
     let verified = true;
 
     await Promise.all(
@@ -138,12 +138,12 @@ class BlockSynchronizer {
     );
 
     return verified;
-  }
+  };
 
-  private async processBlocks(
+  private processBlocks = async (
     chainStatus: ChainStatus,
     mongoBlocks: IBlock[]
-  ): Promise<[leavesSynchronizersStatus: Promise<boolean | null>[], synchronizedIds: string[]]> {
+  ): Promise<[leavesSynchronizersStatus: Promise<boolean | null>[], synchronizedIds: string[]]> => {
     const leavesSynchronizers: Promise<boolean | null>[] = [];
     const blockIds: string[] = [];
     let blocksWereReverted = false;
@@ -192,23 +192,23 @@ class BlockSynchronizer {
     );
 
     return [leavesSynchronizers, blockIds];
-  }
+  };
 
-  private static brokenBlock(block: IBlock): boolean {
+  private static brokenBlock = (block: IBlock): boolean => {
     return block.blockId === undefined || block.chainAddress === undefined;
-  }
+  };
 
-  private static async revertBlocks(
+  private static revertBlocks = async (
     blockId: number
-  ): Promise<({ ok?: number; n?: number } & { deletedCount?: number })[]> {
+  ): Promise<({ ok?: number; n?: number } & { deletedCount?: number })[]> => {
     const condition = { blockId: { $gte: blockId } };
     return Promise.all([Block.deleteMany(condition), Leaf.deleteMany(condition)]);
-  }
+  };
 
-  private noticeError(err: string): void {
+  private noticeError = (err: string): void => {
     newrelic.noticeError(Error(err));
     this.logger.error(err);
-  }
+  };
 }
 
 export default BlockSynchronizer;

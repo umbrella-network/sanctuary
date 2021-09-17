@@ -19,12 +19,12 @@ export class ForeignChainContract extends BaseChainContract {
     transactionRequest: TransactionRequest
   ): Promise<TransactionResponse> {
     return (await this.resolveContract()).contract
-      .connect(this.blockchain.wallets[this.chainId])
+      .connect(this.blockchain.wallet)
       .submit(dataTimestamp, root, keys, values, blockId, transactionRequest);
   }
 
   protected setContract = (chainAddress: string): ForeignChainContract => {
-    this.contract = new Contract(chainAddress, abi, this.blockchain.getProvider(this.chainId));
+    this.contract = new Contract(chainAddress, abi, this.blockchain.getProvider());
     return this;
   };
 }

@@ -4,7 +4,7 @@ import IORedis from 'ioredis';
 import settings from '../config/settings';
 import logger from './logger';
 import Settings from '../types/Settings';
-import Blockchain from './Blockchain';
+import { Blockchain } from './Blockchain';
 import ChainContract from '../contracts/ChainContract';
 import { AuthUtils } from '../services/AuthUtils';
 import LockRepository from '../repositories/LockRepository';

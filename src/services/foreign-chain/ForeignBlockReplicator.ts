@@ -19,10 +19,11 @@ import ChainContract from '../../contracts/ChainContract';
 import { IForeignBlockReplicator } from './IForeignBlockReplicator';
 import { TxSender } from '../TxSender';
 import Settings from '../../types/Settings';
-import Blockchain from '../../lib/Blockchain';
+import { Blockchain } from '../../lib/Blockchain';
 import { FailedTransactionEvent } from '../../constants/ReportedMetricsEvents';
 import { ChainFCDsData } from '../../models/ChainBlockData';
 import RevertedBlockResolver from '../RevertedBlockResolver';
+import { BlockchainRepository } from '../../repositories/BlockchainRepository';
 
 export type ReplicationStatus = {
   blocks?: IBlock[];
@@ -36,18 +37,21 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   @inject(ForeignChainContract) foreignChainContract: ForeignChainContract;
   @inject(ChainContract) chainContract: ChainContract;
   @inject('Settings') settings: Settings;
-  @inject(Blockchain) blockchain: Blockchain;
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
+  @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
 
   readonly chainId!: string;
   private txSender!: TxSender;
+  private blockchain!: Blockchain;
 
   @postConstruct()
   private setup() {
+    this.blockchain = this.blockchainRepository.get(this.chainId);
+
     this.txSender = new TxSender(
-      this.blockchain.wallets[this.chainId],
+      this.blockchain.wallet,
       this.logger,
-      this.blockchain.getBlockchainSettings(this.chainId).transactions.waitForBlockTime
+      this.blockchain.settings.transactions.waitForBlockTime
     );
 
     this.foreignChainContract.setChainId(this.chainId);
@@ -204,7 +208,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         tr
       );
 
-    const { minGasPrice, maxGasPrice } = this.blockchain.getBlockchainSettings(this.chainId).transactions;
+    const { minGasPrice, maxGasPrice } = this.blockchain.settings.transactions;
     const transaction = (tr: TransactionRequest) =>
       this.txSender.apply(fn, minGasPrice, maxGasPrice, chainStatus.timePadding, tr);
 
