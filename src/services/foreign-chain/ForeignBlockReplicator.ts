@@ -43,11 +43,13 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   readonly chainId!: string;
   private txSender!: TxSender;
   private blockchain!: Blockchain;
+  private homeBlockchain!: Blockchain;
   private homeChainContract!: ChainContract;
   private foreignChainContract!: ForeignChainContract;
 
   @postConstruct()
   private setup() {
+    this.homeBlockchain = this.blockchainRepository.get(this.settings.blockchain.homeChain.chainId);
     this.blockchain = this.blockchainRepository.get(this.chainId);
 
     if (!this.blockchain.provider) {
@@ -161,7 +163,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   private blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
     // we need to wait for confirmations before we replicate block
     const homeChainConfirmations = this.settings.blockchain.homeChain.replicationConfirmations;
-    const homeBlockNumber = await this.blockchain.getBlockNumber();
+    const homeBlockNumber = await this.homeBlockchain.getBlockNumber();
     const safeAnchor = homeBlockNumber - homeChainConfirmations;
     const dataTimestamp = this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding);
 
