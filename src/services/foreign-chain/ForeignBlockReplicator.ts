@@ -165,7 +165,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const safeAnchor = homeBlockNumber - homeChainConfirmations;
     const dataTimestamp = this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding);
 
-    this.logger.info(`[${this.chainId}] looking for blocks`, { dataTimestamp, safeAnchor });
+    this.logger.info(`[${this.chainId}] looking for blocks at ${dataTimestamp} and anchor: ${safeAnchor}`);
 
     return Block.find({
       status: BlockStatus.Finalized,
