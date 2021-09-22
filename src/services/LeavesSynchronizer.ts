@@ -12,7 +12,7 @@ import { ChainStatus } from '../types/ChainStatus';
 import { Validator } from '../types/Validator';
 import * as url from 'url';
 import { callRetry } from '../utils/callRetry';
-import Settings, { BlockchainSettings } from '../types/Settings';
+import Settings  from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 
 @injectable()
