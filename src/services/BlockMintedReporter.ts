@@ -5,7 +5,7 @@ import { Logger } from 'winston';
 import StatsdClient from 'statsd-client';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { ForeignChainStatus } from '../types/ForeignChainStatus';
-import {BaseChainContract} from '../contracts/BaseChainContract';
+import { BaseChainContract } from '../contracts/BaseChainContract';
 
 @injectable()
 class BlockMintedReporter {
@@ -27,7 +27,9 @@ class BlockMintedReporter {
 
     const chainStatus = await contract.resolveStatus<ChainStatus | ForeignChainStatus>();
     const delta = timestamp - chainStatus.lastDataTimestamp;
-    this.logger.debug(`[${chainId}] Last minted block time: ${chainStatus.lastDataTimestamp}, block delta time: ${delta}`);
+    this.logger.debug(
+      `[${chainId}] Last minted block time: ${chainStatus.lastDataTimestamp}, block delta time: ${delta}`
+    );
     this.statsdClient?.gauge('LastMintedBlockDeltaTime', delta);
   };
 }

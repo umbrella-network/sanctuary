@@ -21,13 +21,15 @@ export class ChainContractRepository {
     const ethBlockchain = blockchainRepository.get(ChainsIds.ETH);
 
     this.collection = {
-      bsc: bscBlockchain.provider && bscBlockchain.getContractRegistryAddress()
-        ? new ChainContract({ blockchain: bscBlockchain, settings })
-        : undefined,
+      bsc:
+        bscBlockchain.provider && bscBlockchain.getContractRegistryAddress()
+          ? new ChainContract({ blockchain: bscBlockchain, settings })
+          : undefined,
 
-      ethereum: ethBlockchain.provider && ethBlockchain.getContractRegistryAddress()
-        ? new ForeignChainContract({ blockchain: ethBlockchain, settings })
-        : undefined,
+      ethereum:
+        ethBlockchain.provider && ethBlockchain.getContractRegistryAddress()
+          ? new ForeignChainContract({ blockchain: ethBlockchain, settings })
+          : undefined,
     };
   }
 

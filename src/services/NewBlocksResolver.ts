@@ -7,7 +7,7 @@ import { Contract, Event, EventFilter } from 'ethers';
 import { BlockStatus, IEventBlock } from '../types/blocks';
 import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
-import Settings, {BlockchainSettings} from '../types/Settings';
+import Settings, { BlockchainSettings } from '../types/Settings';
 import { LogMint, LogVoter } from '../types/events';
 import Block, { IBlock } from '../models/Block';
 import BlockSynchronizer from './BlockSynchronizer';

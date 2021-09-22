@@ -7,7 +7,7 @@ export type FromBlockProps = {
   block: IBlock;
   foreignChainId: string;
   anchor: number;
-  chainAddress: string
+  chainAddress: string;
 };
 
 @injectable()

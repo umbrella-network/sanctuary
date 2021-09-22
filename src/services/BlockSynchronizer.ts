@@ -44,7 +44,7 @@ class BlockSynchronizer {
 
     this.chainContract = <ChainContract>this.chainContractRepository.get(this.chainId);
     this.chainInstanceResolver.setup(this.chainId);
-  }
+  };
 
   apply = async (): Promise<void> => {
     this.setup();

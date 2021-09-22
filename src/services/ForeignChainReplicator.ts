@@ -33,7 +33,11 @@ export class ForeignChainReplicator {
     }
   };
 
-  private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string, chainAddress: string): Promise<void> => {
+  private commit = async (
+    replicationStatus: ReplicationStatus,
+    foreignChainId: string,
+    chainAddress: string
+  ): Promise<void> => {
     if (!replicationStatus.blocks || replicationStatus.blocks.length == 0) return;
 
     if (replicationStatus.errors) {
