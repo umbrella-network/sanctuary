@@ -27,13 +27,13 @@ export class ForeignChainReplicator {
       const foreignChainStatus = await replicator.getStatus();
       const blocks = await replicator.resolvePendingBlocks(foreignChainStatus, new Date());
       const replicationStatus = await replicator.replicate(blocks, foreignChainStatus);
-      await this.commit(replicationStatus, foreignChainId);
+      await this.commit(replicationStatus, foreignChainId, foreignChainStatus.chainAddress);
     } catch (e) {
       this.logger.error(e);
     }
   };
 
-  private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string): Promise<void> => {
+  private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string, chainAddress: string): Promise<void> => {
     if (!replicationStatus.blocks || replicationStatus.blocks.length == 0) return;
 
     if (replicationStatus.errors) {
@@ -44,7 +44,7 @@ export class ForeignChainReplicator {
     for (let i = 0; i < replicationStatus.blocks.length; i++) {
       const block = replicationStatus.blocks[i];
       const anchor = replicationStatus.anchors[i];
-      const foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, foreignChainId });
+      const foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, chainAddress, foreignChainId });
 
       try {
         await foreignBlock.save();

@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IForeignBlock extends Document {
   foreignChainId: string;
+  chainAddress: string;
   anchor: number;
   createdAt: Date;
   updatedAt: Date;
@@ -13,6 +14,7 @@ const ForeignBlockSchema = new Schema(
     _id: { type: String, required: true },
     anchor: { type: Number, required: true },
     foreignChainId: { type: String, required: true },
+    chainAddress: { type: String, required: true, unique: false },
     blockId: { type: Number, required: true },
   },
   {
