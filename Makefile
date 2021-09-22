@@ -45,14 +45,6 @@ publish-bsc:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n dev
 
-publish-eth:
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-eth01 -n dev
-
 publish-bsc-sbx:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n sandbox
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc01 -n sandbox
@@ -63,8 +55,7 @@ publish-bsc-sbx:
 
 
 dev-bsc: assume login build-dev update-stg-kubeconfig publish-bsc
-dev-eth: assume login build-dev update-stg-kubeconfig publish-eth
-dev: assume login build-dev update-stg-kubeconfig publish-bsc publish-eth
+dev: assume login build-dev update-stg-kubeconfig publish-bsc
 
 sbx-bsc: assume login update-stg-kubeconfig build-sbx publish-bsc-sbx
 sbx: sbx-bsc
