@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Added
+- v1 of multichain support
+- `ForeignChainReplicationWorker` worker for multichain solution
+
+### Changed
+- moved statsD from being directly used to being injected
+- API accept `chainId`
+
+### Fixed
+- 
+
 ## [3.1.5] - 2021-09-03
 ### Changed
 - update ethers and toolbox

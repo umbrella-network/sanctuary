@@ -6,7 +6,7 @@ const settings: Settings = {
   port: parseInt(process.env.PORT || '3000'),
   jobs: {
     blockCreation: {
-      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '60000', 10),
+      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '1000', 10),
     },
     metricsReporting: {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
