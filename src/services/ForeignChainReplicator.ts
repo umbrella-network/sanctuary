@@ -34,7 +34,10 @@ export class ForeignChainReplicator {
   };
 
   private commit = async (replicationStatus: ReplicationStatus, foreignChainId: string): Promise<void> => {
-    if (!replicationStatus.blocks && !replicationStatus.errors) {
+    if (!replicationStatus.blocks || replicationStatus.blocks.length == 0) return;
+
+    if (replicationStatus.errors) {
+      this.logger.error(`Block Replication Error - Errors: ${JSON.stringify(replicationStatus)}`);
       return;
     }
 
@@ -42,7 +45,12 @@ export class ForeignChainReplicator {
       const block = replicationStatus.blocks[i];
       const anchor = replicationStatus.anchors[i];
       const foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, foreignChainId });
-      await foreignBlock.save();
+
+      try {
+        await foreignBlock.save();
+      } catch (e) {
+        this.logger.error(e);
+      }
     }
   };
 }

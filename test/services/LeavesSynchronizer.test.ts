@@ -139,20 +139,18 @@ describe('LeavesSynchronizer', () => {
 
   it('returns "true" if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
-
     mockedChainContract.resolveValidators.returns(resolveValidators(chainStatus));
     mockedChainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [17005632]]));
-
     moxios.install();
+
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/blockId\/.+/, {
       status: 200,
       response: {
-        data: blockFromPegasus
+        data: [blockFromPegasus]
       }
     });
 
     const result = await leavesSynchronizer.apply(chainStatus, block._id);
-
     expect(result).to.be.true;
   });
 
@@ -170,7 +168,7 @@ describe('LeavesSynchronizer', () => {
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/blockId\/.+/, {
       status: 200,
       response: {
-        data: blockFromPegasus
+        data: [blockFromPegasus]
       }
     });
 

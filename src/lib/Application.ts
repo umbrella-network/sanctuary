@@ -4,14 +4,15 @@ import IORedis from 'ioredis';
 import settings from '../config/settings';
 import logger from './logger';
 import Settings from '../types/Settings';
-import Blockchain from './Blockchain';
-import ChainContract from '../contracts/ChainContract';
+import { Blockchain } from './Blockchain';
+import { ChainContract } from '../contracts/ChainContract';
 import { AuthUtils } from '../services/AuthUtils';
 import LockRepository from '../repositories/LockRepository';
 import buildRedisConnection from '../utils/buildRedisConnection';
 import StatsdClient from 'statsd-client';
 import statsdClient from './statsDClient';
-import { ChainContractFactory, ChainContractProvider } from '../factories/ChainContractFactory';
+import { BlockchainRepository } from '../repositories/BlockchainRepository';
+import { ChainContractRepository } from '../repositories/ChainContractRepository';
 
 class Application {
   private static _instance: Application;
@@ -23,13 +24,11 @@ class Application {
     this.container.bind<Logger>('Logger').toConstantValue(logger);
     this.container.bind<IORedis.Redis>('Redis').toConstantValue(buildRedisConnection(settings.redis));
     this.container.bind<StatsdClient>('StatsdClient').toConstantValue(statsdClient);
-    this.container.bind<ChainContract>(ChainContract).toSelf().inSingletonScope();
     this.container.bind<Blockchain>(Blockchain).toSelf().inSingletonScope();
     this.container.bind<AuthUtils>(AuthUtils).toSelf().inSingletonScope();
     this.container.bind(LockRepository).toSelf().inSingletonScope();
-
-    this.container.bind<ChainContractProvider>('ChainContractProvider')
-      .toProvider(ChainContractFactory.getProvider);
+    this.container.bind(BlockchainRepository).toSelf().inSingletonScope();
+    this.container.bind(ChainContractRepository).toSelf().inSingletonScope();
   }
 
   public static get instance(): Application {

@@ -18,7 +18,7 @@ describe('AuthUtils', () => {
   const mockVerificationResult = { apiKey };
   const mockRequest = {
     headers: { authorization: `Bearer ${apiKey.key}` },
-    route: { path: 'leaves' },
+    path: 'leaves',
     method,
     baseUrl: 'blocks/',
   } as Request;

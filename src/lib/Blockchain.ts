@@ -1,53 +1,49 @@
-import { inject, injectable } from 'inversify';
 import Settings, { BlockchainSettings } from '../types/Settings';
 import { ethers, Wallet } from 'ethers';
 
-@injectable()
-class Blockchain {
-  settings!: Settings;
-  providers: Record<string, ethers.providers.Provider> = {};
-  wallets: Record<string, Wallet> = {};
+export type BlockchainProps = {
+  chainId: string;
+  settings: Settings;
+};
 
-  constructor(@inject('Settings') settings: Settings) {
-    this.settings = settings;
+export class Blockchain {
+  readonly chainId!: string;
+  readonly isHomeChain!: boolean;
+  readonly settings!: BlockchainSettings;
+  readonly provider: ethers.providers.Provider;
+  readonly wallet: Wallet;
 
-    const { replicatorPrivateKey } = settings.blockchain;
+  constructor(props: BlockchainProps) {
+    const { chainId, settings } = props;
 
-    Object.keys(settings.blockchain.multiChains).forEach((key) => {
-      const blockchainSettings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[key];
+    this.chainId = chainId;
+    this.isHomeChain = chainId === settings.blockchain.homeChain.chainId;
+    this.settings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[chainId];
 
-      if (!blockchainSettings.providerUrl) {
-        return;
-      }
+    if (!this.settings.providerUrl) {
+      return;
+    }
 
-      this.providers[key] = ethers.providers.getDefaultProvider(blockchainSettings.providerUrl);
+    this.provider = ethers.providers.getDefaultProvider(this.settings.providerUrl);
 
-      if (replicatorPrivateKey) {
-        this.wallets[key] = new Wallet(replicatorPrivateKey, this.providers[key]);
-      }
-    });
+    if (settings.blockchain.replicatorPrivateKey) {
+      this.wallet = new Wallet(settings.blockchain.replicatorPrivateKey, this.provider);
+    }
   }
 
-  getProvider(chainId = this.settings.blockchain.homeChain.chainId): ethers.providers.Provider {
-    return this.providers[chainId];
-  }
+  getProvider = (): ethers.providers.Provider => {
+    return this.provider;
+  };
 
-  async getLastNonce(chainId = this.settings.blockchain.homeChain.chainId): Promise<number> {
-    return this.wallets[chainId].getTransactionCount('latest');
-  }
+  getLastNonce = async (): Promise<number> => {
+    return this.wallet.getTransactionCount('latest');
+  };
 
-  async getBlockNumber(chainId = this.settings.blockchain.homeChain.chainId): Promise<number> {
-    return this.providers[chainId].getBlockNumber();
-  }
+  getBlockNumber = async (): Promise<number> => {
+    return this.provider.getBlockNumber();
+  };
 
-  getContractRegistryAddress(chainId = this.settings.blockchain.homeChain.chainId): string {
-    const blockchainSettings = (<Record<string, BlockchainSettings>>this.settings.blockchain.multiChains)[chainId];
-    return blockchainSettings.contractRegistryAddress;
-  }
-
-  getBlockchainSettings(chainId = this.settings.blockchain.homeChain.chainId): BlockchainSettings {
-    return (<Record<string, BlockchainSettings>>this.settings.blockchain.multiChains)[chainId];
-  }
+  getContractRegistryAddress = (): string => {
+    return this.settings.contractRegistryAddress;
+  };
 }
-
-export default Blockchain;

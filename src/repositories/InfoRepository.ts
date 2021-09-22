@@ -1,14 +1,18 @@
 import { inject, injectable } from 'inversify';
 import Settings from '../types/Settings';
 import StakingBankContract from '../contracts/StakingBankContract';
-import Blockchain from '../lib/Blockchain';
-import ChainContract from '../contracts/ChainContract';
 import { ChainStatus } from '../types/ChainStatus';
-import { Network } from '@ethersproject/networks';
-import { ChainContractProvider } from '../factories/ChainContractFactory';
+import { ForeignChainStatus } from '../types/ForeignChainStatus';
+import { BlockchainRepository } from './BlockchainRepository';
+import { ChainContractRepository } from './ChainContractRepository';
+import { BaseChainContract } from '../contracts/BaseChainContract';
 
-type FullChainStatus = ChainStatus | Error;
-type NetworkStatus = Network | Error;
+type FullChainStatus = ChainStatus | ForeignChainStatus | Error;
+
+type NetworkStatus = {
+  name: string;
+  id: number;
+};
 
 export type Info = {
   status: FullChainStatus;
@@ -18,22 +22,22 @@ export type Info = {
   contractRegistryAddress?: string;
   stakingBankAddress?: string;
   chainContractAddress?: string;
-}
+};
 
 export type GetInfoProps = {
   chainId?: string;
-}
+};
 
 @injectable()
 export class InfoRepository {
   @inject('Settings') private readonly settings: Settings;
   @inject(StakingBankContract) private readonly stakingBankContract: StakingBankContract;
-  @inject(Blockchain) private readonly blockchain: Blockchain;
-  @inject('ChainContractProvider') chainContractProvider: ChainContractProvider;
+  @inject(BlockchainRepository) private readonly blockchainRepository: BlockchainRepository;
+  @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
 
   getInfo = async (props: GetInfoProps): Promise<Info> => {
     const chainId = props.chainId;
-    const chainContract = await this.chainContractProvider(chainId);
+    const chainContract = await this.getChainContract(chainId);
     const version = this.settings.version;
     const environment = this.settings.environment;
     const network = await this.getNetworkStatus(chainId);
@@ -48,34 +52,49 @@ export class InfoRepository {
     }
 
     return info;
-  }
+  };
 
-  private getStatus = async(chainContract: ChainContract): Promise<FullChainStatus> => {
+  private getStatus = async (chainContract: BaseChainContract): Promise<FullChainStatus> => {
     try {
-      return await chainContract.resolveStatus<ChainStatus>();
+      return await chainContract.resolveStatus<ChainStatus | ForeignChainStatus>();
     } catch (e) {
       return e;
     }
-  }
+  };
+
+  private getChainContract = async (chainId: string): Promise<BaseChainContract> => {
+    try {
+      return await this.chainContractRepository.get(chainId);
+    } catch (e) {
+      return e;
+    }
+  };
 
   private getChainContractAddress = (status: FullChainStatus): string | undefined => {
-    if (status.constructor.name != 'ChainStatus') return undefined;
-    return (<ChainStatus> status).chainAddress;
-  }
-
-  private getNetworkStatus = async (chainId?: string): Promise<NetworkStatus> => {
     try {
-      return await this.blockchain.getProvider(chainId).getNetwork();
+      return (<ChainStatus>status).chainAddress;
     } catch (e) {
-      return e;
+      return e.message;
     }
-  }
+  };
+
+  private getNetworkStatus = async (chainId: string): Promise<NetworkStatus> => {
+    try {
+      const network = await this.blockchainRepository.get(chainId).getProvider().getNetwork();
+      return { name: network.name, id: network.chainId };
+    } catch (e) {
+      return { name: e.message, id: -1 };
+    }
+  };
 
   private getStakingBankAddress = async (): Promise<string> =>
-    (await this.stakingBankContract.resolveContract())
-      .address;
+    (await this.stakingBankContract.resolveContract()).address;
 
-  private getContractRegistryAddress = (chainId?: string): string => this
-    .blockchain
-    .getContractRegistryAddress(chainId);
+  private getContractRegistryAddress = (chainId: string): string => {
+    try {
+      return this.blockchainRepository.get(chainId).getContractRegistryAddress();
+    } catch (e) {
+      return e.message;
+    }
+  };
 }

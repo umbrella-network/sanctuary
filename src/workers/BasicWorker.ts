@@ -33,7 +33,14 @@ abstract class BasicWorker {
   }
 
   enqueue = async <T>(params: T, opts?: Bull.JobsOptions): Promise<Bull.Job<T>> => {
-    return this.queue.add(this.queueName, params, opts);
+    const jobOptions = {
+      removeOnComplete: 100,
+      removeOnFail: 100,
+      stackTraceLimit: 100,
+      ...opts,
+    };
+
+    return this.queue.add(this.queueName, params, jobOptions);
   };
 
   start = (): void => {

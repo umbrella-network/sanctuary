@@ -7,7 +7,10 @@ import { ForeignChainReplicationWorker } from './workers';
 import Settings from './types/Settings';
 import { Logger } from 'winston';
 import newrelic from 'newrelic';
-import { QueueScheduler } from 'bullmq';
+import logger from './lib/logger';
+import { ChainsIds } from './types/ChainsIds';
+
+logger.info('Starting Scheduler...');
 
 (async (): Promise<void> => {
   const settings: Settings = Application.get('Settings');
@@ -18,23 +21,29 @@ import { QueueScheduler } from 'bullmq';
   const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
 
   setInterval(async () => {
-    await foreignChainReplicationWorker.enqueue({
-      foreignChainId: 'ethereum',
-      lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
-      interval: settings.jobs.foreignChainReplication.ethereum.interval,
-    });
+    await foreignChainReplicationWorker.enqueue(
+      {
+        foreignChainId: ChainsIds.ETH,
+        lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
+        interval: settings.jobs.foreignChainReplication.ethereum.interval,
+      },
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
   }, settings.jobs.foreignChainReplication.ethereum.interval);
 
-  // setInterval(async () => {
-  //   await metricsWorker.enqueue(
-  //     {},
-  //     {
-  //       removeOnComplete: true,
-  //       removeOnFail: true,
-  //     }
-  //   );
-  // }, settings.jobs.metricsReporting.interval);
-  //
+  setInterval(async () => {
+    await metricsWorker.enqueue(
+      {},
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
+  }, settings.jobs.metricsReporting.interval);
+
   setInterval(async () => {
     try {
       await blockSynchronizerWorker.enqueue(

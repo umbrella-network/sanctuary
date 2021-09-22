@@ -1,23 +1,20 @@
-import dotenv from 'dotenv';
 import Settings from '../types/Settings';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../../package.json');
-
-dotenv.config();
 
 const settings: Settings = {
   port: parseInt(process.env.PORT || '3000'),
   jobs: {
     blockCreation: {
-      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '1000', 10),
+      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '60000', 10),
     },
     metricsReporting: {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
     },
     foreignChainReplication: {
       ethereum: {
-        interval: parseInt(process.env.ETHEREUM_REPLICATION_INTERVAL || '10000'),
-        lockTTL: parseInt(process.env.ETHEREUM_REPLICATION_LOCK_TTL || '9000'),
+        interval: parseInt(process.env.ETHEREUM_REPLICATION_INTERVAL || '60000'),
+        lockTTL: parseInt(process.env.ETHEREUM_REPLICATION_LOCK_TTL || '30000'),
       },
     },
   },
