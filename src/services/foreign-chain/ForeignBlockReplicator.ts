@@ -261,9 +261,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const [fcdsValues, fcdsTimestamps] = <ChainFCDsData>(
       await this.homeChainContract.resolveFCDs(block.chainAddress, allKeys)
     );
-
+    
     fcdsTimestamps.forEach((timestamp, i) => {
-      if (timestamp >= block.dataTimestamp.getTime()) {
+      if (timestamp >= block.dataTimestamp.getTime() / 1000) {
         keys.push(allKeys[i]);
         values.push(fcdsValues[i]._hex);
       }
