@@ -109,7 +109,11 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const [block] = blocks;
     const { keys, values } = await this.fetchFCDs(block);
     const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
-    if (!receipt) return { errors: [`[${this.chainId}] Unable to send tx for blockId ${block.blockId}`] };
+    if (receipt) {
+      this.logger.info(`block ${block.blockId} replicated with success at tx: ${receipt.transactionHash}`);
+    } else {
+      return { errors: [`[${this.chainId}] Unable to send tx for blockId ${block.blockId}`] };
+    }
 
     if (receipt.status === 1) {
       return {
@@ -261,7 +265,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const [fcdsValues, fcdsTimestamps] = <ChainFCDsData>(
       await this.homeChainContract.resolveFCDs(block.chainAddress, allKeys)
     );
-    
+
     fcdsTimestamps.forEach((timestamp, i) => {
       if (timestamp >= block.dataTimestamp.getTime() / 1000) {
         keys.push(allKeys[i]);
