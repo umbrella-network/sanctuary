@@ -2,6 +2,7 @@ include .env
 
 TAG=`git rev-parse --short HEAD`
 DEVELOP="$(AWS_REPOSITORY)/sanctuary:develop"
+PROD="$(AWS_REPOSITORY)/sanctuary:$(PROD_TAG)"
 
 CRED_TMP := /tmp/.credentials.tmp
 DURATION := 900
@@ -34,6 +35,10 @@ build-sbx:
 	@echo "## Building the sbx docker image ##"
 	docker buildx build  --push --platform linux/amd64 -t $(shell kubectl --kubeconfig ~/.kube/config-staging get deployments -n sandbox sanctuary-api-bsc01 -o=jsonpath='{$$.spec.template.spec.containers[:1].image}') .
 
+build-prod:
+	@echo "## Building the sbx docker image ##"
+	docker buildx build  --push --platform linux/amd64 -t $(PROD) .
+
 login:
 	@aws ecr --profile umb-central --region $(AWS_REGION) get-login-password  | docker login --username AWS --password-stdin $(AWS_REPOSITORY)
 
@@ -59,3 +64,5 @@ dev: assume login build-dev update-stg-kubeconfig publish-bsc
 
 sbx-bsc: assume login update-stg-kubeconfig build-sbx publish-bsc-sbx
 sbx: sbx-bsc
+
+prod-bsc: assume login build-prod
