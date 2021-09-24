@@ -3,6 +3,7 @@ import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
 import { EthereumBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
+import { IForeignBlock } from '../models/ForeignBlock';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -20,30 +21,33 @@ export class ForeignChainReplicator {
     };
   }
 
-  apply = async (props: ForeignChainReplicatorProps): Promise<void> => {
+  async apply(props: ForeignChainReplicatorProps): Promise<IForeignBlock[] | undefined> {
     try {
       const { foreignChainId } = props;
       const replicator = this.replicators[foreignChainId];
       const foreignChainStatus = await replicator.getStatus();
       const blocks = await replicator.resolvePendingBlocks(foreignChainStatus, new Date());
       const replicationStatus = await replicator.replicate(blocks, foreignChainStatus);
-      await this.commit(replicationStatus, foreignChainId, foreignChainStatus.chainAddress);
+      return await this.commit(replicationStatus, foreignChainId, foreignChainStatus.chainAddress);
     } catch (e) {
       this.logger.error(e);
+      return;
     }
-  };
+  }
 
   private commit = async (
     replicationStatus: ReplicationStatus,
     foreignChainId: string,
     chainAddress: string
-  ): Promise<void> => {
+  ): Promise<IForeignBlock[] | undefined> => {
     if (!replicationStatus.blocks || replicationStatus.blocks.length == 0) return;
 
     if (replicationStatus.errors) {
       this.logger.error(`Block Replication Error - Errors: ${JSON.stringify(replicationStatus)}`);
       return;
     }
+
+    const foreignBlocks: IForeignBlock[] = [];
 
     for (let i = 0; i < replicationStatus.blocks.length; i++) {
       const block = replicationStatus.blocks[i];
@@ -52,9 +56,12 @@ export class ForeignChainReplicator {
 
       try {
         await foreignBlock.save();
+        foreignBlocks.push(foreignBlock);
       } catch (e) {
         this.logger.error(e);
       }
     }
+
+    return foreignBlocks;
   };
 }

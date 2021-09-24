@@ -15,7 +15,7 @@ import moxios from 'moxios';
 import {LeafValueCoder} from '@umb-network/toolbox';
 import {expect} from 'chai';
 import {inputForBlockModel} from '../fixtures/inputForBlockModel';
-import ChainContract from '../../src/contracts/ChainContract';
+import {ChainContract} from '../../src/contracts/ChainContract';
 import FCD from '../../src/models/FCD';
 import {ChainStatus} from '../../src/types/ChainStatus';
 import {Validator} from '../../src/types/Validator';

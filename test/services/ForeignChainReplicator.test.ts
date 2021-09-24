@@ -1,211 +1,121 @@
-// import 'reflect-metadata';
-// import { getTestContainer } from '../helpers/getTestContainer';
-// import { ForeignBlockFactory } from '../../src/factories/ForeignBlockFactory';
-// import sinon, { createStubInstance, mock, SinonMock, SinonStubbedInstance } from 'sinon';
-// import { EthereumBlockReplicator } from '../../src/services/foreign-chain';
-// import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
-// import { Container } from 'inversify';
-// import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
-// import Block, { IBlock } from '../../src/models/Block';
-// import { ForeignChainReplicator } from '../../src/services/ForeignChainReplicator';
-// import { expect } from 'chai';
-//
-// describe('ForeignChainReplicator', () => {
-//   let instance: ForeignChainReplicator;
-//   let container: Container;
-//   let foreignBlockFactory: SinonMock;
-//   let ethereumBlockReplicator: SinonMock;
-//   let replicationStatus: ReplicationStatus;
-//   let foreignBlock: SinonMock;
-//   let block: SinonMock;
-//
-//   before(() => {
-//     // block = createStubInstance(Block);
-//     // replicationStatus = { blocks: [<IBlock><unknown>block], anchors: [1] };
-//     // foreignBlock = createStubInstance(ForeignBlock);
-//     // foreignBlock.save.resolves(foreignBlock);
-//     // ethereumBlockReplicator = createStubInstance(EthereumBlockReplicator);
-//     // foreignBlockFactory = createStubInstance(ForeignBlockFactory);
-//     // foreignBlockFactory.fromBlock.returns(new ForeignBlock());
-//     // foreignBlockFactory.fromBlock.returns(<IForeignBlock><unknown>foreignBlock);
-//     block = mock(Block);
-//     const blocks = [<IBlock><unknown>block];
-//     replicationStatus = { blocks: blocks, anchors: [1] };
-//     ethereumBlockReplicator = mock(EthereumBlockReplicator);
-//     ethereumBlockReplicator.expects('resolvePendingBlocks').returns(blocks);
-//     ethereumBlockReplicator.expects('replicate').returns(replicationStatus);
-//     foreignBlockFactory = mock(ForeignBlockFactory);
-//     foreignBlock = mock(ForeignBlock);
-//     foreignBlock.expects('save').resolves(foreignBlock);
-//     foreignBlockFactory.expects('fromBlock').returns(foreignBlock);
-//     container = getTestContainer();
-//     container.bind(ForeignBlockFactory).toConstantValue(<ForeignBlockFactory><unknown>foreignBlockFactory);
-//     container.bind(EthereumBlockReplicator).toConstantValue(<EthereumBlockReplicator><unknown>ethereumBlockReplicator);
-//     instance = container.get(ForeignChainReplicator);
-//   });
-//
-//   describe('#apply', async () => {
-//     it('replicates blocks', async () => {
-//       await instance.apply({ foreignChainId: 'ethereum' });
-//     });
-//   });
-// });
-//
-// // import logger from '../../src/lib/logger';
-// //
-// // describe('ForeignChainReplicator', async () => {
-// //   it('logs errors', () => {
-// //     logger.info('test');
-// //
-// //     try {
-// //       throw new Error('ERROR');
-// //     } catch (e) {
-// //       logger.error(e);
-// //     }
-// //   });
-// // });
-//
-// // import { expect } from 'chai';
-// // import { instance, mock, verify, when } from 'ts-mockito';
-// // import { EthereumBlockReplicator, IForeignBlockReplicator } from '../../src/services/foreign-chain';
-// // import { ForeignChainStatus } from '../../src/types/ForeignChainStatus';
-// // import { resolvableInstance } from '../helpers/resolvableInstance';
-// // import { IBlock } from '@umb-network/toolbox/dist/models/ChainBlock';
-// // import { ForeignBlockFactory } from '../../src/factories/ForeignBlockFactory';
-// // import ForeignBlock from '../../src/models/ForeignBlock';
-// // import Block from '../../src/models/Block';
-// //
-// // describe('ForeignChainReplicator', () => {
-// //   describe('#apply', () => {
-// //     const MockForeignChainStatus = mock<ForeignChainStatus>();
-// //     const foreignChainStatus = resolvableInstance(MockForeignChainStatus);
-// //
-// //     const MockBlock = mock(Block);
-// //     const block = instance(MockBlock);
-// //
-// //     const MockForeignBlockReplicator = mock(EthereumBlockReplicator);
-// //     const replicator = instance(MockForeignBlockReplicator);
-// //
-// //     const MockForeignBlockFactory = mock(ForeignBlockFactory);
-// //     const foreignBlockFactory = instance(MockForeignBlockReplicator);
-// //
-// //     const MockForeignBlock = mock(ForeignBlock);
-// //     const foreignBlock = instance(MockForeignBlock);
-// //
-// //   });
-// // });
-// //
-// //
-// // // import 'reflect-metadata';
-// // // import '../../src/config/setupDotenv';
-// // // import { anything, instance, mock, verify, when } from 'ts-mockito';
-// // // import { assert, expect } from 'chai';
-// // // import { getTestContainer } from '../helpers/getTestContainer';
-// // // import {
-// // //   EthereumBlockReplicator,
-// // //   ForeignBlockReplicator,
-// // //   IForeignBlockReplicator
-// // // } from '../../src/services/foreign-chain';
-// // // import { ForeignChainReplicator } from '../../src/services/ForeignChainReplicator';
-// // // import { ForeignBlockFactory } from '../../src/factories/ForeignBlockFactory';
-// // // import { IBlock } from '../../src/models/Block';
-// // // import { ForeignChainStatus } from '../../src/types/ForeignChainStatus';
-// // // import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
-// // // import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
-// // // import { Logger } from 'winston';
-// // //
-// // // const resolvableInstance = <T extends {}>(mock: T) => new Proxy<T>(instance(mock), {
-// // //   get(target, name: PropertyKey) {
-// // //     if (["Symbol(Symbol.toPrimitive)", "then", "catch"].includes(name.toString())) {
-// // //       return undefined;
-// // //     }
-// // //
-// // //     return (target as any)[name];
-// // //   },
-// // // });
-// // //
-// // // describe('ForeignChainReplicator', async () => {
-// // //   const container = getTestContainer();
-// // //
-// // //   describe('#apply', () => {
-// // //     // let instance: ForeignChainReplicator;
-// // //     // let mockForeignChainStatus: ForeignChainStatus;
-// // //     // let mockBlock: IBlock;
-// // //     // let mockReplicationStatus: ReplicationStatus;
-// // //     // let ethereumBlockReplicator: EthereumBlockReplicator;
-// // //     // let mockForeignBlock: IForeignBlock;
-// // //
-// // //
-// // //
-// // //     // const mockForeignChainStatus = mock<ForeignChainStatus>();
-// // //     // const mockBlocks = [mock<IBlock>()];
-// // //     // const mockReplicationStatus = mock<ReplicationStatus>();
-// // //     // const mockEthereumBlockReplicator = mock<EthereumBlockReplicator>(EthereumBlockReplicator);
-// // //     // when(mockEthereumBlockReplicator.getStatus()).thenResolve(mockForeignChainStatus);
-// // //     // when(mockEthereumBlockReplicator.resolvePendingBlocks(anything(), anything())).thenResolve(mockBlocks);
-// // //     // when(mockEthereumBlockReplicator.replicate(anything(), anything())).thenResolve(mockReplicationStatus);
-// // //     // container.bind(EthereumBlockReplicator).toConstantValue(mockEthereumBlockReplicator);
-// // //     //
-// // //     // const mockForeignBlock = mock<IForeignBlock>(ForeignBlock);
-// // //     // when(mockForeignBlock.save()).thenResolve();
-// // //     //
-// // //     // const mockForeignBlockFactory = mock(ForeignBlockFactory);
-// // //     // when(mockForeignBlockFactory.fromBlock(anything())).thenReturn(mockForeignBlock);
-// // //     // container.bind(ForeignBlockFactory).toConstantValue(mockForeignBlockFactory);
-// // //
-// // //     // beforeEach(async () => {
-// // //       // mockForeignChainStatus = mock<ForeignChainStatus>();
-// // //       // mockBlock = mock<IBlock>();
-// // //       // mockReplicationStatus = mock<ReplicationStatus>();
-// // //       // when(mockEthereumBlockReplicator.getStatus()).thenResolve(mockForeignChainStatus);
-// // //       // instance = container.get(ForeignChainReplicator);
-// // //     // });
-// // //
-// // //     // it('Asyncs', async function() {
-// // //     //   const promise = new Promise((resolve, reject) => resolve(false));
-// // //     //
-// // //     //   return promise.then((res) => assert.equal(false, true));
-// // //     //   // const result = await promise;
-// // //     //   // expect(result).to.eq(false);
-// // //     // });
-// // //
-// // //     it('Checks', async () => {
-// // //       const MockForeignChainStatus = mock<ForeignChainStatus>();
-// // //       when(MockForeignChainStatus.chainAddress).thenReturn('BLAH');
-// // //       const foreignChainStatus = resolvableInstance(MockForeignChainStatus);
-// // //
-// // //       const MockBlockReplicator = mock(EthereumBlockReplicator);
-// // //       when(MockBlockReplicator.getStatus()).thenReturn(Promise.resolve(foreignChainStatus));
-// // //       const blockReplicator = instance(MockBlockReplicator);
-// // //       container.bind(EthereumBlockReplicator).toConstantValue(blockReplicator);
-// // //
-// // //       const result = await blockReplicator.getStatus();
-// // //       expect(result.chainAddress).to.eq('BLAH');
-// // //
-// // //       // const result = await (Promise.resolve(true));
-// // //       // expect(result).to.eq(true);
-// // //
-// // //
-// // //       // expect(foreignChainStatus.chainAddress).to.eq('BLAH');
-// // //
-// // //       // expect(blockReplicator.getStatus()).to.have();
-// // //       // return blockReplicator.getStatus().then((result) => expect(result.chainAddress).to.eq('BLUH'));
-// // //
-// // //       // return blockReplicator.getStatus().then((res) => {
-// // //       //   expect(res).to.eq(false);
-// // //       // });
-// // //
-// // //
-// // //     //
-// // //     //
-// // //     //   // expect(true).to.eq(true);
-// // //     });
-// // //
-// // //     // it('gets the foreign chain status', async () => {
-// // //     //   await instance.apply({ foreignChainId: 'ethereum' });
-// // //     //   console.log('===========');
-// // //     //   console.log(verify(mockEthereumBlockReplicator.getStatus()).called());
-// // //     //   console.log('===========');
-// // //     // });
-// // //   });
-// // // });
+import 'reflect-metadata';
+import { getTestContainer } from '../helpers/getTestContainer';
+import { Container } from 'inversify';
+import { ForeignChainReplicator } from '../../src/services/ForeignChainReplicator';
+import sinon, { SinonStub } from 'sinon';
+import { EthereumBlockReplicator } from '../../src/services/foreign-chain';
+import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
+import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
+import { StubbedInstance, stubConstructor, stubObject } from 'ts-sinon';
+import { ForeignBlockFactory } from '../../src/factories/ForeignBlockFactory';
+import { ForeignChainStatus } from '../../src/types/ForeignChainStatus';
+import Block, { IBlock } from '../../src/models/Block';
+import { expect } from 'chai';
+import { foreignBlockFactory as mockForeignBlockFactory } from '../mocks/factories/foreignBlockFactory';
+
+describe('ForeignChainReplicator', () => {
+  let container: Container;
+  let instance: ForeignChainReplicator;
+  const subject = async () => await instance.apply({ foreignChainId: 'ethereum' });
+  let foreignBlockFactory: StubbedInstance<ForeignBlockFactory>;
+  let ethereumBlockReplicator: StubbedInstance<EthereumBlockReplicator>;
+  let foreignChainStatus: SinonStub;
+  let replicationStatus: ReplicationStatus;
+  let block: StubbedInstance<IBlock>;
+  let foreignBlock: StubbedInstance<IForeignBlock>;
+
+  before(async () => {
+    container = getTestContainer();
+    foreignBlockFactory = stubConstructor(ForeignBlockFactory);
+    ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
+    container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
+    container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
+
+    foreignChainStatus = sinon.stub();
+    ethereumBlockReplicator.getStatus.resolves(<ForeignChainStatus><unknown>foreignChainStatus);
+    block = stubConstructor(Block);
+    ethereumBlockReplicator.resolvePendingBlocks.resolves([block]);
+    replicationStatus = { blocks: [block], anchors: [1] };
+    ethereumBlockReplicator.replicate.resolves(replicationStatus);
+
+    foreignBlock = stubObject<IForeignBlock>(new ForeignBlock(mockForeignBlockFactory.attributes()));
+    foreignBlock.save.resolves();
+    foreignBlockFactory.fromBlock.returns(foreignBlock);
+
+    instance = container.get(ForeignChainReplicator);
+  });
+
+  after(() => {
+    sinon.restore();
+  });
+
+  describe('#apply', async () => {
+    it('replicates blocks', async () => {
+      const result = <IForeignBlock[]> await subject();
+      expect(result.length).to.eq(1);
+      expect(result[0]._id).to.eq(foreignBlock._id);
+      // class Engine {
+      //   pistons: Piston[];
+      //
+      //   check = (): string[] => {
+      //     this.logCheckCall();
+      //     return this.pistons.map((p) => p.check());
+      //   }
+      //
+      //   checkWithMethod = (): string[] => this.pistons.map((p) => p.method());
+      //
+      //   private logCheckCall = () => console.log('check start');
+      // }
+      //
+      // class Piston {
+      //   check = (): string => 'Piston OK';
+      //   run = () => logger.info('Running');
+      //   method(): string { return 'METHOD OK'; }
+      // }
+      //
+      // // No Lib
+      // const engine = new Engine();
+      // const piston = <Piston><unknown> { check: (): string => 'MOCKED' };
+      // engine.pistons = [piston];
+      // console.log(engine.check());
+
+      // // TS Mockito
+      // const engine = new Engine();
+      // const PistonMock = mock(Piston);
+      // when(PistonMock.check).thenReturn((): string => 'MOCKED');
+      // const piston = instance(PistonMock);
+      // engine.pistons = [piston];
+      // console.log(engine.check());
+
+      // // Sinon Simple Stub - ONLY WORKS WITH METHODS!
+      // const engine = new Engine();
+      // const piston = sinon.createStubInstance(Piston);
+      // piston.method.returns('MOCKED');
+      // engine.pistons = [<Piston><unknown>piston];
+      // console.log(engine.checkWithMethod());
+
+      // // Sinon Arrow Stub
+      // const engine = new Engine();
+      // const piston = sinon.createStubInstance(Piston);
+      // piston.check = sinon.stub();
+      // piston.check.returns('MOCKED');
+      // engine.pistons = [<Piston><unknown>piston];
+      // console.log(engine.check());
+
+      // // TS-Sinon (Arrow)
+      // const engine = new Engine();
+      // const piston = stubConstructor(Piston);
+      // piston.check = sinon.stub();
+      // piston.check.returns('MOCKED');
+      // engine.pistons = [piston];
+      // console.log(engine.check());
+
+      // // TS-Sinon (Method)
+      // const engine = new Engine();
+      // const piston = stubObject<Piston>(new Piston());
+      // piston.method.returns('MOCKED');
+      // engine.pistons = [piston];
+      // console.log(engine.checkWithMethod());
+    });
+  });
+});
