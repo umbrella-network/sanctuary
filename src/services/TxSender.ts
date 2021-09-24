@@ -1,8 +1,7 @@
 // TODO move this class to SDK and reuse in Pegasus and Sanctuary
 import { Wallet } from 'ethers';
-import { GasEstimator } from './GasEstimator';
+import { GasEstimator, GasEstimation } from './GasEstimator';
 import { TransactionResponse, TransactionReceipt } from '@ethersproject/providers';
-import { GasPriceMetrics } from '../types/GasPriceMetrics';
 import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
 
 interface ILogger {
@@ -29,13 +28,20 @@ export class TxSender {
     timePadding: number,
     transactionRequest: TransactionRequest = {}
   ): Promise<TransactionReceipt> => {
-    const gasMetrics = await GasEstimator.apply(this.wallet.provider, minGasPrice, maxGasPrice);
+    const gasEstimation = await GasEstimator.apply(this.wallet.provider, minGasPrice, maxGasPrice);
+    const { gasPrice, maxPriorityFeePerGas, maxFeePerGas, isTxType2 } = gasEstimation;
+    const gas = {
+      type: isTxType2 ? 2 : 0,
+      gasPrice: isTxType2 ? undefined : gasPrice,
+      maxPriorityFeePerGas: isTxType2 ? maxPriorityFeePerGas : undefined,
+      maxFeePerGas: isTxType2 ? maxFeePerGas : undefined
+    };
 
-    this.logger.info(`Submitting tx, gas metrics: ${GasEstimator.printable(gasMetrics)}`);
+    this.logger.info(`Submitting tx, gas metrics: ${GasEstimator.printable(gasEstimation)}`);
 
     const { tx, receipt, timeoutMs } = await this.executeTx(
       fn,
-      { gasPrice: gasMetrics.estimation, ...transactionRequest },
+      { ...gas, ...transactionRequest },
       timePadding * 1000
     );
 
@@ -43,7 +49,7 @@ export class TxSender {
       this.logger.warn(`canceling tx ${tx.hash}`);
       const newGasMetrics = await GasEstimator.apply(this.wallet.provider, minGasPrice, maxGasPrice);
 
-      await this.cancelPendingTransaction(gasMetrics.estimation, timePadding, newGasMetrics).catch(this.logger.warn);
+      await this.cancelPendingTransaction(gasEstimation.gasPrice, timePadding, newGasMetrics).catch(this.logger.warn);
 
       throw new Error(`mint TX timeout: ${timeoutMs}ms`);
     }
@@ -54,7 +60,7 @@ export class TxSender {
   private cancelPendingTransaction = async (
     prevGasPrice: number,
     timePadding: number,
-    gasMetrics: GasPriceMetrics
+    gasEstimation: GasEstimation
   ): Promise<boolean> => {
     const txData = <TransactionRequest>{
       from: this.wallet.address,
@@ -62,7 +68,7 @@ export class TxSender {
       value: 0n,
       nonce: await this.wallet.getTransactionCount('latest'),
       gasLimit: 21000,
-      gasPrice: Math.max(gasMetrics.estimation, prevGasPrice) * 2,
+      gasPrice: Math.max(gasEstimation.gasPrice, prevGasPrice) * 2,
     };
 
     this.logger.warn('Sending canceling tx', { nonce: txData.nonce, gasPrice: txData.gasPrice });
