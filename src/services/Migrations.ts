@@ -89,7 +89,7 @@ class Migrations {
         console.log(`${address_1} removed`);
       }
 
-      const chains = await ChainInstance.find({chainId: { $exists: false }});
+      const chains = await ChainInstance.find({ chainId: { $exists: false } });
 
       await Promise.all(
         chains.map((chain) => {
@@ -109,7 +109,7 @@ class Migrations {
         console.log(`${dataTimestamp1} removed`);
       }
 
-      const fcds = await FCD.find({chainId: { $exists: false }});
+      const fcds = await FCD.find({ chainId: { $exists: false } });
 
       await Promise.all(
         fcds.map((fcd) => {
@@ -123,7 +123,7 @@ class Migrations {
         })
       );
 
-      await FCD.deleteMany({chainId: { $exists: false }});
+      await FCD.deleteMany({ chainId: { $exists: false } });
     });
   };
 }

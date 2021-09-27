@@ -3,12 +3,12 @@ import { Logger } from 'winston';
 import newrelic from 'newrelic';
 
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
-import {LeafKeyCoder, LeafValueCoder} from '@umb-network/toolbox';
+import { LeafKeyCoder, LeafValueCoder } from '@umb-network/toolbox';
 import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
 
 import Block, { IBlock } from '../../models/Block';
 import ForeignBlock, { IForeignBlock } from '../../models/ForeignBlock';
-import FCD, {IFCD} from '../../models/FCD';
+import FCD, { IFCD } from '../../models/FCD';
 
 import { ForeignChainStatus } from '../../types/ForeignChainStatus';
 import { BlockStatus } from '../../types/blocks';
@@ -28,8 +28,8 @@ import { ChainContractRepository } from '../../repositories/ChainContractReposit
 
 type FetchedFCDs = {
   keys: string[];
-  values: FeedValue[],
-}
+  values: FeedValue[];
+};
 
 export type ReplicationStatus = {
   blocks?: IBlock[];
@@ -115,7 +115,14 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const [block] = blocks;
     const fetchedFCDs = await this.fetchFCDs(block);
 
-    const receipt = await this.replicateBlock(block.dataTimestamp, block.root, fetchedFCDs.keys, fetchedFCDs.values, block.blockId, status);
+    const receipt = await this.replicateBlock(
+      block.dataTimestamp,
+      block.root,
+      fetchedFCDs.keys,
+      fetchedFCDs.values,
+      block.blockId,
+      status
+    );
 
     if (receipt) {
       this.logger.info(`block ${block.blockId} replicated with success at tx: ${receipt.transactionHash}`);
@@ -126,7 +133,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     if (receipt.status === 1) {
       return {
         blocks: [block],
-        fcds:  fetchedFCDs,
+        fcds: fetchedFCDs,
         anchors: [receipt.blockNumber],
       };
     }
@@ -265,9 +272,11 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const values: FeedValue[] = [];
 
     // TODO this potentially should be fetched based on feed file, but we cloning everything so we can use DB
-    const homeFcdKeys = (await FCD.find({
-      chainId: this.settings.blockchain.homeChain.chainId
-    })).map((item) => item._id);
+    const homeFcdKeys = (
+      await FCD.find({
+        chainId: this.settings.blockchain.homeChain.chainId,
+      })
+    ).map((item) => item._id);
 
     if (!homeFcdKeys.length) {
       this.logger.warn(`[${this.chainId}] No FCDs found for replication`);

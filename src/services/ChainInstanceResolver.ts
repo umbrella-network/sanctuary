@@ -17,8 +17,7 @@ export class ChainInstanceResolver {
   async byAnchor(anchors: number[]): Promise<(IChainInstance | undefined)[]> {
     const sortedInstances = await this.sortedChainInstances();
 
-    const found = anchors
-      .map((anchor) => sortedInstances.find((chainInstance) => chainInstance.anchor <= anchor));
+    const found = anchors.map((anchor) => sortedInstances.find((chainInstance) => chainInstance.anchor <= anchor));
 
     this.checkIfFound(found, anchors);
     return found;

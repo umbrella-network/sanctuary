@@ -4,7 +4,7 @@ import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
 import { EthereumBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IForeignBlock } from '../models/ForeignBlock';
-import {FCDFactory} from "../factories/FCDFactory";
+import { FCDFactory } from '../factories/FCDFactory';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -60,7 +60,7 @@ export class ForeignChainReplicator {
         key: replicationStatus.fcds.keys[i],
         value: replicationStatus.fcds.values[i],
         dataTimestamp: block.dataTimestamp,
-        chainId: foreignChainId
+        chainId: foreignChainId,
       });
 
       try {

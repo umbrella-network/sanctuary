@@ -14,7 +14,7 @@ import * as url from 'url';
 import { callRetry } from '../utils/callRetry';
 import Settings from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
-import {FCDFactory} from '../factories/FCDFactory';
+import { FCDFactory } from '../factories/FCDFactory';
 
 @injectable()
 class LeavesSynchronizer {
@@ -156,7 +156,7 @@ class LeavesSynchronizer {
           key: fcdKeys[i],
           dataTimestamp: new Date(timestamps[i] * 1000),
           value: LeafValueCoder.decode(value.toHexString(), fcdKeys[i]),
-          chainId: this.settings.blockchain.homeChain.chainId
+          chainId: this.settings.blockchain.homeChain.chainId,
         });
 
         return FCD.findOneAndUpdate(
@@ -164,7 +164,7 @@ class LeavesSynchronizer {
           {
             dataTimestamp: fcd.dataTimestamp,
             value: fcd.value,
-            chainId: fcd.chainId
+            chainId: fcd.chainId,
           },
           { new: true, upsert: true }
         );

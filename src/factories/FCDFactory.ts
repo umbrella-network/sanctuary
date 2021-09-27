@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import FCD, {IFCD} from '../models/FCD';
+import FCD, { IFCD } from '../models/FCD';
 
 export interface FCDFactoryProps {
   key: string;

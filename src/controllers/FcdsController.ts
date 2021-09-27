@@ -11,14 +11,14 @@ class FcdsController {
   router: express.Application;
 
   constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
-    this.router = express()
-      .get('/', this.index)
-      .get('/:chainId', this.index);
+    this.router = express().get('/', this.index).get('/:chainId', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const chainId = <string>(request.query.chainId || request.params.chainId || this.settings.blockchain.homeChain.chainId);
-    const fcds = await FCD.find({chainId: chainId}).sort({ dataTimestamp: -1 }).exec();
+    const chainId = <string>(
+      (request.query.chainId || request.params.chainId || this.settings.blockchain.homeChain.chainId)
+    );
+    const fcds = await FCD.find({ chainId: chainId }).sort({ dataTimestamp: -1 }).exec();
     response.send(fcds);
   };
 }
