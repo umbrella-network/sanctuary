@@ -31,19 +31,19 @@ export class Blockchain {
     }
   }
 
-  getProvider = (): ethers.providers.Provider => {
+  getProvider(): ethers.providers.Provider {
     return this.provider;
-  };
+  }
 
-  getLastNonce = async (): Promise<number> => {
+  async getLastNonce(): Promise<number> {
     return this.wallet.getTransactionCount('latest');
-  };
+  }
 
-  getBlockNumber = async (): Promise<number> => {
+  async getBlockNumber(): Promise<number> {
     return this.provider.getBlockNumber();
-  };
+  }
 
-  getContractRegistryAddress = (): string => {
+  getContractRegistryAddress(): string {
     return this.settings.contractRegistryAddress;
-  };
+  }
 }

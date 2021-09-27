@@ -1,5 +1,6 @@
 import { Container } from 'inversify';
 import { createLogger, transports } from 'winston';
+import settings from '../../src/config/settings';
 
 export function getTestContainer(): Container {
   const container = new Container({ autoBindInjectable: true });
@@ -12,5 +13,6 @@ export function getTestContainer(): Container {
   });
 
   container.bind('Logger').toConstantValue(logger);
+  container.bind('Settings').toConstantValue(settings);
   return container;
 }

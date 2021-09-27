@@ -1,3 +1,76 @@
+import 'reflect-metadata';
+import { Container } from 'inversify';
+import BlockSynchronizer from '../../src/services/BlockSynchronizer';
+import { ChainInstanceResolver } from '../../src/services/ChainInstanceResolver';
+import LeavesSynchronizer from '../../src/services/LeavesSynchronizer';
+import RevertedBlockResolver from '../../src/services/RevertedBlockResolver';
+import { BlockchainRepository } from '../../src/repositories/BlockchainRepository';
+import { ChainContractRepository } from '../../src/repositories/ChainContractRepository';
+import sinon, { createStubInstance, SinonStubbedInstance } from 'sinon';
+import { getTestContainer } from '../helpers/getTestContainer';
+import { ChainContract } from '../../src/contracts/ChainContract';
+import { arbitraryBlockFromChain } from '../fixtures/arbitraryBlockFromChain';
+import { Blockchain } from '../../src/lib/Blockchain';
+
+describe('BlockSynchronizer', () => {
+  describe('#apply', async () => {
+    let container: Container;
+    let instance: BlockSynchronizer;
+    const subject = async () => await instance.apply();
+    let chainInstanceResolver: SinonStubbedInstance<ChainInstanceResolver>;
+    let leavesSynchronizer: SinonStubbedInstance<LeavesSynchronizer>;
+    let revertedBlockResolver: SinonStubbedInstance<RevertedBlockResolver>;
+    let blockchainRepository: SinonStubbedInstance<BlockchainRepository>;
+    let chainContract: SinonStubbedInstance<ChainContract>;
+    let chainContractRepository: SinonStubbedInstance<ChainContractRepository>;
+
+    before(async () => {
+      container = getTestContainer();
+      chainInstanceResolver = createStubInstance(ChainInstanceResolver);
+      leavesSynchronizer = createStubInstance(LeavesSynchronizer);
+      revertedBlockResolver = createStubInstance(RevertedBlockResolver);
+      blockchainRepository = createStubInstance(BlockchainRepository);
+      chainContract = createStubInstance(ChainContract);
+      chainContractRepository = createStubInstance(ChainContractRepository);
+
+      chainContractRepository.get.returns(<ChainContract><unknown> chainContract);
+      revertedBlockResolver.apply.resolves(0);
+
+      chainContract.resolveBlockData.resolves({
+        ...arbitraryBlockFromChain,
+        root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6'
+      });
+
+      const blockchain = createStubInstance(Blockchain);
+      blockchain.getContractRegistryAddress.returns('CONTRACT_REGISTRY_ADDRESS');
+      blockchainRepository.get.returns(blockchain);
+      chainContractRepository.get.returns(<ChainContract><unknown> chainContract);
+
+      container.bind(ChainInstanceResolver).toConstantValue(<ChainInstanceResolver><unknown> chainInstanceResolver);
+      container.bind(LeavesSynchronizer).toConstantValue(<LeavesSynchronizer><unknown> leavesSynchronizer);
+      container.bind(RevertedBlockResolver).toConstantValue(revertedBlockResolver);
+      container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository><unknown> blockchainRepository);
+
+      container
+        .bind(ChainContractRepository)
+        .toConstantValue(<ChainContractRepository><unknown> chainContractRepository);
+
+      instance = container.get(BlockSynchronizer);
+    });
+
+    after(async () => {
+      sinon.restore();
+    });
+
+    it('synchronizes blocks', async () => {
+      // const result = await subject();
+
+    });
+  });
+});
+
+
+
 // /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 // import 'reflect-metadata';
 // import {Container} from 'inversify';

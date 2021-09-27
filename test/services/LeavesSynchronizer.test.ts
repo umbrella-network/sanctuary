@@ -85,7 +85,7 @@ describe('LeavesSynchronizer', () => {
     chainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [BigNumber.from('17005632')]] as any));
 
     container.bind(StakingBankContract).toConstantValue(validatorRegistryContract as unknown as StakingBankContract);
-    container.bind('Settings').toConstantValue(settings);
+    container.rebind('Settings').toConstantValue(settings);
     container.bind(ChainContract).toConstantValue(chainContract as unknown as ChainContract);
 
     container

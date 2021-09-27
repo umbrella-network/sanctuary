@@ -9,23 +9,23 @@ export class ChainInstanceResolver {
 
   private chainId!: string;
 
-  setup = (chainId: string): ChainInstanceResolver => {
+  setup(chainId: string): ChainInstanceResolver {
     this.chainId = chainId;
     return this;
-  };
+  }
 
-  byAnchor = async (anchors: number[]): Promise<(IChainInstance | undefined)[]> => {
+  async byAnchor(anchors: number[]): Promise<(IChainInstance | undefined)[]> {
     const sortedInstances = await this.sortedChainInstances();
 
-    const founded = anchors.map((anchor) => sortedInstances.find((chainInstance) => chainInstance.anchor <= anchor));
+    const found = anchors
+      .map((anchor) => sortedInstances.find((chainInstance) => chainInstance.anchor <= anchor));
 
-    this.checkIfFounded(founded, anchors);
+    this.checkIfFound(found, anchors);
+    return found;
+  }
 
-    return founded;
-  };
-
-  private checkIfFounded = (founded: (IChainInstance | undefined)[], ids: number[]) => {
-    founded.forEach((instance, i) => {
+  private checkIfFound = (found: (IChainInstance | undefined)[], ids: number[]) => {
+    found.forEach((instance, i) => {
       !instance && this.noticeError(`Can't resolve chain instance for id: ${ids[i]}`);
     });
   };

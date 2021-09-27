@@ -26,7 +26,7 @@ class LeavesSynchronizer {
 
   constructor(
     @inject('Settings') settings: Settings,
-    @inject(ChainContractRepository) private chainContractRepository: ChainContractRepository
+    @inject(ChainContractRepository) chainContractRepository: ChainContractRepository
   ) {
     this.chainContract = <ChainContract>chainContractRepository.get(settings.blockchain.homeChain.chainId);
   }

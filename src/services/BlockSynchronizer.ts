@@ -1,5 +1,5 @@
 import { Logger } from 'winston';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, postConstruct } from 'inversify';
 import newrelic from 'newrelic';
 import { ChainContract } from '../contracts/ChainContract';
 import Block, { IBlock } from '../models/Block';
@@ -21,7 +21,7 @@ class BlockSynchronizer {
   @inject('Settings') settings!: Settings;
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
   @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
-  @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
+  @inject(RevertedBlockResolver) revertedBlockResolver!: RevertedBlockResolver;
   @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
 
@@ -29,32 +29,32 @@ class BlockSynchronizer {
   private blockchain!: Blockchain;
   private chainContract!: ChainContract;
 
-  setup = (): void => {
+  @postConstruct()
+  setup(): void {
     if (this.chainId) {
       return;
     }
 
+
     this.chainId = this.settings.blockchain.homeChain.chainId;
     this.blockchain = this.blockchainRepository.get(this.chainId);
 
-    if (!this.blockchain.settings.contractRegistryAddress) {
+    if (!this.blockchain.getContractRegistryAddress()) {
       // scheduler catch
       return;
     }
 
     this.chainContract = <ChainContract>this.chainContractRepository.get(this.chainId);
     this.chainInstanceResolver.setup(this.chainId);
-  };
+  }
 
-  apply = async (): Promise<void> => {
-    this.setup();
-
+  async apply(): Promise<void> {
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
       this.chainContract.resolveStatus<ChainStatus>(),
       this.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
-    if ((await this.reveredBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId)) > 0) {
+    if ((await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId)) > 0) {
       return;
     }
 
@@ -78,7 +78,7 @@ class BlockSynchronizer {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
       await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
     }
-  };
+  }
 
   getLastSavedBlockIdAndStartAnchor = async (): Promise<[number, number]> => {
     const lastSavedBlock = await Block.find({}).sort({ blockId: -1 }).limit(1).exec();
