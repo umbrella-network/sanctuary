@@ -15,8 +15,8 @@ import { Blockchain } from '../../src/lib/Blockchain';
 describe('BlockSynchronizer', () => {
   describe('#apply', async () => {
     let container: Container;
-    let instance: BlockSynchronizer;
-    const subject = async () => await instance.apply();
+    // let instance: BlockSynchronizer;
+    // const subject = async () => await instance.apply();
     let chainInstanceResolver: SinonStubbedInstance<ChainInstanceResolver>;
     let leavesSynchronizer: SinonStubbedInstance<LeavesSynchronizer>;
     let revertedBlockResolver: SinonStubbedInstance<RevertedBlockResolver>;
@@ -55,7 +55,7 @@ describe('BlockSynchronizer', () => {
         .bind(ChainContractRepository)
         .toConstantValue(<ChainContractRepository><unknown> chainContractRepository);
 
-      instance = container.get(BlockSynchronizer);
+      container.get(BlockSynchronizer);
     });
 
     after(async () => {
