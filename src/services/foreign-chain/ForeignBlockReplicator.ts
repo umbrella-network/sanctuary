@@ -3,12 +3,12 @@ import { Logger } from 'winston';
 import newrelic from 'newrelic';
 
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
-import { LeafKeyCoder, LeafValueCoder } from '@umb-network/toolbox';
+import {LeafKeyCoder, LeafValueCoder} from '@umb-network/toolbox';
 import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
 
 import Block, { IBlock } from '../../models/Block';
 import ForeignBlock, { IForeignBlock } from '../../models/ForeignBlock';
-import FCD from '../../models/FCD';
+import FCD, {IFCD} from '../../models/FCD';
 
 import { ForeignChainStatus } from '../../types/ForeignChainStatus';
 import { BlockStatus } from '../../types/blocks';
@@ -26,8 +26,14 @@ import RevertedBlockResolver from '../RevertedBlockResolver';
 import { BlockchainRepository } from '../../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../../repositories/ChainContractRepository';
 
+type FetchedFCDs = {
+  keys: string[];
+  values: FeedValue[],
+}
+
 export type ReplicationStatus = {
   blocks?: IBlock[];
+  fcds?: FetchedFCDs;
   anchors?: number[];
   errors?: string[];
 };
@@ -107,8 +113,10 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     if (blocks.length > 1) return { errors: ['we support only one block at a time'] };
 
     const [block] = blocks;
-    const { keys, values } = await this.fetchFCDs(block);
-    const receipt = await this.replicateBlock(block.dataTimestamp, block.root, keys, values, block.blockId, status);
+    const fetchedFCDs = await this.fetchFCDs(block);
+
+    const receipt = await this.replicateBlock(block.dataTimestamp, block.root, fetchedFCDs.keys, fetchedFCDs.values, block.blockId, status);
+
     if (receipt) {
       this.logger.info(`block ${block.blockId} replicated with success at tx: ${receipt.transactionHash}`);
     } else {
@@ -118,6 +126,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     if (receipt.status === 1) {
       return {
         blocks: [block],
+        fcds:  fetchedFCDs,
         anchors: [receipt.blockNumber],
       };
     }
@@ -251,24 +260,28 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return e.message.includes('nonce has already been used');
   }
 
-  private async fetchFCDs(block: IBlock): Promise<{ keys: string[]; values: FeedValue[] }> {
+  private async fetchFCDs(block: IBlock): Promise<FetchedFCDs> {
     const keys: string[] = [];
     const values: FeedValue[] = [];
 
-    const allKeys = (await FCD.find()).map((item) => item._id);
+    // TODO this potentially should be fetched based on feed file, but we cloning everything so we can use DB
+    const homeFcdKeys = (await FCD.find({
+      chainId: this.settings.blockchain.homeChain.chainId
+    })).map((item) => item._id);
 
-    if (!allKeys.length) {
+    if (!homeFcdKeys.length) {
       this.logger.warn(`[${this.chainId}] No FCDs found for replication`);
       return { keys, values };
     }
 
     const [fcdsValues, fcdsTimestamps] = <ChainFCDsData>(
-      await this.homeChainContract.resolveFCDs(block.chainAddress, allKeys)
+      await this.homeChainContract.resolveFCDs(block.chainAddress, homeFcdKeys)
     );
 
     fcdsTimestamps.forEach((timestamp, i) => {
-      if (timestamp >= block.dataTimestamp.getTime() / 1000) {
-        keys.push(allKeys[i]);
+      // FCDs has the same time as block
+      if (timestamp === block.dataTimestamp.getTime() / 1000) {
+        keys.push(homeFcdKeys[i]);
         values.push(fcdsValues[i]._hex);
       }
     });

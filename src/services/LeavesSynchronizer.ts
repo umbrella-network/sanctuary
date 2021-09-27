@@ -14,6 +14,7 @@ import * as url from 'url';
 import { callRetry } from '../utils/callRetry';
 import Settings from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
+import {FCDFactory} from '../factories/FCDFactory';
 
 @injectable()
 class LeavesSynchronizer {
@@ -21,14 +22,15 @@ class LeavesSynchronizer {
   @inject('Settings') private readonly settings: Settings;
   @inject(StakingBankContract) private stakingBankContract!: StakingBankContract;
   @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
+  @inject(FCDFactory) private fcdFactory!: FCDFactory;
 
-  private chainContract!: ChainContract;
+  private homeChainContract!: ChainContract;
 
   constructor(
     @inject('Settings') settings: Settings,
     @inject(ChainContractRepository) chainContractRepository: ChainContractRepository
   ) {
-    this.chainContract = <ChainContract>chainContractRepository.get(settings.blockchain.homeChain.chainId);
+    this.homeChainContract = <ChainContract>chainContractRepository.get(settings.blockchain.homeChain.chainId);
   }
 
   async apply(chainStatus: ChainStatus, mongoBlockId: string): Promise<boolean | null> {
@@ -65,7 +67,7 @@ class LeavesSynchronizer {
 
   private validatorsList(chainStatus: ChainStatus, minter: string): Validator[] {
     // lets do a call to minter first
-    return this.chainContract
+    return this.homeChainContract
       .resolveValidators(chainStatus)
       .sort((a, b) => (a.id === minter ? -1 : b.id === minter ? 1 : 0));
   }
@@ -142,7 +144,7 @@ class LeavesSynchronizer {
       return [];
     }
 
-    const [values, timestamps] = await this.chainContract.resolveFCDs(block.chainAddress, fcdKeys);
+    const [values, timestamps] = await this.homeChainContract.resolveFCDs(block.chainAddress, fcdKeys);
 
     return Promise.all(
       values.map((value, i) => {
@@ -150,11 +152,19 @@ class LeavesSynchronizer {
           return;
         }
 
+        const fcd = this.fcdFactory.create({
+          key: fcdKeys[i],
+          dataTimestamp: new Date(timestamps[i] * 1000),
+          value: LeafValueCoder.decode(value.toHexString(), fcdKeys[i]),
+          chainId: this.settings.blockchain.homeChain.chainId
+        });
+
         return FCD.findOneAndUpdate(
-          { _id: fcdKeys[i] },
+          { _id: fcd._id },
           {
-            dataTimestamp: new Date(timestamps[i] * 1000),
-            value: LeafValueCoder.decode(value.toHexString(), fcdKeys[i]),
+            dataTimestamp: fcd.dataTimestamp,
+            value: fcd.value,
+            chainId: fcd.chainId
           },
           { new: true, upsert: true }
         );

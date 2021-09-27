@@ -11,6 +11,7 @@ class Migrations {
     // await this.migrateTo110();
     await Migrations.migrateTo121();
     await Migrations.migrateTo400();
+    await Migrations.migrateTo400_2();
   }
 
   private static hasMigration = async (v: string): Promise<boolean> => {
@@ -88,7 +89,7 @@ class Migrations {
         console.log(`${address_1} removed`);
       }
 
-      const chains = await ChainInstance.find();
+      const chains = await ChainInstance.find({chainId: { $exists: false }});
 
       await Promise.all(
         chains.map((chain) => {
@@ -96,6 +97,31 @@ class Migrations {
           return chain.save();
         })
       );
+    });
+  };
+
+  private static migrateTo400_2 = async () => {
+    await Migrations.wrapMigration('4.0.0_2', async () => {
+      const dataTimestamp1 = 'dataTimestamp_1';
+
+      if (await FCD.collection.indexExists(dataTimestamp1)) {
+        await FCD.collection.dropIndex(dataTimestamp1);
+        console.log(`${dataTimestamp1} removed`);
+      }
+
+      const fcds = await FCD.find({chainId: { $exists: false }});
+
+      await Promise.all(
+        fcds.map((fcd) => {
+          const newFcd = new FCD();
+          newFcd.chainId = 'bsc';
+          newFcd.key = fcd._id;
+          newFcd.id = `bsc::${fcd.key}`;
+          return newFcd.save();
+        })
+      );
+
+      await FCD.deleteMany({chainId: { $exists: false }});
     });
   };
 }
