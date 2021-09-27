@@ -11,7 +11,7 @@ class Migrations {
     // await this.migrateTo110();
     await Migrations.migrateTo121();
     await Migrations.migrateTo400();
-    await Migrations.migrateTo400_2();
+    await Migrations.migrateTo400_3();
   }
 
   private static hasMigration = async (v: string): Promise<boolean> => {
@@ -100,13 +100,15 @@ class Migrations {
     });
   };
 
-  private static migrateTo400_2 = async () => {
-    await Migrations.wrapMigration('4.0.0_2', async () => {
-      const dataTimestamp1 = 'dataTimestamp_1';
+  private static migrateTo400_3 = async () => {
+    await Migrations.wrapMigration('4.0.0_3', async () => {
+      const indexesToRemove = ['dataTimestamp_-1', 'chainAddress_1'];
 
-      if (await FCD.collection.indexExists(dataTimestamp1)) {
-        await FCD.collection.dropIndex(dataTimestamp1);
-        console.log(`${dataTimestamp1} removed`);
+      for (const indexToRemove of indexesToRemove) {
+        if (await FCD.collection.indexExists(indexToRemove)) {
+          await FCD.collection.dropIndex(indexToRemove);
+          console.log(`index ${indexToRemove} removed`);
+        }
       }
 
       const fcds = await FCD.find({ chainId: { $exists: false } });
@@ -124,6 +126,7 @@ class Migrations {
       );
 
       await FCD.deleteMany({ chainId: { $exists: false } });
+      await FCD.deleteMany({ id: { $exists: false } });
     });
   };
 }
