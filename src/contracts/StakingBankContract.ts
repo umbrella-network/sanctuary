@@ -19,18 +19,18 @@ class StakingBankContract {
     this.blockchain = blockchainRepository.get(settings.blockchain.homeChain.chainId);
   }
 
-  resolveContract = async (): Promise<Contract> => {
+  async resolveContract(): Promise<Contract> {
     if (!this.registry) {
       this.registry = new ContractRegistry(this.blockchain.getProvider(), this.blockchain.getContractRegistryAddress());
     }
 
     const address = await this.registry.getAddress(this.settings.blockchain.contracts.stakingBank.name);
     return new Contract(address, ABI.stakingBankAbi, this.blockchain.getProvider());
-  };
+  }
 
-  validators = async (id: string): Promise<utils.Result> => {
+  async validators(id: string): Promise<utils.Result> {
     return (await this.resolveContract()).validators(id);
-  };
+  }
 }
 
 export default StakingBankContract;

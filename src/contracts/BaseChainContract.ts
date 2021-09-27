@@ -30,40 +30,40 @@ export abstract class BaseChainContract {
     this.registry = new Contract(registryAddress, ABI.registryAbi, this.blockchain.getProvider());
   }
 
-  resolveContract = async (): Promise<BaseChainContract> => {
+  async resolveContract(): Promise<BaseChainContract> {
     const chainAddress = await this.registry.getAddressByString(this.settings.blockchain.contracts.chain.name);
     return this.setContract(chainAddress);
-  };
+  }
 
-  resolveStatus = async <T>(): Promise<T> => {
+  async resolveStatus<T>(): Promise<T> {
     const chain = await this.resolveContract();
     const status = await chain.contract.getStatus();
     return { chainAddress: chain.contract.address, ...status };
-  };
+  }
 
-  blocksCountOffset = async (): Promise<number> => {
+  async blocksCountOffset(): Promise<number> {
     await this._assertContract();
     return this.contract.blocksCountOffset();
-  };
+  }
 
   address = (): string => this.contract.address;
 
-  resolveBlockData = async (chainAddress: string, blockId: number): Promise<ChainBlockData> => {
+  async resolveBlockData(chainAddress: string, blockId: number): Promise<ChainBlockData> {
     return this.setContract(chainAddress).contract.blocks(blockId);
-  };
+  }
 
-  resolveFCDs = async (chainAddress: string, keys: string[]): Promise<ChainFCDsData> => {
+  async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
     //we resolving from homechain always
     if (!this.blockchain.isHomeChain) {
       throw Error('I think we using this only to resolve FCD from home chain');
     }
 
     return this.setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
-  };
+  }
 
-  resolveBlocksCountOffset = async (chainAddress: string): Promise<number> => {
+  async resolveBlocksCountOffset(chainAddress: string): Promise<number> {
     return this.setContract(chainAddress).contract.blocksCountOffset();
-  };
+  }
 
   protected _assertContract = async (): Promise<void> => {
     if (!this.contract) {

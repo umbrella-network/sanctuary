@@ -1,16 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 import 'reflect-metadata';
 import {Container} from 'inversify';
-import {mockedLogger} from '../mocks/logger';
 import LeavesSynchronizer from '../../src/services/LeavesSynchronizer';
 import StakingBankContract from '../../src/contracts/StakingBankContract';
 import sinon from 'sinon';
 import {BigNumber, ethers} from 'ethers';
-import mongoose from 'mongoose';
-import {loadTestEnv} from '../helpers';
 import Block from '../../src/models/Block';
 import Leaf from '../../src/models/Leaf';
-import SortedMerkleTreeFactory from '../../src/services/SortedMerkleTreeFactory';
 import moxios from 'moxios';
 import {LeafValueCoder} from '@umb-network/toolbox';
 import {expect} from 'chai';
@@ -21,6 +17,10 @@ import {ChainStatus} from '../../src/types/ChainStatus';
 import {Validator} from '../../src/types/Validator';
 import {BlockFromPegasus} from '../../src/types/blocks';
 import settings from '../../src/config/settings';
+import { setupDatabase, teardownDatabase } from '../helpers/databaseHelpers';
+import { getTestContainer } from '../helpers/getTestContainer';
+import { loadTestEnv } from '../helpers';
+import { ChainContractRepository } from '../../src/repositories/ChainContractRepository';
 
 const resolveValidators = (chainStatus: ChainStatus): Validator[] => {
   return chainStatus.validators.map((address, i) => {
@@ -34,8 +34,9 @@ const resolveValidators = (chainStatus: ChainStatus): Validator[] => {
 
 describe('LeavesSynchronizer', () => {
   let container: Container;
-  let mockedChainContract: sinon.SinonStubbedInstance<ChainContract>;
-  let mockedValidatorRegistryContract: sinon.SinonStubbedInstance<StakingBankContract>;
+  let chainContract: sinon.SinonStubbedInstance<ChainContract>;
+  let chainContractRepository: sinon.SinonStubbedInstance<ChainContractRepository>;
+  let validatorRegistryContract: sinon.SinonStubbedInstance<StakingBankContract>;
   let leavesSynchronizer: LeavesSynchronizer;
 
   const chainStatus: ChainStatus = {
@@ -64,28 +65,32 @@ describe('LeavesSynchronizer', () => {
   };
 
   before(async () => {
-    const config = loadTestEnv();
-    mongoose.set('useFindAndModify', false);
-    await mongoose.connect(config.MONGODB_URL, {useNewUrlParser: true, useUnifiedTopology: true});
+    loadTestEnv();
+    await setupDatabase();
   });
 
   beforeEach(async () => {
     moxios.uninstall();
     settings.app.feedsOnChain = 'test/fixtures/feeds-example.yaml';
 
-    container = new Container({autoBindInjectable: true});
+    container = getTestContainer();
 
     // Mocking dependencies and adding them to the container
-    mockedChainContract = sinon.createStubInstance(ChainContract);
-    mockedValidatorRegistryContract = sinon.createStubInstance(StakingBankContract);
-    container.bind('Logger').toConstantValue(mockedLogger);
-    container.bind('Settings').toConstantValue(settings);
-    container.bind(ChainContract).toConstantValue(mockedChainContract as unknown as ChainContract);
-    container.bind(StakingBankContract).toConstantValue(mockedValidatorRegistryContract as unknown as StakingBankContract);
-    container.bind(SortedMerkleTreeFactory).toSelf();
+    chainContract = sinon.createStubInstance(ChainContract);
+    validatorRegistryContract = sinon.createStubInstance(StakingBankContract);
+    chainContractRepository = sinon.createStubInstance(ChainContractRepository);
 
-    // Adding LeavesSynchronizer to the container
-    container.bind(LeavesSynchronizer).toSelf();
+    chainContractRepository.get.returns(<ChainContract><unknown> chainContract);
+    chainContract.resolveValidators.returns(resolveValidators(chainStatus));
+    chainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [BigNumber.from('17005632')]] as any));
+
+    container.bind(StakingBankContract).toConstantValue(validatorRegistryContract as unknown as StakingBankContract);
+    container.bind('Settings').toConstantValue(settings);
+    container.bind(ChainContract).toConstantValue(chainContract as unknown as ChainContract);
+
+    container
+      .bind(ChainContractRepository)
+      .toConstantValue(chainContractRepository as unknown as ChainContractRepository);
 
     leavesSynchronizer = container.get(LeavesSynchronizer);
 
@@ -101,7 +106,7 @@ describe('LeavesSynchronizer', () => {
     await Leaf.deleteMany({});
     await FCD.deleteMany({});
 
-    await mongoose.connection.close();
+    await teardownDatabase();
   });
 
   it('returns "false/null" if root hashes do not match', async () => {
@@ -129,9 +134,6 @@ describe('LeavesSynchronizer', () => {
       nextBlockId: chainStatus.nextBlockId - 1
     };
 
-    mockedChainContract.resolveValidators.returns(resolveValidators(chainStatus));
-    mockedChainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [BigNumber.from('17005632')]] as any));
-
     expect(await leavesSynchronizer.apply(chainStatus, block._id)).to.equal(null, 'null for current block');
     expect(await leavesSynchronizer.apply(oldStatus, block._id)).to.equal(false, 'false for old blocks');
   });
@@ -139,8 +141,8 @@ describe('LeavesSynchronizer', () => {
 
   it('returns "true" if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
-    mockedChainContract.resolveValidators.returns(resolveValidators(chainStatus));
-    mockedChainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [17005632]]));
+    chainContract.resolveValidators.returns(resolveValidators(chainStatus));
+    chainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [17005632]]));
     moxios.install();
 
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/blockId\/.+/, {
@@ -157,8 +159,8 @@ describe('LeavesSynchronizer', () => {
   it('saves leaves correctly if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
 
-    mockedChainContract.resolveValidators.returns(resolveValidators(chainStatus));
-    mockedChainContract.resolveFCDs.resolves(([[BigNumber.from(999)], [BigNumber.from('17005632')]] as any));
+    chainContract.resolveValidators.returns(resolveValidators(chainStatus));
+    chainContract.resolveFCDs.resolves(([[BigNumber.from(999)], [BigNumber.from('17005632')]] as any));
 
     const treeData = {
       'ETH-USD': '0x' + LeafValueCoder.encode(100,'ETH-USD').toString('hex'),

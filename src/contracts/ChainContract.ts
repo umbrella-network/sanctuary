@@ -3,7 +3,7 @@ import { ChainStatus } from '../types/ChainStatus';
 import { BaseChainContract } from './BaseChainContract';
 
 export class ChainContract extends BaseChainContract {
-  resolveValidators = (chainStatus: ChainStatus): Validator[] => {
+  resolveValidators(chainStatus: ChainStatus): Validator[] {
     return chainStatus.validators.map((address, i) => {
       return {
         id: address,
@@ -11,5 +11,5 @@ export class ChainContract extends BaseChainContract {
         power: chainStatus.powers[i],
       };
     });
-  };
+  }
 }
