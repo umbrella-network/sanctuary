@@ -34,16 +34,12 @@ export class TxSender {
       type: isTxType2 ? 2 : 0,
       gasPrice: isTxType2 ? undefined : gasPrice,
       maxPriorityFeePerGas: isTxType2 ? maxPriorityFeePerGas : undefined,
-      maxFeePerGas: isTxType2 ? maxFeePerGas : undefined
+      maxFeePerGas: isTxType2 ? maxFeePerGas : undefined,
     };
 
     this.logger.info(`Submitting tx, gas metrics: ${GasEstimator.printable(gasEstimation)}`);
 
-    const { tx, receipt, timeoutMs } = await this.executeTx(
-      fn,
-      { ...gas, ...transactionRequest },
-      timePadding * 1000
-    );
+    const { tx, receipt, timeoutMs } = await this.executeTx(fn, { ...gas, ...transactionRequest }, timePadding * 1000);
 
     if (!receipt) {
       this.logger.warn(`canceling tx ${tx.hash}`);
