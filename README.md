@@ -102,7 +102,7 @@ GET /fcds
  ```json
 [
   {
-    "_id": "GVol-BTC-IV-28days",
+    "key": "GVol-BTC-IV-28days",
     "__v": 0,
     "dataTimestamp": "2020-05-16T09:23:42.000Z",
     "value": 89.19

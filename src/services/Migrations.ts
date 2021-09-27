@@ -116,7 +116,9 @@ class Migrations {
           const newFcd = new FCD();
           newFcd.chainId = 'bsc';
           newFcd.key = fcd._id;
-          newFcd.id = `bsc::${fcd.key}`;
+          newFcd.value = fcd.value;
+          newFcd.dataTimestamp = fcd.dataTimestamp;
+          newFcd._id = `bsc::${newFcd.key}`;
           return newFcd.save();
         })
       );

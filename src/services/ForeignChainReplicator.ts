@@ -59,12 +59,12 @@ export class ForeignChainReplicator {
       const fcd = this.fcdFactory.create({
         key: replicationStatus.fcds.keys[i],
         value: replicationStatus.fcds.values[i],
-        dataTimestamp: block.dataTimestamp;
-        chainId: this.ch
+        dataTimestamp: block.dataTimestamp,
+        chainId: foreignChainId
       });
 
       try {
-        await foreignBlock.save();
+        await Promise.all([foreignBlock.save(), fcd.save()]);
         foreignBlocks.push(foreignBlock);
       } catch (e) {
         this.logger.error(e);
