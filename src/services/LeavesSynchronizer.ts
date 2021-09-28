@@ -14,7 +14,7 @@ import * as url from 'url';
 import { callRetry } from '../utils/callRetry';
 import Settings from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
-import { FCDFactory } from '../factories/FCDFactory';
+import { FCDRepository } from '../repositories/FCDRepository';
 
 @injectable()
 class LeavesSynchronizer {
@@ -22,7 +22,7 @@ class LeavesSynchronizer {
   @inject('Settings') private readonly settings: Settings;
   @inject(StakingBankContract) private stakingBankContract!: StakingBankContract;
   @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
-  @inject(FCDFactory) private fcdFactory!: FCDFactory;
+  @inject(FCDRepository) private fcdRepository!: FCDRepository;
 
   private homeChainContract!: ChainContract;
 
@@ -152,23 +152,12 @@ class LeavesSynchronizer {
           return;
         }
 
-        const fcd = this.fcdFactory.create({
+        return this.fcdRepository.saveOrUpdate({
           key: fcdKeys[i],
           dataTimestamp: new Date(timestamps[i] * 1000),
           value: LeafValueCoder.decode(value.toHexString(), fcdKeys[i]),
           chainId: this.settings.blockchain.homeChain.chainId,
         });
-
-        return FCD.findOneAndUpdate(
-          { _id: fcd._id },
-          {
-            dataTimestamp: fcd.dataTimestamp,
-            key: fcd.key,
-            value: fcd.value,
-            chainId: fcd.chainId,
-          },
-          { new: true, upsert: true }
-        );
       })
     );
   };

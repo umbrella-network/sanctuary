@@ -4,8 +4,8 @@ import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
 import { EthereumBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IForeignBlock } from '../models/ForeignBlock';
-import { FCDFactory } from '../factories/FCDFactory';
 import { IFCD } from '../models/FCD';
+import { FCDRepository } from '../repositories/FCDRepository';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -15,8 +15,8 @@ export type ForeignChainReplicatorProps = {
 export class ForeignChainReplicator {
   private readonly replicators: { [key: string]: IForeignBlockReplicator };
   @inject('Logger') logger!: Logger;
-  @inject(ForeignBlockFactory) foreignBlockFactory: ForeignBlockFactory;
-  @inject(FCDFactory) fcdFactory: FCDFactory;
+  @inject(ForeignBlockFactory) foreignBlockFactory!: ForeignBlockFactory;
+  @inject(FCDRepository) fcdRepository!: FCDRepository;
 
   constructor(@inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator) {
     this.replicators = {
@@ -65,14 +65,14 @@ export class ForeignChainReplicator {
       const saveData: Promise<IForeignBlock | IFCD>[] = [foreignBlock.save()];
 
       replicationStatus.fcds[i].keys.forEach((key, k) => {
-        const fcd = this.fcdFactory.create({
-          key,
-          value: replicationStatus.fcds[i].values[k],
-          dataTimestamp: block.dataTimestamp,
-          chainId: foreignChainId,
-        });
-
-        saveData.push(fcd.save());
+        saveData.push(
+          this.fcdRepository.saveOrUpdate({
+            key,
+            value: replicationStatus.fcds[i].values[k],
+            dataTimestamp: block.dataTimestamp,
+            chainId: foreignChainId,
+          })
+        );
       });
 
       try {
