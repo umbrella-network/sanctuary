@@ -73,7 +73,7 @@ export class BlocksController {
       projectId: request.params.currentProjectId,
     });
 
-    const leaves = await Leaf.find({ blockId: parseInt(request.params.id, 10) });
+    const leaves = await Leaf.find({ blockId: parseInt(request.params.blockId, 10) });
     response.send(leaves);
   };
 
