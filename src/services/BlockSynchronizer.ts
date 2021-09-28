@@ -35,7 +35,6 @@ class BlockSynchronizer {
       return;
     }
 
-
     this.chainId = this.settings.blockchain.homeChain.chainId;
     this.blockchain = this.blockchainRepository.get(this.chainId);
 

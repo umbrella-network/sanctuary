@@ -69,6 +69,7 @@ describe('/blocks', async () => {
 
   describe('GET /:blockId', async () => {
     let foreignBlock: IForeignBlock;
+    let block: IBlock;
     let subject: IForeignBlock;
 
     const operation = async (foreignChainId: string, blockId: number) =>
@@ -83,15 +84,18 @@ describe('/blocks', async () => {
     before(async () => {
       foreignBlock = new ForeignBlock(foreignBlockFactory.build());
       await foreignBlock.save();
+
+      block = new Block({ ...blockFactory.build(), blockId: foreignBlock.blockId });
+      await block.save();
     });
 
     it('returns the correct block', async () => {
       const response = await operation(foreignBlock.foreignChainId, foreignBlock.blockId);
       subject = response.data.data;
       expect(response.status).to.eq(200);
-      expect(subject._id).to.eq(foreignBlock._id);
-      expect(subject.blockId).to.eq(foreignBlock.blockId);
-      expect(subject.foreignChainId).to.eq(foreignBlock.foreignChainId);
+      expect(subject._id).to.eq(block._id);
+      expect(subject.blockId).to.eq(block.blockId);
+      // expect(subject.foreignChainId).to.eq(foreignBlock.foreignChainId);
       expect(subject.anchor).to.eq(foreignBlock.anchor);
     });
   });

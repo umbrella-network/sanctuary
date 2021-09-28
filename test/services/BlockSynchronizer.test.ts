@@ -64,7 +64,6 @@ describe('BlockSynchronizer', () => {
 
     it('synchronizes blocks', async () => {
       // const result = await subject();
-
     });
   });
 });

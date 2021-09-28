@@ -32,7 +32,6 @@ export class BlocksController {
       .get('/:blockId/leaves', this.leaves);
   }
 
-
   index = async (request: Request, response: Response): Promise<void> => {
     await this.statsdClient?.increment('sanctuary.blocks-controller.index', 1, {
       projectId: request.params.currentProjectId,
@@ -51,20 +50,19 @@ export class BlocksController {
     response.send({ data: latestBlock });
   };
 
-  // return augmented block if chainId
   show = async (request: Request, response: Response): Promise<void> => {
     this.statsdClient?.increment('sanctuary.blocks-controller.show', 1, {
       projectId: request.params.currentProjectId,
     });
 
     const chainId = this.extractChainId(request);
-    const blockId = parseInt(<string> request.params.blockId);
+    const blockId = parseInt(<string>request.params.blockId);
     const block = await this.blockRepository.findOne({ blockId, chainId });
 
     if (block) {
       response.send({ data: block });
     } else {
-      response.status(404);
+      response.status(404).end();
     }
   };
 
@@ -78,7 +76,7 @@ export class BlocksController {
   };
 
   private extractChainId(request: Request): string | undefined {
-    const chainId = <string> request.query.chainId;
+    const chainId = <string>request.query.chainId;
     if (chainId == this.settings.blockchain.homeChain.chainId) return;
 
     return chainId;

@@ -7,16 +7,16 @@ export type FindProps = {
   offset: number;
   limit: number;
   chainId?: string;
-}
+};
 
 export type FindOneProps = {
   blockId: number;
   chainId?: string;
-}
+};
 
 export type LatestProps = {
   chainId?: string;
-}
+};
 
 @injectable()
 export class BlockRepository {
@@ -30,15 +30,13 @@ export class BlockRepository {
         .sort({ blockId: -1 })
         .exec();
 
-      const blocks = await Block
-        .find({ blockId: { $in: foreignBlocks.map((fb) => fb.blockId) } })
+      const blocks = await Block.find({ blockId: { $in: foreignBlocks.map((fb) => fb.blockId) } })
         .sort({ blockId: -1 })
         .exec();
 
       return this.augmentBlockCollectionWithReplicationData(blocks, foreignBlocks);
     } else {
-      return Block
-        .find({ status: { $in: [BlockStatus.Finalized] } })
+      return Block.find({ status: { $in: [BlockStatus.Finalized] } })
         .skip(offset)
         .limit(limit)
         .sort({ blockId: -1 })
@@ -52,7 +50,7 @@ export class BlockRepository {
     if (chainId) {
       const foreignBlock = await ForeignBlock.findOne({ blockId, foreignChainId: chainId });
       const block = await Block.findOne({ blockId });
-      if(!block && !foreignBlock) return;
+      if (!block || !foreignBlock) return;
 
       return this.augmentBlockWithReplicationData(block, foreignBlock);
     } else {
@@ -66,7 +64,7 @@ export class BlockRepository {
     if (chainId) {
       const foreignBlock = await ForeignBlock.findOne({ foreignChainId: chainId }).sort({ blockId: -1 });
       const block = await Block.findOne({ blockId: foreignBlock.blockId });
-      if(!block && !foreignBlock) return;
+      if (!block || !foreignBlock) return;
 
       return this.augmentBlockWithReplicationData(block, foreignBlock);
     } else {
