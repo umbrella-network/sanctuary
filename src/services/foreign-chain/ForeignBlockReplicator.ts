@@ -8,7 +8,6 @@ import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/inde
 
 import Block, { IBlock } from '../../models/Block';
 import ForeignBlock, { IForeignBlock } from '../../models/ForeignBlock';
-import FCD, { IFCD } from '../../models/FCD';
 
 import { ForeignChainStatus } from '../../types/ForeignChainStatus';
 import { BlockStatus } from '../../types/blocks';
@@ -21,20 +20,14 @@ import { TxSender } from '../TxSender';
 import Settings from '../../types/Settings';
 import { Blockchain } from '../../lib/Blockchain';
 import { FailedTransactionEvent } from '../../constants/ReportedMetricsEvents';
-import { ChainFCDsData } from '../../models/ChainBlockData';
 import RevertedBlockResolver from '../RevertedBlockResolver';
 import { BlockchainRepository } from '../../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../../repositories/ChainContractRepository';
-import { FCDRepository } from '../../repositories/FCDRepository';
-
-type FetchedFCDs = {
-  keys: string[];
-  values: FeedValue[];
-};
+import { FCDRepository, FetchedFCDs } from '../../repositories/FCDRepository';
 
 export type ReplicationStatus = {
   blocks?: IBlock[];
-  fcds?: FetchedFCDs;
+  fcds?: FetchedFCDs[];
   anchors?: number[];
   errors?: string[];
 };
@@ -144,7 +137,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     if (receipt.status === 1) {
       return {
         blocks: [block],
-        fcds: fetchedFCDs,
+        fcds: [fetchedFCDs],
         anchors: [receipt.blockNumber],
       };
     }

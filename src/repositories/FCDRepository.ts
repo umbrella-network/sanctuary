@@ -24,7 +24,10 @@ export class FCDRepository {
     const values: FeedValue[] = [];
 
     // TODO this potentially should be fetched based on feed file, but we cloning everything so we can use DB
-    const homeFcdKeys = (await FCD.find({ chainId: homeChainId })).map((item) => item._id);
+    // NOTE: FCDs must be from the same time that block
+    const homeFcdKeys = (await FCD.find({ chainId: homeChainId, dataTimestamp: block.dataTimestamp })).map(
+      (item) => item._id
+    );
 
     if (!homeFcdKeys.length) {
       return { keys, values };
