@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 import Block, { IBlock } from '../models/Block';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
+import { BlockStatus } from '../types/blocks';
 
 export type FindProps = {
   offset: number;
@@ -36,7 +37,12 @@ export class BlockRepository {
 
       return this.augmentBlockCollectionWithReplicationData(blocks, foreignBlocks);
     } else {
-      return Block.find().skip(offset).limit(limit).sort({ blockId: -1 }).exec();
+      return Block
+        .find({ status: { $in: [BlockStatus.Finalized] } })
+        .skip(offset)
+        .limit(limit)
+        .sort({ blockId: -1 })
+        .exec();
     }
   }
 
@@ -46,11 +52,8 @@ export class BlockRepository {
     if (chainId) {
       const foreignBlock = await ForeignBlock.findOne({ blockId, foreignChainId: chainId });
       const block = await Block.findOne({ blockId });
-      console.log('===========');
-      console.log(chainId);
-      console.log(block);
-      console.log(foreignBlock);
-      console.log('===========');
+      if(!block && !foreignBlock) return;
+
       return this.augmentBlockWithReplicationData(block, foreignBlock);
     } else {
       return Block.findOne({ blockId });
@@ -63,6 +66,8 @@ export class BlockRepository {
     if (chainId) {
       const foreignBlock = await ForeignBlock.findOne({ foreignChainId: chainId }).sort({ blockId: -1 });
       const block = await Block.findOne({ blockId: foreignBlock.blockId });
+      if(!block && !foreignBlock) return;
+
       return this.augmentBlockWithReplicationData(block, foreignBlock);
     } else {
       return Block.findOne().sort({ blockId: -1 });
