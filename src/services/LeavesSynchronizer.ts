@@ -163,6 +163,7 @@ class LeavesSynchronizer {
           { _id: fcd._id },
           {
             dataTimestamp: fcd.dataTimestamp,
+            key: fcd.key,
             value: fcd.value,
             chainId: fcd.chainId,
           },

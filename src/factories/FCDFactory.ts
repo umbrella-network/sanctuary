@@ -12,11 +12,15 @@ export interface FCDFactoryProps {
 export class FCDFactory {
   create(props: FCDFactoryProps): IFCD {
     const fcd = new FCD();
-    fcd.id = `${props.chainId}::${props.key}`;
+    fcd._id = FCDFactory.makeId(props.chainId, props.key);
     fcd.key = props.key;
     fcd.value = props.value;
     fcd.chainId = props.chainId;
     fcd.dataTimestamp = props.dataTimestamp;
     return fcd;
+  }
+
+  static makeId(chainId: string, key: string): string {
+    return `${chainId}::${key}`;
   }
 }

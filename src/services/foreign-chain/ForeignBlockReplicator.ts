@@ -25,6 +25,7 @@ import { ChainFCDsData } from '../../models/ChainBlockData';
 import RevertedBlockResolver from '../RevertedBlockResolver';
 import { BlockchainRepository } from '../../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../../repositories/ChainContractRepository';
+import { FCDRepository } from '../../repositories/FCDRepository';
 
 type FetchedFCDs = {
   keys: string[];
@@ -45,6 +46,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   @inject('Settings') settings: Settings;
   @inject(RevertedBlockResolver) reveredBlockResolver!: RevertedBlockResolver;
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
+  @inject(FCDRepository) fcdRepository!: FCDRepository;
 
   readonly chainId!: string;
   private txSender!: TxSender;
@@ -113,7 +115,16 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     if (blocks.length > 1) return { errors: ['we support only one block at a time'] };
 
     const [block] = blocks;
-    const fetchedFCDs = await this.fetchFCDs(block);
+
+    const fetchedFCDs = await this.fcdRepository.findFCDsForReplication({
+      block,
+      homeChainId: this.settings.blockchain.homeChain.chainId,
+      homeChainContract: this.homeChainContract,
+    });
+
+    if (!fetchedFCDs.keys.length) {
+      this.logger.warn(`[${this.chainId}] No FCDs found for replication`);
+    }
 
     const receipt = await this.replicateBlock(
       block.dataTimestamp,
@@ -265,36 +276,5 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   private static isNonceError(e: Error): boolean {
     return e.message.includes('nonce has already been used');
-  }
-
-  private async fetchFCDs(block: IBlock): Promise<FetchedFCDs> {
-    const keys: string[] = [];
-    const values: FeedValue[] = [];
-
-    // TODO this potentially should be fetched based on feed file, but we cloning everything so we can use DB
-    const homeFcdKeys = (
-      await FCD.find({
-        chainId: this.settings.blockchain.homeChain.chainId,
-      })
-    ).map((item) => item._id);
-
-    if (!homeFcdKeys.length) {
-      this.logger.warn(`[${this.chainId}] No FCDs found for replication`);
-      return { keys, values };
-    }
-
-    const [fcdsValues, fcdsTimestamps] = <ChainFCDsData>(
-      await this.homeChainContract.resolveFCDs(block.chainAddress, homeFcdKeys)
-    );
-
-    fcdsTimestamps.forEach((timestamp, i) => {
-      // FCDs has the same time as block
-      if (timestamp === block.dataTimestamp.getTime() / 1000) {
-        keys.push(homeFcdKeys[i]);
-        values.push(fcdsValues[i]._hex);
-      }
-    });
-
-    return { keys, values };
   }
 }
