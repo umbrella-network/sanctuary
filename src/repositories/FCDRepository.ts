@@ -1,49 +1,35 @@
-import { injectable } from 'inversify';
-import { IBlock } from '../models/Block';
-import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
+import {inject, injectable} from 'inversify';
+import {IBlock} from '../models/Block';
+import {FeedValue} from '@umb-network/toolbox/dist/types/Feed';
 import FCD from '../models/FCD';
-import { ChainFCDsData } from '../models/ChainBlockData';
-import { ChainContract } from '../contracts/ChainContract';
+import Settings from "../types/Settings";
 
 export type FetchedFCDs = {
   keys: string[];
   values: FeedValue[];
 };
 
-type FcdsForReplicationProps = {
-  block: IBlock;
-  homeChainId: string;
-  homeChainContract: ChainContract;
-};
-
 @injectable()
 export class FCDRepository {
-  async findFCDsForReplication(props: FcdsForReplicationProps): Promise<FetchedFCDs> {
-    const { block, homeChainId, homeChainContract } = props;
+  @inject('Settings') settings: Settings;
+
+  async findFCDsForReplication(block: IBlock): Promise<FetchedFCDs> {
     const keys: string[] = [];
     const values: FeedValue[] = [];
 
     // TODO this potentially should be fetched based on feed file, but we cloning everything so we can use DB
     // NOTE: FCDs must be from the same time that block
-    const homeFcdKeys = (await FCD.find({ chainId: homeChainId, dataTimestamp: block.dataTimestamp })).map(
-      (item) => item._id
-    );
+    const homeFcdKeys = await FCD.find({chainId: this.settings.blockchain.homeChain.chainId, dataTimestamp: block.dataTimestamp});
 
     if (!homeFcdKeys.length) {
-      return { keys, values };
+      return {keys, values};
     }
 
-    const [fcdsValues, fcdsTimestamps] = <ChainFCDsData>(
-      await homeChainContract.resolveFCDs(block.chainAddress, homeFcdKeys)
-    );
-
-    fcdsTimestamps.forEach((timestamp, i) => {
-      if (timestamp >= block.dataTimestamp.getTime() / 1000) {
-        keys.push(homeFcdKeys[i]);
-        values.push(fcdsValues[i]._hex);
-      }
+    homeFcdKeys.forEach(fcd => {
+      keys.push(fcd.key);
+      values.push(fcd.value);
     });
 
-    return { keys, values };
+    return {keys, values};
   }
 }

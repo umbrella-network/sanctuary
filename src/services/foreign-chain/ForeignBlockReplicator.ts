@@ -109,11 +109,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     const [block] = blocks;
 
-    const fetchedFCDs = await this.fcdRepository.findFCDsForReplication({
-      block,
-      homeChainId: this.settings.blockchain.homeChain.chainId,
-      homeChainContract: this.homeChainContract,
-    });
+    const fetchedFCDs = await this.fcdRepository.findFCDsForReplication(block);
 
     if (!fetchedFCDs.keys.length) {
       this.logger.warn(`[${this.chainId}] No FCDs found for replication`);
