@@ -1,91 +1,86 @@
-import { inject, injectable } from 'inversify';
-import express, { Request, Response } from 'express';
-import Block from '../models/Block';
-import Leaf from '../models/Leaf';
-import { AuthUtils } from '../services/AuthUtils';
-import { BlockStatus } from '../types/blocks';
+import { inject, injectable, postConstruct } from 'inversify';
 import StatsdClient from 'statsd-client';
+import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { Request, Response, Router } from 'express';
+import { BlockRepository } from '../repositories/BlockRepository';
+import Leaf from '../models/Leaf';
+import Settings from '../types/Settings';
 
 @injectable()
-class BlocksController {
-  @inject('StatsdClient') statsdClient?: StatsdClient;
+export class BlocksController {
+  @inject('StatsdClient')
+  private statsdClient?: StatsdClient;
 
-  router: express.Application;
+  @inject(AuthenticationMiddleware)
+  private authenticationMiddleware: AuthenticationMiddleware;
 
-  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
-    this.router = express()
+  @inject(BlockRepository)
+  private blockRepository: BlockRepository;
+
+  @inject('Settings')
+  private settings: Settings;
+
+  router: Router;
+
+  @postConstruct()
+  setup(): void {
+    this.router = Router()
+      .use(this.authenticationMiddleware.apply)
       .get('/', this.index)
       .get('/latest', this.latest)
-      .get('/:id', this.show)
-      .get('/:id/leaves', this.leaves);
+      .get('/:blockId', this.show)
+      .get('/:blockId/leaves', this.leaves);
   }
 
+
   index = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
-
-    if (!apiKeyVerificationResult.apiKey) {
-      return;
-    }
-
-    this.statsdClient?.increment('sanctuary.blocks-controller.index', undefined, {
-      projectId: apiKeyVerificationResult.apiKey.projectId,
+    await this.statsdClient?.increment('sanctuary.blocks-controller.index', 1, {
+      projectId: request.params.currentProjectId,
     });
 
-    const offset: number = parseInt(<string>request.query.offset || '0');
-    const limit: number = Math.min(parseInt(<string>request.query.limit || '100', 10), 100);
-
-    const blocks = await Block.find({ status: { $in: [BlockStatus.Finalized] } })
-      .skip(offset)
-      .limit(limit)
-      .sort({ blockId: -1 })
-      .exec();
-
+    const chainId = this.extractChainId(request);
+    const offset = parseInt(<string>request.query.offset || '0');
+    const limit = Math.min(parseInt(<string>request.query.limit || '100'), 100);
+    const blocks = await this.blockRepository.find({ chainId, offset, limit });
     response.send(blocks);
   };
 
   latest = async (request: Request, response: Response): Promise<void> => {
-    const block = await Block.findOne().sort({ blockId: -1 });
-
-    response.send({ data: block });
+    const chainId = this.extractChainId(request);
+    const latestBlock = await this.blockRepository.findLatest({ chainId });
+    response.send({ data: latestBlock });
   };
 
+  // return augmented block if chainId
   show = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
-
-    if (!apiKeyVerificationResult.apiKey) {
-      return;
-    }
-
-    this.statsdClient?.increment('sanctuary.blocks-controller.show', undefined, {
-      projectId: apiKeyVerificationResult.apiKey.projectId,
+    this.statsdClient?.increment('sanctuary.blocks-controller.show', 1, {
+      projectId: request.params.currentProjectId,
     });
 
-    let blockId = -1;
+    const chainId = this.extractChainId(request);
+    const blockId = parseInt(<string> request.params.blockId);
+    const block = await this.blockRepository.findOne({ blockId, chainId });
 
-    try {
-      blockId = parseInt(request.params.id, 10);
-    } catch (_) {
-      // ignore
+    if (block) {
+      response.send({ data: block });
+    } else {
+      response.status(404);
     }
-
-    const [block] = await Block.find({ blockId });
-    response.send({ data: block });
   };
 
   leaves = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
-
-    if (!apiKeyVerificationResult.apiKey) {
-      return;
-    }
-
     this.statsdClient?.increment('sanctuary.blocks-controller.leaves', undefined, {
-      projectId: apiKeyVerificationResult.apiKey.projectId,
+      projectId: request.params.currentProjectId,
     });
 
     const leaves = await Leaf.find({ blockId: parseInt(request.params.id, 10) });
     response.send(leaves);
   };
-}
 
-export default BlocksController;
+  private extractChainId(request: Request): string | undefined {
+    const chainId = <string> request.query.chainId;
+    if (chainId == this.settings.blockchain.homeChain.chainId) return;
+
+    return chainId;
+  }
+}

@@ -2,19 +2,19 @@ import { expect } from 'chai';
 import { foreignBlockFactory } from '../../mocks/factories/foreignBlockFactory';
 import ForeignBlock, { IForeignBlock } from '../../../src/models/ForeignBlock';
 import { loadTestEnv } from '../../helpers';
-import mongoose from 'mongoose';
 import axios from 'axios';
 import { setupTestUser, teardownTestUser, TestUserHarness } from '../../helpers/authHelpers';
 import Block, { IBlock } from '../../../src/models/Block';
 import { blockFactory } from '../../mocks/factories/blockFactory';
+import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
 
-describe('/foreign-blocks', async () => {
+describe('/blocks', async () => {
   let credentials: TestUserHarness;
   const config = loadTestEnv();
   const adapter = axios.create({ baseURL: config.APP_URL });
 
   before(async () => {
-    await mongoose.connect(config.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+    await setupDatabase();
     await teardownTestUser();
     await ForeignBlock.deleteMany({});
     await Block.deleteMany();
@@ -26,15 +26,15 @@ describe('/foreign-blocks', async () => {
     await teardownTestUser();
     await ForeignBlock.deleteMany({});
     await Block.deleteMany();
-    await mongoose.connection.close();
+    await teardownDatabase();
   });
 
   describe('GET /', async () => {
     let foreignBlocks: IForeignBlock[];
     let blocks: IBlock[];
 
-    const operation = async (foreignChainId: string) => adapter.get('/foreign-blocks', {
-      params: { foreignChainId },
+    const operation = async (chainId: string) => adapter.get('/blocks', {
+      params: { chainId },
       headers: {
         authorization: `Bearer ${credentials.apiKey.key}`
       }
@@ -67,13 +67,13 @@ describe('/foreign-blocks', async () => {
     });
   });
 
-  describe('GET /:foreignChainId/:blockId', async () => {
+  describe('GET /:blockId', async () => {
     let foreignBlock: IForeignBlock;
     let subject: IForeignBlock;
 
     const operation = async (foreignChainId: string, blockId: number) =>
       adapter.get(
-        `/foreign-blocks/${foreignChainId}/${blockId}`,
+        `/blocks/${blockId}?chainId=${foreignChainId}`,
         {
           headers: {
             authorization: `Bearer ${credentials.apiKey.key}`

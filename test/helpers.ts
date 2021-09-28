@@ -3,5 +3,9 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 export function loadTestEnv(): dotenv.DotenvParseOutput {
+  (async () => {
+    await dotenv.config({ path: '.testing.env' });
+  })();
+
   return dotenv.parse(fs.readFileSync(path.join(__dirname, '../.testing.env'), 'utf-8'));
 }
