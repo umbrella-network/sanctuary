@@ -33,7 +33,7 @@ export class FCDRepository {
       // so there is change FCDs will not exists anymore in DB for exact time for a block
       // that's why we replicating everything that was send after (so it might be more fresh)
       // TODO perfect solution would be copy data from original tx data
-      dataTimestamp: {$gte: new Date(block.dataTimestamp.toISOString())},
+      dataTimestamp: { $gte: new Date(block.dataTimestamp.toISOString()) },
     });
 
     if (!homeFcdKeys.length) {

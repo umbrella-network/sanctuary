@@ -6,7 +6,7 @@ import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import { BlockFromPegasus } from '../types/blocks';
 import { ChainContract } from '../contracts/ChainContract';
-import FCD, { IFCD } from '../models/FCD';
+import { IFCD } from '../models/FCD';
 import { LeafValueCoder, loadFeeds, SortedMerkleTree } from '@umb-network/toolbox';
 import { ChainStatus } from '../types/ChainStatus';
 import { Validator } from '../types/Validator';
