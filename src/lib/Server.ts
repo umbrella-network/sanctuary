@@ -6,7 +6,7 @@ import compression from 'compression';
 import logger from './logger';
 import cors from 'cors';
 import HealthController from '../controllers/HealthController';
-import BlocksController from '../controllers/BlocksController';
+import { BlocksController } from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
 import AuthController from '../controllers/AuthController';
 import UsersController from '../controllers/UsersController';
@@ -59,8 +59,7 @@ class Server {
       .use('/api-keys', apiKeyController.router)
       .use('/projects', projectsController.router)
       .use('/wallet-auth', walletAuthController.router)
-      .use('/info', infoController.router)
-      .options('*', cors());
+      .use('/info', infoController.router);
 
     this.server = http.createServer(this.router);
   }

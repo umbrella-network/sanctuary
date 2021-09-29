@@ -48,8 +48,12 @@ npx tsc -p . | node ./dist/scripts/mock-seeds.js
 npm run start:dev:scheduler
 
 # Worker
-npm run start:dev:worker -- --worker BlockSynchronizerWorker
+# BlockResolverWorker will scan for chains and for block events
 npm run start:dev:worker -- --worker BlockResolverWorker
+# BlockSynchronizerWorker will pull blocks data from validators
+npm run start:dev:worker -- --worker BlockSynchronizerWorker
+
+npm run start:dev:worker -- --worker ForeignChainReplicationWorker
 
 # Server
 npm run start:dev
@@ -98,7 +102,7 @@ GET /fcds
  ```json
 [
   {
-    "_id": "GVol-BTC-IV-28days",
+    "key": "GVol-BTC-IV-28days",
     "__v": 0,
     "dataTimestamp": "2020-05-16T09:23:42.000Z",
     "value": 89.19
@@ -295,11 +299,16 @@ GET /proofs/?keys[]=ETH-USD
 }
 ```
 
-## Kubectl cheats
+## Infrastructure deployments
 
 ```shell script
-# set env variable
-kubectl set env deployment/sanctuary-worker REGISTRY_CONTRACT_ADDRESS='0x622c7725a8D1103E44F89341A6358A0e811Df0a5' --namespace staging
+# Deploy to dev
+make dev
 
-kubectl scale --replicas=1 deployment/sanctuary-worker --namespace staging
+# Deploy to dev bsc
+make dev-bsc
+
+# Deploy to dev eth
+make dev-eth
+
 ```

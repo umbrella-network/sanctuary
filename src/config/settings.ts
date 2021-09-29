@@ -1,9 +1,6 @@
-import dotenv from 'dotenv';
 import Settings from '../types/Settings';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../../package.json');
-
-dotenv.config();
 
 const settings: Settings = {
   port: parseInt(process.env.PORT || '3000'),
@@ -13,6 +10,12 @@ const settings: Settings = {
     },
     metricsReporting: {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
+    },
+    foreignChainReplication: {
+      ethereum: {
+        interval: parseInt(process.env.ETH_REPLICATION_INTERVAL || '60000'),
+        lockTTL: parseInt(process.env.ETH_REPLICATION_LOCK_TTL || '30000'),
+      },
     },
   },
   redis: {
@@ -30,21 +33,38 @@ const settings: Settings = {
       'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feedsOnChain.yaml',
   },
   blockchain: {
-    startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
-    scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '1000', 10),
-    confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
-    provider: {
-      url: process.env.BLOCKCHAIN_PROVIDER_URL || 'ws://127.0.0.1:8545',
-    },
     contracts: {
       chain: {
         name: 'Chain',
       },
-      registry: {
-        address: process.env.REGISTRY_CONTRACT_ADDRESS,
-      },
       stakingBank: {
         name: 'StakingBank',
+      },
+    },
+    replicatorPrivateKey: process.env.REPLICATOR_PRIVATE_KEY as string,
+    homeChain: {
+      chainId: 'bsc',
+      replicationConfirmations: parseInt(process.env.HOME_REPLICATION_CONFIRMATIONS || '20', 10),
+    },
+    multiChains: {
+      bsc: {
+        startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
+        scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
+      },
+      ethereum: {
+        startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
+        scanBatchSize: parseInt(process.env.ETH_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.ETH_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
+        transactions: {
+          waitForBlockTime: parseInt(process.env.ETH_WAIT_FOR_BLOCK_TIME || '1000'),
+          minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '2000000000', 10),
+          maxGasPrice: parseInt(process.env.ETH_MAX_GAS_PRICE || '10000000000', 10),
+        },
       },
     },
   },

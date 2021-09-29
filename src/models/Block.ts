@@ -1,5 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export type SynchronizationState = {
+  synchronizedAt: Date;
+  chains: {
+    [key: string]: string;
+  };
+};
+
 export interface IBlock extends Document {
   chainAddress: string;
   blockId: number;
@@ -12,6 +19,7 @@ export interface IBlock extends Document {
   power: string;
   voters: Array<string>;
   votes: Map<string, string>;
+  synchronization?: SynchronizationState;
 }
 
 const BlockSchema: Schema = new Schema({
@@ -27,10 +35,12 @@ const BlockSchema: Schema = new Schema({
   power: { type: String, required: true },
   voters: { type: [String], required: false, default: [] },
   votes: { type: Map, required: false, default: {} },
+  synchronization: { type: Map, required: false },
 });
 
 BlockSchema.index({ blockId: -1 });
 BlockSchema.index({ blockId: 1 });
 BlockSchema.index({ status: 1 });
+BlockSchema.index({ 'synchronization.synchronizedAt': -1 });
 
 export default mongoose.model<IBlock>('Block', BlockSchema);

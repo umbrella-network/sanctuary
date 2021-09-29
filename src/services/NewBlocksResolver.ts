@@ -2,114 +2,132 @@ import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import newrelic from 'newrelic';
 import { ABI } from '@umb-network/toolbox';
-import ChainContract from '../contracts/ChainContract';
+import { ChainContract } from '../contracts/ChainContract';
 import { Contract, Event, EventFilter } from 'ethers';
 import { BlockStatus, IEventBlock } from '../types/blocks';
 import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
 import Settings from '../types/Settings';
-import Blockchain from '../lib/Blockchain';
 import { LogMint, LogVoter } from '../types/events';
 import Block, { IBlock } from '../models/Block';
 import BlockSynchronizer from './BlockSynchronizer';
 import { CreateBatchRanges } from './CreateBatchRanges';
+import { BlockchainRepository } from '../repositories/BlockchainRepository';
+import { ChainContractRepository } from '../repositories/ChainContractRepository';
 
 @injectable()
 class NewBlocksResolver {
   @inject('Logger') private logger!: Logger;
-  @inject(Blockchain) private blockchain!: Blockchain;
   @inject('Settings') settings!: Settings;
-  @inject(ChainContract) private chainContract!: ChainContract;
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
+  @inject(BlockSynchronizer) blockSynchronizer!: BlockSynchronizer;
+  @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
 
-  async apply(): Promise<void> {
-    const [[, chainStatus], [, lastAnchor]] = await Promise.all([
-      this.chainContract.resolveStatus(),
-      BlockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
+  private chainContract!: ChainContract;
+
+  constructor(
+    @inject(ChainContractRepository) chainContractRepository: ChainContractRepository,
+    @inject('Settings') settings: Settings
+  ) {
+    this.chainContract = <ChainContract>chainContractRepository.get(settings.blockchain.homeChain.chainId);
+  }
+
+  apply = async (): Promise<void> => {
+    this.chainInstanceResolver.setup(this.settings.blockchain.homeChain.chainId);
+
+    const [chainStatus, [, lastAnchor]] = await Promise.all([
+      this.chainContract.resolveStatus<ChainStatus>(),
+      this.blockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
     ]);
 
     await this.resolveBlockEvents(chainStatus, lastAnchor);
-  }
+  };
 
-  private async resolveBlockEvents(chainStatus: ChainStatus, lastAnchor: number): Promise<void> {
+  private resolveBlockEvents = async (chainStatus: ChainStatus, lastAnchor: number): Promise<void> => {
     const ranges = CreateBatchRanges.apply(
       lastAnchor,
       chainStatus.blockNumber.toNumber(),
-      this.settings.blockchain.scanBatchSize
+      this.blockchainRepository.get(this.settings.blockchain.homeChain.chainId).settings.scanBatchSize
     );
 
     // must be sync execution!
     for (const [batchFrom, batchTo] of ranges) {
       await this.resolveBatchOfEvents(batchFrom, batchTo);
     }
-  }
+  };
 
-  private async resolveBatchOfEvents(fromBlock: number, toBlock: number): Promise<void> {
+  private resolveBatchOfEvents = async (fromBlock: number, toBlock: number): Promise<void> => {
     const [logMintEvents, logVoteEvents] = await this.getChainLogsEvents(fromBlock, toBlock);
+    const { chainId } = this.settings.blockchain.homeChain;
 
     if (!logMintEvents.length) {
-      this.logger.warn(`No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`);
+      this.logger.warn(`[${chainId}] No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`);
       return;
     }
 
-    this.logger.info(`Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
+    this.logger.info(`[${chainId}] Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
     await this.saveNewBlocks((await this.processEvents(logMintEvents, logVoteEvents)).filter((e) => e != undefined));
-  }
+  };
 
-  private async getChainLogsEvents(
+  private getChainLogsEvents = async (
     fromBlockNumber: number,
     toBlockNumber: number
-  ): Promise<[logMint: Event[], logVote: Event[]]> {
+  ): Promise<[logMint: Event[], logVote: Event[]]> => {
     if (fromBlockNumber >= toBlockNumber) {
       return [[], []];
     }
 
     const anchors: number[] = [];
+    const { chainId } = this.settings.blockchain.homeChain;
 
     for (let i = fromBlockNumber; i < toBlockNumber; i++) {
       anchors.push(i);
     }
 
-    this.logger.info('Scanning for new blocks', { fromBlock: fromBlockNumber, toBlock: toBlockNumber });
+    this.logger.info(`[${chainId}] Scanning for new blocks`, { fromBlock: fromBlockNumber, toBlock: toBlockNumber });
 
     const chainsInstancesForIds = await this.chainInstanceResolver.byAnchor(anchors);
     const uniqueChainsInstances = this.chainInstanceResolver.uniqueInstances(chainsInstancesForIds);
 
     if (!uniqueChainsInstances.length) {
-      this.noticeError(`There is no Chain for anchors: ${fromBlockNumber} - ${toBlockNumber}`);
+      this.noticeError(`[${chainId}] There is no Chain for anchors: ${fromBlockNumber} - ${toBlockNumber}`);
     }
 
     const chains: Contract[] = uniqueChainsInstances.map(
-      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchain.provider)
+      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchainRepository.get(chainId).getProvider())
     );
 
     return Promise.all([
       this.getChainsLogMintEvents(chains, fromBlockNumber, toBlockNumber),
       this.getChainsLogVoterEvents(chains, fromBlockNumber, toBlockNumber),
     ]);
-  }
+  };
 
-  private async getChainsLogMintEvents(chains: Contract[], fromBlock: number, toBlock: number): Promise<Event[]> {
+  private getChainsLogMintEvents = async (chains: Contract[], fromBlock: number, toBlock: number): Promise<Event[]> => {
     const filter = chains[0].filters.LogMint();
     return this.getChainsEvents(chains, filter, fromBlock, toBlock);
-  }
+  };
 
-  private async getChainsLogVoterEvents(chains: Contract[], fromBlock: number, toBlock: number): Promise<Event[]> {
+  private getChainsLogVoterEvents = async (
+    chains: Contract[],
+    fromBlock: number,
+    toBlock: number
+  ): Promise<Event[]> => {
     const filter = await chains[0].filters.LogVoter();
     return this.getChainsEvents(chains, filter, fromBlock, toBlock);
-  }
+  };
 
-  private async getChainsEvents(
+  private getChainsEvents = async (
     chains: Contract[],
     filter: EventFilter,
     fromBlock: number,
     toBlock: number
-  ): Promise<Event[]> {
+  ): Promise<Event[]> => {
     const events = await Promise.all(chains.map((chain) => chain.queryFilter(filter, fromBlock, toBlock)));
     return events.flatMap((e: Event[]) => e);
-  }
+  };
 
-  private async processEvents(logMintEvents: Event[], logVoterEvents: Event[]): Promise<IEventBlock[]> {
+  private processEvents = async (logMintEvents: Event[], logVoterEvents: Event[]): Promise<IEventBlock[]> => {
     const logVotersByBlockId: Map<number, LogVoter[]> = new Map<number, LogVoter[]>();
 
     logVoterEvents.forEach((event) => {
@@ -152,9 +170,9 @@ class NewBlocksResolver {
           };
         })
     );
-  }
+  };
 
-  private static toLogMint(event: Event): LogMint {
+  private static toLogMint = (event: Event): LogMint => {
     return {
       chain: event.address,
       minter: event.args[0],
@@ -162,17 +180,17 @@ class NewBlocksResolver {
       staked: event.args[2],
       power: event.args[3],
     };
-  }
+  };
 
-  private static toLogVoter(event: Event): LogVoter {
+  private static toLogVoter = (event: Event): LogVoter => {
     return {
       blockId: event.args[0].toNumber(),
       voter: event.args[1],
       vote: event.args[2],
     };
-  }
+  };
 
-  private async saveNewBlocks(newBlocks: IEventBlock[]): Promise<IBlock[]> {
+  private saveNewBlocks = async (newBlocks: IEventBlock[]): Promise<IBlock[]> => {
     return Promise.all(
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
@@ -200,12 +218,12 @@ class NewBlocksResolver {
         }
       })
     );
-  }
+  };
 
-  private noticeError(err: string): void {
+  private noticeError = (err: string): void => {
     newrelic.noticeError(Error(err));
     this.logger.error(err);
-  }
+  };
 }
 
 export default NewBlocksResolver;

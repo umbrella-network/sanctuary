@@ -2,17 +2,23 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import { AuthUtils } from '../services/AuthUtils';
 import FCD from '../models/FCD';
+import Settings from '../types/Settings';
 
 @injectable()
 class FcdsController {
+  @inject('Settings') private readonly settings: Settings;
+
   router: express.Application;
 
   constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
-    this.router = express().get('/', this.index);
+    this.router = express().get('/', this.index).get('/:chainId', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const fcds = await FCD.find({}).sort({ dataTimestamp: -1 }).exec();
+    const chainId = <string>(
+      (request.query.chainId || request.params.chainId || this.settings.blockchain.homeChain.chainId)
+    );
+    const fcds = await FCD.find({ chainId: chainId }).sort({ dataTimestamp: -1 }).exec();
     response.send(fcds);
   };
 }
