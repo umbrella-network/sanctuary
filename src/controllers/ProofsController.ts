@@ -4,10 +4,12 @@ import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { AuthUtils } from '../services/AuthUtils';
 import { BlockStatus } from '../types/blocks';
-import StatsDClient from '../lib/StatsDClient';
+import StatsdClient from 'statsd-client';
 
 @injectable()
 class ProofsController {
+  @inject('StatsdClient') statsdClient?: StatsdClient;
+
   router: express.Router;
 
   constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
@@ -21,7 +23,7 @@ class ProofsController {
       return;
     }
 
-    StatsDClient?.increment('sanctuary.proofs-controller.index', undefined, {
+    this.statsdClient?.increment('sanctuary.proofs-controller.index', undefined, {
       projectId: apiKeyVerificationResult.apiKey.projectId,
     });
 

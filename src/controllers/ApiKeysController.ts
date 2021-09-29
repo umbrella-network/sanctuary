@@ -114,7 +114,7 @@ class ApiKeysController {
       response.status(403).send({ error: 'You do not own this project' });
     }
 
-    await apiKey.remove();
+    await apiKey.deleteOne();
     response.send();
   };
 

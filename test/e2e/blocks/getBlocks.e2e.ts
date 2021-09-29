@@ -114,8 +114,8 @@ describe('Getting blocks', () => {
     const blocks: Record<string, unknown>[] = blocksResponse.data;
     
     expect(blocks).to.be.an('array').with.lengthOf(2);
-    expect(blocks[0]).to.have.property('height', 3);
-    expect(blocks[1]).to.have.property('height', 2);
+    expect(blocks[0]).to.have.property('blockId', 3);
+    expect(blocks[1]).to.have.property('blockId', 2);
   });
 
   it('returns block by it\'s id', async () => {
@@ -126,10 +126,10 @@ describe('Getting blocks', () => {
       { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
     ]);
 
-    const blockResponse = await appAxios.get('/blocks/block::3', { params: { limit: 2, offset: 1 }, headers: { authorization: `Bearer ${apiKey}` } });
+    const blockResponse = await appAxios.get('/blocks/1', { params: { limit: 2, offset: 1 }, headers: { authorization: `Bearer ${apiKey}` } });
     const block: Record<string, unknown> = blockResponse.data.data;
     
-    expect(block).to.have.property('_id', 'block::3');
+    expect(block).to.have.property('_id', 'block::1');
   });
 
 
@@ -142,21 +142,21 @@ describe('Getting blocks', () => {
     ]);
 
     await Leaf.create([
-      { _id: 'leaf::block::1::a', blockId: 'block::1', key: 'a', value: '0x0', proof: []},
-      { _id: 'leaf::block::1::b', blockId: 'block::1', key: 'b', value: '0x0', proof: []},
-      { _id: 'leaf::block::2::a', blockId: 'block::2', key: 'a', value: '0x0', proof: []},
-      { _id: 'leaf::block::2::b', blockId: 'block::2', key: 'b', value: '0x0', proof: []},
-      { _id: 'leaf::block::3::a', blockId: 'block::3', key: 'a', value: '0x0', proof: []},
-      { _id: 'leaf::block::4::a', blockId: 'block::4', key: 'a', value: '0x0', proof: []},
+      { _id: 'leaf::block::1::a', blockId: 1, key: 'a', value: '0x0', proof: []},
+      { _id: 'leaf::block::1::b', blockId: 1, key: 'b', value: '0x0', proof: []},
+      { _id: 'leaf::block::2::a', blockId: 2, key: 'a', value: '0x0', proof: []},
+      { _id: 'leaf::block::2::b', blockId: 2, key: 'b', value: '0x0', proof: []},
+      { _id: 'leaf::block::3::a', blockId: 3, key: 'a', value: '0x0', proof: []},
+      { _id: 'leaf::block::4::a', blockId: 4, key: 'a', value: '0x0', proof: []},
     ]);
 
-    const leavesResponse = await appAxios.get('/blocks/block::1/leaves', { headers: { authorization: `Bearer ${apiKey}` } });
+    const leavesResponse = await appAxios.get('/blocks/1/leaves', { headers: { authorization: `Bearer ${apiKey}` } });
     const leaves: Record<string, unknown>[] = leavesResponse.data;
 
     expect(leaves).to.be.an('array').with.lengthOf(2);
 
     leaves.forEach(leaf => {
-      expect(leaf).to.have.property('blockId', 'block::1');
+      expect(leaf).to.have.property('blockId', 1);
     });
   });
 });
