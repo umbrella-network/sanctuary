@@ -10,6 +10,8 @@ class Migrations {
     // await this.migrateTo100();
     // await this.migrateTo110();
     await Migrations.migrateTo121();
+    await Migrations.migrateTo400();
+    await Migrations.migrateTo400_3();
   }
 
   private static hasMigration = async (v: string): Promise<boolean> => {
@@ -75,6 +77,56 @@ class Migrations {
     await Migrations.wrapMigration('1.2.1', async () => {
       const deleted = await FCD.collection.deleteMany({ dataTimestamp: { $eq: new Date(0) } });
       console.log(`Deleted ${deleted.deletedCount} old chains instances`);
+    });
+  };
+
+  private static migrateTo400 = async () => {
+    await Migrations.wrapMigration('4.0.0', async () => {
+      const address_1 = 'address_1';
+
+      if (await ChainInstance.collection.indexExists(address_1)) {
+        await ChainInstance.collection.dropIndex(address_1);
+        console.log(`${address_1} removed`);
+      }
+
+      const chains = await ChainInstance.find({ chainId: { $exists: false } });
+
+      await Promise.all(
+        chains.map((chain) => {
+          chain.chainId = 'bsc';
+          return chain.save();
+        })
+      );
+    });
+  };
+
+  private static migrateTo400_3 = async () => {
+    await Migrations.wrapMigration('4.0.0_3', async () => {
+      const indexesToRemove = ['dataTimestamp_-1', 'chainAddress_1'];
+
+      for (const indexToRemove of indexesToRemove) {
+        if (await FCD.collection.indexExists(indexToRemove)) {
+          await FCD.collection.dropIndex(indexToRemove);
+          console.log(`index ${indexToRemove} removed`);
+        }
+      }
+
+      const fcds = await FCD.find({ chainId: { $exists: false } });
+
+      await Promise.all(
+        fcds.map((fcd) => {
+          const newFcd = new FCD();
+          newFcd.chainId = 'bsc';
+          newFcd.key = fcd._id;
+          newFcd.value = fcd.value;
+          newFcd.dataTimestamp = fcd.dataTimestamp;
+          newFcd._id = `bsc::${newFcd.key}`;
+          return newFcd.save();
+        })
+      );
+
+      await FCD.deleteMany({ chainId: { $exists: false } });
+      await FCD.deleteMany({ id: { $exists: false } });
     });
   };
 }

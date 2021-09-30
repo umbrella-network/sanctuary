@@ -3,9 +3,14 @@ import Application from './lib/Application';
 import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
 import BlockResolverWorker from './workers/BlockResolverWorker';
 import MetricsWorker from './workers/MetricsWorker';
+import { ForeignChainReplicationWorker } from './workers';
 import Settings from './types/Settings';
 import { Logger } from 'winston';
 import newrelic from 'newrelic';
+import logger from './lib/logger';
+import { ChainsIds } from './types/ChainsIds';
+
+logger.info('Starting Scheduler...');
 
 (async (): Promise<void> => {
   const settings: Settings = Application.get('Settings');
@@ -13,6 +18,21 @@ import newrelic from 'newrelic';
   const blockSynchronizerWorker = Application.get(BlockSynchronizerWorker);
   const blockResolverWorker = Application.get(BlockResolverWorker);
   const metricsWorker = Application.get(MetricsWorker);
+  const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
+
+  setInterval(async () => {
+    await foreignChainReplicationWorker.enqueue(
+      {
+        foreignChainId: ChainsIds.ETH,
+        lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
+        interval: settings.jobs.foreignChainReplication.ethereum.interval,
+      },
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
+  }, settings.jobs.foreignChainReplication.ethereum.interval);
 
   setInterval(async () => {
     await metricsWorker.enqueue(

@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import BlockMintedReporter from '../services/BlockMintedReporter';
 import BlockLeafCountReporter from '../services/BlockLeafCountReporter';
 import BasicWorker from './BasicWorker';
+import { ChainsIds } from '../types/ChainsIds';
 
 @injectable()
 class MetricsWorker extends BasicWorker {
@@ -15,7 +16,8 @@ class MetricsWorker extends BasicWorker {
   apply = async (job: Bull.Job): Promise<void> => {
     try {
       this.logger.debug(`Sending metrics to NewRelic ${job.data}`);
-      await this.blockMintedReporter.call();
+      await this.blockMintedReporter.call(ChainsIds.BSC);
+      await this.blockMintedReporter.call(ChainsIds.ETH);
       await this.blockLeafCountReporter.call();
     } catch (e) {
       this.logger.error(e);

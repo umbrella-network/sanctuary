@@ -30,14 +30,8 @@ build-dev:
 	@echo "## Building the docker image ##"
 	docker buildx build  --push --platform linux/amd64 -t $(DEVELOP) .
 
-
 login:
 	@aws ecr --profile umb-central --region $(AWS_REGION) get-login-password  | docker login --username AWS --password-stdin $(AWS_REPOSITORY)
-
-push: login
-	@echo "## Pushing image to AWS ##"
-	@docker push $(IMAGE)
-
 
 publish-bsc:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n dev
@@ -47,15 +41,5 @@ publish-bsc:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n dev
 
-publish-eth:
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-eth01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-eth01 -n dev
+dev: assume login build-dev update-stg-kubeconfig publish-bsc
 
-
-dev-bsc: assume login build-dev update-stg-kubeconfig publish-bsc
-dev-eth: assume login build-dev update-stg-kubeconfig publish-eth
-dev: assume login build-dev update-stg-kubeconfig publish-bsc publish-eth

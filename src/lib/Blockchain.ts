@@ -1,19 +1,49 @@
-import { inject, injectable } from 'inversify';
-import Settings from '../types/Settings';
-import { ethers } from 'ethers';
-import { BaseProvider } from '@ethersproject/providers';
+import Settings, { BlockchainSettings } from '../types/Settings';
+import { ethers, Wallet } from 'ethers';
 
-@injectable()
-class Blockchain {
-  provider: ethers.providers.Provider;
+export type BlockchainProps = {
+  chainId: string;
+  settings: Settings;
+};
 
-  constructor(@inject('Settings') settings: Settings) {
-    this.provider = this.getProvider(settings.blockchain.provider.url);
+export class Blockchain {
+  readonly chainId!: string;
+  readonly isHomeChain!: boolean;
+  readonly settings!: BlockchainSettings;
+  readonly provider: ethers.providers.Provider;
+  readonly wallet: Wallet;
+
+  constructor(props: BlockchainProps) {
+    const { chainId, settings } = props;
+
+    this.chainId = chainId;
+    this.isHomeChain = chainId === settings.blockchain.homeChain.chainId;
+    this.settings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[chainId];
+
+    if (!this.settings.providerUrl) {
+      return;
+    }
+
+    this.provider = ethers.providers.getDefaultProvider(this.settings.providerUrl);
+
+    if (settings.blockchain.replicatorPrivateKey) {
+      this.wallet = new Wallet(settings.blockchain.replicatorPrivateKey, this.provider);
+    }
   }
 
-  getProvider(url: string): BaseProvider {
-    return ethers.providers.getDefaultProvider(url);
+  getProvider(): ethers.providers.Provider {
+    return this.provider;
+  }
+
+  async getLastNonce(): Promise<number> {
+    return this.wallet.getTransactionCount('latest');
+  }
+
+  async getBlockNumber(): Promise<number> {
+    return this.provider.getBlockNumber();
+  }
+
+  getContractRegistryAddress(): string {
+    return this.settings.contractRegistryAddress;
   }
 }
-
-export default Blockchain;

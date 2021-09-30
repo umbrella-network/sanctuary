@@ -1,21 +1,12 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
-process.env['NEW_RELIC_ENABLED'] = process.env['NEW_RELIC_ENABLED'] || 'false';
-import 'newrelic';
-
 import 'reflect-metadata';
-import './config/initMongoDB';
+import './config/setupDotenv';
+import './config/setupNewrelic';
 import initMongoDB from './config/initMongoDB';
 import Migrations from './services/Migrations';
+import logger from './lib/logger';
 
 (async () => {
-  if (process.env.NODE_ENV === 'testing') {
-    dotenv.config({ path: '.testing.env' });
-  } else {
-    dotenv.config();
-  }
-
+  logger.info('Booting up...');
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { default: settings } = await require('./config/settings');
 

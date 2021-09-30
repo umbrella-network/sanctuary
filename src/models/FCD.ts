@@ -1,18 +1,20 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IFCD extends Document {
+  key: string;
   value: number | string;
   dataTimestamp: Date;
-  chainAddress: string;
+  chainId: string;
 }
 
 const FCDSchema: Schema = new Schema({
   _id: { type: String, required: true },
-  chainAddress: { type: String, required: true, unique: false },
+  key: { type: String, required: true },
   value: { type: String, required: true },
+  chainId: { type: String, required: true, unique: false },
   dataTimestamp: { type: Date, required: true },
 });
 
-FCDSchema.index({ dataTimestamp: -1 });
+FCDSchema.index({ dataTimestamp: -1, chainId: 1 });
 
 export default mongoose.model<IFCD>('FCD', FCDSchema);
