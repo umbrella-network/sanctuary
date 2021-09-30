@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [4.0.0] - 2021-09-29
 ### Added
 - v1 of multichain support
 - `ForeignChainReplicationWorker` worker for multichain solution
@@ -14,7 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - API accept `chainId`
 
 ### Fixed
-- 
+- Redis queue
 
 ## [3.1.5] - 2021-09-03
 ### Changed
