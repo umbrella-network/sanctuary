@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.0.1] - 2021-10-01
+### Changed
+- default max gas price 150Gwei
+
+### Fixed
+- use replicator address as minter for foreign chain
+
 ## [4.0.0] - 2021-09-29
 ### Added
 - v1 of multichain support
