@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [4.0.1] - 2021-10-01
 ### Changed
 - default max gas price 150Gwei
+- increase priority fee by 10% 
 
 ### Fixed
 - use replicator address as minter for foreign chain

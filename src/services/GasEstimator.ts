@@ -53,8 +53,8 @@ export class GasEstimator {
   static printable(metrics: GasEstimation): string {
     return (
       `gasPrice: ${GasEstimator.formatGwei(metrics.gasPrice)} Gwei, ` +
-      `maxPriorityFeePerGas: ${GasEstimator.formatGwei(metrics.maxPriorityFeePerGas)} Gwei, ` +
-      `maxFeePerGas: ${GasEstimator.formatGwei(metrics.maxFeePerGas)} Gwei, ` +
+      `maxPriorityFee: ${GasEstimator.formatGwei(metrics.maxPriorityFeePerGas)} Gwei, ` +
+      `maxFee: ${GasEstimator.formatGwei(metrics.maxFeePerGas)} Gwei, ` +
       `min: ${GasEstimator.formatGwei(metrics.min)} Gwei, ` +
       `max: ${GasEstimator.formatGwei(metrics.max)} Gwei, ` +
       `avg: ${GasEstimator.formatGwei(metrics.avg)} Gwei`
@@ -158,7 +158,9 @@ export class GasEstimator {
   private static calcMaxFeePerGas = (baseFee: number, maxPriorityFee: number, maxGasPrice: number): number =>
     Math.min(maxGasPrice, 2 * baseFee + maxPriorityFee);
 
-  private static calcMaxPriorityFeePerGas = (feeData: FeeData): number => feeData.maxPriorityFeePerGas?.toNumber() || 0;
+  private static calcMaxPriorityFeePerGas = (feeData: FeeData): number => {
+    return (feeData.maxPriorityFeePerGas?.toNumber() || 0) * 1.1;
+  };
 
   private static formatGwei = (wei: number): number => Math.round((wei / 1e9) * 1e4) / 1e4;
 
