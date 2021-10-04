@@ -4,6 +4,7 @@ import Migration from '../models/Migration';
 import ChainInstance from '../models/ChainInstance';
 import Leaf from '../models/Leaf';
 import FCD from '../models/FCD';
+import ForeignBlock from '../models/ForeignBlock';
 
 class Migrations {
   static async apply(): Promise<void> {
@@ -12,6 +13,7 @@ class Migrations {
     await Migrations.migrateTo121();
     await Migrations.migrateTo400();
     await Migrations.migrateTo400_3();
+    await Migrations.migrateTo401();
   }
 
   private static hasMigration = async (v: string): Promise<boolean> => {
@@ -127,6 +129,19 @@ class Migrations {
 
       await FCD.deleteMany({ chainId: { $exists: false } });
       await FCD.deleteMany({ id: { $exists: false } });
+    });
+  };
+
+  private static migrateTo401 = async () => {
+    await Migrations.wrapMigration('4.0.1', async () => {
+      const foreignBlocks = await ForeignBlock.find({ minter: { $exists: false } });
+
+      await Promise.all(
+        foreignBlocks.map((foreignBlock) => {
+          foreignBlock.minter = '0x57a2022Fa04F38207Ab3CD280557CAD6d0b77BE1';
+          return foreignBlock.save();
+        })
+      );
     });
   };
 }

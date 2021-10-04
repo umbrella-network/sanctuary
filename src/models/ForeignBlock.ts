@@ -4,6 +4,7 @@ export interface IForeignBlock extends Document {
   foreignChainId: string;
   chainAddress: string;
   anchor: number;
+  minter: string;
   createdAt: Date;
   updatedAt: Date;
   blockId: number;
@@ -15,6 +16,7 @@ const ForeignBlockSchema = new Schema(
     anchor: { type: Number, required: true },
     foreignChainId: { type: String, required: true },
     chainAddress: { type: String, required: true, unique: false },
+    minter: { type: String, required: true, unique: false },
     blockId: { type: Number, required: true },
   },
   {

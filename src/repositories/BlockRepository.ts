@@ -82,6 +82,7 @@ export class BlockRepository {
   private augmentBlockWithReplicationData(block: IBlock, foreignBlock: IForeignBlock): IBlock {
     block.chainAddress = foreignBlock.chainAddress;
     block.anchor = foreignBlock.anchor;
+    block.minter = foreignBlock.minter;
     return block;
   }
 }
