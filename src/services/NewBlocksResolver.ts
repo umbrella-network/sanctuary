@@ -141,33 +141,38 @@ class NewBlocksResolver {
       logMintEvents
         .sort((a, b) => b.blockNumber - a.blockNumber)
         .map(async (event) => {
-          const logMint = NewBlocksResolver.toLogMint(event);
-          const logVoters = logVotersByBlockId.get(logMint.blockId);
+          try {
+            const logMint = NewBlocksResolver.toLogMint(event);
+            const logVoters = logVotersByBlockId.get(logMint.blockId);
 
-          if (!logVoters) {
-            this.logger.error(`LogVoters does not exist for blockId ${logMint.blockId}`);
+            if (!logVoters) {
+              this.logger.error(`LogVoters does not exist for blockId ${logMint.blockId}`);
+              return undefined;
+            }
+
+            const votes: Map<string, string> = new Map<string, string>();
+            const blockData = await this.chainContract.resolveBlockData(logMint.chain, logMint.blockId);
+
+            logVoters.forEach((logVoter) => {
+              votes.set(logVoter.voter, logVoter.vote.toString());
+            });
+
+            return {
+              dataTimestamp: blockData.dataTimestamp,
+              root: blockData.root,
+              anchor: event.blockNumber,
+              blockId: logMint.blockId,
+              chainAddress: event.address,
+              minter: logMint.minter,
+              power: logMint.power.toString(),
+              staked: logMint.staked.toString(),
+              voters: logVoters.map((v) => v.voter),
+              votes,
+            };
+          } catch (e) {
+            this.noticeError(e, { ...event });
             return undefined;
           }
-
-          const votes: Map<string, string> = new Map<string, string>();
-          const blockData = await this.chainContract.resolveBlockData(logMint.chain, logMint.blockId);
-
-          logVoters.forEach((logVoter) => {
-            votes.set(logVoter.voter, logVoter.vote.toString());
-          });
-
-          return {
-            dataTimestamp: blockData.dataTimestamp,
-            root: blockData.root,
-            anchor: event.blockNumber,
-            blockId: logMint.blockId,
-            chainAddress: event.address,
-            minter: logMint.minter,
-            power: logMint.power.toString(),
-            staked: logMint.staked.toString(),
-            voters: logVoters.map((v) => v.voter),
-            votes,
-          };
         })
     );
   };
@@ -220,9 +225,9 @@ class NewBlocksResolver {
     );
   };
 
-  private noticeError = (err: string): void => {
+  private noticeError = (err: string, meta?: Record<string, unknown>): void => {
     newrelic.noticeError(Error(err));
-    this.logger.error(err);
+    this.logger.error(err, meta);
   };
 }
 
