@@ -15,6 +15,7 @@ import { callRetry } from '../utils/callRetry';
 import Settings from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { FCDRepository } from '../repositories/FCDRepository';
+import { TimeService } from './TimeService';
 
 @injectable()
 class LeavesSynchronizer {
@@ -101,7 +102,7 @@ class LeavesSynchronizer {
   ): Promise<[boolean, string]> => {
     const resolvedLeaves: Map<string, string> = new Map(<[string, string][]>Object.entries(blockFromValidator.data));
     const tree = this.sortedMerkleTreeFactory.apply(resolvedLeaves);
-    const root = tree.getRoot();
+    const root = tree.getRoot(TimeService.msTos(savedBlock.dataTimestamp.getTime()));
     if (root != savedBlock.root) return [false, root];
 
     const [, updatedLeaves] = await Promise.all([

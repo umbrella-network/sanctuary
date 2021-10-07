@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 
 ## [4.0.2] - 2021-10-07
+### Added
+- add support for squashed root
+
 ### Fixed
 - ensure that when we have issue with processing events while resolving blocks, it does not halt whole process
 

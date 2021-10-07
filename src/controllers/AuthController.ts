@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import User from '../models/User';
 import Settings from '../types/Settings';
+import { TimeService } from '../services/TimeService';
 
 @injectable()
 class AuthController {
@@ -37,7 +38,7 @@ class AuthController {
       return;
     }
 
-    const exp = Math.floor(Date.now() / 1000) + this.settings.auth.tokenExpiry;
+    const exp = TimeService.now() + this.settings.auth.tokenExpiry;
     const privateKey = process.env.AUTH_PRIVATE_KEY;
     const token = sign({ exp, userId: user.id }, privateKey);
     response.status(201).send({ token });
