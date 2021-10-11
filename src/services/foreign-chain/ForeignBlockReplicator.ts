@@ -148,7 +148,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       return false;
     }
 
-    if ((await this.reveredBlockResolver.apply(lastForeignBlock.blockId, status.nextBlockId)) > 0) {
+    if ((await this.reveredBlockResolver.apply(lastForeignBlock.blockId, status.nextBlockId, this.chainId)) > 0) {
       return true;
     }
   }
