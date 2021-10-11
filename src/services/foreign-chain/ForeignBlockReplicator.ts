@@ -76,7 +76,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   };
 
   resolvePendingBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
-    if (!this.canMint(status, currentDate.getTime())) {
+    if (!this.canMint(status, TimeService.msTos(currentDate.getTime()))) {
       return [];
     }
 
