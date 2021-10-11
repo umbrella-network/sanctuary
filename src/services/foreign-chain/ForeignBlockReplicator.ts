@@ -24,6 +24,7 @@ import RevertedBlockResolver from '../RevertedBlockResolver';
 import { BlockchainRepository } from '../../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../../repositories/ChainContractRepository';
 import { FCDRepository, FetchedFCDs } from '../../repositories/FCDRepository';
+import { TimeService } from '../TimeService';
 
 export type ReplicationStatus = {
   blocks?: IBlock[];
@@ -232,7 +233,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   ) => {
     const fn = (tr: TransactionRequest) =>
       this.foreignChainContract.submit(
-        dataTimestamp.getTime() / 1000,
+        TimeService.msTos(dataTimestamp.getTime()),
         root,
         keys.map(LeafKeyCoder.encode),
         values.map((v, i) => LeafValueCoder.encode(v, keys[i])),
