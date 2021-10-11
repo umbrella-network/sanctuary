@@ -14,9 +14,9 @@ class RevertedBlockResolver {
     }
 
     this.logger.warn(`Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
-    const blockRes = await (chainId
-      ? RevertedBlockResolver.revertHomeBlocks(nextBlockId)
-      : RevertedBlockResolver.revertForeignBlocks(nextBlockId, chainId));
+    const blockRes = chainId
+      ? await RevertedBlockResolver.revertForeignBlocks(nextBlockId, chainId)
+      : await RevertedBlockResolver.revertHomeBlocks(nextBlockId);
     this.logger.info(`because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
 
     return blockRes.deletedCount;
