@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import { ethers } from 'ethers';
 import { sign } from 'jsonwebtoken';
 import Settings from '../types/Settings';
+import { TimeService } from '../services/TimeService';
 
 @injectable()
 class WalletAuthController {
@@ -17,7 +18,7 @@ class WalletAuthController {
   create = async (request: Request, response: Response): Promise<void> => {
     const { signatureTimestamp, signature } = request.body;
 
-    const currentTime = () => Math.floor(Date.now() / 1000);
+    const currentTime = TimeService.now();
 
     if (currentTime < signatureTimestamp) {
       response.status(400).send({ error: 'Signed timestamp was in the future, provide valid timestamp.' });
@@ -32,7 +33,7 @@ class WalletAuthController {
     try {
       const address = await ethers.utils.verifyMessage(signatureTimestamp, signature);
       const tokenPrivateKey = process.env.AUTH_PRIVATE_KEY;
-      const exp = Math.floor(Date.now() / 1000) + this.settings.auth.tokenExpiry;
+      const exp = TimeService.now() + this.settings.auth.tokenExpiry;
       const token = sign({ exp, userId: address }, tokenPrivateKey);
       response.status(201).send({ token });
     } catch (error) {
