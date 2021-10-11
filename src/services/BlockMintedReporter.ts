@@ -5,6 +5,7 @@ import StatsdClient from 'statsd-client';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { ForeignChainStatus } from '../types/ForeignChainStatus';
 import { BaseChainContract } from '../contracts/BaseChainContract';
+import { TimeService } from './TimeService';
 
 @injectable()
 class BlockMintedReporter {
@@ -13,7 +14,7 @@ class BlockMintedReporter {
   @inject(ChainContractRepository) chainContractRepository!: ChainContractRepository;
 
   call = async (chainId: string): Promise<void> => {
-    const timestamp = Math.trunc(Date.now() / 1000);
+    const timestamp = TimeService.now();
     let contract: BaseChainContract;
 
     try {
