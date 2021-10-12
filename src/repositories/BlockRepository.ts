@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import Block, { IBlock } from '../models/Block';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 import { BlockStatus } from '../types/blocks';
+import { isUndefined, omitBy } from 'lodash';
 
 export type FindProps = {
   offset: number;
@@ -16,6 +17,7 @@ export type FindOneProps = {
 
 export type LatestProps = {
   chainId?: string;
+  status?: BlockStatus;
 };
 
 @injectable()
@@ -59,16 +61,18 @@ export class BlockRepository {
   }
 
   async findLatest(props: LatestProps): Promise<IBlock | undefined> {
-    const { chainId } = props;
+    const { chainId, status } = props;
 
     if (chainId) {
       const foreignBlock = await ForeignBlock.findOne({ foreignChainId: chainId }).sort({ blockId: -1 });
-      const block = await Block.findOne({ blockId: foreignBlock.blockId });
+      const query = omitBy({ blockId: foreignBlock.blockId, status }, isUndefined);
+      const block = await Block.findOne(query);
       if (!block || !foreignBlock) return;
 
       return this.augmentBlockWithReplicationData(block, foreignBlock);
     } else {
-      return Block.findOne().sort({ blockId: -1 });
+      const query = omitBy({ status }, isUndefined);
+      return Block.findOne(query).sort({ blockId: -1 });
     }
   }
 

@@ -6,6 +6,7 @@ export const foreignBlockFactory = Factory
   .attr('_id', () => v4())
   .attr('chainAddress', 'CHAIN_ADDRESS')
   .attr('chainId', 'ethereum')
+  .attr('minter', 'MINTER')
   .sequence('blockId')
   .sequence('anchor')
   .attr('foreignChainId', 'ethereum');
