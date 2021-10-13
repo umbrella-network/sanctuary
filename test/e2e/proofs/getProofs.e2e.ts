@@ -44,13 +44,15 @@ describe('Getting proofs', () => {
 
     it('returns valid response without leaves for the latest finalized block when keys are not specified', async () => {
       await Block.create([
-        { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new'},
-        { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'finalized'},
-        { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed'},
-        { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized'},
+        { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new' },
+        { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'finalized' },
+        { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed' },
+        { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized' },
       ]);
 
-      const proofsResponse = await appAxios.get('/proofs', { headers: { authorization: `Bearer ${credentials.apiKey.key}` } });
+      const proofsResponse = await appAxios.get('/proofs', {
+        headers: { authorization: `Bearer ${credentials.apiKey.key}` },
+      });
       expect(proofsResponse.data).to.be.an('object');
       expect(proofsResponse.data.data.block).to.be.an('object');
       expect(proofsResponse.data.data.block).to.have.property('blockId', 4);
@@ -68,15 +70,18 @@ describe('Getting proofs', () => {
       ]);
 
       await Leaf.create([
-        { _id: 'leaf::block::1::a', blockId: 1, key: 'a', value: '0x0', proof: []},
-        { _id: 'leaf::block::2::a', blockId: 2, key: 'a', value: '0x0', proof: []},
-        { _id: 'leaf::block::3::a', blockId: 3, key: 'a', value: '0x0', proof: []},
-        { _id: 'leaf::block::4::a', blockId: 4, key: 'a', value: '0x0', proof: []},
-        { _id: 'leaf::block::4::b', blockId: 4, key: 'b', value: '0x0', proof: []},
-        { _id: 'leaf::block::4::c', blockId: 4, key: 'c', value: '0x0', proof: []},
+        { _id: 'leaf::block::1::a', blockId: 1, key: 'a', value: '0x0', proof: [] },
+        { _id: 'leaf::block::2::a', blockId: 2, key: 'a', value: '0x0', proof: [] },
+        { _id: 'leaf::block::3::a', blockId: 3, key: 'a', value: '0x0', proof: [] },
+        { _id: 'leaf::block::4::a', blockId: 4, key: 'a', value: '0x0', proof: [] },
+        { _id: 'leaf::block::4::b', blockId: 4, key: 'b', value: '0x0', proof: [] },
+        { _id: 'leaf::block::4::c', blockId: 4, key: 'c', value: '0x0', proof: [] },
       ]);
 
-      const proofsResponse = await appAxios.get('/proofs', { params: { keys: ['a', 'b'] }, headers: { authorization: `Bearer ${credentials.apiKey.key}` } });
+      const proofsResponse = await appAxios.get('/proofs', {
+        params: { keys: ['a', 'b'] },
+        headers: { authorization: `Bearer ${credentials.apiKey.key}` },
+      });
 
       expect(proofsResponse.status).to.be.eq(200);
 
@@ -98,33 +103,31 @@ describe('Getting proofs', () => {
 
     it('returns empty object if no finalized block found', async () => {
       await Block.create([
-        { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new'},
-        { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'failed'},
-        { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed'},
-        { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'failed'},
+        { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new' },
+        { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'failed' },
+        { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed' },
+        { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'failed' },
       ]);
 
-      const proofsResponse = await appAxios.get('/proofs', { headers: { authorization: `Bearer ${credentials.apiKey.key}` } });
+      const proofsResponse = await appAxios.get('/proofs', {
+        headers: { authorization: `Bearer ${credentials.apiKey.key}` },
+      });
 
       expect(proofsResponse.data).to.be.an('object');
       expect(proofsResponse.data.data).to.be.an('object').that.is.empty;
     });
-
   });
-
 
   describe('when a foreign Chain ID is provided', async () => {
     let foreignBlock: IForeignBlock;
     let block: IBlock;
 
-    const operation = async (chainId: string) => appAxios.get(
-      `/proofs?chainId=${chainId}`,
-      {
+    const operation = async (chainId: string) =>
+      appAxios.get(`/proofs?chainId=${chainId}`, {
         headers: {
-          authorization: `Bearer ${credentials.apiKey.key}`
-        }
-      }
-    );
+          authorization: `Bearer ${credentials.apiKey.key}`,
+        },
+      });
 
     beforeEach(async () => {
       await Block.deleteMany({});
@@ -134,10 +137,12 @@ describe('Getting proofs', () => {
       foreignBlock = new ForeignBlock(foreignBlockFactory.build());
       await foreignBlock.save();
 
-      block = new Block(blockFactory.build({
-        status: BlockStatus.Finalized,
-        blockId: foreignBlock.blockId
-      }));
+      block = new Block(
+        blockFactory.build({
+          status: BlockStatus.Finalized,
+          blockId: foreignBlock.blockId,
+        })
+      );
 
       await block.save();
       const nonFinalizedBlock = new Block(blockFactory.build({ blockId: 1000, status: BlockStatus.New }));

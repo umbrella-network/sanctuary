@@ -2,8 +2,7 @@ import { Factory } from 'rosie';
 import { v4 } from 'uuid';
 import bcrypt from 'bcrypt';
 
-export const userFactory = Factory
-  .define('User')
+export const userFactory = Factory.define('User')
   .attr('_id', () => v4())
   .sequence('email', (n) => `user${n}@example.com`)
   .attr('verified', true)

@@ -16,6 +16,10 @@ const settings: Settings = {
         interval: parseInt(process.env.ETH_REPLICATION_INTERVAL || '60000'),
         lockTTL: parseInt(process.env.ETH_REPLICATION_LOCK_TTL || '30000'),
       },
+      polygon: {
+        interval: parseInt(process.env.POLYGON_REPLICATION_INTERVAL || '10000'),
+        lockTTL: parseInt(process.env.POLYGON_REPLICATION_LOCK_TTL || '5000'),
+      },
     },
   },
   redis: {
@@ -63,7 +67,19 @@ const settings: Settings = {
         transactions: {
           waitForBlockTime: parseInt(process.env.ETH_WAIT_FOR_BLOCK_TIME || '1000'),
           minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '2000000000', 10),
-          maxGasPrice: parseInt(process.env.ETH_MAX_GAS_PRICE || '150000000000', 10),
+          maxGasPrice: parseInt(process.env.ETH_MAX_GAS_PRICE || '500000000000', 10),
+        },
+      },
+      polygon: {
+        startBlockNumber: parseInt(process.env.POLYGON_START_BLOCK_NUMBER || '-100000', 10),
+        scanBatchSize: parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        confirmations: parseInt(process.env.POLYGON_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.POLYGON_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
+        transactions: {
+          waitForBlockTime: parseInt(process.env.POLYGON_WAIT_FOR_BLOCK_TIME || '1000'),
+          minGasPrice: parseInt(process.env.POLYGON_MIN_GAS_PRICE || '1000000000', 10),
+          maxGasPrice: parseInt(process.env.POLYGON_MAX_GAS_PRICE || '500000000000', 10),
         },
       },
     },

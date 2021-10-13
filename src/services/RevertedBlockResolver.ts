@@ -3,21 +3,27 @@ import Block from '../models/Block';
 import { Logger } from 'winston';
 import ForeignBlock from '../models/ForeignBlock';
 import { DeleteWriteOpResultObject } from 'mongodb';
+import Settings from '../types/Settings';
 
 @injectable()
 class RevertedBlockResolver {
   @inject('Logger') logger!: Logger;
+  @inject('Settings') settings!: Settings;
 
   async apply(lastSubmittedBlockId: number, nextBlockId: number, chainId?: string): Promise<number> {
     if (lastSubmittedBlockId <= nextBlockId) {
       return -1;
     }
 
-    this.logger.warn(`Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
+    const chainName = chainId || this.settings.blockchain.homeChain.chainId;
+
+    this.logger.warn(`[${chainName}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
+
     const blockRes = chainId
       ? await RevertedBlockResolver.revertForeignBlocks(nextBlockId, chainId)
       : await RevertedBlockResolver.revertHomeBlocks(nextBlockId);
-    this.logger.info(`because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
+
+    this.logger.info(`[${chainName}] because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
 
     return blockRes.deletedCount;
   }

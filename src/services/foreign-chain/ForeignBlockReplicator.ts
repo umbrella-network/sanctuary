@@ -59,11 +59,12 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       return;
     }
 
-    this.txSender = new TxSender(
-      this.blockchain.wallet,
-      this.logger,
-      this.blockchain.settings.transactions.waitForBlockTime
-    );
+    this.txSender = new TxSender({
+      wallet: this.blockchain.wallet,
+      logger: this.logger,
+      chainId: this.chainId,
+      waitForBlockTime: this.blockchain.settings.transactions.waitForBlockTime,
+    });
 
     this.homeChainContract = <ChainContract>(
       this.chainContractRepository.get(this.settings.blockchain.homeChain.chainId)
@@ -76,7 +77,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   };
 
   resolvePendingBlocks = async (status: ForeignChainStatus, currentDate: Date): Promise<IBlock[]> => {
-    if (!this.canMint(status, TimeService.msTos(currentDate.getTime()))) {
+    if (!this.canMint(status, TimeService.msToSec(currentDate.getTime()))) {
       return [];
     }
 
@@ -106,7 +107,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   replicate = async (blocks: IBlock[], status: ForeignChainStatus): Promise<ReplicationStatus> => {
     if (blocks.length === 0) return {};
-    if (blocks.length > 1) return { errors: ['we support only one block at a time'] };
+    if (blocks.length > 1) return { errors: [`[${this.chainId}] we support only one block at a time`] };
 
     const [block] = blocks;
 
@@ -126,7 +127,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     );
 
     if (receipt) {
-      this.logger.info(`block ${block.blockId} replicated with success at tx: ${receipt.transactionHash}`);
+      this.logger.info(
+        `[${this.chainId}] block ${block.blockId} replicated with success at tx: ${receipt.transactionHash}`
+      );
     } else {
       return { errors: [`[${this.chainId}] Unable to send tx for blockId ${block.blockId}`] };
     }
@@ -148,9 +151,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       return false;
     }
 
-    if ((await this.reveredBlockResolver.apply(lastForeignBlock.blockId, status.nextBlockId, this.chainId)) > 0) {
-      return true;
-    }
+    return (await this.reveredBlockResolver.apply(lastForeignBlock.blockId, status.nextBlockId, this.chainId)) > 0;
   }
 
   private canMint = (chainStatus: ForeignChainStatus, dataTimestamp: number): boolean => {
@@ -188,7 +189,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const safeAnchor = homeBlockNumber - homeChainConfirmations;
     const dataTimestamp = this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding);
 
-    this.logger.info(`[${this.chainId}] looking for blocks at ${dataTimestamp} and anchor: ${safeAnchor}`);
+    this.logger.info(
+      `[${this.chainId}] looking for home blocks at ${dataTimestamp.toISOString()} and anchor: ${safeAnchor}`
+    );
 
     return Block.find({
       status: BlockStatus.Finalized,
@@ -233,7 +236,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   ) => {
     const fn = (tr: TransactionRequest) =>
       this.foreignChainContract.submit(
-        TimeService.msTos(dataTimestamp.getTime()),
+        TimeService.msToSec(dataTimestamp.getTime()),
         root,
         keys.map(LeafKeyCoder.encode),
         values.map((v, i) => LeafValueCoder.encode(v, keys[i])),
