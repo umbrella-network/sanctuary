@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 import 'reflect-metadata';
-import {Container} from 'inversify';
+import { Container } from 'inversify';
 import LeavesSynchronizer from '../../src/services/LeavesSynchronizer';
 import StakingBankContract from '../../src/contracts/StakingBankContract';
 import sinon from 'sinon';
-import {BigNumber, ethers} from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import Block from '../../src/models/Block';
 import Leaf from '../../src/models/Leaf';
 import moxios from 'moxios';
-import {LeafValueCoder} from '@umb-network/toolbox';
-import {expect} from 'chai';
-import {inputForBlockModel} from '../fixtures/inputForBlockModel';
-import {ChainContract} from '../../src/contracts/ChainContract';
+import { LeafValueCoder } from '@umb-network/toolbox';
+import { expect } from 'chai';
+import { inputForBlockModel } from '../fixtures/inputForBlockModel';
+import { ChainContract } from '../../src/contracts/ChainContract';
 import FCD from '../../src/models/FCD';
-import {ChainStatus} from '../../src/types/ChainStatus';
-import {Validator} from '../../src/types/Validator';
-import {BlockFromPegasus} from '../../src/types/blocks';
+import { ChainStatus } from '../../src/types/ChainStatus';
+import { Validator } from '../../src/types/Validator';
+import { BlockFromPegasus } from '../../src/types/blocks';
 import settings from '../../src/config/settings';
 import { setupDatabase, teardownDatabase } from '../helpers/databaseHelpers';
 import { getTestContainer } from '../helpers/getTestContainer';
@@ -80,17 +80,17 @@ describe('LeavesSynchronizer', () => {
     validatorRegistryContract = sinon.createStubInstance(StakingBankContract);
     chainContractRepository = sinon.createStubInstance(ChainContractRepository);
 
-    chainContractRepository.get.returns(<ChainContract><unknown> chainContract);
+    chainContractRepository.get.returns(<ChainContract>(<unknown>chainContract));
     chainContract.resolveValidators.returns(resolveValidators(chainStatus));
-    chainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [BigNumber.from('17005632')]] as any));
+    chainContract.resolveFCDs.resolves([[BigNumber.from(1)], [BigNumber.from('17005632')]] as any);
 
-    container.bind(StakingBankContract).toConstantValue(validatorRegistryContract as unknown as StakingBankContract);
+    container.bind(StakingBankContract).toConstantValue((validatorRegistryContract as unknown) as StakingBankContract);
     container.rebind('Settings').toConstantValue(settings);
-    container.bind(ChainContract).toConstantValue(chainContract as unknown as ChainContract);
+    container.bind(ChainContract).toConstantValue((chainContract as unknown) as ChainContract);
 
     container
       .bind(ChainContractRepository)
-      .toConstantValue(chainContractRepository as unknown as ChainContractRepository);
+      .toConstantValue((chainContractRepository as unknown) as ChainContractRepository);
 
     leavesSynchronizer = container.get(LeavesSynchronizer);
 
@@ -124,32 +124,31 @@ describe('LeavesSynchronizer', () => {
           data: {
             'ETH-USD': '0x' + LeafValueCoder.encode(10, 'ETH-USD').toString('hex'),
           },
-        }
-      }
+        },
+      },
     });
 
     const oldStatus = {
       ...chainStatus,
       lastBlockId: chainStatus.lastBlockId - 1,
-      nextBlockId: chainStatus.nextBlockId - 1
+      nextBlockId: chainStatus.nextBlockId - 1,
     };
 
     expect(await leavesSynchronizer.apply(chainStatus, block._id)).to.equal(null, 'null for current block');
     expect(await leavesSynchronizer.apply(oldStatus, block._id)).to.equal(false, 'false for old blocks');
   });
 
-
   it('returns "true" if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
     chainContract.resolveValidators.returns(resolveValidators(chainStatus));
-    chainContract.resolveFCDs.resolves(([[BigNumber.from(1)], [17005632]]));
+    chainContract.resolveFCDs.resolves([[BigNumber.from(1)], [17005632]]);
     moxios.install();
 
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/blockId\/.+/, {
       status: 200,
       response: {
-        data: [blockFromPegasus]
-      }
+        data: [blockFromPegasus],
+      },
     });
 
     const result = await leavesSynchronizer.apply(chainStatus, block._id);
@@ -160,18 +159,18 @@ describe('LeavesSynchronizer', () => {
     const block = await Block.create(inputForBlockModel);
 
     chainContract.resolveValidators.returns(resolveValidators(chainStatus));
-    chainContract.resolveFCDs.resolves(([[BigNumber.from(999)], [BigNumber.from('17005632')]] as any));
+    chainContract.resolveFCDs.resolves([[BigNumber.from(999)], [BigNumber.from('17005632')]] as any);
 
     const treeData = {
-      'ETH-USD': '0x' + LeafValueCoder.encode(100,'ETH-USD').toString('hex'),
+      'ETH-USD': '0x' + LeafValueCoder.encode(100, 'ETH-USD').toString('hex'),
     };
 
     moxios.install();
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/blockId\/.+/, {
       status: 200,
       response: {
-        data: [blockFromPegasus]
-      }
+        data: [blockFromPegasus],
+      },
     });
 
     await leavesSynchronizer.apply(chainStatus, block._id);

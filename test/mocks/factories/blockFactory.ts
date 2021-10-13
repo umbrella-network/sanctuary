@@ -1,8 +1,7 @@
 import { Factory } from 'rosie';
 import { v4 } from 'uuid';
 
-export const blockFactory = Factory
-  .define('ForeignBlock')
+export const blockFactory = Factory.define('ForeignBlock')
   .attr('_id', () => v4())
   .sequence('blockId')
   .sequence('anchor')

@@ -25,19 +25,23 @@ describe('User registration', () => {
   });
 
   it('fails if password is less than 8 characters long', async () => {
-    await expect(appAxios.post('/users', {
-      email: 'example@example.com',
-      password: '1234567'
-    })).to.be.rejected.then(error => {
+    await expect(
+      appAxios.post('/users', {
+        email: 'example@example.com',
+        password: '1234567',
+      })
+    ).to.be.rejected.then((error) => {
       expect(error.response.status).to.be.eq(422);
     });
   });
 
   it('fails if email is invalid', async () => {
-    await expect(appAxios.post('/users', {
-      email: 'invalid email',
-      password: 'valid_password'
-    })).to.be.rejected.then(error => {
+    await expect(
+      appAxios.post('/users', {
+        email: 'invalid email',
+        password: 'valid_password',
+      })
+    ).to.be.rejected.then((error) => {
       expect(error.response.status).to.be.eq(422);
     });
   });
@@ -45,7 +49,7 @@ describe('User registration', () => {
   it('successfully registers when input is valid', async () => {
     const response = await appAxios.post('/users', {
       email: 'example@example.com',
-      password: 'valid_password'
+      password: 'valid_password',
     });
 
     expect(response.status).to.be.eq(201);
@@ -57,14 +61,16 @@ describe('User registration', () => {
   it('responds with 422 if email is already used', async () => {
     await appAxios.post('/users', {
       email: 'example@example.com',
-      password: 'valid_password'
+      password: 'valid_password',
     });
 
-    await expect(appAxios.post('/users', {
-      email: 'example@example.com',
-      password: 'valid_password'
-    })).to.be.rejected.then(error => {
+    await expect(
+      appAxios.post('/users', {
+        email: 'example@example.com',
+        password: 'valid_password',
+      })
+    ).to.be.rejected.then((error) => {
       expect(error.response.status).to.be.eq(422);
-    }); 
+    });
   });
 });

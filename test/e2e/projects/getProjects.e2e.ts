@@ -68,8 +68,8 @@ describe('Get projects', () => {
 
     const response = await appAxios.get('/projects', {
       headers: {
-        authorization: `Bearer ${accessToken}`
-      }
+        authorization: `Bearer ${accessToken}`,
+      },
     });
 
     expect(response.status).to.be.eq(200);

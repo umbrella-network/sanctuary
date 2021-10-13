@@ -33,12 +33,13 @@ describe('/blocks', async () => {
     let foreignBlocks: IForeignBlock[];
     let blocks: IBlock[];
 
-    const operation = async (chainId: string) => adapter.get('/blocks', {
-      params: { chainId },
-      headers: {
-        authorization: `Bearer ${credentials.apiKey.key}`
-      }
-    });
+    const operation = async (chainId: string) =>
+      adapter.get('/blocks', {
+        params: { chainId },
+        headers: {
+          authorization: `Bearer ${credentials.apiKey.key}`,
+        },
+      });
 
     before(async () => {
       foreignBlocks = [];
@@ -73,13 +74,11 @@ describe('/blocks', async () => {
     let subject: IForeignBlock;
 
     const operation = async (foreignChainId: string, blockId: number) =>
-      adapter.get(
-        `/blocks/${blockId}?chainId=${foreignChainId}`,
-        {
-          headers: {
-            authorization: `Bearer ${credentials.apiKey.key}`
-          }
-        });
+      adapter.get(`/blocks/${blockId}?chainId=${foreignChainId}`, {
+        headers: {
+          authorization: `Bearer ${credentials.apiKey.key}`,
+        },
+      });
 
     before(async () => {
       foreignBlock = new ForeignBlock(foreignBlockFactory.build());

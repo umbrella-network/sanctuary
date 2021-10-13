@@ -64,9 +64,7 @@ describe('Delete API key', () => {
   });
 
   it('responds with 403 if no access token was provided', async () => {
-    await expect(
-      appAxios.delete('/api-keys/1', { headers: { authorization: '' } })
-    ).to.be.rejected.then((error) => {
+    await expect(appAxios.delete('/api-keys/1', { headers: { authorization: '' } })).to.be.rejected.then((error) => {
       expect(error.response.status).to.be.eq(403);
     });
   });

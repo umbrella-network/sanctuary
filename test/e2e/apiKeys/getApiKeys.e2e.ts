@@ -101,9 +101,9 @@ describe('Get API keys', () => {
 
     const apiKeys: Record<string, unknown>[] = response.data;
 
-    const apiKeyForFirstProject = apiKeys.find(apiKey => apiKey.projectId === firstProjectId);
+    const apiKeyForFirstProject = apiKeys.find((apiKey) => apiKey.projectId === firstProjectId);
     expect(apiKeyForFirstProject).to.be.an('object', 'Not found an API key for the first project');
-    const apiKeyForSecondProject = apiKeys.find(apiKey => apiKey.projectId === secondProjectId);
+    const apiKeyForSecondProject = apiKeys.find((apiKey) => apiKey.projectId === secondProjectId);
     expect(apiKeyForSecondProject).to.be.an('object', 'Not found an API key for the second project');
   });
 
@@ -125,7 +125,7 @@ describe('Get API keys', () => {
       },
       { headers: { authorization: accessToken } }
     );
-    
+
     const response = await appAxios.get('/api-keys', {
       params: {
         projectId: firstProjectId,
@@ -139,7 +139,7 @@ describe('Get API keys', () => {
 
     const apiKeys: Record<string, unknown>[] = response.data;
 
-    apiKeys.forEach(apiKey => {
+    apiKeys.forEach((apiKey) => {
       expect(apiKey.projectId).to.be.eq(firstProjectId);
     });
   });

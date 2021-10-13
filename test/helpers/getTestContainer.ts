@@ -7,9 +7,7 @@ export function getTestContainer(): Container {
 
   const logger = createLogger({
     level: 'INFO',
-    transports: [
-      new transports.Console({ silent: true })
-    ]
+    transports: [new transports.Console({ silent: true })],
   });
 
   container.bind('Logger').toConstantValue(logger);
