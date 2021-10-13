@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import Settings from '../types/Settings';
-import { ChainsIds } from '../types/ChainsIds';
+import { ChainsIds, ForeignChainsIds } from '../types/ChainsIds';
 import { ChainContract } from '../contracts/ChainContract';
 import { BlockchainRepository } from './BlockchainRepository';
 import { ForeignChainContract } from '../contracts/ForeignChainContract';
@@ -18,19 +18,20 @@ export class ChainContractRepository {
     @inject(BlockchainRepository) blockchainRepository: BlockchainRepository
   ) {
     const bscBlockchain = blockchainRepository.get(ChainsIds.BSC);
-    const ethBlockchain = blockchainRepository.get(ChainsIds.ETH);
 
-    this.collection = {
-      bsc:
-        bscBlockchain.provider && bscBlockchain.getContractRegistryAddress()
-          ? new ChainContract({ blockchain: bscBlockchain, settings })
-          : undefined,
+    this.collection[ChainsIds.BSC] =
+      bscBlockchain.provider && bscBlockchain.getContractRegistryAddress()
+        ? new ChainContract({ blockchain: bscBlockchain, settings })
+        : undefined;
 
-      ethereum:
-        ethBlockchain.provider && ethBlockchain.getContractRegistryAddress()
-          ? new ForeignChainContract({ blockchain: ethBlockchain, settings })
-          : undefined,
-    };
+    ForeignChainsIds.forEach((foreignChainId) => {
+      const blockchain = blockchainRepository.get(foreignChainId);
+
+      this.collection[foreignChainId] =
+        blockchain.provider && blockchain.getContractRegistryAddress()
+          ? new ForeignChainContract({ blockchain, settings })
+          : undefined;
+    });
   }
 
   get(id: string): ChainContract | ForeignChainContract {

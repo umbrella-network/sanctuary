@@ -3,7 +3,7 @@ export class TimeService {
     return Math.floor(Date.now() / 1000);
   }
 
-  static msTos(timeInMs: number): number {
+  static msToSec(timeInMs: number): number {
     return Math.floor(timeInMs / 1000);
   }
 }

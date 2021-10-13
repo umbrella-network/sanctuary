@@ -12,11 +12,12 @@ import { ForeignChainStatus } from '../../src/types/ForeignChainStatus';
 import Block, { IBlock } from '../../src/models/Block';
 import { expect } from 'chai';
 import { foreignBlockFactory as mockForeignBlockFactory } from '../mocks/factories/foreignBlockFactory';
+import {ForeignChainsIds} from "../../src/types/ChainsIds";
 
 describe('ForeignChainReplicator', () => {
   let container: Container;
   let instance: ForeignChainReplicator;
-  const subject = async () => await instance.apply({ foreignChainId: 'ethereum' });
+  const subject = async (foreignChainId: string) => await instance.apply({ foreignChainId });
   let foreignBlockFactory: StubbedInstance<ForeignBlockFactory>;
   let ethereumBlockReplicator: StubbedInstance<EthereumBlockReplicator>;
   let foreignChainStatus: SinonStub;
@@ -50,10 +51,12 @@ describe('ForeignChainReplicator', () => {
   });
 
   describe('#apply', async () => {
-    it('replicates blocks', async () => {
-      const result = <IForeignBlock[]> await subject();
-      expect(result.length).to.eq(1);
-      expect(result[0]).to.eq(foreignBlock);
+    ForeignChainsIds.forEach(foreignChainId => {
+      it(`replicates blocks for ${foreignChainId}`, async () => {
+        const result = <IForeignBlock[]> await subject(foreignChainId);
+        expect(result.length).to.eq(1);
+        expect(result[0]).to.eq(foreignBlock);
+      });
     });
   });
 });

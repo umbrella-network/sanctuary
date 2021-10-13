@@ -9,15 +9,24 @@ interface ILogger {
   warn(msg: string, meta?: Record<string, unknown>): void;
 }
 
+interface TxSenderProps {
+  wallet: Wallet;
+  logger: ILogger;
+  chainId: string;
+  waitForBlockTime?: number;
+}
+
 export class TxSender {
   readonly logger!: ILogger;
   readonly wallet!: Wallet;
   readonly waitForBlockTime!: number;
+  readonly chainId!: string;
 
-  constructor(wallet: Wallet, logger: ILogger, waitForBlockTime = 500) {
-    this.wallet = wallet;
-    this.logger = logger;
-    this.waitForBlockTime = waitForBlockTime;
+  constructor(props: TxSenderProps) {
+    this.wallet = props.wallet;
+    this.logger = props.logger;
+    this.waitForBlockTime = props.waitForBlockTime || 500;
+    this.chainId = props.chainId;
   }
 
   // @throws when tx is not successful on time
@@ -37,17 +46,17 @@ export class TxSender {
       maxFeePerGas: isTxType2 ? maxFeePerGas : undefined,
     };
 
-    this.logger.info(`Submitting tx, gas metrics: ${GasEstimator.printable(gasEstimation)}`);
+    this.logger.info(`[${this.chainId}] submitting tx, gas metrics: ${GasEstimator.printable(gasEstimation)}`);
 
     const { tx, receipt, timeoutMs } = await this.executeTx(fn, { ...gas, ...transactionRequest }, timePadding * 1000);
 
     if (!receipt) {
-      this.logger.warn(`canceling tx ${tx.hash}`);
+      this.logger.warn(`[${this.chainId}] canceling tx ${tx.hash}`);
       const newGasMetrics = await GasEstimator.apply(this.wallet.provider, minGasPrice, maxGasPrice);
 
       await this.cancelPendingTransaction(gasEstimation.gasPrice, timePadding, newGasMetrics).catch(this.logger.warn);
 
-      throw new Error(`mint TX timeout: ${timeoutMs}ms`);
+      throw new Error(`[${this.chainId}] mint TX timeout: ${timeoutMs}ms`);
     }
 
     return receipt;
@@ -67,14 +76,14 @@ export class TxSender {
       gasPrice: Math.max(gasEstimation.gasPrice, prevGasPrice) * 2,
     };
 
-    this.logger.warn('Sending canceling tx', { nonce: txData.nonce, gasPrice: txData.gasPrice });
+    this.logger.warn(`[${this.chainId}] sending canceling tx`, { nonce: txData.nonce, gasPrice: txData.gasPrice });
 
     const fn = (tr: TransactionRequest) => this.wallet.sendTransaction(tr);
 
     const { tx, receipt } = await this.executeTx(fn, txData, timePadding * 1000);
 
     if (!receipt || receipt.status !== 1) {
-      this.logger.warn(`Canceling tx ${tx.hash}: filed or still pending`);
+      this.logger.warn(`[${this.chainId}] canceling tx ${tx.hash}: filed or still pending`);
       return false;
     }
 
@@ -87,7 +96,7 @@ export class TxSender {
     let newBlockNumber = await this.wallet.provider.getBlockNumber();
 
     while (currentBlockNumber === newBlockNumber) {
-      this.logger.info(`waitUntilNextBlock: current ${currentBlockNumber}, new ${newBlockNumber}.`);
+      this.logger.info(`[${this.chainId}] waitUntilNextBlock: current ${currentBlockNumber}, new ${newBlockNumber}.`);
       await TxSender.sleep(this.waitForBlockTime);
       newBlockNumber = await this.wallet.provider.getBlockNumber();
     }
@@ -105,7 +114,7 @@ export class TxSender {
     // there is no point of doing any action on tx if block is not minted
     const newBlockNumber = await this.waitUntilNextBlock(currentBlockNumber);
 
-    this.logger.info(`New block detected ${newBlockNumber}, waiting for tx to be minted.`);
+    this.logger.info(`[${this.chainId}] new block detected ${newBlockNumber}, waiting for tx to be minted.`);
 
     return { tx, receipt: await Promise.race([tx.wait(), TxSender.txTimeout(timeoutMs)]), timeoutMs };
   };

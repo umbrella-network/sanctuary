@@ -15,7 +15,7 @@ export class ForeignChainReplicationWorker extends SingletonWorker {
     const foreignChainId = job.data.foreignChainId as string;
     if (this.isStale(job, interval)) return;
 
-    await this.synchronizeWork(foreignChainId, lockTTL, async () => await this.execute(foreignChainId));
+    await this.synchronizeWork(foreignChainId, lockTTL, async () => this.execute(foreignChainId));
   };
 
   private execute = async (foreignChainId: string): Promise<void> => {
