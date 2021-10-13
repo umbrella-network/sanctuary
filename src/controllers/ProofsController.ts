@@ -1,33 +1,36 @@
 import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
-import Block from '../models/Block';
 import Leaf from '../models/Leaf';
-import { AuthUtils } from '../services/AuthUtils';
 import { BlockStatus } from '../types/blocks';
 import StatsdClient from 'statsd-client';
+import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import Settings from '../types/Settings';
+import { BlockRepository } from '../repositories/BlockRepository';
 
 @injectable()
 class ProofsController {
-  @inject('StatsdClient') statsdClient?: StatsdClient;
+  @inject('StatsdClient')
+  private statsdClient?: StatsdClient;
+
+  @inject(BlockRepository)
+  private blockRepository: BlockRepository;
+
+  @inject('Settings')
+  private settings: Settings;
 
   router: express.Router;
 
-  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
-    this.router = express.Router().get('/', this.index);
+  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
+    this.router = express.Router().use(authenticationMiddleware.apply).get('/', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const apiKeyVerificationResult = await this.authUtils.verifyApiKey(request, response);
-
-    if (!apiKeyVerificationResult.apiKey) {
-      return;
-    }
-
     this.statsdClient?.increment('sanctuary.proofs-controller.index', undefined, {
-      projectId: apiKeyVerificationResult.apiKey.projectId,
+      projectId: request.params.currentProjectId,
     });
 
-    const block = await Block.findOne({ status: BlockStatus.Finalized }).sort({ blockId: -1 }).limit(1);
+    const chainId = this.extractChainId(request);
+    const block = await this.blockRepository.findLatest({ chainId, status: BlockStatus.Finalized });
 
     if (block) {
       const keys = (request.query.keys || []) as string[];
@@ -37,6 +40,13 @@ class ProofsController {
       response.send({ data: {} });
     }
   };
+
+  private extractChainId(request: Request): string | undefined {
+    const chainId = <string>request.query.chainId;
+    if (chainId == this.settings.blockchain.homeChain.chainId) return;
+
+    return chainId;
+  }
 }
 
 export default ProofsController;

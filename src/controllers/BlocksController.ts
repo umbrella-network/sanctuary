@@ -71,8 +71,16 @@ export class BlocksController {
       projectId: request.params.currentProjectId,
     });
 
-    const leaves = await Leaf.find({ blockId: parseInt(request.params.blockId, 10) });
-    response.send(leaves);
+    const chainId = this.extractChainId(request);
+    const blockId = parseInt(<string>request.params.blockId);
+    const block = await this.blockRepository.findOne({ blockId, chainId });
+
+    if (block) {
+      const leaves = await Leaf.find({ blockId: parseInt(request.params.blockId, 10) });
+      response.send(leaves);
+    } else {
+      response.status(404).end();
+    }
   };
 
   private extractChainId(request: Request): string | undefined {

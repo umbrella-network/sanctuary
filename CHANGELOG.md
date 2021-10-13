@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [4.0.4] - 2021-10-12
+### Fixed
+- multi-chain check added to /proofs (OR-1050);
+- multi-chain check added to /leaves (OR-1060);
+
 ## [4.0.3] - 2021-10-11
 ### Fixed 
 - revert blocks for valid blockchain
