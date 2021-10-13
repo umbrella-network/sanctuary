@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
-import { EthereumBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
+import { EthereumBlockReplicator, PolygonBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IForeignBlock } from '../models/ForeignBlock';
 import { IFCD } from '../models/FCD';
@@ -18,9 +18,13 @@ export class ForeignChainReplicator {
   @inject(ForeignBlockFactory) foreignBlockFactory!: ForeignBlockFactory;
   @inject(FCDRepository) fcdRepository!: FCDRepository;
 
-  constructor(@inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator) {
+  constructor(
+    @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
+    @inject(PolygonBlockReplicator) polygonBlockReplicator: PolygonBlockReplicator
+  ) {
     this.replicators = {
       ethereum: ethereumBlockReplicator,
+      polygon: polygonBlockReplicator,
     };
   }
 

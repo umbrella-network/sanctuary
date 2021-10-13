@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {loadFeeds} from '@umb-network/toolbox';
+import { loadFeeds } from '@umb-network/toolbox';
 
 chai.use(chaiAsPromised);
 

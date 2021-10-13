@@ -7,9 +7,8 @@ import UsageMetricsRepository from '../../src/services/analytics/UsageMetricsRep
 import sinon from 'sinon';
 import { expect } from 'chai';
 
-
 describe('AuthUtils', () => {
-  const authUtils = new AuthUtils;
+  const authUtils = new AuthUtils();
 
   const fullRoute = 'blocks/leaves';
   const method = 'GET';
@@ -27,7 +26,6 @@ describe('AuthUtils', () => {
     beforeEach(() => {
       sinon.stub(AuthUtils.prototype, 'verifyApiKeyFromAuthHeader').resolves(mockVerificationResult);
     });
-
 
     it('registers usage metric on API authentication', async () => {
       const usageMetricsRepositorySpy = sinon.stub(UsageMetricsRepository, 'register').resolves();

@@ -102,7 +102,7 @@ class LeavesSynchronizer {
   ): Promise<[boolean, string]> => {
     const resolvedLeaves: Map<string, string> = new Map(<[string, string][]>Object.entries(blockFromValidator.data));
     const tree = this.sortedMerkleTreeFactory.apply(resolvedLeaves);
-    const root = tree.getRoot(TimeService.msTos(savedBlock.dataTimestamp.getTime()));
+    const root = tree.getRoot(TimeService.msToSec(savedBlock.dataTimestamp.getTime()));
     if (root != savedBlock.root) return [false, root];
 
     const [, updatedLeaves] = await Promise.all([

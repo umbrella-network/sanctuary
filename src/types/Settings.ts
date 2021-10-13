@@ -11,6 +11,11 @@ export type BlockchainSettings = {
   };
 };
 
+export type ForeignChainReplicationSettings = {
+  interval: number;
+  lockTTL: number;
+};
+
 type Settings = {
   port: number;
   jobs: {
@@ -21,10 +26,8 @@ type Settings = {
       interval: number;
     };
     foreignChainReplication: {
-      ethereum: {
-        interval: number;
-        lockTTL: number;
-      };
+      ethereum: ForeignChainReplicationSettings;
+      polygon: ForeignChainReplicationSettings;
     };
   };
   redis: {
@@ -55,6 +58,7 @@ type Settings = {
     multiChains: {
       bsc: BlockchainSettings;
       ethereum: BlockchainSettings;
+      polygon: BlockchainSettings;
     };
   };
   auth: {

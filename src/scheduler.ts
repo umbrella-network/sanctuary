@@ -4,11 +4,11 @@ import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
 import BlockResolverWorker from './workers/BlockResolverWorker';
 import MetricsWorker from './workers/MetricsWorker';
 import { ForeignChainReplicationWorker } from './workers';
-import Settings from './types/Settings';
+import Settings, { ForeignChainReplicationSettings } from './types/Settings';
 import { Logger } from 'winston';
 import newrelic from 'newrelic';
 import logger from './lib/logger';
-import { ChainsIds } from './types/ChainsIds';
+import { ForeignChainsIds } from './types/ChainsIds';
 
 logger.info('Starting Scheduler...');
 
@@ -20,19 +20,38 @@ logger.info('Starting Scheduler...');
   const metricsWorker = Application.get(MetricsWorker);
   const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
 
-  setInterval(async () => {
-    await foreignChainReplicationWorker.enqueue(
-      {
-        foreignChainId: ChainsIds.ETH,
-        lockTTL: settings.jobs.foreignChainReplication.ethereum.lockTTL,
-        interval: settings.jobs.foreignChainReplication.ethereum.interval,
-      },
-      {
-        removeOnComplete: true,
-        removeOnFail: true,
-      }
+  const scheduleForeignChainReplication = async (
+    foreignChainReplicationSettings: ForeignChainReplicationSettings,
+    chainId: string
+  ): Promise<void> => {
+    try {
+      await foreignChainReplicationWorker.enqueue(
+        {
+          foreignChainId: chainId,
+          lockTTL: foreignChainReplicationSettings.lockTTL,
+          interval: foreignChainReplicationSettings.interval,
+        },
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      );
+    } catch (e) {
+      newrelic.noticeError(e);
+      logger.error(e);
+    }
+  };
+
+  for (const foreignChainId of ForeignChainsIds) {
+    const foreignChainReplicationSettings: ForeignChainReplicationSettings = (<
+      Record<string, ForeignChainReplicationSettings>
+    >settings.jobs.foreignChainReplication)[foreignChainId];
+
+    setInterval(
+      async () => scheduleForeignChainReplication(foreignChainReplicationSettings, foreignChainId),
+      foreignChainReplicationSettings.interval
     );
-  }, settings.jobs.foreignChainReplication.ethereum.interval);
+  }
 
   setInterval(async () => {
     await metricsWorker.enqueue(
