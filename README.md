@@ -299,11 +299,12 @@ GET /proofs/?keys[]=ETH-USD
 }
 ```
 
-## Multichain development
+## MultiChain development
 
-### EVM compatible
+### EVM compatible blockchains
 
-Use this commit to reproduce multichain steps:
+Use this commit to reproduce multichain steps: 
+[a5600de5631a5e226e6c53b23bcf46882f7ee240](https://github.com/umbrella-network/sanctuary/commit/a5600de5631a5e226e6c53b23bcf46882f7ee240)
 
 
 ## Infrastructure deployments
