@@ -51,13 +51,17 @@ export class GasEstimator {
   }
 
   static printable(metrics: GasEstimation): string {
+    const { gasPrice, maxPriorityFeePerGas, maxFeePerGas, min, max, avg, isTxType2, baseFeePerGas } = metrics;
+
     return (
-      `gasPrice: ${GasEstimator.formatGwei(metrics.gasPrice)} Gwei, ` +
-      `maxPriorityFee: ${GasEstimator.formatGwei(metrics.maxPriorityFeePerGas)} Gwei, ` +
-      `maxFee: ${GasEstimator.formatGwei(metrics.maxFeePerGas)} Gwei, ` +
-      `min: ${GasEstimator.formatGwei(metrics.min)} Gwei, ` +
-      `max: ${GasEstimator.formatGwei(metrics.max)} Gwei, ` +
-      `avg: ${GasEstimator.formatGwei(metrics.avg)} Gwei`
+      `isTxType2: ${isTxType2 ? 'yes' : 'no'} Gwei, ` +
+      `gasPrice: ${GasEstimator.formatGwei(gasPrice)} Gwei, ` +
+      `baseFeePerGas: ${GasEstimator.formatGwei(baseFeePerGas)} Gwei, ` +
+      `maxPriorityFee: ${maxPriorityFeePerGas ? GasEstimator.formatGwei(maxPriorityFeePerGas) : '-'} Gwei, ` +
+      `maxFee: ${maxFeePerGas ? GasEstimator.formatGwei(maxFeePerGas) : '-'} Gwei, ` +
+      `min: ${GasEstimator.formatGwei(min)} Gwei, ` +
+      `max: ${GasEstimator.formatGwei(max)} Gwei, ` +
+      `avg: ${GasEstimator.formatGwei(avg)} Gwei`
     );
   }
 
@@ -111,14 +115,14 @@ export class GasEstimator {
       return GasEstimator.makeGasEstimation(minPrice, params);
     }
 
-    const gasPrice = params.metrics.isTxType2
-      ? minPrice
-      : GasEstimator.customEstimation(params.prices, params.minGasPrice, params.maxGasPrice);
+    const gasPrice = params.metrics.isTxType2 ? minPrice : GasEstimator.customEstimation(params);
 
     return GasEstimator.makeGasEstimation(gasPrice, params);
   };
 
-  private static customEstimation = (prices: number[], minGasPrice: number, maxGasPrice: number): number => {
+  private static customEstimation = (params: EstimateParams): number => {
+    const { prices, minGasPrice, maxGasPrice, metrics } = params;
+
     const sortedPrices = prices.sort(); // from lower -> higher
     const bottomPrices = sortedPrices
       .slice(0, Math.ceil((sortedPrices.length - 1) * 0.9)) // ignore top 10% of higher prices
@@ -136,7 +140,7 @@ export class GasEstimator {
       return minGasPrice;
     }
 
-    return Math.ceil(Math.min(maxGasPrice, Math.max(minGasPrice, estimatedPrice))) + 1;
+    return Math.ceil(Math.min(maxGasPrice, Math.max(minGasPrice, estimatedPrice, metrics.avg))) + 1;
   };
 
   private static makeGasEstimation(gasPrice: number, params: EstimateParams): GasEstimation {
