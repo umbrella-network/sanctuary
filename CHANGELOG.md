@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.2.0] - 2021-10-15
+### Changed
+- include avg price in custom gas calculations
+
 ## [4.1.0] - 2021-10-13
 ### Added
 - Polygon replicator
