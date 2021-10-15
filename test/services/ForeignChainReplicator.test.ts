@@ -3,10 +3,7 @@ import { getTestContainer } from '../helpers/getTestContainer';
 import { Container } from 'inversify';
 import { ForeignChainReplicator } from '../../src/services/ForeignChainReplicator';
 import sinon, { SinonStub } from 'sinon';
-import {
-  EthereumBlockReplicator,
-  PolygonBlockReplicator,
-} from '../../src/services/foreign-chain';
+import { EthereumBlockReplicator, PolygonBlockReplicator } from '../../src/services/foreign-chain';
 import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
 import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
 import { StubbedInstance, stubConstructor, stubObject } from 'ts-sinon';
