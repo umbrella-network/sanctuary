@@ -32,12 +32,17 @@ export async function eraseBucket(influxConn: InfluxDB, org: string, bucketName:
   return bucket;
 }
 
-export function registerPoint(point: Point, influxConnection: InfluxDB, org: string, bucket: string): void {
+export async function registerPoint(
+  point: Point,
+  influxConnection: InfluxDB,
+  org: string,
+  bucket: string
+): Promise<void> {
   const writeApi = influxConnection.getWriteApi(org, bucket, 'ms');
 
   writeApi.writePoint(point);
 
-  writeApi.close();
+  await writeApi.close();
 }
 
 export async function collectRowsFromQuery(

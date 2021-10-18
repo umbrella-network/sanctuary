@@ -1,10 +1,11 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import ApiKey from '../models/ApiKey';
 import { IApiKey } from '../models/ApiKey';
 import Token from '../types/Token';
 import UsageMetricsRepository from './analytics/UsageMetricsRepository';
+import { Logger } from 'winston';
 
 export type ApiKeyFromAuthHeaderInterface =
   | { apiKey: IApiKey; errorMessage?: void }
@@ -12,6 +13,8 @@ export type ApiKeyFromAuthHeaderInterface =
 
 @injectable()
 export class AuthUtils {
+  @inject('Logger') logger!: Logger;
+
   async verifyApiKey(request: Request, response: Response): Promise<ApiKeyFromAuthHeaderInterface> {
     const apiKeyVerificationResult = await this.verifyApiKeyFromAuthHeader(request.headers.authorization);
 
@@ -28,9 +31,9 @@ export class AuthUtils {
     try {
       const { path, method, baseUrl } = request;
       const route = `${baseUrl}${path}`;
-      UsageMetricsRepository.register(apiKey.key, route, method);
+      await UsageMetricsRepository.register(apiKey.key, route, method);
     } catch (e) {
-      console.log(e);
+      this.logger.error(e);
     }
   }
 
