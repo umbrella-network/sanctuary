@@ -3,8 +3,11 @@ import express, { Request, Response } from 'express';
 import { loadFeeds } from '@umb-network/toolbox';
 import Settings from '../types/Settings';
 
+import LeafRepository from '../repositories/LeafRepository';
+
 @injectable()
 class KeysController {
+  @inject(LeafRepository) leafRepository!: LeafRepository;
   router: express.Application;
 
   constructor(@inject('Settings') private readonly settings: Settings) {
@@ -22,8 +25,8 @@ class KeysController {
 
   layer2keys = async (request: Request, response: Response): Promise<void> => {
     try {
-      const keys = await loadFeeds(this.settings.app.feedsFile);
-      response.send([...Object.keys(keys)]);
+      const keys = await this.leafRepository.getKeys();
+      response.send(keys);
     } catch (err) {
       response.sendStatus(500);
     }
