@@ -20,14 +20,14 @@ export default class UsageMetricsRepository {
     return usageMetrics;
   }
 
-  static register(apiKey: string, route: string, method: string): void {
+  static async register(apiKey: string, route: string, method: string): Promise<void> {
     const point = new Point('apiKey')
       .tag('apiKey', apiKey)
       .tag('route', route)
       .tag('method', method)
       .stringField('type', 'access');
 
-    influxUtils.registerPoint(point, influxConn, org, bucket);
+    await influxUtils.registerPoint(point, influxConn, org, bucket);
   }
 
   private static getQueryForApiKeysAndPeriod(apiKeys: Array<string>, period?: string): string {
