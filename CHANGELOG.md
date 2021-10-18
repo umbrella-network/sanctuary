@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.2.1] - 2021-10-18
+### Changed
+- separate api usage registering from API operation
+
 ## [4.2.0] - 2021-10-15
 ### Changed
 - include avg price in custom gas calculations
