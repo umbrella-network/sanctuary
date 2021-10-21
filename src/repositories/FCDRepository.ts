@@ -22,6 +22,13 @@ export class FCDRepository {
   @inject('Settings') settings: Settings;
   @inject(FCDFactory) fcdFactory: FCDFactory;
 
+  async find(): Promise<string[]> {
+    const fcds = await FCD.find().select('key');
+    const fcdKeys = fcds.map(({ key, _id }) => key || _id);
+    const keySet = new Set<string>(fcdKeys);
+    return Array.from(keySet);
+  }
+
   async findFCDsForReplication(block: IBlock): Promise<FetchedFCDs> {
     const keys: string[] = [];
     const values: FeedValue[] = [];

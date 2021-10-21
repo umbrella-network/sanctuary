@@ -1,12 +1,13 @@
 import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
-import { loadFeeds } from '@umb-network/toolbox';
 import Settings from '../types/Settings';
 
+import { FCDRepository } from '../repositories/FCDRepository';
 import LeafRepository from '../repositories/LeafRepository';
 
 @injectable()
 class KeysController {
+  @inject(FCDRepository) fcdRepository!: FCDRepository;
   @inject(LeafRepository) leafRepository!: LeafRepository;
   router: express.Application;
 
@@ -16,8 +17,8 @@ class KeysController {
 
   fcds = async (request: Request, response: Response): Promise<void> => {
     try {
-      const keys = await loadFeeds(this.settings.app.feedsOnChain);
-      response.send([...Object.keys(keys)]);
+      const keys = await this.fcdRepository.find();
+      response.send(keys);
     } catch (err) {
       response.sendStatus(500);
     }
