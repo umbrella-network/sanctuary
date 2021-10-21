@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - LeafRepository to fetch leaves keys
 ### Changed
 - KeysController L2D data source
+- KeysController FCD data source
 
 ## [4.2.1] - 2021-10-18
 ### Changed
