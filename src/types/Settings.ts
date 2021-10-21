@@ -75,6 +75,11 @@ type Settings = {
     bucket: string;
     token: string;
   };
+  auth0: {
+    audience: string;
+    issuer: string;
+    jwksUri: string;
+  };
 };
 
 export default Settings;

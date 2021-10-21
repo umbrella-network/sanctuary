@@ -88,6 +88,11 @@ const settings: Settings = {
     tokenExpiry: 60 * 60 * 24 * 7, // 1 week
     walletVerificationThreshold: 10,
   },
+  auth0: {
+    audience: process.env.AUTH0_AUDIENCE || 'TEST_AUDIENCE',
+    issuer: process.env.AUTH0_ISSUER || 'https://example.com',
+    jwksUri: process.env.AUTH0_JWKS_URI || 'https://example.com/.well-known/jwks.json',
+  },
   environment: process.env.ENVIRONMENT || process.env.NODE_ENV,
   version: packageJson.version,
   influxDB: {
