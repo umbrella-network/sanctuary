@@ -22,9 +22,9 @@ export class FCDRepository {
   @inject('Settings') settings: Settings;
   @inject(FCDFactory) fcdFactory: FCDFactory;
 
-  async find(): Promise<string[]> {
-    const fcds = await FCD.find().select('key');
-    const fcdKeys = fcds.map(({ key, _id }) => key || _id);
+  async findUniqueKeys(): Promise<string[]> {
+    const fcds = await FCD.find({ key: { $ne: null } }).select('key');
+    const fcdKeys = fcds.map(({ key }) => key);
     const keySet = new Set<string>(fcdKeys);
     return Array.from(keySet);
   }

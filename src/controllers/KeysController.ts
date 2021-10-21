@@ -17,7 +17,7 @@ class KeysController {
 
   fcds = async (request: Request, response: Response): Promise<void> => {
     try {
-      const keys = await this.fcdRepository.find();
+      const keys = await this.fcdRepository.findUniqueKeys();
       response.send(keys);
     } catch (err) {
       response.sendStatus(500);
