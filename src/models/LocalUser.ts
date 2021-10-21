@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IUser extends Document {
+export interface ILocalUser extends Document {
   email: string;
   password: string;
   verified: boolean;
@@ -30,4 +30,4 @@ UserSchema.post('save', (user) => {
   // Send verification request
 });
 
-export default mongoose.model<IUser>('User', UserSchema);
+export default mongoose.model<ILocalUser>('User', UserSchema);

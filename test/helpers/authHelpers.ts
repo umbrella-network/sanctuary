@@ -1,4 +1,4 @@
-import User, { IUser } from '../../src/models/User';
+import User, { ILocalUser } from '../../src/models/LocalUser';
 import { userFactory } from '../mocks/factories/userFactory';
 import axios from 'axios';
 import { loadTestEnv } from '../helpers';
@@ -10,14 +10,14 @@ import { v4 } from 'uuid';
 const config = loadTestEnv();
 const adapter = axios.create({ baseURL: config.APP_URL });
 
-const getTempUser = async (): Promise<IUser> => {
+const getTempUser = async (): Promise<ILocalUser> => {
   const userAttributes = await userFactory.build();
   const user = new User(userAttributes);
   await user.save();
   return user;
 };
 
-const signIn = async (user: IUser): Promise<string> => {
+const signIn = async (user: ILocalUser): Promise<string> => {
   const response = await adapter.post('/auth', {
     email: user.email,
     password: 'PASSWORD',
@@ -44,7 +44,7 @@ const generateAPIKey = async (accessToken: string, projectId: string): Promise<I
 };
 
 type TestUserHarness = {
-  user: IUser;
+  user: ILocalUser;
   accessToken: string;
   project: IProject;
   apiKey: IApiKey;

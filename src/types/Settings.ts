@@ -76,6 +76,9 @@ type Settings = {
     token: string;
   };
   auth0: {
+    clientId?: string;
+    clientSecret: string;
+    domain: string;
     audience: string;
     issuer: string;
     jwksUri: string;

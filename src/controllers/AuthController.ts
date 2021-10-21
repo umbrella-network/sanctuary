@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
-import User from '../models/User';
+import User from '../models/LocalUser';
 import Settings from '../types/Settings';
 import { TimeService } from '../services/TimeService';
 

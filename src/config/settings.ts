@@ -89,6 +89,9 @@ const settings: Settings = {
     walletVerificationThreshold: 10,
   },
   auth0: {
+    clientId: process.env.AUTH0_CLIENT_ID,
+    clientSecret: process.env.AUTH0_CLIENT_SECRET || 'AUTH0_SECRET',
+    domain: process.env.AUTH0_DOMAIN || 'umbrella-dev.auth0.com',
     audience: process.env.AUTH0_AUDIENCE || 'TEST_AUDIENCE',
     issuer: process.env.AUTH0_ISSUER || 'https://example.com',
     jwksUri: process.env.AUTH0_JWKS_URI || 'https://example.com/.well-known/jwks.json',

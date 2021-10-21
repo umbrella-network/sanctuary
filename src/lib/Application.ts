@@ -12,6 +12,8 @@ import StatsdClient from 'statsd-client';
 import statsdClient from './statsDClient';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
+import { ManagementClient } from 'auth0';
+import { initAuth0ManagementClient } from '../config/initAuth0ManagementClient';
 
 class Application {
   private static _instance: Application;
@@ -28,6 +30,12 @@ class Application {
     this.container.bind(LockRepository).toSelf().inSingletonScope();
     this.container.bind(BlockchainRepository).toSelf().inSingletonScope();
     this.container.bind(ChainContractRepository).toSelf().inSingletonScope();
+
+    this
+      .container
+      .bind<ManagementClient>('Auth0ManagementClient')
+      .toDynamicValue((ctx) => initAuth0ManagementClient(ctx.container.get('Settings')))
+      .inSingletonScope();
   }
 
   public static get instance(): Application {

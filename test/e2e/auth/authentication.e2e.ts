@@ -2,7 +2,7 @@ import axios from 'axios';
 import { loadTestEnv } from '../../helpers';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import User from '../../../src/models/User';
+import User from '../../../src/models/LocalUser';
 import mongoose from 'mongoose';
 
 chai.use(chaiAsPromised);

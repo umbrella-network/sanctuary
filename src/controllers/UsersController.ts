@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import User from '../models/User';
+import User from '../models/LocalUser';
 import Company from '../models/Company';
 import Project from '../models/Project';
 import { AuthUtils } from '../services/AuthUtils';
