@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
 import LeafModel, { ILeaf } from '../models/Leaf';
+import { sort } from 'fast-sort';
 
 const BLOCKS_SEARCH_LIMIT = 6;
 
@@ -17,15 +18,7 @@ class LeafRepository {
     const keys = leaves.map(({ key }) => key);
     const keySet = new Set<string>(keys);
     const uniqueKeys = Array.from(keySet);
-    return this.sortAlphabetically(uniqueKeys);
-  };
-
-  private sortAlphabetically = (origin: string[]): string[] => {
-    return origin.sort((a, b) => {
-      if (a < b) return -1;
-      if (a > b) return 1;
-      return 0;
-    });
+    return sort(uniqueKeys).asc();
   };
 }
 

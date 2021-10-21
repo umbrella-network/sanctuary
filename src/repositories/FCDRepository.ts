@@ -4,6 +4,7 @@ import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import FCD, { IFCD } from '../models/FCD';
 import Settings from '../types/Settings';
 import { FCDFactory } from '../factories/FCDFactory';
+import { sort } from 'fast-sort';
 
 export type FetchedFCDs = {
   keys: string[];
@@ -26,7 +27,7 @@ export class FCDRepository {
     const fcds = await FCD.find({ key: { $ne: null } }).select('key');
     const fcdKeys = fcds.map(({ key }) => key);
     const keySet = new Set<string>(fcdKeys);
-    return Array.from(keySet);
+    return sort(Array.from(keySet)).asc();
   }
 
   async findFCDsForReplication(block: IBlock): Promise<FetchedFCDs> {
