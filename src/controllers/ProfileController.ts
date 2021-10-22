@@ -24,7 +24,10 @@ export class ProfileController {
   }
 
   show = async (req: Request, res: Response): Promise<void> => {
-    res.metrics.metric = 'sanctuary.profile-controller.show';
+    console.log('==================');
+    console.log(req);
+    console.log('==================');
+    res.metrics = { metric: 'sanctuary.profile-controller.show' };
 
     try {
       const user = await this.userRepository.find({ id: req.user.sub });
@@ -37,7 +40,7 @@ export class ProfileController {
   };
 
   update = async (req: Request, res: Response): Promise<void> => {
-    res.metrics.metric = 'sanctuary.profile-controller.update';
+    res.metrics = { metric: 'sanctuary.profile-controller.update' };
 
     try {
       const update = req.body;

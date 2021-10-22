@@ -22,7 +22,7 @@ export class AuthenticationMiddleware {
     this.userAuthenticator = jwt({
       audience,
       issuer: `https://${domain}/`,
-      algorithms: ['RSA256'],
+      algorithms: ['RS256'],
       credentialsRequired: true,
       secret: jwksRsa.expressJwtSecret({
         cache: true,
