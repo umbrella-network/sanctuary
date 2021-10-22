@@ -2,11 +2,15 @@ import { inject, injectable, postConstruct } from 'inversify';
 import { Request, Response, Router } from 'express';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import { UserNotFoundError, UserRepository, UserUpdateError } from '../repositories/UserRepository';
+import { MetricsMiddleware } from '../middleware/MetricsMiddleware';
 
 @injectable()
 export class ProfileController {
   @inject(AuthenticationMiddleware)
   authenticationMiddleware!: AuthenticationMiddleware;
+
+  @inject(MetricsMiddleware)
+  metricsMiddleware!: MetricsMiddleware;
 
   @inject(UserRepository)
   userRepository!: UserRepository;
@@ -20,10 +24,13 @@ export class ProfileController {
     this
       .router
       .use(this.authenticationMiddleware.apply)
-      .get('/', this.show);
+      .get('/', this.show)
+      .use(this.metricsMiddleware.apply);
   }
 
   show = async (req: Request, res: Response): Promise<void> => {
+    res.metrics.metric = 'sanctuary.profile-controller.show';
+
     try {
       const user = await this.userRepository.find({ id: req.user.sub });
       res.send({ data: user }); // TODO: check if we need to filter fields
@@ -35,6 +42,8 @@ export class ProfileController {
   }
 
   update = async (req: Request, res: Response): Promise<void> => {
+    res.metrics.metric = 'sanctuary.profile-controller.update';
+
     try {
       const update = req.body;
 
