@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import Settings from '../types/Settings';
 import { User } from '../types/User';
-import { ManagementClient, PasswordChangeTicketResponse, User as Auth0User } from 'auth0';
+import { ManagementClient, User as Auth0User } from 'auth0';
 import { Logger } from 'winston';
 import { isUndefined, omitBy } from 'lodash';
 
@@ -20,7 +20,7 @@ export type UpdateProps = {
 
 export type ChangePasswordProps = {
   userId: string;
-}
+};
 
 export class UserNotFoundError extends Error {}
 export class UserUpdateError extends Error {}
@@ -71,10 +71,9 @@ export class UserRepository {
 
   // TODO: set the result_url properly
   async startPasswordChange(props: ChangePasswordProps): Promise<string> {
-    const res = await this.adapter
-      .createPasswordChangeTicket({
-        user_id: props.userId
-      });
+    const res = await this.adapter.createPasswordChangeTicket({
+      user_id: props.userId,
+    });
 
     return res.ticket;
   }
