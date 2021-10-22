@@ -24,9 +24,6 @@ export class ProfileController {
   }
 
   show = async (req: Request, res: Response): Promise<void> => {
-    console.log('==================');
-    console.log(req);
-    console.log('==================');
     res.metrics = { metric: 'sanctuary.profile-controller.show' };
 
     try {
