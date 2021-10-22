@@ -10,8 +10,8 @@ declare global {
     }
 
     interface Request {
-      currentProject?: Project;
-      currentUser?: User;
+      project?: Project;
+      user?: User;
     }
 
     interface Response {

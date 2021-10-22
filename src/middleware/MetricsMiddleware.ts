@@ -12,9 +12,9 @@ export class MetricsMiddleware {
       const { metric, delta } = res.metrics;
       let { tags } = res.metrics;
 
-      if (req.currentProject) {
+      if (req.project) {
         tags ||= {};
-        tags = { projectId: req.currentProject.id, ...tags };
+        tags = { projectId: req.project.id, ...tags };
       }
 
       if (delta && tags) {
