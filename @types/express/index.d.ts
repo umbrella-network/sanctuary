@@ -10,7 +10,9 @@ declare global {
     }
 
     interface Request {
-      project?: Project;
+      project?: {
+        id: string;
+      };
       user?: User;
     }
 
