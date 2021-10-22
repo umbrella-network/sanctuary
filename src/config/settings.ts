@@ -87,14 +87,15 @@ const settings: Settings = {
   auth: {
     tokenExpiry: 60 * 60 * 24 * 7, // 1 week
     walletVerificationThreshold: 10,
+    jwt: {
+      audience: process.env.AUTH_JWT_AUDIENCE || 'TEST_AUDIENCE',
+      domain: process.env.AUTH_JWT_DOMAIN || 'https://example.com',
+    },
   },
   auth0: {
     clientId: process.env.AUTH0_CLIENT_ID,
     clientSecret: process.env.AUTH0_CLIENT_SECRET || 'AUTH0_SECRET',
     domain: process.env.AUTH0_DOMAIN || 'umbrella-dev.auth0.com',
-    audience: process.env.AUTH0_AUDIENCE || 'TEST_AUDIENCE',
-    issuer: process.env.AUTH0_ISSUER || 'https://example.com',
-    jwksUri: process.env.AUTH0_JWKS_URI || 'https://example.com/.well-known/jwks.json',
   },
   environment: process.env.ENVIRONMENT || process.env.NODE_ENV,
   version: packageJson.version,

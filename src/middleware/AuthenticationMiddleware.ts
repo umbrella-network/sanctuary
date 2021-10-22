@@ -17,16 +17,18 @@ export class AuthenticationMiddleware {
 
   @postConstruct()
   setup(): void {
+    const { audience, domain } = this.settings.auth.jwt;
+
     this.userAuthenticator = jwt({
-      audience: this.settings.auth0.audience,
-      issuer: this.settings.auth0.issuer,
+      audience,
+      issuer: `https://${domain}/`,
       algorithms: ['RSA256'],
       credentialsRequired: true,
       secret: jwksRsa.expressJwtSecret({
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: this.settings.auth0.jwksUri,
+        jwksUri: `https://${domain}/.well-known/jwks.json`,
       }),
     });
   }

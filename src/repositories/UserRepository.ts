@@ -28,7 +28,7 @@ export class UserRepository {
   private settings!: Settings;
 
   @inject('Auth0ManagementClient')
-  private adapter!: ManagementClient;
+  adapter!: ManagementClient;
 
   async find(props: FindProps): Promise<User | undefined> {
     const { id } = props;

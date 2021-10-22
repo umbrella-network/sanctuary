@@ -7,20 +7,19 @@ import { MetricsMiddleware } from '../middleware/MetricsMiddleware';
 @injectable()
 export class ProfileController {
   @inject(AuthenticationMiddleware)
-  authenticationMiddleware!: AuthenticationMiddleware;
+  private authenticationMiddleware!: AuthenticationMiddleware;
 
   @inject(MetricsMiddleware)
-  metricsMiddleware!: MetricsMiddleware;
+  private metricsMiddleware!: MetricsMiddleware;
 
   @inject(UserRepository)
-  userRepository!: UserRepository;
+  private userRepository!: UserRepository;
 
   router: Router;
 
   @postConstruct()
   setup(): void {
     this.router = Router();
-
     this.router.use(this.authenticationMiddleware.apply).get('/', this.show).use(this.metricsMiddleware.apply);
   }
 
