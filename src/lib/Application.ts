@@ -31,8 +31,7 @@ class Application {
     this.container.bind(BlockchainRepository).toSelf().inSingletonScope();
     this.container.bind(ChainContractRepository).toSelf().inSingletonScope();
 
-    this
-      .container
+    this.container
       .bind<ManagementClient>('Auth0ManagementClient')
       .toDynamicValue((ctx) => initAuth0ManagementClient(ctx.container.get('Settings')))
       .inSingletonScope();

@@ -21,11 +21,7 @@ export class ProfileController {
   setup(): void {
     this.router = Router();
 
-    this
-      .router
-      .use(this.authenticationMiddleware.apply)
-      .get('/', this.show)
-      .use(this.metricsMiddleware.apply);
+    this.router.use(this.authenticationMiddleware.apply).get('/', this.show).use(this.metricsMiddleware.apply);
   }
 
   show = async (req: Request, res: Response): Promise<void> => {
@@ -35,11 +31,11 @@ export class ProfileController {
       const user = await this.userRepository.find({ id: req.user.sub });
       res.send({ data: user }); // TODO: check if we need to filter fields
     } catch (e) {
-      if (!(e instanceof UserNotFoundError)) throw(e);
+      if (!(e instanceof UserNotFoundError)) throw e;
 
       res.status(404).send();
     }
-  }
+  };
 
   update = async (req: Request, res: Response): Promise<void> => {
     res.metrics.metric = 'sanctuary.profile-controller.update';
@@ -49,14 +45,14 @@ export class ProfileController {
 
       const user = await this.userRepository.update({
         sub: req.user.sub,
-        update
+        update,
       });
 
       res.send({ data: user });
     } catch (e) {
-      if (!(e instanceof UserUpdateError)) throw(e);
+      if (!(e instanceof UserUpdateError)) throw e;
 
       res.status(422).send();
     }
-  }
+  };
 }

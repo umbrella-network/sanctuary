@@ -13,16 +13,21 @@ export class MetricsMiddleware {
       let { tags } = res.metrics;
 
       if (req.currentProject) {
+        tags ||= {};
         tags = { projectId: req.currentProject.id, ...tags };
       }
 
       if (delta && tags) {
         this.statsdClient?.increment(metric, delta, tags);
+      } else if (delta) {
+        this.statsdClient?.increment(metric, delta);
+      } else if (tags) {
+        this.statsdClient?.increment(metric, 1, tags);
       } else {
         this.statsdClient?.increment(metric);
       }
     }
 
     next();
-  }
+  };
 }

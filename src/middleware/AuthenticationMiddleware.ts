@@ -27,14 +27,14 @@ export class AuthenticationMiddleware {
         rateLimit: true,
         jwksRequestsPerMinute: 5,
         jwksUri: this.settings.auth0.jwksUri,
-      })
+      }),
     });
   }
 
   apply = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     const projectAuthentication = await this.projectAuthenticator.verifyApiKey(request, response);
 
-    if(projectAuthentication.apiKey) {
+    if (projectAuthentication.apiKey) {
       request.params['currentProjectId'] = projectAuthentication.apiKey.projectId;
       next();
     } else {

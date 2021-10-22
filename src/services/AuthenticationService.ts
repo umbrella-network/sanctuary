@@ -18,7 +18,7 @@ export class AuthenticationService {
       }),
       audience: this.settings.audience,
       issuer: this.settings.issuer,
-      algorithms: ['RSA256']
+      algorithms: ['RSA256'],
     });
   }
 }
