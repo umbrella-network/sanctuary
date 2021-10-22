@@ -40,13 +40,9 @@ export class ProfileController {
     res.metrics = { metric: 'sanctuary.profile-controller.update' };
 
     try {
-      const update = req.body;
-
-      const user = await this.userRepository.update({
-        sub: req.user.sub,
-        update,
-      });
-
+      const id = req.user.sub;
+      const data = req.body.data;
+      const user = await this.userRepository.update({ id, data });
       res.send({ data: user });
     } catch (e) {
       if (!(e instanceof UserUpdateError)) throw e;

@@ -8,24 +8,25 @@ export class MetricsMiddleware {
   private statsdClient?: StatsdClient;
 
   apply = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (res.metrics) {
-      const { metric, delta } = res.metrics;
-      let { tags } = res.metrics;
+    if (!this.statsdClient) return next();
+    if (!res.metrics) return next();
 
-      if (req.project) {
-        tags ||= {};
-        tags = { projectId: req.project.id, ...tags };
-      }
+    const { metric, delta } = res.metrics;
+    let { tags } = res.metrics;
 
-      if (delta && tags) {
-        this.statsdClient?.increment(metric, delta, tags);
-      } else if (delta) {
-        this.statsdClient?.increment(metric, delta);
-      } else if (tags) {
-        this.statsdClient?.increment(metric, 1, tags);
-      } else {
-        this.statsdClient?.increment(metric);
-      }
+    if (req.project) {
+      tags ||= {};
+      tags = { projectId: req.project.id, ...tags };
+    }
+
+    if (delta && tags) {
+      this.statsdClient?.increment(metric, delta, tags);
+    } else if (delta) {
+      this.statsdClient?.increment(metric, delta);
+    } else if (tags) {
+      this.statsdClient?.increment(metric, 1, tags);
+    } else {
+      this.statsdClient?.increment(metric);
     }
 
     next();

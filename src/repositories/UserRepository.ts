@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import Settings from '../types/Settings';
 import { User } from '../types/User';
-import { ManagementClient, User as Auth0User } from 'auth0';
+import { ManagementClient, PasswordChangeTicketResponse, User as Auth0User } from 'auth0';
 import { Logger } from 'winston';
 import { isUndefined, omitBy } from 'lodash';
 
@@ -10,11 +10,17 @@ export type FindProps = {
 };
 
 export type UpdateProps = {
-  sub?: string;
-  update: {
+  id?: string;
+  data: {
     name?: string;
+    givenName?: string;
+    familyName?: string;
   };
 };
+
+export type ChangePasswordProps = {
+  userId: string;
+}
 
 export class UserNotFoundError extends Error {}
 export class UserUpdateError extends Error {}
@@ -34,7 +40,7 @@ export class UserRepository {
     const { id } = props;
 
     try {
-      const userData = await this.adapter.getUser({ id: id });
+      const userData = await this.adapter.getUser({ id });
       return this.deserialize(userData);
     } catch (e) {
       this.logger.error(e);
@@ -43,8 +49,34 @@ export class UserRepository {
   }
 
   async update(props: UpdateProps): Promise<User | undefined> {
-    console.log(props);
-    throw new UserUpdateError();
+    const { id, data } = props;
+
+    const update = omitBy(
+      {
+        name: data.name,
+        family_name: data.familyName,
+        given_name: data.givenName,
+      },
+      isUndefined
+    );
+
+    try {
+      const userData = await this.adapter.updateUser({ id }, { ...update });
+      return this.deserialize(userData);
+    } catch (e) {
+      this.logger.error(e);
+      throw new UserUpdateError();
+    }
+  }
+
+  // TODO: set the result_url properly
+  async startPasswordChange(props: ChangePasswordProps): Promise<string> {
+    const res = await this.adapter
+      .createPasswordChangeTicket({
+        user_id: props.userId
+      });
+
+    return res.ticket;
   }
 
   private deserialize(data: Auth0User): User {
