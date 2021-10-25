@@ -11,10 +11,10 @@ class LeafRepository {
     const leaves = await LeafModel.find({
       blockId: { $gt: latestBlockId - BLOCKS_SEARCH_LIMIT },
     }).select('key');
-    return this.serializeKeys(leaves);
+    return this.formatKeys(leaves);
   }
 
-  private serializeKeys = (leaves: ILeaf[]): string[] => {
+  private formatKeys = (leaves: ILeaf[]): string[] => {
     const keys = leaves.map(({ key }) => key);
     const keySet = new Set<string>(keys);
     const uniqueKeys = Array.from(keySet);
