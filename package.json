@@ -83,6 +83,7 @@
     "dotenv": "~8.2.0",
     "ethers": "~5.4.6",
     "express": "~4.17.1",
+    "fast-sort": "^3.0.3",
     "helmet": "~4.1.1",
     "inversify": "~5.0.1",
     "ioredis": "~4.17.3",
