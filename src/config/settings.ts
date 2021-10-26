@@ -98,6 +98,11 @@ const settings: Settings = {
     bucket: process.env.INFLUX_BUCKET || 'sanctuary',
     token: process.env.INFLUX_TOKEN || 'localDevToken',
   },
+  repositoriesConfig: {
+    leafRepository: {
+      blockSearchInterval: parseInt(process.env.BLOCK_SEARCH_INTERVAL || '6', 10),
+    },
+  },
 };
 
 export default settings;

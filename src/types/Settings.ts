@@ -75,6 +75,11 @@ type Settings = {
     bucket: string;
     token: string;
   };
+  repositoriesConfig: {
+    leafRepository: {
+      blockSearchInterval: number;
+    };
+  };
 };
 
 export default Settings;
