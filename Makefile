@@ -32,7 +32,7 @@ build-dev:
 
 build-sbx:
 	@echo "## Building the docker image for sbx ##"
-	@docker buildx build  --push --platform linux/amd64 -t "$(shell kubectl --kubeconfig ~/.kube/config-staging get deployments -n sandbox pegasus-api-bsc01 -o=jsonpath='{$$.spec.template.spec.containers[:1].image}')" .
+	@docker buildx build  --push --platform linux/amd64 -t "$(shell kubectl --kubeconfig ~/.kube/config-staging get deployments -n sandbox sanctuary-api-bsc01 -o=jsonpath='{$$.spec.template.spec.containers[:1].image}')" .
 
 login:
 	@aws ecr --profile umb-central --region $(AWS_REGION) get-login-password  | docker login --username AWS --password-stdin $(AWS_REPOSITORY)
