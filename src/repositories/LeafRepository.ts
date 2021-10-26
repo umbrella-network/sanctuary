@@ -1,15 +1,17 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import LeafModel, { ILeaf } from '../models/Leaf';
 import { sort } from 'fast-sort';
-
-const BLOCKS_SEARCH_LIMIT = 6;
+import Settings from '../types/Settings';
 
 @injectable()
 class LeafRepository {
+  @inject('Settings')
+  settings!: Settings;
+
   async getKeys(): Promise<string[]> {
     const [{ blockId: latestBlockId }] = await LeafModel.find().sort('-blockId').limit(1);
     const leaves = await LeafModel.find({
-      blockId: { $gt: latestBlockId - BLOCKS_SEARCH_LIMIT },
+      blockId: { $gt: latestBlockId - this.settings.repositoriesConfig.leafRepository.blockSearchInterval },
     }).select('key');
     return this.formatKeys(leaves);
   }
