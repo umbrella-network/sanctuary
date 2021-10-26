@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import logger from './logger';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from '../../swagger.json';
 import HealthController from '../controllers/HealthController';
 import { BlocksController } from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
@@ -49,6 +51,7 @@ class Server {
       .use(express.urlencoded({ extended: true }))
       .use(cors())
       .use('/health', healthController.router)
+      .use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
       .use('/blocks', blocksController.router)
       .use('/fcds', fcdsController.router)
       .use('/keys', keysController.router)
