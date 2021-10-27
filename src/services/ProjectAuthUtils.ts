@@ -12,15 +12,13 @@ export type ApiKeyFromAuthHeaderInterface =
   | { apiKey?: void; errorMessage: string };
 
 @injectable()
-export class AuthUtils {
+export class ProjectAuthUtils {
   @inject('Logger') logger!: Logger;
 
   async verifyApiKey(request: Request, response: Response): Promise<ApiKeyFromAuthHeaderInterface> {
     const apiKeyVerificationResult = await this.verifyApiKeyFromAuthHeader(request.headers.authorization);
 
-    if (!apiKeyVerificationResult.apiKey) {
-      response.status(401).send({ error: apiKeyVerificationResult.errorMessage });
-    } else {
+    if (apiKeyVerificationResult.apiKey) {
       await this.registerUsage(request, apiKeyVerificationResult.apiKey);
     }
 

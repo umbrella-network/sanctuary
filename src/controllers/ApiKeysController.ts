@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import Project from '../models/Project';
 import ApiKey from '../models/ApiKey';
 import cryptoRandomString from 'crypto-random-string';
-import { AuthUtils } from '../services/AuthUtils';
+import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
 
 interface ICreateApiKeyReqBody {
   projectId?: string;
@@ -25,7 +25,7 @@ interface IEditApiKeyReqBody {
 class ApiKeysController {
   router: express.Router;
 
-  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
+  constructor(@inject(ProjectAuthUtils) private readonly authUtils: ProjectAuthUtils) {
     this.router = express
       .Router()
       .post('/', this.create)

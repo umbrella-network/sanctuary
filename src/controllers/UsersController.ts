@@ -5,13 +5,13 @@ import bcrypt from 'bcrypt';
 import User from '../models/LocalUser';
 import Company from '../models/Company';
 import Project from '../models/Project';
-import { AuthUtils } from '../services/AuthUtils';
+import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
 
 @injectable()
 class UsersController {
   router: express.Application;
 
-  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
+  constructor(@inject(ProjectAuthUtils) private readonly authUtils: ProjectAuthUtils) {
     this.router = express().post('/', this.create).get('/', this.find);
   }
 

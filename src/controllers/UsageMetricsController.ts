@@ -2,14 +2,14 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import Project from '../models/Project';
 import ApiKey from '../models/ApiKey';
-import { AuthUtils } from '../services/AuthUtils';
+import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
 import UsageMetricsRepository from '../services/analytics/UsageMetricsRepository';
 
 @injectable()
 class UsageMetricsController {
   router: express.Router;
 
-  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
+  constructor(@inject(ProjectAuthUtils) private readonly authUtils: ProjectAuthUtils) {
     this.router = express.Router().get('/', this.index);
   }
 

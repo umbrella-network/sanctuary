@@ -6,7 +6,7 @@ import buildRedisConnection from '../utils/buildRedisConnection';
 import { Logger } from 'winston';
 import StatsdClient from 'statsd-client';
 import { Blockchain } from './Blockchain';
-import { AuthUtils } from '../services/AuthUtils';
+import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
 import LockRepository from '../repositories/LockRepository';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
@@ -44,7 +44,7 @@ export function getContainer(): Container {
     .inSingletonScope();
 
   container.bind<Blockchain>(Blockchain).toSelf().inSingletonScope();
-  container.bind<AuthUtils>(AuthUtils).toSelf().inSingletonScope();
+  container.bind<ProjectAuthUtils>(ProjectAuthUtils).toSelf().inSingletonScope();
   container.bind(LockRepository).toSelf().inSingletonScope();
   container.bind(BlockchainRepository).toSelf().inSingletonScope();
   container.bind(ChainContractRepository).toSelf().inSingletonScope();

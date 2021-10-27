@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
-import { AuthUtils } from '../services/AuthUtils';
+import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
 import FCD from '../models/FCD';
 import Settings from '../types/Settings';
 
@@ -10,7 +10,7 @@ class FcdsController {
 
   router: express.Application;
 
-  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
+  constructor(@inject(ProjectAuthUtils) private readonly authUtils: ProjectAuthUtils) {
     this.router = express().get('/', this.index).get('/:chainId', this.index);
   }
 

@@ -1,5 +1,5 @@
 import { inject, injectable, postConstruct } from 'inversify';
-import { AuthUtils } from '../services/AuthUtils';
+import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
 import { Request, Response, NextFunction } from 'express';
 import Settings from '../types/Settings';
 import jwt, { RequestHandler } from 'express-jwt';
@@ -10,8 +10,8 @@ export class AuthenticationMiddleware {
   @inject('Settings')
   private settings!: Settings;
 
-  @inject(AuthUtils)
-  private projectAuthenticator: AuthUtils;
+  @inject(ProjectAuthUtils)
+  private projectAuthenticator: ProjectAuthUtils;
 
   private userAuthenticator!: RequestHandler;
 
@@ -34,6 +34,8 @@ export class AuthenticationMiddleware {
   }
 
   apply = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
+    if (!request.headers.authorization) return next();
+
     const projectAuthentication = await this.projectAuthenticator.verifyApiKey(request, response);
 
     if (projectAuthentication.apiKey) {
