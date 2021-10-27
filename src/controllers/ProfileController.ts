@@ -24,7 +24,7 @@ export class ProfileController {
   }
 
   show = async (req: Request, res: Response): Promise<void> => {
-    // res.metrics = { metric: 'sanctuary.profile-controller.show' };
+    res.metrics = { metric: 'sanctuary.profile-controller.show' };
 
     try {
       const user = await this.userRepository.find({ id: req.user.sub });

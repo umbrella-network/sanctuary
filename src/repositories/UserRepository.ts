@@ -69,6 +69,23 @@ export class UserRepository {
     }
   }
 
+  async updateEmail(props: { id: string, email: string }): Promise<User | undefined> {
+    try {
+      const { id, email } = props;
+
+      const userData = await this.adapter.updateUser(
+        { id },
+        { email, email_verified: false }
+      );
+
+      await this.adapter.sendEmailVerification({ user_id: id });
+      return this.deserialize(userData);
+    } catch (e) {
+      this.logger.error(e);
+      throw new UserUpdateError();
+    }
+  }
+
   // TODO: set the result_url properly
   async startPasswordChange(props: ChangePasswordProps): Promise<string> {
     const res = await this.adapter.createPasswordChangeTicket({
