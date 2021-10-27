@@ -84,6 +84,7 @@ export class UserRepository {
         id: data._id, // TODO: check which ID this is
         email: data.email,
         name: data.name,
+        username: data.username,
         createdAt: data.created_at && new Date(data.created_at),
         updatedAt: data.updated_at && new Date(data.updated_at),
       },
