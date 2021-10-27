@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 import 'reflect-metadata';
 import { ProjectAuthUtils } from '../../src/services/ProjectAuthUtils';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { IApiKey } from '../../src/models/ApiKey';
 import UsageMetricsRepository from '../../src/services/analytics/UsageMetricsRepository';
 import sinon from 'sinon';
@@ -29,7 +29,7 @@ describe('AuthUtils', () => {
 
     it('registers usage metric on API authentication', async () => {
       const usageMetricsRepositorySpy = sinon.stub(UsageMetricsRepository, 'register').resolves();
-      await authUtils.verifyApiKey(mockRequest, {} as Response);
+      await authUtils.verifyApiKey(mockRequest);
       expect(usageMetricsRepositorySpy.calledWith(apiKey.key, fullRoute, method)).to.be.true;
     });
   });

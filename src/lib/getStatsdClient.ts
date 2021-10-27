@@ -1,7 +1,9 @@
 import SDC from 'statsd-client';
 import StatsdClient from 'statsd-client';
 
-export function getStatsdClient(): StatsdClient {
+export function getStatsdClient(): StatsdClient | undefined {
+  if (!process.env.STATSD_URL) return;
+
   const { NEW_RELIC_LABELS = '' } = process.env;
   let tags: { [key: string]: string } = {};
 
@@ -11,12 +13,5 @@ export function getStatsdClient(): StatsdClient {
     return nrTags;
   }, tags);
 
-  const statsDClient = process.env.STATSD_URL
-    ? new SDC({
-        host: process.env.STATSD_URL,
-        tags: tags,
-      })
-    : null;
-
-  return statsDClient;
+  return new SDC({ host: process.env.STATSD_URL, tags: tags });
 }
