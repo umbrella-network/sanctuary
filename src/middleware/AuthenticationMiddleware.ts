@@ -36,7 +36,7 @@ export class AuthenticationMiddleware {
   apply = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     if (!request.headers.authorization) return next();
 
-    const projectAuthentication = await this.projectAuthenticator.verifyApiKey(request, response);
+    const projectAuthentication = await this.projectAuthenticator.verifyApiKey(request);
 
     if (projectAuthentication.apiKey) {
       request.params['currentProjectId'] = projectAuthentication.apiKey.projectId; //TODO: deprecate

@@ -25,9 +25,7 @@ interface IEditApiKeyReqBody {
 class ApiKeysController {
   router: express.Router;
 
-  constructor(
-    @inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware
-  ) {
+  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
     this.router = express
       .Router()
       .use(authenticationMiddleware.apply)

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as jwt from 'jsonwebtoken';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import ApiKey from '../models/ApiKey';
 import { IApiKey } from '../models/ApiKey';
 import Token from '../types/Token';
@@ -15,7 +15,7 @@ export type ApiKeyFromAuthHeaderInterface =
 export class ProjectAuthUtils {
   @inject('Logger') logger!: Logger;
 
-  async verifyApiKey(request: Request, response: Response): Promise<ApiKeyFromAuthHeaderInterface> {
+  async verifyApiKey(request: Request): Promise<ApiKeyFromAuthHeaderInterface> {
     const apiKeyVerificationResult = await this.verifyApiKeyFromAuthHeader(request.headers.authorization);
 
     if (apiKeyVerificationResult.apiKey) {

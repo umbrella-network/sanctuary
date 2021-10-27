@@ -69,14 +69,11 @@ export class UserRepository {
     }
   }
 
-  async updateEmail(props: { id: string, email: string }): Promise<User | undefined> {
+  async updateEmail(props: { id: string; email: string }): Promise<User | undefined> {
     try {
       const { id, email } = props;
 
-      const userData = await this.adapter.updateUser(
-        { id },
-        { email, email_verified: false }
-      );
+      const userData = await this.adapter.updateUser({ id }, { email, email_verified: false });
 
       await this.adapter.sendEmailVerification({ user_id: id });
       return this.deserialize(userData);
