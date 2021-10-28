@@ -6,7 +6,7 @@ import compression from 'compression';
 import logger from './logger';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from '../../swagger.json';
+import swaggerDocument from '../config/swagger.json';
 import HealthController from '../controllers/HealthController';
 import { BlocksController } from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
