@@ -1,5 +1,6 @@
+import 'express-async-errors';
 import { inject, injectable } from 'inversify';
-import express from 'express';
+import express, { ErrorRequestHandler } from 'express';
 import http from 'http';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -8,43 +9,41 @@ import cors from 'cors';
 import HealthController from '../controllers/HealthController';
 import { BlocksController } from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
-import AuthController from '../controllers/AuthController';
-import UsersController from '../controllers/UsersController';
 import UsageMetricsController from '../controllers/UsageMetricsController';
 import Settings from '../types/Settings';
 import ApiKeysController from '../controllers/ApiKeysController';
 import ProjectsController from '../controllers/ProjectsController';
-import WalletAuthController from '../controllers/WalletAuthController';
 import InfoController from '../controllers/InfoController';
 import FcdsController from '../controllers/FcdsController';
 import KeysController from '../controllers/KeysController';
 import { ProfileController } from '../controllers/ProfileController';
+import { Logger } from 'winston';
 
 @injectable()
 class Server {
+  app: express.Application;
+  private logger: Logger;
   private port: number;
-  private router: express.Application;
   private server: http.Server;
 
   constructor(
     @inject('Settings') settings: Settings,
+    @inject('Logger') logger: Logger,
     @inject(HealthController) healthController: HealthController,
     @inject(BlocksController) blocksController: BlocksController,
     @inject(FcdsController) fcdsController: FcdsController,
     @inject(KeysController) keysController: KeysController,
     @inject(ProofsController) proofsController: ProofsController,
-    @inject(AuthController) authController: AuthController,
-    @inject(UsersController) usersController: UsersController,
     @inject(UsageMetricsController) usageMetricsController: UsageMetricsController,
     @inject(ApiKeysController) apiKeyController: ApiKeysController,
     @inject(ProjectsController) projectsController: ProjectsController,
-    @inject(WalletAuthController) walletAuthController: WalletAuthController,
     @inject(InfoController) infoController: InfoController,
     @inject(ProfileController) profileController: ProfileController
   ) {
     this.port = settings.port;
+    this.logger = logger;
 
-    this.router = express()
+    this.app = express()
       .use(helmet())
       .use(compression())
       .use(express.json())
@@ -55,17 +54,29 @@ class Server {
       .use('/fcds', fcdsController.router)
       .use('/keys', keysController.router)
       .use('/proofs', proofsController.router)
-      .use('/users', usersController.router)
       .use('/usage-metrics', usageMetricsController.router)
-      .use('/auth', authController.router)
       .use('/api-keys', apiKeyController.router)
       .use('/projects', projectsController.router)
-      .use('/wallet-auth', walletAuthController.router)
       .use('/info', infoController.router)
-      .use('/profile', profileController.router);
+      .use('/profile', profileController.router)
+      .use(this.authErrorHandler)
+      .use(this.generalErrorHandler);
 
-    this.server = http.createServer(this.router);
+    this.server = http.createServer(this.app);
   }
+
+  authErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
+    if (err.name != 'UnauthorizedError') return next(err);
+
+    this.logger.error('Authorization Error');
+    res.status(401).end();
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  generalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
+    this.logger.error('Application Error', err);
+    res.status(500).end();
+  };
 
   start(): void {
     this.server.listen(this.port, () => logger.info('Live on: ' + this.port));

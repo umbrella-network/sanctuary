@@ -4,6 +4,7 @@ import Project from '../models/Project';
 import ApiKey from '../models/ApiKey';
 import UsageMetricsRepository from '../services/analytics/UsageMetricsRepository';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { translateAuth0UserId } from '../lib/translateAuth0UserId';
 
 @injectable()
 class UsageMetricsController {
@@ -16,7 +17,7 @@ class UsageMetricsController {
   index = async (request: Request, response: Response): Promise<void> => {
     const projectId = request.query?.projectId as string;
     const projectIdParam = projectId ? { _id: projectId } : {};
-    const searchParams = { ownerId: request.user.sub, ...projectIdParam };
+    const searchParams = { ownerId: translateAuth0UserId(request.user.sub), ...projectIdParam };
     const userProjects = await Project.find(searchParams, { _id: true, apiKeys: true });
 
     if (projectId && !userProjects.length) {

@@ -62,8 +62,6 @@ type Settings = {
     };
   };
   auth: {
-    tokenExpiry: number;
-    walletVerificationThreshold: number;
     jwt: {
       domain: string;
       audience: string;
@@ -80,6 +78,7 @@ type Settings = {
     token: string;
   };
   auth0: {
+    connectionId?: string;
     clientId?: string;
     clientSecret: string;
     domain: string;

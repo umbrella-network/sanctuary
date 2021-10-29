@@ -5,6 +5,7 @@ import Project from '../models/Project';
 import ApiKey from '../models/ApiKey';
 import cryptoRandomString from 'crypto-random-string';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { translateAuth0UserId } from '../lib/translateAuth0UserId';
 
 interface ICreateApiKeyReqBody {
   projectId?: string;
@@ -43,7 +44,7 @@ class ApiKeysController {
       return;
     }
 
-    const project = await Project.findOne({ _id: projectId, ownerId: request.user.sub });
+    const project = await Project.findOne({ _id: projectId, ownerId: translateAuth0UserId(request.user.sub) });
 
     if (!project) {
       response.status(404).send({ error: 'Project with provided ID not found' });
@@ -65,8 +66,8 @@ class ApiKeysController {
     const projectIdFilter = request.query.projectId;
 
     const projectsProjectedByIds = projectIdFilter
-      ? await Project.find({ _id: projectIdFilter, ownerId: request.user.sub }, { _id: true })
-      : await Project.find({ ownerId: request.user.sub }, { _id: true });
+      ? await Project.find({ _id: projectIdFilter, ownerId: translateAuth0UserId(request.user.sub) }, { _id: true })
+      : await Project.find({ ownerId: translateAuth0UserId(request.user.sub) }, { _id: true });
 
     const projectIds: string[] = projectsProjectedByIds.map((project) => project._id);
 
@@ -90,7 +91,7 @@ class ApiKeysController {
     }
 
     // Check if the current user is the owner of project
-    const project = await Project.findOne({ _id: apiKey.projectId, ownerId: request.user.sub });
+    const project = await Project.findOne({ _id: apiKey.projectId, ownerId: translateAuth0UserId(request.user.sub) });
     if (!project) {
       response.status(403).send({ error: 'You do not own this project' });
     }
@@ -114,7 +115,7 @@ class ApiKeysController {
     }
 
     // Check if the current user is the owner of project
-    const project = await Project.findOne({ _id: apiKey.projectId, ownerId: request.user.sub });
+    const project = await Project.findOne({ _id: apiKey.projectId, ownerId: translateAuth0UserId(request.user.sub) });
     if (!project) {
       response.status(403).send({ error: 'You do not own this project' });
     }

@@ -70,9 +70,10 @@ export class UserRepository {
   private deserialize(data: Auth0User): User {
     return omitBy(
       {
-        id: data._id,
+        id: data.user_id,
         email: data.email,
         name: data.name,
+        picture: data.picture,
         username: data.username,
         createdAt: data.created_at && new Date(data.created_at),
         updatedAt: data.updated_at && new Date(data.updated_at),

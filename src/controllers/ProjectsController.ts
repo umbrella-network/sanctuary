@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Project from '../models/Project';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { translateAuth0UserId } from '../lib/translateAuth0UserId';
 
 interface ICreateProjectReqBody {
   name?: string;
@@ -32,7 +33,7 @@ class ProjectsController {
     const project = await Project.create({
       _id: new mongoose.Types.ObjectId().toHexString(),
       name,
-      ownerId: request.user.sub,
+      ownerId: translateAuth0UserId(request.user.sub),
       ownerType: 'User',
     });
 
@@ -40,7 +41,7 @@ class ProjectsController {
   };
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const projects = await Project.find({ ownerId: request.user.sub });
+    const projects = await Project.find({ ownerId: translateAuth0UserId(request.user.sub) });
 
     response.send({
       projects: projects.map((project) => {
@@ -59,7 +60,7 @@ class ProjectsController {
       return;
     }
 
-    const project = await Project.findOne({ _id: projectId, ownerId: request.user.sub });
+    const project = await Project.findOne({ _id: projectId, ownerId: translateAuth0UserId(request.user.sub) });
     if (!projectId || !project) {
       response.status(404).send({ error: 'Project with provided ID not found' });
       return;
