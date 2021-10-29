@@ -15,6 +15,7 @@ export type UpdateProps = {
     name?: string;
     givenName?: string;
     familyName?: string;
+    password?: string;
   };
 };
 
@@ -56,6 +57,7 @@ export class UserRepository {
         name: data.name,
         family_name: data.familyName,
         given_name: data.givenName,
+        password: data.password,
       },
       isUndefined
     );
@@ -67,29 +69,6 @@ export class UserRepository {
       this.logger.error(e);
       throw new UserUpdateError();
     }
-  }
-
-  async updateEmail(props: { id: string; email: string }): Promise<User | undefined> {
-    try {
-      const { id, email } = props;
-
-      const userData = await this.adapter.updateUser({ id }, { email, email_verified: false });
-
-      await this.adapter.sendEmailVerification({ user_id: id });
-      return this.deserialize(userData);
-    } catch (e) {
-      this.logger.error(e);
-      throw new UserUpdateError();
-    }
-  }
-
-  // TODO: set the result_url properly
-  async startPasswordChange(props: ChangePasswordProps): Promise<string> {
-    const res = await this.adapter.createPasswordChangeTicket({
-      user_id: props.userId,
-    });
-
-    return res.ticket;
   }
 
   private deserialize(data: Auth0User): User {
