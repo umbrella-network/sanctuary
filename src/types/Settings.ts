@@ -84,6 +84,11 @@ type Settings = {
     clientSecret: string;
     domain: string;
   };
+  repositoriesConfig: {
+    leafRepository: {
+      blockSearchInterval: number;
+    };
+  };
 };
 
 export default Settings;

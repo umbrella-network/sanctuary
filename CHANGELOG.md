@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.3.0] - 2021-10-25
+### Added
+- LeafRepository to fetch leaves keys
+### Changed
+- KeysController L2D data source
+- KeysController FCD data source
+
 ## [4.2.1] - 2021-10-18
 ### Changed
 - separate api usage registering from API operation
