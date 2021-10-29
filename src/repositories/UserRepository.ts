@@ -19,10 +19,6 @@ export type UpdateProps = {
   };
 };
 
-export type ChangePasswordProps = {
-  userId: string;
-};
-
 export class UserNotFoundError extends Error {}
 export class UserUpdateError extends Error {}
 
@@ -74,7 +70,7 @@ export class UserRepository {
   private deserialize(data: Auth0User): User {
     return omitBy(
       {
-        id: data._id, // TODO: check which ID this is
+        id: data._id,
         email: data.email,
         name: data.name,
         username: data.username,
