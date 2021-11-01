@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [4.3.1] - 2021-11-01
 ### Removed
 - Unnecesary github actions executions
+
 ## [4.3.0] - 2021-10-25
 ### Added
 - LeafRepository to fetch leaves keys
