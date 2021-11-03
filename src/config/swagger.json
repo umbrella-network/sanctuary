@@ -126,7 +126,8 @@
             "in": "path",
             "description": "The ID of the block",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "example": "153111"
           }
         ],
         "responses": {
@@ -169,7 +170,8 @@
             "in": "path",
             "description": "The ID of the block",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "example": "153111"
           }
         ],
         "responses": {
@@ -229,7 +231,8 @@
             "in": "path",
             "description": "The ID of the Chain. \"bsc\" or \"eth\".",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "example": "bsc"
           }
         ],
         "responses": {
@@ -261,7 +264,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "example": ["KEY_1", "KEY_2", "KEY_3"]
+                  "example": ["BNB-USD", "BNT-USD", "BTC-USD", "CNTR-USD"]
                 }
               }
             }
@@ -280,7 +283,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "example": ["KEY_1", "KEY_2", "KEY_3"]
+                  "example": ["ADA-BTC", "ADA-USD", "ADA-USDT", "AMPL-USD-VWAP-1day", "ATOM-USDT"]
                 }
               }
             }
@@ -294,7 +297,7 @@
         "tags": ["proofs"],
         "security": [
           {
-            "UserJWTToken": []
+            "ProjectAPIKey": []
           }
         ],
         "responses": {
@@ -303,7 +306,18 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Proof"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "block": {
+                          "type": "object",
+                          "$ref": "#/components/schemas/Block"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -328,7 +342,7 @@
         "tags": ["users"],
         "security": [
           {
-            "ProjectAPIKey": []
+            "UserJWTToken": []
           }
         ],
         "responses": {
@@ -474,7 +488,12 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "$ref": "#/components/schemas/Error"
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzY1Njc5OTcsInVzZXJJZCI6IjYxODJkMDViOTAxNjRiMTJhNjFmOWQzOSIsImlhdCI6MTYzNTk2MzE5N30.5s2adE56Og7Ufdm4Z9ZJw5IEKzONgj-BGYOdeqG0qRE"
+                    }
+                  }
                 }
               }
             }
@@ -623,7 +642,8 @@
             "in": "path",
             "description": "The ID of the API key",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "example": "6182d30a4ac1731cec105069"
           }
         ],
         "requestBody": {
@@ -714,7 +734,8 @@
             "in": "path",
             "description": "The ID of the API key",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "example": "6182d30a4ac1731cec105069"
           }
         ],
         "responses": {
@@ -768,10 +789,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Project"
-                  }
+                  "$ref": "#/components/schemas/Projects"
                 }
               }
             }
@@ -855,7 +873,8 @@
             "in": "path",
             "description": "The ID of the project to be deleted",
             "required": "true",
-            "type": "string"
+            "type": "string",
+            "example": "6182d1fe89df5f1a38104e55"
           }
         ],
         "security": [
@@ -922,50 +941,62 @@
             "type": "array",
             "items": {
               "type": "string",
-              "format": "hex"
+              "format": "hex",
+              "example": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
             }
           },
           "votes": {
             "type": "object",
             "properties": {
-              "voter_hex": {
+              "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0": {
                 "type": "string",
-                "format": "hex"
+                "format": "hex",
+                "example": "2000000000000000000"
               }
             }
           },
           "_id": {
-            "type": "string"
+            "type": "string",
+            "example": "block::153111"
           },
           "chainAddress": {
             "type": "string",
-            "format": "hex"
+            "format": "hex",
+            "example": "0x23731A38B2B2EfB1fE46053f6510A76b388e663b"
           },
           "root": {
             "type": "string",
-            "format": "hex"
+            "format": "hex",
+            "example": "0x03a0ee2e5dcdcaa1a01389beba35a1ada3b2cce8cbc1a7282f8e1e78e5fa8929"
           },
           "blockId": {
-            "type": "number"
+            "type": "number",
+            "example": 153111
           },
           "minter": {
             "type": "string",
-            "format": "hex"
+            "format": "hex",
+            "example": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
           },
           "staked": {
-            "type": "string"
+            "type": "string",
+            "example": "7000000000000000000"
           },
           "power": {
-            "type": "string"
+            "type": "string",
+            "example": "5000000000000000000"
           },
           "anchor": {
-            "type": "number"
+            "type": "number",
+            "example": 25513802
           },
           "dataTimestamp": {
-            "type": "string"
+            "type": "string",
+            "example": "2021-06-16T10:48:26.000Z"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "example": "finalized"
           },
           "__v": {
             "type": "number"
@@ -979,24 +1010,29 @@
             "type": "array",
             "items": {
               "type": "string",
-              "format": "hex"
+              "format": "hex",
+              "example": "0xca8d98e14e188c03edee74b2f52664bdf6804dbb36828484793f41817f590b78"
             }
           },
           "_id": {
-            "type": "string"
+            "type": "string",
+            "example": "block::169269::leaf::SUSHI-USDT"
           },
           "blockId": {
-            "type": "number"
+            "type": "number",
+            "example": "169269"
           },
           "key": {
-            "type": "string"
+            "type": "string",
+            "example": "SUSHI-USDT"
           },
           "__v": {
             "type": "number"
           },
           "value": {
             "type": "string",
-            "format": "hex"
+            "format": "hex",
+            "example": "0x0000000000000000000000000000000000000000000000005b50db233e120000"
           }
         }
       },
@@ -1004,22 +1040,27 @@
         "type": "object",
         "properties": {
           "_id": {
-            "type": "string"
+            "type": "string",
+            "example": "bsc::ETH-USD"
           },
           "__v": {
             "type": "number"
           },
           "chainId": {
-            "type": "string"
+            "type": "string",
+            "example": "bsc"
           },
           "dataTimestamp": {
-            "type": "string"
+            "type": "string",
+            "example": "2021-10-20T19:27:14.000Z"
           },
           "key": {
-            "type": "string"
+            "type": "string",
+            "example": "ETH-USD"
           },
           "value": {
-            "type": "string"
+            "type": "string",
+            "example": "4107.01"
           }
         }
       },
@@ -1029,14 +1070,17 @@
           "user": {
             "type": "object",
             "properties": {
-              "name": {
-                "type": "string"
+              "id": {
+                "type": "string",
+                "example": "6182d05b90164b12a61f9d39"
               },
               "email": {
-                "type": "string"
+                "type": "string",
+                "example": "jd@umb.network"
               },
               "verified": {
-                "type": "boolean"
+                "type": "boolean",
+                "example": "false"
               },
               "projects": {
                 "type": "array",
@@ -1056,14 +1100,17 @@
           "user": {
             "type": "object",
             "properties": {
-              "name": {
-                "type": "string"
+              "id": {
+                "type": "string",
+                "example": "6182d05b90164b12a61f9d39"
               },
               "email": {
-                "type": "string"
+                "type": "string",
+                "example": "jd@umb.network"
               },
               "verified": {
-                "type": "boolean"
+                "type": "boolean",
+                "example": false
               }
             }
           }
@@ -1145,19 +1192,45 @@
         "type": "object",
         "properties": {
           "_id": {
-            "type": "string"
+            "type": "string",
+            "example": "6182d1fe89df5f1a38104e55"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "example": "My Project"
           },
           "ownerId": {
-            "type": "string"
+            "type": "string",
+            "example": "6182d05b90164b12a61f9d39"
           },
           "ownerType": {
-            "type": "string"
+            "type": "string",
+            "example": "User"
           },
           "__v": {
-            "type": "number"
+            "type": "number",
+            "example": 0
+          }
+        }
+      },
+      "Projects": {
+        "type": "object",
+        "properties": {
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "6182d1fe89df5f1a38104e55"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "My Project"
+                }
+              }
+            }
           }
         }
       },
@@ -1165,25 +1238,32 @@
         "type": "object",
         "properties": {
           "_id": {
-            "type": "string"
+            "type": "string",
+            "example": "6182d30a4ac1731cec105069"
           },
           "key": {
-            "type": "string"
+            "type": "string",
+            "example": "2896470cbdf883e0c1744c7da81677c153aeac5091d95fc035ee5ab5776085b6"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "example": "My API key"
           },
           "projectId": {
-            "type": "string"
+            "type": "string",
+            "example": "6182d1fe89df5f1a38104e55"
           },
           "expiresAt": {
-            "type": "string"
+            "type": "string",
+            "example": null
           },
           "createdAt": {
-            "type": "string"
+            "type": "string",
+            "example": "2021-11-03T18:20:58.314Z"
           },
           "__v": {
-            "type": "number"
+            "type": "number",
+            "example": 0
           }
         }
       },
@@ -1191,92 +1271,130 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "chainAddress": {
+                "type": "string",
+                "format": "hex",
+                "example": "0x650f3dfc6026ad1891F9a6451ABd37b67B68Fe89"
+              },
+              "blockNumber": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "BigNumber"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "format": "hex",
+                    "example": "0xd28ec0"
+                  }
+                }
+              },
+              "validators": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "hex",
+                  "example": "0xDc3eBc37DA53A644D67E5E3b5BA4EEF88D969d5C"
+                }
+              },
+              "timePadding": {
+                "type": "number",
+                "example": 60
+              },
+              "lastDataTimestamp": {
+                "type": "number",
+                "example": 1635955802
+              },
+              "lastBlockId": {
+                "type": "number",
+                "example": 307898
+              },
+              "nextLeader": {
+                "type": "string",
+                "format": "hex",
+                "example": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
+              },
+              "nextBlockId": {
+                "type": "number",
+                "example": 307899
+              },
+              "powers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "BigNumber"
+                    },
+                    "hex": {
+                      "type": "string",
+                      "format": "hex",
+                      "example": "0x056bc75e2d63100000"
+                    }
+                  }
+                }
+              },
+              "locations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "example": "https://validator.dev.umb.network"
+                }
+              },
+              "staked": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "BigNumber"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "format": "hex",
+                    "example": "0x15af1d78b58c400000"
+                  }
+                }
+              },
+              "minSignatures": {
+                "type": "number",
+                "example": 2
+              }
+            }
           },
           "network": {
             "type": "object",
             "properties": {
               "name": {
-                "type": "string"
+                "type": "string",
+                "example": "bnbt"
               },
               "id": {
-                "type": "number"
+                "type": "number",
+                "example": 97
               }
-            }
-          },
-          "chainAddress": {
-            "type": "string",
-            "format": "hex"
-          },
-          "blockNumber": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string"
-              },
-              "hex": {
-                "type": "string",
-                "format": "hex"
-              }
-            }
-          },
-          "validators": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "hex"
-            }
-          },
-          "timePadding": {
-            "type": "number"
-          },
-          "lastDataTimestamp": {
-            "type": "number"
-          },
-          "lastBlockId": {
-            "type": "number"
-          },
-          "nextLeader": {
-            "type": "string",
-            "format": "hex"
-          },
-          "nextBlockId": {
-            "type": "number"
-          },
-          "powers": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string"
-                },
-                "hex": {
-                  "type": "string",
-                  "format": "hex"
-                }
-              }
-            }
-          },
-          "locations": {
-            "type": "array",
-            "items": {
-              "type": "string"
             }
           },
           "contractRegistryAddress": {
             "type": "string",
-            "format": "hex"
+            "format": "hex",
+            "example": "0x8f98d3B5C911206C1Ac08B9938875620A03BCd59"
           },
           "chainContractAddress": {
             "type": "string",
-            "format": "hex"
+            "format": "hex",
+            "example": "0x650f3dfc6026ad1891F9a6451ABd37b67B68Fe89"
           },
           "version": {
-            "type": "string"
+            "type": "string",
+            "example": "4.2.0"
           },
           "environment": {
-            "type": "string"
+            "type": "string",
+            "example": "development"
           }
         }
       },
@@ -1286,16 +1404,20 @@
           "type": "object",
           "properties": {
             "time": {
-              "type": "string"
+              "type": "string",
+              "example": "2021-11-03T18:28:36.534Z"
             },
             "apiKey": {
-              "type": "string"
+              "type": "string",
+              "example": "2896470cbdf883e0c1744c7da81677c153aeac5091d95fc035ee5ab5776085b6"
             },
             "route": {
-              "type": "string"
+              "type": "string",
+              "example": "/blocks/169269/leaves"
             },
             "method": {
-              "type": "string"
+              "type": "string",
+              "example": "GET"
             }
           }
         }
