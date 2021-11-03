@@ -13,6 +13,10 @@
     {
       "url": "https://api.dev.umb.network",
       "description": "Development environment server"
+    },
+    {
+      "url": "https://api.umb.network",
+      "description": "Production live server"
     }
   ],
   "paths": {
@@ -27,7 +31,7 @@
               "text/plain": {
                 "schema": {
                   "type": "string",
-                  "$ref": "#/components/schemas/Error"
+                  "example": "pong"
                 }
               }
             }
@@ -257,7 +261,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "$ref": "#/components/schemas/Error"
+                  "example": ["KEY_1", "KEY_2", "KEY_3"]
                 }
               }
             }
@@ -276,7 +280,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "$ref": "#/components/schemas/Error"
+                  "example": ["KEY_1", "KEY_2", "KEY_3"]
                 }
               }
             }
@@ -1190,7 +1194,75 @@
             "type": "object"
           },
           "network": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "id": {
+                "type": "number"
+              }
+            }
+          },
+          "chainAddress": {
+            "type": "string",
+            "format": "hex"
+          },
+          "blockNumber": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "hex": {
+                "type": "string",
+                "format": "hex"
+              }
+            }
+          },
+          "validators": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "hex"
+            }
+          },
+          "timePadding": {
+            "type": "number"
+          },
+          "lastDataTimestamp": {
+            "type": "number"
+          },
+          "lastBlockId": {
+            "type": "number"
+          },
+          "nextLeader": {
+            "type": "string",
+            "format": "hex"
+          },
+          "nextBlockId": {
+            "type": "number"
+          },
+          "powers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "hex": {
+                  "type": "string",
+                  "format": "hex"
+                }
+              }
+            }
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "contractRegistryAddress": {
             "type": "string",
