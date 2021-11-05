@@ -5,24 +5,6 @@
     "description": "Retrieves raw block leaves from Umbrella sidechain blocks. Displays information about the leaves and allows users to retrieve Merkle proofs. Provides an API for retrieving block leaves and Merkle proofs.",
     "version": "4.2.1"
   },
-  "servers": [
-    {
-      "url": "http://api.sbx.umb.network",
-      "description": "Sandbox environment server"
-    },
-    {
-      "url": "https://api.umb.network",
-      "description": "Production live server"
-    },
-    {
-      "url": "https://api.dev.umb.network",
-      "description": "Development environment server"
-    },
-    {
-      "url": "http://localhost:3003",
-      "description": "Local environment server"
-    }
-  ],
   "paths": {
     "/health": {
       "get": {
