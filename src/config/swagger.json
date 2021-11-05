@@ -52,6 +52,16 @@
             "ProjectAPIKey": []
           }
         ],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "query",
+            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "required": false,
+            "type": "string",
+            "example": "bsc"
+          }
+        ],
         "responses": {
           "200": {
             "description": "An array of the latest blocks",
@@ -207,6 +217,16 @@
       "get": {
         "summary": "Returns FCDs from every chain",
         "tags": ["first class data"],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "query",
+            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "required": false,
+            "type": "string",
+            "example": "bsc"
+          }
+        ],
         "responses": {
           "200": {
             "description": "An array of FCDs of every chain",
@@ -302,6 +322,16 @@
         "security": [
           {
             "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "query",
+            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "required": false,
+            "type": "string",
+            "example": "bsc"
           }
         ],
         "responses": {
