@@ -7,16 +7,20 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3003",
-      "description": "Local environment server"
+      "url": "http://api.sbx.umb.network",
+      "description": "Sandbox environment server"
+    },
+    {
+      "url": "https://api.umb.network",
+      "description": "Production live server"
     },
     {
       "url": "https://api.dev.umb.network",
       "description": "Development environment server"
     },
     {
-      "url": "https://api.umb.network",
-      "description": "Production live server"
+      "url": "http://localhost:3003",
+      "description": "Local environment server"
     }
   ],
   "paths": {
