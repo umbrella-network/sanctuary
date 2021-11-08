@@ -3,7 +3,7 @@
   "info": {
     "title": "Block Explorer - Sanctuary",
     "description": "Retrieves raw block leaves from Umbrella sidechain blocks. Displays information about the leaves and allows users to retrieve Merkle proofs. Provides an API for retrieving block leaves and Merkle proofs.",
-    "version": "4.2.1"
+    "version": "4.4.0"
   },
   "paths": {
     "/health": {
