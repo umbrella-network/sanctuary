@@ -1,0 +1,1452 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Block Explorer - Sanctuary",
+    "description": "Retrieves raw block leaves from Umbrella sidechain blocks. Displays information about the leaves and allows users to retrieve Merkle proofs. Provides an API for retrieving block leaves and Merkle proofs.",
+    "version": "4.2.1"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Checks if the server is alive",
+        "tags": ["default"],
+        "responses": {
+          "200": {
+            "description": "A plain text \"pong\"",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "pong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/blocks": {
+      "get": {
+        "summary": "Returns the latest blocks",
+        "tags": ["blocks"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "query",
+            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "required": false,
+            "type": "string",
+            "example": "bsc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of the latest blocks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "$ref": "#/components/schemas/Block"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/blocks/latest": {
+      "get": {
+        "summary": "Returns the latest block",
+        "tags": ["blocks"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing the latest block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/blocks/{blockId}": {
+      "get": {
+        "summary": "Returns a block by ID",
+        "tags": ["blocks"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "The ID of the block",
+            "required": true,
+            "type": "string",
+            "example": "153111"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing the block data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Block"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/blocks/{blockId}/leaves": {
+      "get": {
+        "summary": "Returns the leaves of a block by its ID",
+        "tags": ["blocks"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "The ID of the block",
+            "required": true,
+            "type": "string",
+            "example": "153111"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing the leaves of a block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Leaf"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fcds": {
+      "get": {
+        "summary": "Returns FCDs from every chain",
+        "tags": ["first class data"],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "query",
+            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "required": false,
+            "type": "string",
+            "example": "bsc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of FCDs of every chain",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "$ref": "#/components/schemas/FCD"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fcds/{chainId}": {
+      "get": {
+        "summary": "Returns FCDs from a specific chain",
+        "tags": ["first class data"],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "The ID of the Chain. \"bsc\" or \"eth\".",
+            "required": true,
+            "type": "string",
+            "example": "bsc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of FCDs of a specific chain",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "$ref": "#/components/schemas/FCD"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keys/fcds": {
+      "get": {
+        "summary": "Returns the keys used in First Class Data",
+        "tags": ["keys"],
+        "responses": {
+          "200": {
+            "description": "An array of the keys used in First Class Data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "example": ["BNB-USD", "BNT-USD", "BTC-USD", "CNTR-USD"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keys/layer2": {
+      "get": {
+        "summary": "Returns the keys used in Layer Two Data",
+        "tags": ["keys"],
+        "responses": {
+          "200": {
+            "description": "An array of the keys used in Layer Two Data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "example": ["ADA-BTC", "ADA-USD", "ADA-USDT", "AMPL-USD-VWAP-1day", "ATOM-USDT"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proofs": {
+      "get": {
+        "summary": "Returns the latest block height and proofs for a given set of leaf keys",
+        "tags": ["proofs"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "query",
+            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "required": false,
+            "type": "string",
+            "example": "bsc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing proof data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "block": {
+                          "type": "object",
+                          "$ref": "#/components/schemas/Block"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "Returns user data based on a JWT token",
+        "tags": ["users"],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing the user data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["users"],
+        "requestBody": {
+          "description": "A JSON containing user information",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "email": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "examples": {
+                "user": {
+                  "summary": "An example of a user",
+                  "value": {
+                    "email": "jd@umb.network",
+                    "password": "q1w2e3r4"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "A JSON containing the user data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/UserBrief"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "User information is missing or invalid"
+          }
+        }
+      }
+    },
+    "/usage-metrics": {
+      "get": {
+        "summary": "Returns the usage of the user keys",
+        "tags": ["metrics"],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of the usage of the user projects keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Usage"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth": {
+      "post": {
+        "summary": "Authenticate a registered user",
+        "tags": ["authentication"],
+        "requestBody": {
+          "description": "A JSON containing user information",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "email": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "examples": {
+                "user": {
+                  "summary": "An example of a user",
+                  "value": {
+                    "email": "jd@umb.network",
+                    "password": "q1w2e3r4"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User is successfully authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzY1Njc5OTcsInVzZXJJZCI6IjYxODJkMDViOTAxNjRiMTJhNjFmOWQzOSIsImlhdCI6MTYzNTk2MzE5N30.5s2adE56Og7Ufdm4Z9ZJw5IEKzONgj-BGYOdeqG0qRE"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization information is missing or invalid"
+          }
+        }
+      }
+    },
+    "/api-keys": {
+      "get": {
+        "summary": "Returns all of the API keys of the user",
+        "tags": ["api keys"],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array containing the API keys of the user's projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKey"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a new API key for an user project",
+        "tags": ["api keys"],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "requestBody": {
+          "description": "A JSON containing the key metadata",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectId": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "expiresAt": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "metadata": {
+                  "summary": "An example of a API key metadata",
+                  "value": {
+                    "projectId": "project_id",
+                    "description": "My API key",
+                    "expiresAt": null
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "An API key was successfully created for an user project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Project ID was not provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project with provided project ID was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-keys/{id}": {
+      "patch": {
+        "summary": "Updates an existing API key from an user project",
+        "tags": ["api keys"],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the API key",
+            "required": true,
+            "type": "string",
+            "example": "6182d30a4ac1731cec105069"
+          }
+        ],
+        "requestBody": {
+          "description": "A JSON containing the key metadata",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string"
+                  },
+                  "expiresAt": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "metadata": {
+                  "summary": "An example of a API key metadata",
+                  "value": {
+                    "description": "My API key",
+                    "expiresAt": null
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "An API key was successfully created for an user project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Project ID was not provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project with provided project ID was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes an API key from an user project",
+        "tags": ["api keys"],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the API key",
+            "required": true,
+            "type": "string",
+            "example": "6182d30a4ac1731cec105069"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API key was successfully deleted"
+          },
+          "400": {
+            "description": "API key was not provided",
+            "content": {
+              "application/json": {
+                "type": "object",
+                "$ref": "#/components/schemas/Error"
+              }
+            }
+          },
+          "403": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "API key provided is invalid",
+            "content": {
+              "application/json": {
+                "type": "object",
+                "$ref": "#/components/schemas/Error"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "summary": "Returns the projects of the user",
+        "tags": ["projects"],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array containing the projects of the user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Projects"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a new project",
+        "tags": ["projects"],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "requestBody": {
+          "description": "A JSON containing the name of the project",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "name": {
+                  "type": "string"
+                }
+              },
+              "examples": {
+                "user": {
+                  "summary": "An example of a project",
+                  "value": {
+                    "name": "My Project"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project is successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "delete": {
+        "summary": "Deletes a user project",
+        "tags": ["projects"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the project to be deleted",
+            "required": "true",
+            "type": "string",
+            "example": "6182d1fe89df5f1a38104e55"
+          }
+        ],
+        "security": [
+          {
+            "UserJWTToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The project is successfully deleted"
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/info": {
+      "get": {
+        "summary": "Returns information about Sanctuary",
+        "responses": {
+          "200": {
+            "description": "A JSON containing information about Sanctuary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Info"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "UserJWTToken": {
+        "type": "apiKey",
+        "in": "header",
+        "scheme": "bearer",
+        "name": "Authorization"
+      },
+      "ProjectAPIKey": {
+        "type": "apiKey",
+        "in": "header",
+        "scheme": "Bearer",
+        "name": "Authorization"
+      }
+    },
+    "schemas": {
+      "Block": {
+        "type": "object",
+        "properties": {
+          "voters": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "hex",
+              "example": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
+            }
+          },
+          "votes": {
+            "type": "object",
+            "properties": {
+              "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0": {
+                "type": "string",
+                "format": "hex",
+                "example": "2000000000000000000"
+              }
+            }
+          },
+          "_id": {
+            "type": "string",
+            "example": "block::153111"
+          },
+          "chainAddress": {
+            "type": "string",
+            "format": "hex",
+            "example": "0x23731A38B2B2EfB1fE46053f6510A76b388e663b"
+          },
+          "root": {
+            "type": "string",
+            "format": "hex",
+            "example": "0x03a0ee2e5dcdcaa1a01389beba35a1ada3b2cce8cbc1a7282f8e1e78e5fa8929"
+          },
+          "blockId": {
+            "type": "number",
+            "example": 153111
+          },
+          "minter": {
+            "type": "string",
+            "format": "hex",
+            "example": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
+          },
+          "staked": {
+            "type": "string",
+            "example": "7000000000000000000"
+          },
+          "power": {
+            "type": "string",
+            "example": "5000000000000000000"
+          },
+          "anchor": {
+            "type": "number",
+            "example": 25513802
+          },
+          "dataTimestamp": {
+            "type": "string",
+            "example": "2021-06-16T10:48:26.000Z"
+          },
+          "status": {
+            "type": "string",
+            "example": "finalized"
+          },
+          "__v": {
+            "type": "number"
+          }
+        }
+      },
+      "Leaf": {
+        "type": "object",
+        "properties": {
+          "proof": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "hex",
+              "example": "0xca8d98e14e188c03edee74b2f52664bdf6804dbb36828484793f41817f590b78"
+            }
+          },
+          "_id": {
+            "type": "string",
+            "example": "block::169269::leaf::SUSHI-USDT"
+          },
+          "blockId": {
+            "type": "number",
+            "example": "169269"
+          },
+          "key": {
+            "type": "string",
+            "example": "SUSHI-USDT"
+          },
+          "__v": {
+            "type": "number"
+          },
+          "value": {
+            "type": "string",
+            "format": "hex",
+            "example": "0x0000000000000000000000000000000000000000000000005b50db233e120000"
+          }
+        }
+      },
+      "FCD": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "bsc::ETH-USD"
+          },
+          "__v": {
+            "type": "number"
+          },
+          "chainId": {
+            "type": "string",
+            "example": "bsc"
+          },
+          "dataTimestamp": {
+            "type": "string",
+            "example": "2021-10-20T19:27:14.000Z"
+          },
+          "key": {
+            "type": "string",
+            "example": "ETH-USD"
+          },
+          "value": {
+            "type": "string",
+            "example": "4107.01"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "6182d05b90164b12a61f9d39"
+              },
+              "email": {
+                "type": "string",
+                "example": "jd@umb.network"
+              },
+              "verified": {
+                "type": "boolean",
+                "example": "false"
+              },
+              "projects": {
+                "type": "array",
+                "items": {}
+              },
+              "companies": {
+                "type": "array",
+                "items": {}
+              }
+            }
+          }
+        }
+      },
+      "UserBrief": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "6182d05b90164b12a61f9d39"
+              },
+              "email": {
+                "type": "string",
+                "example": "jd@umb.network"
+              },
+              "verified": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          }
+        }
+      },
+      "Proof": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "block": {
+                "type": "object",
+                "properties": {
+                  "voters": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "hex"
+                    }
+                  },
+                  "votes": {
+                    "type": "object",
+                    "properties": {
+                      "voter_hex": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "_id": {
+                    "type": "string"
+                  },
+                  "chainAddress": {
+                    "type": "string",
+                    "format": "hex"
+                  },
+                  "root": {
+                    "type": "string",
+                    "format": "hex"
+                  },
+                  "blockId": {
+                    "type": "string"
+                  },
+                  "minter": {
+                    "type": "string",
+                    "format": "hex"
+                  },
+                  "staked": {
+                    "type": "string"
+                  },
+                  "power": {
+                    "type": "string"
+                  },
+                  "anchor": {
+                    "type": "number"
+                  },
+                  "dataTimestamp": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "__v": {
+                    "type": "number"
+                  }
+                },
+                "keys": {
+                  "type": "array"
+                },
+                "leaves": {
+                  "type": "array"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "6182d1fe89df5f1a38104e55"
+          },
+          "name": {
+            "type": "string",
+            "example": "My Project"
+          },
+          "ownerId": {
+            "type": "string",
+            "example": "6182d05b90164b12a61f9d39"
+          },
+          "ownerType": {
+            "type": "string",
+            "example": "User"
+          },
+          "__v": {
+            "type": "number",
+            "example": 0
+          }
+        }
+      },
+      "Projects": {
+        "type": "object",
+        "properties": {
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "6182d1fe89df5f1a38104e55"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "My Project"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "6182d30a4ac1731cec105069"
+          },
+          "key": {
+            "type": "string",
+            "example": "2896470cbdf883e0c1744c7da81677c153aeac5091d95fc035ee5ab5776085b6"
+          },
+          "description": {
+            "type": "string",
+            "example": "My API key"
+          },
+          "projectId": {
+            "type": "string",
+            "example": "6182d1fe89df5f1a38104e55"
+          },
+          "expiresAt": {
+            "type": "string",
+            "example": null
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2021-11-03T18:20:58.314Z"
+          },
+          "__v": {
+            "type": "number",
+            "example": 0
+          }
+        }
+      },
+      "Info": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "object",
+            "properties": {
+              "chainAddress": {
+                "type": "string",
+                "format": "hex",
+                "example": "0x650f3dfc6026ad1891F9a6451ABd37b67B68Fe89"
+              },
+              "blockNumber": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "BigNumber"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "format": "hex",
+                    "example": "0xd28ec0"
+                  }
+                }
+              },
+              "validators": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "hex",
+                  "example": "0xDc3eBc37DA53A644D67E5E3b5BA4EEF88D969d5C"
+                }
+              },
+              "timePadding": {
+                "type": "number",
+                "example": 60
+              },
+              "lastDataTimestamp": {
+                "type": "number",
+                "example": 1635955802
+              },
+              "lastBlockId": {
+                "type": "number",
+                "example": 307898
+              },
+              "nextLeader": {
+                "type": "string",
+                "format": "hex",
+                "example": "0x998cb7821e605cC16b6174e7C50E19ADb2Dd2fB0"
+              },
+              "nextBlockId": {
+                "type": "number",
+                "example": 307899
+              },
+              "powers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "example": "BigNumber"
+                    },
+                    "hex": {
+                      "type": "string",
+                      "format": "hex",
+                      "example": "0x056bc75e2d63100000"
+                    }
+                  }
+                }
+              },
+              "locations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "example": "https://validator.dev.umb.network"
+                }
+              },
+              "staked": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "BigNumber"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "format": "hex",
+                    "example": "0x15af1d78b58c400000"
+                  }
+                }
+              },
+              "minSignatures": {
+                "type": "number",
+                "example": 2
+              }
+            }
+          },
+          "network": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "bnbt"
+              },
+              "id": {
+                "type": "number",
+                "example": 97
+              }
+            }
+          },
+          "contractRegistryAddress": {
+            "type": "string",
+            "format": "hex",
+            "example": "0x8f98d3B5C911206C1Ac08B9938875620A03BCd59"
+          },
+          "chainContractAddress": {
+            "type": "string",
+            "format": "hex",
+            "example": "0x650f3dfc6026ad1891F9a6451ABd37b67B68Fe89"
+          },
+          "version": {
+            "type": "string",
+            "example": "4.2.0"
+          },
+          "environment": {
+            "type": "string",
+            "example": "development"
+          }
+        }
+      },
+      "Usage": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "time": {
+              "type": "string",
+              "example": "2021-11-03T18:28:36.534Z"
+            },
+            "apiKey": {
+              "type": "string",
+              "example": "2896470cbdf883e0c1744c7da81677c153aeac5091d95fc035ee5ab5776085b6"
+            },
+            "route": {
+              "type": "string",
+              "example": "/blocks/169269/leaves"
+            },
+            "method": {
+              "type": "string",
+              "example": "GET"
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "A message representing what went wrong with the request"
+          }
+        }
+      }
+    }
+  }
+}
