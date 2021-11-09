@@ -1,132 +1,70 @@
-import axios from 'axios';
+import 'reflect-metadata';
+import { Container } from 'inversify';
+import { Application } from 'express';
 import { loadTestEnv } from '../../helpers';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import User from '../../../src/models/LocalUser';
-import Project from '../../../src/models/Project';
+import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
+import { getContainer } from '../../../src/lib/getContainer';
+import Server from '../../../src/lib/Server';
+import { after } from 'mocha';
+import request from 'supertest';
+import { expect } from 'chai';
+import Project, { IProject } from '../../../src/models/Project';
 import ApiKey from '../../../src/models/ApiKey';
-import mongoose from 'mongoose';
+import { setupAuthHarness, TestAuthHarness } from '../../helpers/authHelpers';
+import { projectFactory } from '../../mocks/factories/projectFactory';
 
-chai.use(chaiAsPromised);
-
-describe('Create API key', () => {
-  const config = loadTestEnv();
-  const appAxios = axios.create({ baseURL: config.APP_URL });
-  let accessToken: string;
-  let projectId: string;
+describe('/api-keys', async () => {
+  let container: Container;
+  let app: Application;
 
   before(async () => {
-    await mongoose.connect(config.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
-  });
-
-  beforeEach(async () => {
-    await User.deleteMany({});
+    loadTestEnv();
+    await setupDatabase();
     await Project.deleteMany({});
     await ApiKey.deleteMany({});
-
-    await appAxios.post('/users', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    const response = await appAxios.post('/auth', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    accessToken = response.data.token;
-
-    const projectResponse = await appAxios.post(
-      '/projects',
-      {
-        name: 'Project name',
-      },
-      {
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-    projectId = projectResponse.data._id;
+    container = getContainer();
+    app = container.get(Server).app;
   });
 
   after(async () => {
-    await User.deleteMany({});
     await Project.deleteMany({});
     await ApiKey.deleteMany({});
-
-    await mongoose.connection.close();
+    await teardownDatabase();
   });
 
-  it('responds with 403 if no access token was provided', async () => {
-    await expect(
-      appAxios.post(
-        '/api-keys',
-        {
-          projectId,
-        },
-        {
-          headers: {
-            authorization: '',
-          },
-        }
-      )
-    ).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(403);
+  describe('POST /api-keys', async () => {
+    describe('when the user is not authenticated', async () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const res = await request(app).post('/api-keys');
+        expect(res.status).to.eq(401);
+      });
     });
-  });
 
-  it('responds with 400 if no projectId was provided', async () => {
-    await expect(
-      appAxios.post(
-        '/api-keys',
-        {},
-        {
-          headers: {
-            authorization: accessToken,
-          },
-        }
-      )
-    ).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(400);
+    describe('when the user is authenticated', async () => {
+      let project: IProject;
+      let authHarness: TestAuthHarness;
+
+      beforeEach(async () => {
+        authHarness = await setupAuthHarness();
+        project = await Project.create({ ...projectFactory.build(), ownerId: 'USER_ID', ownerType: 'User' });
+      });
+
+      afterEach(async () => {
+        await authHarness.jwksMock.stop();
+      });
+
+      it('responds with a new API Key', async () => {
+        const res = await request(app)
+          .post('/api-keys')
+          .set('Authorization', `Bearer ${authHarness.accessToken}`)
+          .send({ projectId: project.id });
+
+        expect(res.status).to.eq(201);
+        expect(res.body).to.have.property('_id').that.is.a('string');
+        expect(res.body).to.have.property('key').that.is.a('string');
+        expect(res.body).to.have.property('projectId', project.id);
+        expect(res.body).to.have.property('expiresAt').that.is.null;
+      });
     });
-  });
-
-  it('responds with 404 if specified project not found', async () => {
-    await expect(
-      appAxios.post(
-        '/api-keys',
-        {
-          projectId: 1000,
-        },
-        {
-          headers: {
-            authorization: accessToken,
-          },
-        }
-      )
-    ).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(404);
-    });
-  });
-
-  it('Creates an API key if input is valid', async () => {
-    const response = await appAxios.post(
-      '/api-keys',
-      {
-        projectId,
-      },
-      {
-        headers: {
-          authorization: accessToken,
-        },
-      }
-    );
-
-    expect(response.status).to.be.eq(201);
-    expect(response.data).to.have.property('_id').that.is.a('string');
-    expect(response.data).to.have.property('key').that.is.a('string');
-    expect(response.data).to.have.property('projectId', projectId);
-    expect(response.data).to.have.property('expiresAt').that.is.null;
   });
 });

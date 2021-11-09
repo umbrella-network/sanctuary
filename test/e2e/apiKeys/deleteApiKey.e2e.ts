@@ -1,109 +1,71 @@
-import axios from 'axios';
+import 'reflect-metadata';
+import { Container } from 'inversify';
+import { Application } from 'express';
 import { loadTestEnv } from '../../helpers';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import User from '../../../src/models/LocalUser';
-import Project from '../../../src/models/Project';
-import ApiKey from '../../../src/models/ApiKey';
-import mongoose from 'mongoose';
+import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
+import { getContainer } from '../../../src/lib/getContainer';
+import Server from '../../../src/lib/Server';
+import { after } from 'mocha';
+import request from 'supertest';
+import { expect } from 'chai';
+import Project, { IProject } from '../../../src/models/Project';
+import ApiKey, { IApiKey } from '../../../src/models/ApiKey';
+import { setupAuthHarness, TestAuthHarness } from '../../helpers/authHelpers';
+import { projectFactory } from '../../mocks/factories/projectFactory';
+import { v4 } from 'uuid';
+import { apiKeyFactory } from '../../mocks/factories/apiKeyFactory';
 
-chai.use(chaiAsPromised);
-
-describe('Delete API key', () => {
-  const config = loadTestEnv();
-  const appAxios = axios.create({ baseURL: config.APP_URL });
-  let accessToken: string;
-  let projectId: string;
-  let apiKeyId: string;
+describe('/api-keys', async () => {
+  let container: Container;
+  let app: Application;
 
   before(async () => {
-    await mongoose.connect(config.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
-  });
-
-  beforeEach(async () => {
-    await User.deleteMany({});
+    loadTestEnv();
+    await setupDatabase();
     await Project.deleteMany({});
     await ApiKey.deleteMany({});
-
-    await appAxios.post('/users', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    const response = await appAxios.post('/auth', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    accessToken = response.data.token;
-
-    const projectResponse = await appAxios.post(
-      '/projects',
-      {
-        name: 'Project name',
-      },
-      { headers: { authorization: `Bearer ${accessToken}` } }
-    );
-    projectId = projectResponse.data._id;
-    const apiKeyResponse = await appAxios.post(
-      '/api-keys',
-      {
-        projectId,
-      },
-      { headers: { authorization: `Bearer ${accessToken}` } }
-    );
-    apiKeyId = apiKeyResponse.data._id;
+    container = getContainer();
+    app = container.get(Server).app;
   });
 
   after(async () => {
-    await User.deleteMany({});
     await Project.deleteMany({});
     await ApiKey.deleteMany({});
-
-    await mongoose.connection.close();
+    await teardownDatabase();
   });
 
-  it('responds with 403 if no access token was provided', async () => {
-    await expect(appAxios.delete('/api-keys/1', { headers: { authorization: '' } })).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(403);
-    });
-  });
-
-  it('responds with 404 if no key found with specified id', async () => {
-    await expect(
-      appAxios.delete('/api-keys/99999', {
-        headers: {
-          authorization: accessToken,
-        },
-      })
-    ).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(404);
-    });
-  });
-
-  it('responds with 403 if the key is for a project that the current user doest not own', async () => {
-    await appAxios.post('/users', {
-      email: 'another-user@example.com',
-      password: 'valid_password',
+  describe('DELETE /api-keys/:id', async () => {
+    describe('when the user is not authenticated', async () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const res = await request(app).delete('/api-keys/API_KEY_ID');
+        expect(res.status).to.eq(401);
+      });
     });
 
-    const response = await appAxios.post('/auth', {
-      email: 'another-user@example.com',
-      password: 'valid_password',
+    describe('when the user is authenticated', async () => {
+      let project: IProject;
+      let apiKey: IApiKey;
+      let authHarness: TestAuthHarness;
+
+      beforeEach(async () => {
+        authHarness = await setupAuthHarness();
+        project = await Project.create({ ...projectFactory.build(), ownerId: 'USER_ID', ownerType: 'User' });
+        apiKey = await ApiKey.create({ ...apiKeyFactory.build(), projectId: project.id });
+      });
+
+      afterEach(async () => {
+        await authHarness.jwksMock.stop();
+      });
+
+      it('deletes the API Key', async () => {
+        const res = await request(app)
+          .delete(`/api-keys/${apiKey.id}`)
+          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+        const apiKeyCount = await ApiKey.countDocuments();
+        expect(res.status).to.eq(200);
+        expect(apiKeyCount).to.eq(0);
+      });
     });
-
-    const accessTokenOfAnotherUser = response.data.token;
-
-    await expect(
-      appAxios.delete(`/api-keys/${apiKeyId}`, { headers: { authorization: accessTokenOfAnotherUser } })
-    ).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(403);
-    });
-  });
-
-  it('deletes API key', async () => {
-    const response = await appAxios.delete(`/api-keys/${apiKeyId}`, { headers: { authorization: accessToken } });
-
-    expect(response.status).to.be.eq(200);
   });
 });
