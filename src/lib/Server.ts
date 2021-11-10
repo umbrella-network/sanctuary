@@ -6,7 +6,6 @@ import compression from 'compression';
 import logger from './logger';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from '../config/swagger.json';
 import HealthController from '../controllers/HealthController';
 import { BlocksController } from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
@@ -20,6 +19,9 @@ import WalletAuthController from '../controllers/WalletAuthController';
 import InfoController from '../controllers/InfoController';
 import FcdsController from '../controllers/FcdsController';
 import KeysController from '../controllers/KeysController';
+
+import swaggerDocument from '../config/swagger.json';
+import internalSwaggerDocument from '../config/swagger-internal.json';
 
 @injectable()
 class Server {
@@ -51,7 +53,7 @@ class Server {
       .use(express.urlencoded({ extended: true }))
       .use(cors())
       .use('/health', healthController.router)
-      .use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+      .use('/docs', swaggerUi.serve, swaggerUi.setup(this.getSwaggerDocument()))
       .use('/blocks', blocksController.router)
       .use('/fcds', fcdsController.router)
       .use('/keys', keysController.router)
@@ -65,6 +67,12 @@ class Server {
       .use('/info', infoController.router);
 
     this.server = http.createServer(this.router);
+  }
+
+  private getSwaggerDocument() {
+    const env = process.env.ENVIRONMENT || process.env.NODE_ENV;
+    if (env === 'production' || env === 'sandbox') return swaggerDocument;
+    return internalSwaggerDocument;
   }
 
   start(): void {
