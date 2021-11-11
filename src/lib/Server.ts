@@ -53,7 +53,8 @@ class Server {
       .use(express.urlencoded({ extended: true }))
       .use(cors())
       .use('/health', healthController.router)
-      .use('/docs', swaggerUi.serve, swaggerUi.setup(this.getSwaggerDocument()))
+      .use('/docs', swaggerUi.serveFiles(swaggerDocument), swaggerUi.setup(swaggerDocument))
+      .use('/docs-internal', swaggerUi.serveFiles(internalSwaggerDocument), swaggerUi.setup(internalSwaggerDocument))
       .use('/blocks', blocksController.router)
       .use('/fcds', fcdsController.router)
       .use('/keys', keysController.router)
@@ -67,12 +68,6 @@ class Server {
       .use('/info', infoController.router);
 
     this.server = http.createServer(this.router);
-  }
-
-  private getSwaggerDocument() {
-    const env = process.env.ENVIRONMENT || process.env.NODE_ENV;
-    if (env === 'production' || env === 'sandbox') return swaggerDocument;
-    return internalSwaggerDocument;
   }
 
   start(): void {
