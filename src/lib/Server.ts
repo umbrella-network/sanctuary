@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import logger from './logger';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
 import HealthController from '../controllers/HealthController';
 import { BlocksController } from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
@@ -18,6 +19,9 @@ import WalletAuthController from '../controllers/WalletAuthController';
 import InfoController from '../controllers/InfoController';
 import FcdsController from '../controllers/FcdsController';
 import KeysController from '../controllers/KeysController';
+
+import swaggerDocument from '../config/swagger.json';
+import internalSwaggerDocument from '../config/swagger-internal.json';
 
 @injectable()
 class Server {
@@ -49,6 +53,8 @@ class Server {
       .use(express.urlencoded({ extended: true }))
       .use(cors())
       .use('/health', healthController.router)
+      .use('/docs', swaggerUi.serveFiles(swaggerDocument), swaggerUi.setup(swaggerDocument))
+      .use('/docs-internal', swaggerUi.serveFiles(internalSwaggerDocument), swaggerUi.setup(internalSwaggerDocument))
       .use('/blocks', blocksController.router)
       .use('/fcds', fcdsController.router)
       .use('/keys', keysController.router)
