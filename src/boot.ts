@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import './config/setupDotenv';
 import './config/setupNewrelic';
 import initMongoDB from './config/initMongoDB';
-import Migrations from './services/Migrations';
+// import Migrations from './services/Migrations';
 import logger from './lib/logger';
 
 (async () => {
