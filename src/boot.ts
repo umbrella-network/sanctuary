@@ -11,5 +11,5 @@ import logger from './lib/logger';
   const { default: settings } = await require('./config/settings');
 
   await initMongoDB(settings);
-  await Migrations.apply();
+  // await Migrations.apply();
 })();
