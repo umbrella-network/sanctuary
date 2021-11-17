@@ -6,13 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.5.0] - 2021-11-17
+### Added
+- Avalanche replicator (avax)
+
 ## [4.4.0] - 2021-11-08
 ### Added
 - Swagger API Documentation on `/docs` endpoint
 
 ## [4.3.1] - 2021-11-01
 ### Removed
-- Unnecesary github actions executions
+- Unnecessary github actions executions
 
 ## [4.3.0] - 2021-10-25
 ### Added

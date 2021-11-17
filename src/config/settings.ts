@@ -20,6 +20,10 @@ const settings: Settings = {
         interval: parseInt(process.env.POLYGON_REPLICATION_INTERVAL || '10000'),
         lockTTL: parseInt(process.env.POLYGON_REPLICATION_LOCK_TTL || '5000'),
       },
+      avax: {
+        interval: parseInt(process.env.AVALANCHE_REPLICATION_INTERVAL || '10000'),
+        lockTTL: parseInt(process.env.AVALANCHE_REPLICATION_LOCK_TTL || '5000'),
+      },
     },
   },
   redis: {
@@ -80,6 +84,18 @@ const settings: Settings = {
           waitForBlockTime: parseInt(process.env.POLYGON_WAIT_FOR_BLOCK_TIME || '1000'),
           minGasPrice: parseInt(process.env.POLYGON_MIN_GAS_PRICE || '1000000000', 10),
           maxGasPrice: parseInt(process.env.POLYGON_MAX_GAS_PRICE || '500000000000', 10),
+        },
+      },
+      avax: {
+        startBlockNumber: parseInt(process.env.AVALANCHE_START_BLOCK_NUMBER || '-100000', 10),
+        scanBatchSize: parseInt(process.env.AVALANCHE_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        confirmations: parseInt(process.env.AVALANCHE_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.AVALANCHE_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.AVALANCHE_REGISTRY_CONTRACT_ADDRESS,
+        transactions: {
+          waitForBlockTime: parseInt(process.env.AVALANCHE_WAIT_FOR_BLOCK_TIME || '1000'),
+          minGasPrice: parseInt(process.env.AVALANCHE_MIN_GAS_PRICE || '25000000000', 10),
+          maxGasPrice: parseInt(process.env.AVALANCHE_MAX_GAS_PRICE || '250000000000', 10),
         },
       },
     },
