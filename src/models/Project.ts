@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IProject extends Document {
   name: string;
-  ownerId: number;
+  ownerId: string;
   ownerType: string;
 }
 

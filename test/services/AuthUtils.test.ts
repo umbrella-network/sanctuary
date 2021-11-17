@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 import 'reflect-metadata';
-import { AuthUtils } from '../../src/services/AuthUtils';
-import { Request, Response } from 'express';
+import { ProjectAuthUtils } from '../../src/services/ProjectAuthUtils';
+import { Request } from 'express';
 import { IApiKey } from '../../src/models/ApiKey';
 import UsageMetricsRepository from '../../src/services/analytics/UsageMetricsRepository';
 import sinon from 'sinon';
 import { expect } from 'chai';
 
 describe('AuthUtils', () => {
-  const authUtils = new AuthUtils();
+  const authUtils = new ProjectAuthUtils();
 
   const fullRoute = 'blocks/leaves';
   const method = 'GET';
@@ -24,12 +24,12 @@ describe('AuthUtils', () => {
 
   describe('#verifyApiKey', () => {
     beforeEach(() => {
-      sinon.stub(AuthUtils.prototype, 'verifyApiKeyFromAuthHeader').resolves(mockVerificationResult);
+      sinon.stub(ProjectAuthUtils.prototype, 'verifyApiKeyFromAuthHeader').resolves(mockVerificationResult);
     });
 
     it('registers usage metric on API authentication', async () => {
       const usageMetricsRepositorySpy = sinon.stub(UsageMetricsRepository, 'register').resolves();
-      await authUtils.verifyApiKey(mockRequest, {} as Response);
+      await authUtils.verifyApiKey(mockRequest);
       expect(usageMetricsRepositorySpy.calledWith(apiKey.key, fullRoute, method)).to.be.true;
     });
   });

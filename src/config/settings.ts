@@ -101,8 +101,16 @@ const settings: Settings = {
     },
   },
   auth: {
-    tokenExpiry: 60 * 60 * 24 * 7, // 1 week
-    walletVerificationThreshold: 10,
+    jwt: {
+      audience: process.env.AUTH_JWT_AUDIENCE || 'TEST_AUDIENCE',
+      domain: process.env.AUTH_JWT_DOMAIN || 'example.com',
+    },
+  },
+  auth0: {
+    connectionId: process.env.AUTH0_CONNECTION_ID,
+    clientId: process.env.AUTH0_CLIENT_ID || 'AUTH0_CLIENT',
+    clientSecret: process.env.AUTH0_CLIENT_SECRET || 'AUTH0_SECRET',
+    domain: process.env.AUTH0_DOMAIN || 'test.auth0.com',
   },
   environment: process.env.ENVIRONMENT || process.env.NODE_ENV,
   version: packageJson.version,
