@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Auth0 Authentication
+- Profile API
+- Metrics middleware
+
+### Removed
+- DB-based authentication
+- Auth routes
+- WalletAuth
 
 ## [4.4.0] - 2021-11-08
 ### Added
