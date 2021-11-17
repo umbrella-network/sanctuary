@@ -28,6 +28,7 @@ type Settings = {
     foreignChainReplication: {
       ethereum: ForeignChainReplicationSettings;
       polygon: ForeignChainReplicationSettings;
+      avax: ForeignChainReplicationSettings;
     };
   };
   redis: {
@@ -59,6 +60,7 @@ type Settings = {
       bsc: BlockchainSettings;
       ethereum: BlockchainSettings;
       polygon: BlockchainSettings;
+      avax: BlockchainSettings;
     };
   };
   auth: {

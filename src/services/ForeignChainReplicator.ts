@@ -1,7 +1,12 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
-import { EthereumBlockReplicator, PolygonBlockReplicator, IForeignBlockReplicator } from './foreign-chain';
+import {
+  AvalancheBlockReplicator,
+  EthereumBlockReplicator,
+  PolygonBlockReplicator,
+  IForeignBlockReplicator,
+} from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IForeignBlock } from '../models/ForeignBlock';
 import { IFCD } from '../models/FCD';
@@ -20,11 +25,13 @@ export class ForeignChainReplicator {
 
   constructor(
     @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
-    @inject(PolygonBlockReplicator) polygonBlockReplicator: PolygonBlockReplicator
+    @inject(PolygonBlockReplicator) polygonBlockReplicator: PolygonBlockReplicator,
+    @inject(AvalancheBlockReplicator) avalancheBlockReplicator: AvalancheBlockReplicator
   ) {
     this.replicators = {
       ethereum: ethereumBlockReplicator,
       polygon: polygonBlockReplicator,
+      avax: avalancheBlockReplicator,
     };
   }
 

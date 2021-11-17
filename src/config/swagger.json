@@ -38,7 +38,7 @@
           {
             "name": "chainId",
             "in": "query",
-            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "description": "The ID of the chain. \"bsc\", \"eth\", \"polygon\" or \"avax\".",
             "required": false,
             "type": "string",
             "example": "bsc"
@@ -203,7 +203,7 @@
           {
             "name": "chainId",
             "in": "query",
-            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "description": "The ID of the chain. \"bsc\", \"eth\", \"polygon\" or \"avax\".",
             "required": false,
             "type": "string",
             "example": "bsc"
@@ -235,7 +235,7 @@
           {
             "name": "chainId",
             "in": "path",
-            "description": "The ID of the Chain. \"bsc\" or \"eth\".",
+            "description": "The ID of the Chain. \"bsc\", \"eth\", \"polygon\" or \"avax\".",
             "required": true,
             "type": "string",
             "example": "bsc"
@@ -310,7 +310,7 @@
           {
             "name": "chainId",
             "in": "query",
-            "description": "The ID of the chain. \"bsc\", \"eth\" or \"polygon\".",
+            "description": "The ID of the chain. \"bsc\", \"eth\", \"polygon\" or \"avax\".",
             "required": false,
             "type": "string",
             "example": "bsc"
