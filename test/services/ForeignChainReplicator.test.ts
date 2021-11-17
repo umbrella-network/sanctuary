@@ -3,7 +3,11 @@ import { getTestContainer } from '../helpers/getTestContainer';
 import { Container } from 'inversify';
 import { ForeignChainReplicator } from '../../src/services/ForeignChainReplicator';
 import sinon, { SinonStub } from 'sinon';
-import { EthereumBlockReplicator, PolygonBlockReplicator } from '../../src/services/foreign-chain';
+import {
+  AvalancheBlockReplicator,
+  EthereumBlockReplicator,
+  PolygonBlockReplicator,
+} from '../../src/services/foreign-chain';
 import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
 import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
 import { StubbedInstance, stubConstructor, stubObject } from 'ts-sinon';
@@ -19,6 +23,7 @@ describe('ForeignChainReplicator', () => {
   let instance: ForeignChainReplicator;
   const subject = async (foreignChainId: string) => instance.apply({ foreignChainId });
   let foreignBlockFactory: StubbedInstance<ForeignBlockFactory>;
+  let avalancheBlockReplicator: StubbedInstance<AvalancheBlockReplicator>;
   let ethereumBlockReplicator: StubbedInstance<EthereumBlockReplicator>;
   let polygonBlockReplicator: StubbedInstance<PolygonBlockReplicator>;
   let foreignChainStatus: SinonStub;
@@ -29,19 +34,24 @@ describe('ForeignChainReplicator', () => {
   before(async () => {
     container = getTestContainer();
     foreignBlockFactory = stubConstructor(ForeignBlockFactory);
+    avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
     ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
     polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
+    container.bind(AvalancheBlockReplicator).toConstantValue(avalancheBlockReplicator);
     container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
     container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
     container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
 
     foreignChainStatus = sinon.stub();
+    avalancheBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
     ethereumBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
     polygonBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
     block = stubConstructor(Block);
+    avalancheBlockReplicator.resolvePendingBlocks.resolves([block]);
     ethereumBlockReplicator.resolvePendingBlocks.resolves([block]);
     polygonBlockReplicator.resolvePendingBlocks.resolves([block]);
     replicationStatus = { blocks: [block], anchors: [1], fcds: [{ keys: [], values: [] }] };
+    avalancheBlockReplicator.replicate.resolves(replicationStatus);
     ethereumBlockReplicator.replicate.resolves(replicationStatus);
     polygonBlockReplicator.replicate.resolves(replicationStatus);
 
