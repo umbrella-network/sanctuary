@@ -64,8 +64,10 @@ type Settings = {
     };
   };
   auth: {
-    tokenExpiry: number;
-    walletVerificationThreshold: number;
+    jwt: {
+      domain: string;
+      audience: string;
+    };
   };
   version: string;
   environment?: string;
@@ -76,6 +78,12 @@ type Settings = {
     password: string;
     bucket: string;
     token: string;
+  };
+  auth0: {
+    connectionId?: string;
+    clientId?: string;
+    clientSecret: string;
+    domain: string;
   };
   repositoriesConfig: {
     leafRepository: {

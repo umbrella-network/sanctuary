@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 
 @injectable()
 class HeathController {
@@ -9,8 +9,9 @@ class HeathController {
     this.router = express().get('/', this.pong);
   }
 
-  pong = async (request: Request, response: Response): Promise<void> => {
+  pong = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     response.send('pong');
+    next();
   };
 }
 

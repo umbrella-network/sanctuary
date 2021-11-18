@@ -1,8 +1,6 @@
-import { CreateQuery } from 'mongoose';
-import { IBlock } from '../../src/models/Block';
 import { BlockStatus } from '../../src/types/blocks';
 
-export const inputForBlockModel: CreateQuery<IBlock> = {
+export const inputForBlockModel = {
   _id: 'block::1',
   chainAddress: '0x1',
   anchor: '1024',

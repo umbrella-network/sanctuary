@@ -94,7 +94,6 @@ describe('/blocks', async () => {
       expect(response.status).to.eq(200);
       expect(subject._id).to.eq(block._id);
       expect(subject.blockId).to.eq(block.blockId);
-      // expect(subject.foreignChainId).to.eq(foreignBlock.foreignChainId);
       expect(subject.anchor).to.eq(foreignBlock.anchor);
     });
   });

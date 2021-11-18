@@ -2,29 +2,22 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import Project from '../models/Project';
 import ApiKey from '../models/ApiKey';
-import { AuthUtils } from '../services/AuthUtils';
 import UsageMetricsRepository from '../services/analytics/UsageMetricsRepository';
+import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { translateAuth0UserId } from '../lib/translateAuth0UserId';
 
 @injectable()
 class UsageMetricsController {
   router: express.Router;
 
-  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
-    this.router = express.Router().get('/', this.index);
+  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
+    this.router = express.Router().use(authenticationMiddleware.apply).get('/', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
-
-    if (!tokenResult.token) {
-      response.status(403).send({ error: tokenResult.errorMessage });
-      return;
-    }
-
     const projectId = request.query?.projectId as string;
     const projectIdParam = projectId ? { _id: projectId } : {};
-    const searchParams = { ownerId: tokenResult.token.userId, ...projectIdParam };
-
+    const searchParams = { ownerId: translateAuth0UserId(request.user.sub), ...projectIdParam };
     const userProjects = await Project.find(searchParams, { _id: true, apiKeys: true });
 
     if (projectId && !userProjects.length) {
@@ -33,15 +26,12 @@ class UsageMetricsController {
     }
 
     const projectIds: string[] = userProjects.map(({ _id }) => _id);
-
     const apiKeys = await ApiKey.find({ projectId: { $in: projectIds } }, { key: true });
     const keys: string[] = apiKeys.map(({ key }) => key);
-
     const period = request.query?.period as string;
 
     try {
       const usageMetrics = await UsageMetricsRepository.retrieveUsageMetrics(keys, period);
-
       response.send(usageMetrics);
     } catch (error) {
       const isInternal = error?.message;

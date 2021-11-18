@@ -2,7 +2,8 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Project from '../models/Project';
-import { AuthUtils } from '../services/AuthUtils';
+import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { translateAuth0UserId } from '../lib/translateAuth0UserId';
 
 interface ICreateProjectReqBody {
   name?: string;
@@ -12,18 +13,16 @@ interface ICreateProjectReqBody {
 class ProjectsController {
   router: express.Router;
 
-  constructor(@inject(AuthUtils) private readonly authUtils: AuthUtils) {
-    this.router = express.Router().post('/', this.create).get('/', this.index).delete('/:id', this.delete);
+  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
+    this.router = express
+      .Router()
+      .use(authenticationMiddleware.apply)
+      .post('/', this.create)
+      .get('/', this.index)
+      .delete('/:id', this.delete);
   }
 
   create = async (request: Request<unknown, unknown, ICreateProjectReqBody>, response: Response): Promise<void> => {
-    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
-
-    if (!tokenResult.token) {
-      response.status(403).send({ error: tokenResult.errorMessage });
-      return;
-    }
-
     const { name } = request.body;
 
     if (!name) {
@@ -34,7 +33,7 @@ class ProjectsController {
     const project = await Project.create({
       _id: new mongoose.Types.ObjectId().toHexString(),
       name,
-      ownerId: tokenResult.token.userId,
+      ownerId: translateAuth0UserId(request.user.sub),
       ownerType: 'User',
     });
 
@@ -42,14 +41,7 @@ class ProjectsController {
   };
 
   index = async (request: Request, response: Response): Promise<void> => {
-    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
-
-    if (!tokenResult.token) {
-      response.status(403).send({ error: tokenResult.errorMessage });
-      return;
-    }
-
-    const projects = await Project.find({ ownerId: tokenResult.token.userId });
+    const projects = await Project.find({ ownerId: translateAuth0UserId(request.user.sub) });
 
     response.send({
       projects: projects.map((project) => {
@@ -62,20 +54,13 @@ class ProjectsController {
   };
 
   delete = async (request: Request<{ id: string }>, response: Response): Promise<void> => {
-    const tokenResult = this.authUtils.getAuthorizationToken(request.headers.authorization);
-
-    if (!tokenResult.token) {
-      response.status(403).send({ error: tokenResult.errorMessage });
-      return;
-    }
-
     const projectId = request.params.id;
     if (!projectId) {
       response.status(400).send({ error: 'No project ID was specified' });
       return;
     }
 
-    const project = await Project.findOne({ _id: projectId, ownerId: tokenResult.token.userId });
+    const project = await Project.findOne({ _id: projectId, ownerId: translateAuth0UserId(request.user.sub) });
     if (!projectId || !project) {
       response.status(404).send({ error: 'Project with provided ID not found' });
       return;

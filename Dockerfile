@@ -13,6 +13,7 @@ RUN chown -R runner:runner /home/runner
 USER runner
 RUN npm install
 
+COPY @types ./@types
 COPY src ./src
 
 RUN npm run build
