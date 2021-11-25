@@ -66,7 +66,9 @@ logger.info('Starting Scheduler...');
   setInterval(async () => {
     try {
       await blockSynchronizerWorker.enqueue(
-        {},
+        {
+          interval: settings.jobs.blockCreation.interval,
+        },
         {
           removeOnComplete: true,
           removeOnFail: true,
