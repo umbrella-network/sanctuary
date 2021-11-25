@@ -5,13 +5,13 @@ import { Logger } from 'winston';
 import { ChainContract } from '../contracts/ChainContract';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import Settings from '../types/Settings';
-import { BigNumber } from '@ethersproject/bignumber';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { Blockchain } from '../lib/Blockchain';
+import { BigNumber } from '@ethersproject/bignumber';
 
 interface IValidatorReport {
   address: string;
-  balance: BigNumber;
+  balance: number;
 }
 
 @injectable()
@@ -45,8 +45,13 @@ class HomechainBalanceReporter {
 
   private fetchValidator = async (validatorId: string): Promise<IValidatorReport> => {
     const balance = await this.homechain.balanceOf(validatorId);
-    return { address: validatorId, balance };
+    return { address: validatorId, balance: this.bigNumberToBalance(balance) };
   };
+
+  private bigNumberToBalance(bigNumber: BigNumber): number {
+    const balance = Number(bigNumber.toBigInt()) / 1e18;
+    return Number(balance.toFixed(8));
+  }
 
   private reportValidatorsBalances(validators: IValidatorReport[]): void {
     this.logReports(validators);
@@ -56,17 +61,18 @@ class HomechainBalanceReporter {
   private logReports(validators: IValidatorReport[]): void {
     validators.forEach(({ balance, address }) => {
       this.logger.info(
-        `[HomechainBalanceReporter] ChainID: ${this.homechainId}, Balance: ${balance.toBigInt()}, Address: ${address}`
+        `[HomechainBalanceReporter] ChainID: ${this.homechainId}, Balance: ${balance} BNB, Address: ${address}`
       );
     });
   }
 
   private recordEvent = ({ balance, address }: IValidatorReport): void => {
     newrelic.recordCustomEvent('WalletBalanceReport', {
-      balance: balance.toString(),
-      address: address,
+      balance,
+      address,
       chain: this.homechainId,
-      node: 'ForeignChainReplicator',
+      currency: 'BNB',
+      env: this.settings.environment,
     });
   };
 }
