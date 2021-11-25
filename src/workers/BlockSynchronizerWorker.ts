@@ -16,7 +16,7 @@ class BlockSynchronizerWorker extends SingletonWorker {
 
   apply = async (job: Bull.Job): Promise<void> => {
     const interval = parseInt(job.data.interval);
-    const lockTTL = interval + 5000;
+    const lockTTL = interval + 15000;
     if (this.isStale(job, interval)) return;
 
     await this.synchronizeWork('block-synchronizer', lockTTL, this.execute);
