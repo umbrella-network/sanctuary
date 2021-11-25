@@ -21,6 +21,7 @@ type Settings = {
   jobs: {
     blockCreation: {
       interval: number;
+      lockTTL: number;
     };
     metricsReporting: {
       interval: number;

@@ -7,6 +7,7 @@ const settings: Settings = {
   jobs: {
     blockCreation: {
       interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '1000', 10),
+      lockTTL: parseInt(process.env.BLOCK_CREATION_LOCK_TTL || '20000'),
     },
     metricsReporting: {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
