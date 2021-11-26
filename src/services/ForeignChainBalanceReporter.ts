@@ -16,7 +16,7 @@ class ForeignChainBalanceReporter extends BalanceReporter {
     return {
       balance: this.bigNumberToBalance(balance),
       address,
-      chain: chainId,
+      chain: chainId.replace('ethereum', 'eth'),
       currency: this.getCurrencyFromChain(chainId),
     };
   };
