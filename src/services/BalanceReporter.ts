@@ -24,12 +24,8 @@ abstract class BalanceReporter {
   }
 
   protected reportBalances(blockchains: IBalanceReport[]): void {
-    this.logReports(blockchains);
-    blockchains.forEach(this.recordEvent);
-  }
-
-  protected logReports(blockchains: IBalanceReport[]): void {
     blockchains.forEach(this.logReport);
+    blockchains.forEach(this.recordEvent);
   }
 
   private logReport = ({ chain, balance, currency, address }: IBalanceReport): void => {

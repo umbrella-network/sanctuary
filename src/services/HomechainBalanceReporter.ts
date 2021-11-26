@@ -14,16 +14,12 @@ class HomechainBalanceReporter extends BalanceReporter {
   private homechain: Blockchain;
 
   call = async (): Promise<void> => {
-    this.setupHomechain();
-    const validators = await this.fetchValidators();
-    this.reportBalances(validators);
-  };
-
-  private setupHomechain(): void {
     this.homechainId = this.settings.blockchain.homeChain.chainId;
     this.homechain = this.blockchainRepository.get(this.homechainId);
     this.chainContract = <ChainContract>this.chainContractRepository.get(this.homechainId);
-  }
+    const validators = await this.fetchValidators();
+    this.reportBalances(validators);
+  };
 
   private fetchValidators = async (): Promise<IBalanceReport[]> => {
     const { validators: validatorsIds } = await this.chainContract.resolveStatus<ChainStatus>();

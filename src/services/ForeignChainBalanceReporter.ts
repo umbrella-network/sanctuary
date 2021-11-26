@@ -13,6 +13,7 @@ class ForeignChainBalanceReporter extends BalanceReporter {
     const blockchain = this.blockchainRepository.get(chainId);
     const address = blockchain.wallet.address;
     const balance = await blockchain.balanceOf(address);
+
     return {
       balance: this.bigNumberToBalance(balance),
       address,
@@ -27,6 +28,7 @@ class ForeignChainBalanceReporter extends BalanceReporter {
       ethereum: 'ETH',
       polygon: 'MATIC',
     };
+
     return currencies[chain];
   }
 }
