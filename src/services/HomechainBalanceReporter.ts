@@ -9,33 +9,40 @@ import BalanceReporter, { IBalanceReport } from './BalanceReporter';
 class HomechainBalanceReporter extends BalanceReporter {
   @inject(ChainContractRepository) chainContractRepository!: ChainContractRepository;
 
-  private chainContract!: ChainContract;
-  private homechainId: string;
-  private homechain: Blockchain;
-
   call = async (): Promise<void> => {
-    this.homechainId = this.settings.blockchain.homeChain.chainId;
-    this.homechain = this.blockchainRepository.get(this.homechainId);
-    this.chainContract = <ChainContract>this.chainContractRepository.get(this.homechainId);
     const validators = await this.fetchValidators();
     this.reportBalances(validators);
   };
 
   private fetchValidators = async (): Promise<IBalanceReport[]> => {
-    const { validators: validatorsIds } = await this.chainContract.resolveStatus<ChainStatus>();
+    const { validators: validatorsIds } = await this.getChainContract().resolveStatus<ChainStatus>();
     const validators = await Promise.all(validatorsIds.map(this.fetchValidator));
     return validators;
   };
 
+  private getChainContract() {
+    const homechainId = this.getHomechainId();
+    return <ChainContract>this.chainContractRepository.get(homechainId);
+  }
+
   private fetchValidator = async (validatorId: string): Promise<IBalanceReport> => {
-    const balance = await this.homechain.balanceOf(validatorId);
+    const balance = await this.getHomechain().balanceOf(validatorId);
     return {
       address: validatorId,
       balance: this.bigNumberToBalance(balance),
-      chain: this.homechainId,
+      chain: this.getHomechainId(),
       currency: 'BNB',
     };
   };
+
+  private getHomechain(): Blockchain {
+    const homechainId = this.getHomechainId();
+    return this.blockchainRepository.get(homechainId);
+  }
+
+  private getHomechainId(): string {
+    return this.settings.blockchain.homeChain.chainId;
+  }
 }
 
 export default HomechainBalanceReporter;
