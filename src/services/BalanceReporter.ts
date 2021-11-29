@@ -5,6 +5,9 @@ import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { BigNumber } from '@ethersproject/bignumber';
 import Settings from '../types/Settings';
 
+const REQUIRED_DECIMAL_CASES = 18;
+const DECIMAL_CASE_POSITION = /(\d)(?=\d{17}$)/g;
+
 export interface IBalanceReport {
   address: string;
   chain: string;
@@ -19,8 +22,16 @@ abstract class BalanceReporter {
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
 
   protected bigNumberToBalance(bigNumber: BigNumber): number {
-    const balance = Number(bigNumber.toBigInt()) / 1e18;
-    return Number(balance.toFixed(8));
+    const paddedNumber = bigNumber
+      .toBigInt()
+      .toString()
+      .padStart(REQUIRED_DECIMAL_CASES + 1, '0');
+    const number = paddedNumber.replace(DECIMAL_CASE_POSITION, '.$1');
+    return Number(this.shortenToNDecimalCases(number, 8));
+  }
+
+  private shortenToNDecimalCases(number: string, cases: number) {
+    return number.slice(0, number.indexOf('.') + cases + 1);
   }
 
   protected reportBalances(blockchains: IBalanceReport[]): void {
