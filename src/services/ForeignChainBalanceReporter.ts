@@ -4,10 +4,10 @@ import BalanceReporter, { IBalanceReport } from './BalanceReporter';
 
 @injectable()
 class ForeignChainBalanceReporter extends BalanceReporter {
-  call = async (chainsIds: ChainsIds[] = ForeignChainsIds): Promise<void> => {
-    const chainsWithBalance = await Promise.all(chainsIds.map(this.fetchBalanceOfReplicator));
-    this.reportBalances(chainsWithBalance);
-  };
+  public async call(chainsIds: ChainsIds[] = ForeignChainsIds): Promise<void> {
+    const replicatorsBalances = await Promise.all(chainsIds.map(this.fetchBalanceOfReplicator));
+    this.reportBalances(replicatorsBalances);
+  }
 
   private fetchBalanceOfReplicator = async (chainId: ChainsIds): Promise<IBalanceReport> => {
     const blockchain = this.blockchainRepository.get(chainId);
