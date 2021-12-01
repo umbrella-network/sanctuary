@@ -1,4 +1,5 @@
 import { injectable } from 'inversify';
+import { ChainsCurrencies } from '../types/ChainsCurrencies';
 import { ChainsIds, ForeignChainsIds } from '../types/ChainsIds';
 import BalanceReporter, { IBalanceReport } from './BalanceReporter';
 
@@ -18,19 +19,9 @@ class ForeignChainBalanceReporter extends BalanceReporter {
       balance: this.bigNumberToBalance(balance),
       address,
       chain: chainId.replace('ethereum', 'eth'),
-      currency: this.getCurrencyFromChain(chainId),
+      currency: ChainsCurrencies[chainId],
     };
   };
-
-  private getCurrencyFromChain(chain: string): string {
-    const currencies: { [chainId: string]: string } = {
-      avax: 'AVAX',
-      ethereum: 'ETH',
-      polygon: 'MATIC',
-    };
-
-    return currencies[chain];
-  }
 }
 
 export default ForeignChainBalanceReporter;
