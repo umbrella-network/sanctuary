@@ -19,7 +19,7 @@ abstract class BalanceReporter {
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
 
   protected bigNumberToBalance(n: BigNumber): number {
-    return n.div(1e10).toNumber() / 1e8;
+    return n.div('10000000000000000').toNumber() / 100;
   }
 
   protected reportBalances(blockchains: IBalanceReport[]): void {
