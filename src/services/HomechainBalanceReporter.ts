@@ -4,6 +4,7 @@ import { ChainContract } from '../contracts/ChainContract';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { Blockchain } from '../lib/Blockchain';
 import BalanceReporter, { IBalanceReport } from './BalanceReporter';
+import { ChainsCurrencies } from '../types/ChainsCurrencies';
 
 @injectable()
 class HomechainBalanceReporter extends BalanceReporter {
@@ -37,7 +38,7 @@ class HomechainBalanceReporter extends BalanceReporter {
       address: validatorId,
       balance: this.bigNumberToBalance(balance),
       chain: this.homechainId,
-      currency: 'BNB',
+      currency: ChainsCurrencies.bsc,
     };
   };
 }

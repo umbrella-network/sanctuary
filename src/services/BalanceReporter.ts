@@ -5,8 +5,6 @@ import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { BigNumber } from '@ethersproject/bignumber';
 import Settings from '../types/Settings';
 
-const FIRST_NUMBER = /(^\d)/;
-
 export type IBalanceReport = {
   address: string;
   chain: string;
