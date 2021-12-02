@@ -25,8 +25,7 @@ class MetricsWorker extends BasicWorker {
       await this.blockLeafCountReporter.call();
 
       await this.homechainBalanceReporter.call();
-      // Avalanche must be included when released
-      await this.foreignChainBalanceReporter.call([ChainsIds.ETH, ChainsIds.POLYGON]);
+      await this.foreignChainBalanceReporter.call([ChainsIds.ETH, ChainsIds.POLYGON, ChainsIds.AVALANCHE]);
     } catch (e) {
       this.logger.error(e);
     }
