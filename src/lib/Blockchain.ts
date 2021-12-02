@@ -1,5 +1,5 @@
 import Settings, { BlockchainSettings } from '../types/Settings';
-import { ethers, Wallet } from 'ethers';
+import { BigNumber, ethers, Wallet } from 'ethers';
 
 export type BlockchainProps = {
   chainId: string;
@@ -41,6 +41,10 @@ export class Blockchain {
 
   async getBlockNumber(): Promise<number> {
     return this.provider.getBlockNumber();
+  }
+
+  async balanceOf(address: string): Promise<BigNumber> {
+    return this.provider.getBalance(address);
   }
 
   getContractRegistryAddress(): string {
