@@ -27,17 +27,20 @@ class HomechainBalanceReporter extends BalanceReporter {
   }
 
   private async fetchValidators(): Promise<IBalanceReport[]> {
-    const { validators: validatorsIds } = await this.chainContract.resolveStatus<ChainStatus>();
-    const validators = await Promise.all(validatorsIds.map(this.fetchValidator));
+    const { validators: validatorsIds, locations } = await this.chainContract.resolveStatus<ChainStatus>();
+    const validators = await Promise.all(
+      validatorsIds.map((validatorId, index) => this.fetchValidator(validatorId, locations[index]))
+    );
     return validators;
   }
 
-  private fetchValidator = async (validatorId: string): Promise<IBalanceReport> => {
+  private fetchValidator = async (validatorId: string, validatorUrl: string): Promise<IBalanceReport> => {
     const balance = await this.homechain.balanceOf(validatorId);
     return {
       address: validatorId,
       balance: this.bigNumberToBalance(balance),
       chain: this.homechainId,
+      location: validatorUrl,
       currency: ChainsCurrencies.bsc,
     };
   };

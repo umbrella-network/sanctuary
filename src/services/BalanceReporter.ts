@@ -10,6 +10,7 @@ export type IBalanceReport = {
   chain: string;
   balance: number;
   currency: string;
+  location?: string;
 };
 
 @injectable()
@@ -32,13 +33,14 @@ abstract class BalanceReporter {
     this.logger.info(`[${instance}] ChainID: ${chain}, Balance: ${balance} ${currency}, Address: ${address}`);
   };
 
-  protected recordEvent = ({ address, balance, chain, currency }: IBalanceReport): void => {
+  protected recordEvent = ({ address, balance, chain, currency, location }: IBalanceReport): void => {
     newrelic.recordCustomEvent('WalletBalanceReport', {
       balance,
       address,
       chain,
       currency,
       env: this.settings.environment,
+      location,
     });
   };
 }
