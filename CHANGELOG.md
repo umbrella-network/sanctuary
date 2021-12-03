@@ -6,8 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [4.7.0] - 2021-11-02
 ### Added
-- Add balance fetcher in Blockchain class
-- Add balance reporters for homechain and foreign chains
+- reporting balances for validators and replicators
 
 ## [4.6.1] - 2021-11-25
 ### Fixed
