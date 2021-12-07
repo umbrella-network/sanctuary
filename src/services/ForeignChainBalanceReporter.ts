@@ -1,16 +1,16 @@
 import { injectable } from 'inversify';
-import { ChainsCurrencies } from '../types/ChainsCurrencies';
-import { ChainsIds, ForeignChainsIds } from '../types/ChainsIds';
-import BalanceReporter, { IBalanceReport } from './BalanceReporter';
+import { ChainCurrencyEnum } from '../types/ChainCurrency';
+import { ChainsIds as ChainId, ForeignChainsIds } from '../types/ChainsIds';
+import BalanceReporter, { BlockReport } from './BalanceReporter';
 
 @injectable()
 class ForeignChainBalanceReporter extends BalanceReporter {
-  public async call(chainsIds: ChainsIds[] = ForeignChainsIds): Promise<void> {
+  async call(chainsIds: ChainId[] = ForeignChainsIds): Promise<void> {
     const replicatorsBalances = await Promise.all(chainsIds.map(this.fetchBalanceOfReplicator));
     this.reportBalances(replicatorsBalances);
   }
 
-  private fetchBalanceOfReplicator = async (chainId: ChainsIds): Promise<IBalanceReport> => {
+  private fetchBalanceOfReplicator = async (chainId: ChainId): Promise<BlockReport> => {
     const blockchain = this.blockchainRepository.get(chainId);
     const address = blockchain.wallet.address;
     const balance = await blockchain.balanceOf(address);
@@ -19,7 +19,7 @@ class ForeignChainBalanceReporter extends BalanceReporter {
       balance: this.bigNumberToBalance(balance),
       address,
       chain: chainId.replace('ethereum', 'eth'),
-      currency: ChainsCurrencies[chainId],
+      currency: ChainCurrencyEnum[chainId],
     };
   };
 }

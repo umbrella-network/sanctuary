@@ -1,4 +1,4 @@
-export enum ChainsCurrencies {
+export enum ChainCurrencyEnum {
   avax = 'AVAX',
   ethereum = 'ETH',
   polygon = 'MATIC',

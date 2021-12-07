@@ -3,8 +3,8 @@ import { ChainStatus } from '../types/ChainStatus';
 import { ChainContract } from '../contracts/ChainContract';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { Blockchain } from '../lib/Blockchain';
-import BalanceReporter, { IBalanceReport } from './BalanceReporter';
-import { ChainsCurrencies } from '../types/ChainsCurrencies';
+import BalanceReporter, { BlockReport } from './BalanceReporter';
+import { ChainCurrencyEnum } from '../types/ChainCurrency';
 
 @injectable()
 class HomechainBalanceReporter extends BalanceReporter {
@@ -21,12 +21,12 @@ class HomechainBalanceReporter extends BalanceReporter {
     this.chainContract = <ChainContract>this.chainContractRepository.get(this.homechainId);
   }
 
-  public async call(): Promise<void> {
+  async call(): Promise<void> {
     const validators = await this.fetchValidators();
     this.reportBalances(validators);
   }
 
-  private async fetchValidators(): Promise<IBalanceReport[]> {
+  private async fetchValidators(): Promise<BlockReport[]> {
     const { validators: validatorsIds, locations } = await this.chainContract.resolveStatus<ChainStatus>();
     const validators = await Promise.all(
       validatorsIds.map((validatorId, index) => this.fetchValidator(validatorId, locations[index]))
@@ -34,14 +34,14 @@ class HomechainBalanceReporter extends BalanceReporter {
     return validators;
   }
 
-  private fetchValidator = async (validatorId: string, validatorUrl: string): Promise<IBalanceReport> => {
+  private fetchValidator = async (validatorId: string, validatorUrl: string): Promise<BlockReport> => {
     const balance = await this.homechain.balanceOf(validatorId);
     return {
       address: validatorId,
       balance: this.bigNumberToBalance(balance),
       chain: this.homechainId,
       location: validatorUrl,
-      currency: ChainsCurrencies.bsc,
+      currency: ChainCurrencyEnum.bsc,
     };
   };
 }
