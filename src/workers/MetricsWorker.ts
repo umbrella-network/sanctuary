@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import BlockMintedReporter from '../services/BlockMintedReporter';
 import BlockLeafCountReporter from '../services/BlockLeafCountReporter';
 import BasicWorker from './BasicWorker';
-import { ChainsIds } from '../types/ChainsIds';
+import { ChainsIds, ForeignChainsIds } from '../types/ChainsIds';
 import HomechainBalanceReporter from '../services/HomechainBalanceReporter';
 import ForeignChainBalanceReporter from '../services/ForeignChainBalanceReporter';
 
@@ -25,7 +25,7 @@ class MetricsWorker extends BasicWorker {
       await this.blockLeafCountReporter.call();
 
       await this.homechainBalanceReporter.call();
-      await this.foreignChainBalanceReporter.call([ChainsIds.ETH, ChainsIds.POLYGON, ChainsIds.AVALANCHE]);
+      await this.foreignChainBalanceReporter.call(ForeignChainsIds);
     } catch (e) {
       this.logger.error(e);
     }

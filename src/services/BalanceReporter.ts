@@ -5,11 +5,12 @@ import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { BigNumber } from '@ethersproject/bignumber';
 import Settings from '../types/Settings';
 
-export type IBalanceReport = {
+export type BlockReport = {
   address: string;
   chain: string;
   balance: number;
   currency: string;
+  location?: string;
 };
 
 @injectable()
@@ -22,24 +23,29 @@ abstract class BalanceReporter {
     return n.div('10000000000000000').toNumber() / 100;
   }
 
-  protected reportBalances(blockchains: IBalanceReport[]): void {
+  protected reportBalances(blockchains: BlockReport[]): void {
     blockchains.forEach(this.logReport);
     blockchains.forEach(this.recordEvent);
   }
 
-  private logReport = ({ chain, balance, currency, address }: IBalanceReport): void => {
-    const instance = this.constructor.name;
-    this.logger.info(`[${instance}] ChainID: ${chain}, Balance: ${balance} ${currency}, Address: ${address}`);
+  private logReport = ({ chain, balance, currency, address }: BlockReport): void => {
+    const className = this.constructor.name;
+    this.logger.info(`[${className}] ChainID: ${chain}, Balance: ${balance} ${currency}, Address: ${address}`);
   };
 
-  protected recordEvent = ({ address, balance, chain, currency }: IBalanceReport): void => {
-    newrelic.recordCustomEvent('WalletBalanceReport', {
-      balance,
-      address,
-      chain,
-      currency,
-      env: this.settings.environment,
-    });
+  protected recordEvent = ({ address, balance, chain, currency, location }: BlockReport): void => {
+    try {
+      newrelic.recordCustomEvent('WalletBalanceReport', {
+        balance,
+        address,
+        chain,
+        currency,
+        env: this.settings.environment,
+        location,
+      });
+    } catch (e) {
+      this.logger.error(`[BalanceReporter] Failed to report balances to NewRelic. ${e.toString()}`);
+    }
   };
 }
 
