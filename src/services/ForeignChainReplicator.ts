@@ -11,6 +11,9 @@ import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IForeignBlock } from '../models/ForeignBlock';
 import { IFCD } from '../models/FCD';
 import { FCDRepository } from '../repositories/FCDRepository';
+import { BlockchainRepository } from '../repositories/BlockchainRepository';
+import Settings from '../types/Settings';
+import { BigNumber } from 'ethers';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: string;
@@ -22,6 +25,8 @@ export class ForeignChainReplicator {
   @inject('Logger') logger!: Logger;
   @inject(ForeignBlockFactory) foreignBlockFactory!: ForeignBlockFactory;
   @inject(FCDRepository) fcdRepository!: FCDRepository;
+  @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
+  @inject('Settings') private readonly settings: Settings;
 
   constructor(
     @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
@@ -38,6 +43,9 @@ export class ForeignChainReplicator {
   async apply(props: ForeignChainReplicatorProps): Promise<IForeignBlock[] | undefined> {
     try {
       const { foreignChainId } = props;
+
+      await this.checkBalanceIsEnough(foreignChainId);
+
       const replicator = this.replicators[foreignChainId];
       const foreignChainStatus = await replicator.getStatus();
       const blocks = await replicator.resolvePendingBlocks(foreignChainStatus, new Date());
@@ -95,5 +103,22 @@ export class ForeignChainReplicator {
     }
 
     return foreignBlocks;
+  };
+
+  private checkBalanceIsEnough = async (chainId: string): Promise<void> => {
+    const blockchain = this.blockchainRepository.get(chainId);
+    const balance = await blockchain.wallet.getBalance();
+
+    const { errorLimit, warningLimit } = this.settings.blockchain.mintBalance;
+
+    this.logger.info(`Wallet address: ${blockchain.wallet.address} - Wallet balance: ${balance}`);
+
+    if (balance.lt(BigNumber.from(errorLimit))) {
+      throw new Error(`Balance is lower than ${errorLimit}`);
+    }
+
+    if (balance.lt(BigNumber.from(warningLimit))) {
+      this.logger.warn(`Balance is lower than ${warningLimit}`);
+    }
   };
 }

@@ -100,6 +100,10 @@ const settings: Settings = {
         },
       },
     },
+    mintBalance: {
+      warningLimit: parseInt(process.env.BALANCE_WARN || '0.005', 10),
+      errorLimit: parseInt(process.env.BALANCE_ERROR || '0.0005', 10),
+    },
   },
   auth: {
     jwt: {

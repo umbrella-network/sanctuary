@@ -63,6 +63,10 @@ type Settings = {
       polygon: BlockchainSettings;
       avax: BlockchainSettings;
     };
+    mintBalance: {
+      warningLimit: number;
+      errorLimit: number;
+    };
   };
   auth: {
     jwt: {

@@ -1,5 +1,5 @@
 // TODO move this class to SDK and reuse in Pegasus and Sanctuary
-import { BigNumber, Wallet } from 'ethers';
+import { Wallet } from 'ethers';
 import { GasEstimator, GasEstimation } from './GasEstimator';
 import { TransactionResponse, TransactionReceipt } from '@ethersproject/providers';
 import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
@@ -45,11 +45,6 @@ export class TxSender {
       maxPriorityFeePerGas: isTxType2 ? maxPriorityFeePerGas : undefined,
       maxFeePerGas: isTxType2 ? maxFeePerGas : undefined,
     };
-
-    const isBalanceEnough = await this.checkIsBalanceEnough(gasEstimation.gasPrice);
-    if (!isBalanceEnough) {
-      throw new Error('Balance is not enough for this transaction.');
-    }
 
     this.logger.info(`[${this.chainId}] submitting tx, gas metrics: ${GasEstimator.printable(gasEstimation)}`);
 
@@ -122,17 +117,6 @@ export class TxSender {
     this.logger.info(`[${this.chainId}] new block detected ${newBlockNumber}, waiting for tx to be minted.`);
 
     return { tx, receipt: await Promise.race([tx.wait(), TxSender.txTimeout(timeoutMs)]), timeoutMs };
-  };
-
-  private checkIsBalanceEnough = async (gasEstimation: number): Promise<boolean> => {
-    const balance = await this.wallet.getBalance();
-    const estimate = BigNumber.from(gasEstimation);
-
-    this.logger.info(
-      `Wallet address: ${this.wallet.address} - Wallet balance: ${balance} - Estimated Transaction Gas Fee: ${estimate}`
-    );
-
-    return balance.gte(estimate);
   };
 
   private static sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
