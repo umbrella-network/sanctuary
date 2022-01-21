@@ -124,17 +124,7 @@ export class TxSender {
     return { tx, receipt: await Promise.race([tx.wait(), TxSender.txTimeout(timeoutMs)]), timeoutMs };
   };
 
-  private static sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
-  private static async txTimeout(timeout: number): Promise<undefined> {
-    return new Promise<undefined>((resolve) =>
-      setTimeout(async () => {
-        resolve(undefined);
-      }, timeout)
-    );
-  }
-
-  private async checkIsBalanceEnough(gasEstimation: number) {
+  private checkIsBalanceEnough = async (gasEstimation: number): Promise<boolean> => {
     const balance = await this.wallet.getBalance();
     const estimate = BigNumber.from(gasEstimation);
 
@@ -143,5 +133,15 @@ export class TxSender {
     );
 
     return balance.gte(estimate);
+  };
+
+  private static sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+  private static async txTimeout(timeout: number): Promise<undefined> {
+    return new Promise<undefined>((resolve) =>
+      setTimeout(async () => {
+        resolve(undefined);
+      }, timeout)
+    );
   }
 }
