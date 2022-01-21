@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Added
-- Check if gas is enough before execute transaction
+- Check if balance is enough before execute replicate blocks
 
 ## [4.7.1] - 2021-12-15
 ### Fixed
