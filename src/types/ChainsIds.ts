@@ -7,4 +7,4 @@ export enum ChainsIds {
 
 export type TForeignChainsIds = ChainsIds.AVALANCHE | ChainsIds.ETH | ChainsIds.POLYGON;
 
-export const ForeignChainsIds = [ChainsIds.AVALANCHE, ChainsIds.ETH, ChainsIds.POLYGON];
+export const ForeignChainsIds: TForeignChainsIds[] = [ChainsIds.AVALANCHE, ChainsIds.ETH, ChainsIds.POLYGON];
