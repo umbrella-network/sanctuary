@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { getTestContainer } from '../helpers/getTestContainer';
 import { Container } from 'inversify';
 import { ForeignChainReplicator } from '../../src/services/ForeignChainReplicator';
-import sinon, { SinonStub } from 'sinon';
+import sinon, { createStubInstance, SinonStub } from 'sinon';
 import {
   AvalancheBlockReplicator,
   EthereumBlockReplicator,
@@ -17,6 +17,9 @@ import Block, { IBlock } from '../../src/models/Block';
 import { expect } from 'chai';
 import { foreignBlockFactory as mockForeignBlockFactory } from '../mocks/factories/foreignBlockFactory';
 import { ForeignChainsIds, TForeignChainsIds } from '../../src/types/ChainsIds';
+import { BlockchainRepository } from '../../src/repositories/BlockchainRepository';
+import { BigNumber, ethers, Wallet } from 'ethers';
+import { BlockchainSettings } from '../../src/types/Settings';
 
 describe('ForeignChainReplicator', () => {
   let container: Container;
@@ -30,6 +33,8 @@ describe('ForeignChainReplicator', () => {
   let replicationStatus: ReplicationStatus;
   let block: StubbedInstance<IBlock>;
   let foreignBlock: StubbedInstance<IForeignBlock>;
+  let blockchainRepository: StubbedInstance<BlockchainRepository>;
+  let provider: StubbedInstance<ethers.providers.Provider>;
 
   before(async () => {
     container = getTestContainer();
@@ -37,10 +42,30 @@ describe('ForeignChainReplicator', () => {
     avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
     ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
     polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
+    blockchainRepository = createStubInstance(BlockchainRepository);
+    provider = createStubInstance(ethers.providers.Provider);
+
+    const wallet = Wallet.createRandom();
+    sinon.stub(wallet, 'getBalance').resolves(BigNumber.from(10));
+
+    blockchainRepository.get.returns({
+      chainId: 'ethereum',
+      isHomeChain: false,
+      wallet,
+      getProvider: sinon.spy(),
+      getLastNonce: sinon.spy(),
+      getBlockNumber: sinon.spy(),
+      balanceOf: sinon.spy(),
+      getContractRegistryAddress: sinon.spy(),
+      settings: {} as BlockchainSettings,
+      provider: provider,
+    });
+
     container.bind(AvalancheBlockReplicator).toConstantValue(avalancheBlockReplicator);
     container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
     container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
     container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
+    container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
 
     foreignChainStatus = sinon.stub();
     avalancheBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
