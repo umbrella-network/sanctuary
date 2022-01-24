@@ -109,7 +109,7 @@ export class ForeignChainReplicator {
     const blockchain = this.blockchainRepository.get(chainId);
     const balance = await blockchain.wallet.getBalance();
 
-    const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].mintBalance;
+    const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].transactions.mintBalance;
 
     if (balance.lt(1e18 * errorLimit)) {
       throw new Error(`Balance is lower than ${errorLimit}`);
