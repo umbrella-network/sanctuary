@@ -9,6 +9,10 @@ export type BlockchainSettings = {
     minGasPrice: number;
     maxGasPrice: number;
   };
+  mintBalance?: {
+    warningLimit: number;
+    errorLimit: number;
+  };
 };
 
 export type ForeignChainReplicationSettings = {
@@ -62,10 +66,6 @@ type Settings = {
       ethereum: BlockchainSettings;
       polygon: BlockchainSettings;
       avax: BlockchainSettings;
-    };
-    mintBalance: {
-      warningLimit: number;
-      errorLimit: number;
     };
   };
   auth: {

@@ -74,6 +74,10 @@ const settings: Settings = {
           minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '2000000000', 10),
           maxGasPrice: parseInt(process.env.ETH_MAX_GAS_PRICE || '500000000000', 10),
         },
+        mintBalance: {
+          warningLimit: parseInt(process.env.ETH_BALANCE_WARN || '0.005', 10),
+          errorLimit: parseInt(process.env.ETH_BALANCE_ERROR || '0.0005', 10),
+        },
       },
       polygon: {
         startBlockNumber: parseInt(process.env.POLYGON_START_BLOCK_NUMBER || '-100000', 10),
@@ -85,6 +89,10 @@ const settings: Settings = {
           waitForBlockTime: parseInt(process.env.POLYGON_WAIT_FOR_BLOCK_TIME || '1000'),
           minGasPrice: parseInt(process.env.POLYGON_MIN_GAS_PRICE || '1000000000', 10),
           maxGasPrice: parseInt(process.env.POLYGON_MAX_GAS_PRICE || '500000000000', 10),
+        },
+        mintBalance: {
+          warningLimit: parseInt(process.env.POLYGON_BALANCE_WARN || '0.005', 10),
+          errorLimit: parseInt(process.env.POLYGON_BALANCE_ERROR || '0.0005', 10),
         },
       },
       avax: {
@@ -98,11 +106,11 @@ const settings: Settings = {
           minGasPrice: parseInt(process.env.AVALANCHE_MIN_GAS_PRICE || '25000000000', 10),
           maxGasPrice: parseInt(process.env.AVALANCHE_MAX_GAS_PRICE || '250000000000', 10),
         },
+        mintBalance: {
+          warningLimit: parseInt(process.env.AVALANCHE_BALANCE_WARN || '0.005', 10),
+          errorLimit: parseInt(process.env.AVALANCHE_BALANCE_ERROR || '0.0005', 10),
+        },
       },
-    },
-    mintBalance: {
-      warningLimit: parseInt(process.env.BALANCE_WARN || '0.005', 10),
-      errorLimit: parseInt(process.env.BALANCE_ERROR || '0.0005', 10),
     },
   },
   auth: {

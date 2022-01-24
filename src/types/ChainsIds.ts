@@ -5,4 +5,6 @@ export enum ChainsIds {
   POLYGON = 'polygon',
 }
 
+export type TForeignChainsIds = ChainsIds.AVALANCHE | ChainsIds.ETH | ChainsIds.POLYGON;
+
 export const ForeignChainsIds = [ChainsIds.AVALANCHE, ChainsIds.ETH, ChainsIds.POLYGON];

@@ -13,10 +13,10 @@ import { IFCD } from '../models/FCD';
 import { FCDRepository } from '../repositories/FCDRepository';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import Settings from '../types/Settings';
-import { BigNumber } from 'ethers';
+import { TForeignChainsIds } from '../types/ChainsIds';
 
 export type ForeignChainReplicatorProps = {
-  foreignChainId: string;
+  foreignChainId: TForeignChainsIds;
 };
 
 @injectable()
@@ -105,19 +105,17 @@ export class ForeignChainReplicator {
     return foreignBlocks;
   };
 
-  private checkBalanceIsEnough = async (chainId: string): Promise<void> => {
+  private checkBalanceIsEnough = async (chainId: TForeignChainsIds): Promise<void> => {
     const blockchain = this.blockchainRepository.get(chainId);
     const balance = await blockchain.wallet.getBalance();
 
-    const { errorLimit, warningLimit } = this.settings.blockchain.mintBalance;
+    const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].mintBalance;
 
-    this.logger.info(`Wallet address: ${blockchain.wallet.address} - Wallet balance: ${balance}`);
-
-    if (balance.lt(BigNumber.from(errorLimit))) {
+    if (balance.lt(1e18 * errorLimit)) {
       throw new Error(`Balance is lower than ${errorLimit}`);
     }
 
-    if (balance.lt(BigNumber.from(warningLimit))) {
+    if (balance.lt(1e18 * warningLimit)) {
       this.logger.warn(`Balance is lower than ${warningLimit}`);
     }
   };
