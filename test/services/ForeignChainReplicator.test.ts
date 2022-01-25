@@ -30,73 +30,141 @@ describe('ForeignChainReplicator', () => {
   let ethereumBlockReplicator: StubbedInstance<EthereumBlockReplicator>;
   let polygonBlockReplicator: StubbedInstance<PolygonBlockReplicator>;
   let foreignChainStatus: SinonStub;
+  let wallet: Wallet;
   let replicationStatus: ReplicationStatus;
   let block: StubbedInstance<IBlock>;
   let foreignBlock: StubbedInstance<IForeignBlock>;
   let blockchainRepository: StubbedInstance<BlockchainRepository>;
   let provider: StubbedInstance<ethers.providers.Provider>;
 
-  before(async () => {
-    container = getTestContainer();
-    foreignBlockFactory = stubConstructor(ForeignBlockFactory);
-    avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
-    ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
-    polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
-    blockchainRepository = createStubInstance(BlockchainRepository);
-    provider = createStubInstance(ethers.providers.Provider);
-
-    const wallet = Wallet.createRandom();
-    sinon.stub(wallet, 'getBalance').resolves(BigNumber.from(10));
-
-    blockchainRepository.get.returns({
-      chainId: 'ethereum',
-      isHomeChain: false,
-      wallet,
-      getProvider: sinon.spy(),
-      getLastNonce: sinon.spy(),
-      getBlockNumber: sinon.spy(),
-      balanceOf: sinon.spy(),
-      getContractRegistryAddress: sinon.spy(),
-      settings: {} as BlockchainSettings,
-      provider: provider,
-    });
-
-    container.bind(AvalancheBlockReplicator).toConstantValue(avalancheBlockReplicator);
-    container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
-    container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
-    container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
-    container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
-
-    foreignChainStatus = sinon.stub();
-    avalancheBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
-    ethereumBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
-    polygonBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
-    block = stubConstructor(Block);
-    avalancheBlockReplicator.resolvePendingBlocks.resolves([block]);
-    ethereumBlockReplicator.resolvePendingBlocks.resolves([block]);
-    polygonBlockReplicator.resolvePendingBlocks.resolves([block]);
-    replicationStatus = { blocks: [block], anchors: [1], fcds: [{ keys: [], values: [] }] };
-    avalancheBlockReplicator.replicate.resolves(replicationStatus);
-    ethereumBlockReplicator.replicate.resolves(replicationStatus);
-    polygonBlockReplicator.replicate.resolves(replicationStatus);
-
-    foreignBlock = stubObject<IForeignBlock>(new ForeignBlock(mockForeignBlockFactory.attributes()));
-    foreignBlock.save.resolves();
-    foreignBlockFactory.fromBlock.returns(foreignBlock);
-
-    instance = container.get(ForeignChainReplicator);
-  });
-
   after(() => {
     sinon.restore();
   });
 
   describe('#apply', async () => {
-    ForeignChainsIds.forEach((foreignChainId: TForeignChainsIds) => {
-      it(`replicates blocks for ${foreignChainId}`, async () => {
-        const result = <IForeignBlock[]>await subject(foreignChainId);
-        expect(result.length).to.eq(1);
-        expect(result[0]).to.eq(foreignBlock);
+    describe('when balance is enough', () => {
+      before(async () => {
+        container = getTestContainer();
+        foreignBlockFactory = stubConstructor(ForeignBlockFactory);
+        avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
+        ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
+        polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
+        blockchainRepository = createStubInstance(BlockchainRepository);
+        provider = createStubInstance(ethers.providers.Provider);
+        wallet = Wallet.createRandom();
+        sinon.stub(wallet, 'getBalance').resolves(BigNumber.from(10));
+
+        blockchainRepository.get.returns({
+          chainId: 'ethereum',
+          isHomeChain: false,
+          wallet,
+          getProvider: sinon.spy(),
+          getLastNonce: sinon.spy(),
+          getBlockNumber: sinon.spy(),
+          balanceOf: sinon.spy(),
+          getContractRegistryAddress: sinon.spy(),
+          settings: {} as BlockchainSettings,
+          provider: provider,
+        });
+
+        container.bind(AvalancheBlockReplicator).toConstantValue(avalancheBlockReplicator);
+        container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
+        container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
+        container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
+        container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
+
+        foreignChainStatus = sinon.stub();
+        avalancheBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
+        ethereumBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
+        polygonBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
+        block = stubConstructor(Block);
+        avalancheBlockReplicator.resolvePendingBlocks.resolves([block]);
+        ethereumBlockReplicator.resolvePendingBlocks.resolves([block]);
+        polygonBlockReplicator.resolvePendingBlocks.resolves([block]);
+        replicationStatus = { blocks: [block], anchors: [1], fcds: [{ keys: [], values: [] }] };
+        avalancheBlockReplicator.replicate.resolves(replicationStatus);
+        ethereumBlockReplicator.replicate.resolves(replicationStatus);
+        polygonBlockReplicator.replicate.resolves(replicationStatus);
+
+        foreignBlock = stubObject<IForeignBlock>(new ForeignBlock(mockForeignBlockFactory.attributes()));
+        foreignBlock.save.resolves();
+        foreignBlockFactory.fromBlock.returns(foreignBlock);
+
+        instance = container.get(ForeignChainReplicator);
+      });
+
+      after(() => {
+        sinon.restore();
+      });
+      ForeignChainsIds.forEach((foreignChainId: TForeignChainsIds) => {
+        it(`replicates blocks for ${foreignChainId}`, async () => {
+          const result = <IForeignBlock[]>await subject(foreignChainId);
+          expect(result.length).to.eq(1);
+          expect(result[0]).to.eq(foreignBlock);
+        });
+      });
+    });
+
+    describe('when balance is not enough', () => {
+      before(async () => {
+        container = getTestContainer();
+        foreignBlockFactory = stubConstructor(ForeignBlockFactory);
+        avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
+        ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
+        polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
+        blockchainRepository = createStubInstance(BlockchainRepository);
+        provider = createStubInstance(ethers.providers.Provider);
+
+        wallet = Wallet.createRandom();
+        sinon.stub(wallet, 'getBalance').resolves(BigNumber.from(-10));
+
+        blockchainRepository.get.returns({
+          chainId: 'ethereum',
+          isHomeChain: false,
+          wallet,
+          getProvider: sinon.spy(),
+          getLastNonce: sinon.spy(),
+          getBlockNumber: sinon.spy(),
+          balanceOf: sinon.spy(),
+          getContractRegistryAddress: sinon.spy(),
+          settings: {} as BlockchainSettings,
+          provider: provider,
+        });
+
+        container.bind(AvalancheBlockReplicator).toConstantValue(avalancheBlockReplicator);
+        container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
+        container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
+        container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
+        container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
+
+        foreignChainStatus = sinon.stub();
+        avalancheBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
+        ethereumBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
+        polygonBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
+        block = stubConstructor(Block);
+        avalancheBlockReplicator.resolvePendingBlocks.resolves([block]);
+        ethereumBlockReplicator.resolvePendingBlocks.resolves([block]);
+        polygonBlockReplicator.resolvePendingBlocks.resolves([block]);
+        replicationStatus = { blocks: [block], anchors: [1], fcds: [{ keys: [], values: [] }] };
+        avalancheBlockReplicator.replicate.resolves(replicationStatus);
+        ethereumBlockReplicator.replicate.resolves(replicationStatus);
+        polygonBlockReplicator.replicate.resolves(replicationStatus);
+
+        foreignBlock = stubObject<IForeignBlock>(new ForeignBlock(mockForeignBlockFactory.attributes()));
+        foreignBlock.save.resolves();
+        foreignBlockFactory.fromBlock.returns(foreignBlock);
+
+        instance = container.get(ForeignChainReplicator);
+      });
+
+      after(() => {
+        sinon.restore();
+      });
+      ForeignChainsIds.forEach((foreignChainId: TForeignChainsIds) => {
+        it(`should not replicates blocks for ${foreignChainId}`, async () => {
+          const result = <IForeignBlock[]>await subject(foreignChainId);
+          expect(result).to.eq(undefined);
+        });
       });
     });
   });
