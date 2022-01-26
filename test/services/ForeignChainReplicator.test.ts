@@ -18,8 +18,9 @@ import { expect } from 'chai';
 import { foreignBlockFactory as mockForeignBlockFactory } from '../mocks/factories/foreignBlockFactory';
 import { ForeignChainsIds, TForeignChainsIds } from '../../src/types/ChainsIds';
 import { BlockchainRepository } from '../../src/repositories/BlockchainRepository';
-import { BigNumber, ethers, Wallet } from 'ethers';
+import { ethers, Wallet } from 'ethers';
 import { BlockchainSettings } from '../../src/types/Settings';
+import { parseEther } from 'ethers/lib/utils';
 
 describe('ForeignChainReplicator', () => {
   let container: Container;
@@ -52,7 +53,7 @@ describe('ForeignChainReplicator', () => {
         blockchainRepository = createStubInstance(BlockchainRepository);
         provider = createStubInstance(ethers.providers.Provider);
         wallet = Wallet.createRandom();
-        sinon.stub(wallet, 'getBalance').resolves(BigNumber.from(10));
+        sinon.stub(wallet, 'getBalance').resolves(parseEther('1'));
 
         blockchainRepository.get.returns({
           chainId: 'ethereum',
@@ -116,7 +117,7 @@ describe('ForeignChainReplicator', () => {
         provider = createStubInstance(ethers.providers.Provider);
 
         wallet = Wallet.createRandom();
-        sinon.stub(wallet, 'getBalance').resolves(BigNumber.from(-10));
+        sinon.stub(wallet, 'getBalance').resolves(parseEther('0.01'));
 
         blockchainRepository.get.returns({
           chainId: 'ethereum',

@@ -9,8 +9,8 @@ export type BlockchainSettings = {
     minGasPrice: number;
     maxGasPrice: number;
     mintBalance?: {
-      warningLimit: number;
-      errorLimit: number;
+      warningLimit: string;
+      errorLimit: string;
     };
   };
 };

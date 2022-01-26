@@ -14,6 +14,7 @@ import { FCDRepository } from '../repositories/FCDRepository';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import Settings from '../types/Settings';
 import { TForeignChainsIds } from '../types/ChainsIds';
+import { parseEther } from 'ethers/lib/utils';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: TForeignChainsIds;
@@ -111,11 +112,11 @@ export class ForeignChainReplicator {
 
     const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].transactions.mintBalance;
 
-    if (balance.lt(1e18 * errorLimit)) {
+    if (balance.lt(parseEther(errorLimit))) {
       throw new Error(`Balance is lower than ${errorLimit}`);
     }
 
-    if (balance.lt(1e18 * warningLimit)) {
+    if (balance.lt(parseEther(warningLimit))) {
       this.logger.warn(`Balance is lower than ${warningLimit}`);
     }
   };
