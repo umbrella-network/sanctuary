@@ -97,6 +97,7 @@ describe('ForeignChainReplicator', () => {
       after(() => {
         sinon.restore();
       });
+
       ForeignChainsIds.forEach((foreignChainId: TForeignChainsIds) => {
         it(`replicates blocks for ${foreignChainId}`, async () => {
           const result = <IForeignBlock[]>await subject(foreignChainId);
@@ -161,6 +162,7 @@ describe('ForeignChainReplicator', () => {
       after(() => {
         sinon.restore();
       });
+
       ForeignChainsIds.forEach((foreignChainId: TForeignChainsIds) => {
         it(`should not replicates blocks for ${foreignChainId}`, async () => {
           const result = <IForeignBlock[]>await subject(foreignChainId);
