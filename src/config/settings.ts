@@ -81,7 +81,7 @@ const settings: Settings = {
       },
       polygon: {
         startBlockNumber: parseInt(process.env.POLYGON_START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        scanBatchSize: Math.max(3500, parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '3500', 10)),
         confirmations: parseInt(process.env.POLYGON_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.POLYGON_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
