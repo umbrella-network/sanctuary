@@ -99,7 +99,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     if (!lastForeignBlock || lastForeignBlock.blockId !== status.lastId) {
       // in theory this can happen if we submit block but mongo will not be able to save it
-      this.logger.error(`[${this.chainId}] Houston we have a problem: block ${status.lastId} is not present in DB`);
+      this.logger.error(
+        `[${this.chainId}] Houston we have a problem: block ${status.lastId} is not present in DB, last blockId is: ${lastForeignBlock?.blockId}`
+      );
     }
 
     return blocks;
