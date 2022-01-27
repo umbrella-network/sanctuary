@@ -11,9 +11,13 @@ import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IForeignBlock } from '../models/ForeignBlock';
 import { IFCD } from '../models/FCD';
 import { FCDRepository } from '../repositories/FCDRepository';
+import { BlockchainRepository } from '../repositories/BlockchainRepository';
+import Settings from '../types/Settings';
+import { TForeignChainsIds } from '../types/ChainsIds';
+import { parseEther } from 'ethers/lib/utils';
 
 export type ForeignChainReplicatorProps = {
-  foreignChainId: string;
+  foreignChainId: TForeignChainsIds;
 };
 
 @injectable()
@@ -22,6 +26,8 @@ export class ForeignChainReplicator {
   @inject('Logger') logger!: Logger;
   @inject(ForeignBlockFactory) foreignBlockFactory!: ForeignBlockFactory;
   @inject(FCDRepository) fcdRepository!: FCDRepository;
+  @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
+  @inject('Settings') private readonly settings: Settings;
 
   constructor(
     @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
@@ -40,6 +46,10 @@ export class ForeignChainReplicator {
     this.logger.info(`[${foreignChainId}] Foreign Chain Block Replication initiated`);
 
     try {
+      const { foreignChainId } = props;
+
+      await this.checkBalanceIsEnough(foreignChainId);
+
       const replicator = this.replicators[foreignChainId];
       const foreignChainStatus = await replicator.getStatus();
       const blocks = await replicator.resolvePendingBlocks(foreignChainStatus, new Date());
@@ -98,5 +108,20 @@ export class ForeignChainReplicator {
     }
 
     return foreignBlocks;
+  };
+
+  private checkBalanceIsEnough = async (chainId: TForeignChainsIds): Promise<void> => {
+    const blockchain = this.blockchainRepository.get(chainId);
+    const balance = await blockchain.wallet.getBalance();
+
+    const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].transactions.mintBalance;
+
+    if (balance.lt(parseEther(errorLimit))) {
+      throw new Error(`Balance is lower than ${errorLimit}`);
+    }
+
+    if (balance.lt(parseEther(warningLimit))) {
+      this.logger.warn(`Balance is lower than ${warningLimit}`);
+    }
   };
 }
