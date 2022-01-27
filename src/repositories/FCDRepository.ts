@@ -34,7 +34,7 @@ export class FCDRepository {
     const keys: string[] = [];
     const values: FeedValue[] = [];
 
-    // NOTE: FCDs must be from the same time that block, because we cloning ste state
+    // NOTE: FCDs must be from the same time that block, because we're cloning the state
     const homeFcdKeys = await FCD.find({
       chainId: this.settings.blockchain.homeChain.chainId,
       // we are waiting for confirmations,

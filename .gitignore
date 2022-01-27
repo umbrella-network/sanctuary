@@ -2,7 +2,7 @@ tmp
 dist
 node_modules
 newrelic_agent.log
-tmp
+dev-ops/
 .idea
 *.env*
 !example.env
@@ -11,4 +11,4 @@ tmp
 .cache
 yarn-error.log
 .vscode
-package-lock.json
+
