@@ -26,6 +26,7 @@ export class ForeignChainReplicationWorker extends SingletonWorker {
       await this.replicator.apply({ foreignChainId });
       this.logger.info(`[${foreignChainId}] Foreign Chain Block Replication Complete`);
     } catch (e) {
+      e.message = `[${foreignChainId}] ${e.message}`;
       this.logger.error(e);
       throw e;
     }
