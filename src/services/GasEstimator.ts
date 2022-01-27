@@ -54,7 +54,7 @@ export class GasEstimator {
     const { gasPrice, maxPriorityFeePerGas, maxFeePerGas, min, max, avg, isTxType2, baseFeePerGas } = metrics;
 
     return (
-      `isTxType2: ${isTxType2 ? 'yes' : 'no'} Gwei, ` +
+      `isTxType2: ${isTxType2 ? 'yes' : 'no'}, ` +
       `gasPrice: ${GasEstimator.formatGwei(gasPrice)} Gwei, ` +
       `baseFeePerGas: ${GasEstimator.formatGwei(baseFeePerGas)} Gwei, ` +
       `maxPriorityFee: ${maxPriorityFeePerGas ? GasEstimator.formatGwei(maxPriorityFeePerGas) : '-'} Gwei, ` +
@@ -77,7 +77,7 @@ export class GasEstimator {
         return;
       }
 
-      // gasPrice can se string or BN
+      // gasPrice can be string or BN
       const gas = BigNumber.from(gasPrice).toNumber();
       prices.push(gas);
       sum += gas;
@@ -109,7 +109,9 @@ export class GasEstimator {
   }
 
   private static estimate = (params: EstimateParams): GasEstimation => {
-    const minPrice = Math.min(Math.max(params.metrics.baseFeePerGas, params.minGasPrice), params.maxGasPrice);
+    // there was a case on Polygon, where provider returns invalid `baseFeePerGas` but `currentGasPrice` was fine
+    const baseFeePerGas = Math.max(params.currentGasPrice, params.metrics.baseFeePerGas);
+    const minPrice = Math.min(Math.max(baseFeePerGas, params.minGasPrice), params.maxGasPrice);
 
     if (params.prices.length < 2) {
       return GasEstimator.makeGasEstimation(minPrice, params);
