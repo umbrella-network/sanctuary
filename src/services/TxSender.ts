@@ -1,8 +1,8 @@
 // TODO move this class to SDK and reuse in Pegasus and Sanctuary
 import { Wallet } from 'ethers';
-import { GasEstimator, GasEstimation } from './GasEstimator';
 import { TransactionResponse, TransactionReceipt } from '@ethersproject/providers';
-import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
+import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts';
+import { GasEstimator, GasEstimation } from './GasEstimator';
 
 interface ILogger {
   info(msg: string, meta?: Record<string, unknown>): void;
@@ -34,7 +34,7 @@ export class TxSender {
     fn: (tr: TransactionRequest) => Promise<TransactionResponse>,
     minGasPrice: number,
     maxGasPrice: number,
-    timePadding: number,
+    timeoutSec: number,
     transactionRequest: TransactionRequest = {}
   ): Promise<TransactionReceipt> => {
     const gasEstimation = await GasEstimator.apply(this.wallet.provider, minGasPrice, maxGasPrice);
@@ -48,13 +48,13 @@ export class TxSender {
 
     this.logger.info(`[${this.chainId}] submitting tx, gas metrics: ${GasEstimator.printable(gasEstimation)}`);
 
-    const { tx, receipt, timeoutMs } = await this.executeTx(fn, { ...gas, ...transactionRequest }, timePadding * 1000);
+    const { tx, receipt, timeoutMs } = await this.executeTx(fn, { ...gas, ...transactionRequest }, timeoutSec * 1000);
 
     if (!receipt) {
       this.logger.warn(`[${this.chainId}] canceling tx ${tx.hash}`);
       const newGasMetrics = await GasEstimator.apply(this.wallet.provider, minGasPrice, maxGasPrice);
 
-      await this.cancelPendingTransaction(gasEstimation.gasPrice, timePadding, newGasMetrics).catch(this.logger.warn);
+      await this.cancelPendingTransaction(gasEstimation.gasPrice, timeoutSec, newGasMetrics).catch(this.logger.warn);
 
       throw new Error(`[${this.chainId}] mint TX timeout: ${timeoutMs}ms`);
     }
@@ -67,20 +67,47 @@ export class TxSender {
     timePadding: number,
     gasEstimation: GasEstimation
   ): Promise<boolean> => {
+    const { isTxType2 } = gasEstimation;
+    const higherGasPrice = Math.max(gasEstimation.gasPrice, prevGasPrice) * 2;
+
     const txData = <TransactionRequest>{
       from: this.wallet.address,
       to: this.wallet.address,
       value: 0n,
       nonce: await this.wallet.getTransactionCount('latest'),
       gasLimit: 21000,
-      gasPrice: Math.max(gasEstimation.gasPrice, prevGasPrice) * 2,
+      gasPrice: isTxType2 ? undefined : higherGasPrice,
+      maxPriorityFeePerGas: isTxType2 ? gasEstimation.maxPriorityFeePerGas * 1.5 : undefined,
+      maxFeePerGas: isTxType2 ? higherGasPrice : undefined,
     };
 
-    this.logger.warn(`[${this.chainId}] sending canceling tx`, { nonce: txData.nonce, gasPrice: txData.gasPrice });
+    this.logger.warn(`[${this.chainId}] sending canceling tx, nonce: ${txData.nonce}, gasPrice: ${higherGasPrice}`);
 
     const fn = (tr: TransactionRequest) => this.wallet.sendTransaction(tr);
 
-    const { tx, receipt } = await this.executeTx(fn, txData, timePadding * 1000);
+    let tx, receipt;
+
+    try {
+      ({ tx, receipt } = await this.executeTx(fn, txData, timePadding * 1000));
+    } catch (e) {
+      if (e.message.includes('replacement fee too low')) {
+        const evenHigherGasPrice = higherGasPrice * 2;
+
+        const newTxData = <TransactionRequest>{
+          ...txData,
+          gasPrice: isTxType2 ? undefined : evenHigherGasPrice,
+          maxFeePerGas: isTxType2 ? evenHigherGasPrice : undefined,
+        };
+
+        this.logger.warn(
+          `[${this.chainId}] re-sending canceling tx, nonce: ${txData.nonce}, gasPrice: ${evenHigherGasPrice}`
+        );
+
+        ({ tx, receipt } = await this.executeTx(fn, newTxData, timePadding * 1000));
+      } else {
+        throw e;
+      }
+    }
 
     if (!receipt || receipt.status !== 1) {
       this.logger.warn(`[${this.chainId}] canceling tx ${tx.hash}: filed or still pending`);

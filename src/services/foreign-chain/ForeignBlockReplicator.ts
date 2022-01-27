@@ -99,7 +99,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     if (!lastForeignBlock || lastForeignBlock.blockId !== status.lastId) {
       // in theory this can happen if we submit block but mongo will not be able to save it
-      this.logger.error(`[${this.chainId}] Houston we have a problem: block ${status.lastId} is not present in DB`);
+      this.logger.error(
+        `[${this.chainId}] Houston we have a problem: block ${status.lastId} is not present in DB, last blockId is: ${lastForeignBlock?.blockId}`
+      );
     }
 
     return blocks;
@@ -245,8 +247,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       );
 
     const { minGasPrice, maxGasPrice } = this.blockchain.settings.transactions;
-    const transaction = (tr: TransactionRequest) =>
-      this.txSender.apply(fn, minGasPrice, maxGasPrice, chainStatus.timePadding, tr);
+
+    const timeoutSec = chainStatus.timePadding * 1.5;
+    const transaction = (tr: TransactionRequest) => this.txSender.apply(fn, minGasPrice, maxGasPrice, timeoutSec, tr);
 
     try {
       try {

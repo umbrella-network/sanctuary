@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Check if balance is enough before execute replicate blocks
 
+## [4.7.4] - 2022-01-27
+### Added
+- support for EIP-1559 for canceling tx
+
+### Changed
+- increase timeout for tx (because of Polygon)
+- detect if gasPrice is too low on tx replacement and increase it
+
+## [4.7.3] - 2022-01-27
+### Added
+- include `package-lock.json`
+
+### Fixed
+- fix gas estimation, when provider returns invalid `baseFeePerGas` (it was a case for Polygon)
+
 ## [4.7.2] - 2022-01-26
 ### Fixed
 - max scan range for infura-polygon is 3,5K
