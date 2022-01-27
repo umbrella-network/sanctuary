@@ -3,6 +3,7 @@ import Bull from 'bullmq';
 import { ForeignChainReplicator } from '../services/ForeignChainReplicator';
 import { SingletonWorker } from './SingletonWorker';
 import ChainSynchronizer from '../services/ChainSynchronizer';
+import { TForeignChainsIds } from '../types/ChainsIds';
 
 @injectable()
 export class ForeignChainReplicationWorker extends SingletonWorker {
@@ -12,13 +13,13 @@ export class ForeignChainReplicationWorker extends SingletonWorker {
   apply = async (job: Bull.Job): Promise<void> => {
     const interval = parseInt(job.data.interval);
     const lockTTL = parseInt(job.data.lockTTL);
-    const foreignChainId = job.data.foreignChainId as string;
+    const foreignChainId = job.data.foreignChainId as TForeignChainsIds;
     if (this.isStale(job, interval)) return;
 
     await this.synchronizeWork(foreignChainId, lockTTL, async () => this.execute(foreignChainId));
   };
 
-  private execute = async (foreignChainId: string): Promise<void> => {
+  private execute = async (foreignChainId: TForeignChainsIds): Promise<void> => {
     try {
       this.logger.info(`[${foreignChainId}] Starting Foreign Chain Block Synchronization`);
       // this is in sequence on purpose - if we can't synchronise chain we should not synchronise blocks
