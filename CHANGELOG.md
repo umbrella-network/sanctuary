@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Added
+
+## [4.7.6] - 2022-01-27
 - Check if balance is enough before execute replicate blocks
 
 ## [4.7.5] - 2022-01-27
