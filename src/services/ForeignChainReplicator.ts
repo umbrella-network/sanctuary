@@ -42,6 +42,9 @@ export class ForeignChainReplicator {
   }
 
   async apply(props: ForeignChainReplicatorProps): Promise<IForeignBlock[] | undefined> {
+    const { foreignChainId } = props;
+    this.logger.info(`[${foreignChainId}] Foreign Chain Block Replication initiated`);
+
     try {
       const { foreignChainId } = props;
 
@@ -53,6 +56,7 @@ export class ForeignChainReplicator {
       const replicationStatus = await replicator.replicate(blocks, foreignChainStatus);
       return await this.commit(replicationStatus, foreignChainId, foreignChainStatus.chainAddress);
     } catch (e) {
+      e.message = `[${foreignChainId}] ${e.message}`;
       this.logger.error(e);
       return;
     }

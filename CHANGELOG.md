@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Check if balance is enough before execute replicate blocks
 
+## [4.7.5] - 2022-01-27
+### Added
+- better logs to see for which blockchain we're throwing errors
+
 ## [4.7.4] - 2022-01-27
 ### Added
 - support for EIP-1559 for canceling tx
