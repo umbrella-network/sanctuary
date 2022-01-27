@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Check if balance is enough before execute replicate blocks
 
+## [4.7.6] - 2022-01-27
+### Fixed
+- fix how we're calculating `maxPriorityFee`, 
+  gas provider did not return real amount, so we estimating it base on last block
+
 ## [4.7.5] - 2022-01-27
 ### Added
 - better logs to see for which blockchain we're throwing errors
