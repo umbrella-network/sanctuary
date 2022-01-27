@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.7.6] - 2022-01-27
+### Fixed
+- fix how we're calculating `maxPriorityFee`, 
+  gas provider did not return real amount, so we estimating it base on last block
+
 ## [4.7.5] - 2022-01-27
 ### Added
 - better logs to see for which blockchain we're throwing errors

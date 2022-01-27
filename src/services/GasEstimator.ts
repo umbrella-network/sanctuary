@@ -24,6 +24,7 @@ type EstimateParams = {
   maxGasPrice: number;
   metrics: GasEstimation;
   prices: number[];
+  maxPriorityFees: number[];
 };
 
 export class GasEstimator {
@@ -38,7 +39,7 @@ export class GasEstimator {
       provider.getFeeData(),
     ]);
 
-    const [metrics, prices] = GasEstimator.gasMetricsForBlock(block);
+    const [metrics, prices, maxPriorityFees] = GasEstimator.gasMetricsForBlock(block);
 
     return GasEstimator.estimate({
       currentGasPrice: currentGasPrice.toNumber(),
@@ -47,6 +48,7 @@ export class GasEstimator {
       prices,
       minGasPrice,
       maxGasPrice,
+      maxPriorityFees,
     });
   }
 
@@ -65,16 +67,25 @@ export class GasEstimator {
     );
   }
 
-  private static gasMetricsForBlock(block: BlockWithTransactions): [gasPriceMetrics: GasEstimation, prices: number[]] {
+  private static gasMetricsForBlock(
+    block: BlockWithTransactions
+  ): [gasPriceMetrics: GasEstimation, prices: number[], maxPriorityFees: number[]] {
     const isTxType2 = !!block.baseFeePerGas;
     let min = Number.MAX_VALUE;
     let max = 0;
     let sum = 0;
     const prices: number[] = [];
+    const fees: number[] = [];
 
-    block.transactions.forEach(({ gasPrice }) => {
+    block.transactions.forEach((tx) => {
+      const { gasPrice, maxPriorityFeePerGas } = tx;
+
       if (!gasPrice) {
         return;
+      }
+
+      if (maxPriorityFeePerGas) {
+        fees.push(maxPriorityFeePerGas.toNumber());
       }
 
       // gasPrice can be string or BN
@@ -92,7 +103,7 @@ export class GasEstimator {
     });
 
     if (!prices.length) {
-      return [{ min: 0, max: 0, avg: 0, baseFeePerGas: 0, gasPrice: 0, isTxType2 }, []];
+      return [{ min: 0, max: 0, avg: 0, baseFeePerGas: 0, gasPrice: 0, isTxType2 }, [], []];
     }
 
     return [
@@ -105,13 +116,12 @@ export class GasEstimator {
         baseFeePerGas: block.baseFeePerGas?.toNumber() || 0,
       },
       prices,
+      fees,
     ];
   }
 
   private static estimate = (params: EstimateParams): GasEstimation => {
-    // there was a case on Polygon, where provider returns invalid `baseFeePerGas` but `currentGasPrice` was fine
-    const baseFeePerGas = Math.max(params.currentGasPrice, params.metrics.baseFeePerGas);
-    const minPrice = Math.min(Math.max(baseFeePerGas, params.minGasPrice), params.maxGasPrice);
+    const minPrice = Math.min(Math.max(params.metrics.baseFeePerGas, params.minGasPrice), params.maxGasPrice);
 
     if (params.prices.length < 2) {
       return GasEstimator.makeGasEstimation(minPrice, params);
@@ -147,7 +157,10 @@ export class GasEstimator {
 
   private static makeGasEstimation(gasPrice: number, params: EstimateParams): GasEstimation {
     const { isTxType2 } = params.metrics;
-    const maxPriorityFeePerGas = isTxType2 ? GasEstimator.calcMaxPriorityFeePerGas(params.feeData) : undefined;
+
+    const maxPriorityFeePerGas = isTxType2
+      ? GasEstimator.calcMaxPriorityFeePerGas(params.maxPriorityFees, params.feeData)
+      : undefined;
 
     return {
       ...params.metrics,
@@ -164,8 +177,23 @@ export class GasEstimator {
   private static calcMaxFeePerGas = (baseFee: number, maxPriorityFee: number, maxGasPrice: number): number =>
     Math.min(maxGasPrice, 2 * baseFee + maxPriorityFee);
 
-  private static calcMaxPriorityFeePerGas = (feeData: FeeData): number => {
-    return (feeData.maxPriorityFeePerGas?.toNumber() || 0) * 1.1;
+  private static calcMaxPriorityFeePerGas = (fees: number[], feeData: FeeData): number => {
+    const minFee = feeData.maxPriorityFeePerGas ? feeData.maxPriorityFeePerGas.toNumber() : 2.5;
+    const sortedFees = fees.sort(); // from lower -> higher
+
+    const bottomFees = sortedFees
+      .slice(0, Math.ceil((sortedFees.length - 1) * 0.8)) // ignore top % of higher prices
+      .filter((p) => p >= minFee); // ignore prices lower than our minimum
+
+    let sum = 0;
+
+    bottomFees.forEach((p) => {
+      sum += p;
+    });
+
+    const avg = sum / bottomFees.length;
+    const estimatedFee = bottomFees.filter((p) => p < avg).pop(); // get price that is in a middle
+    return Math.ceil(estimatedFee);
   };
 
   private static formatGwei = (wei: number): number => Math.round((wei / 1e9) * 1e4) / 1e4;
