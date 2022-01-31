@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import { MetricsRepository } from '../repositories/MetricsRepository';
-import { setDateToZeroTime } from '../utils/time';
+import { setToMidnight } from '../utils/time';
 import isValid from 'date-fns/isValid';
 
 @injectable()
@@ -11,21 +11,19 @@ class MetricsController {
   router: express.Router;
 
   constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
-    this.router = express
-      .Router()
-      .use(authenticationMiddleware.apply)
-      .get('/voters/:startDate&:endDate', this.getVotersCount);
+    this.router = express.Router().use(authenticationMiddleware.apply).get('/voters', this.getVotersCount);
   }
 
   getVotersCount = async (request: Request, response: Response): Promise<void> => {
-    const { startDate, endDate } = request.params;
+    const { startDate, endDate } = <{ startDate: string; endDate: string }>request.query;
 
     if (!isValid(new Date(startDate)) || !isValid(new Date(endDate))) {
       response.status(400).end();
+      return;
     }
 
-    const startDateFormat = setDateToZeroTime(new Date(startDate));
-    const endDateFormat = setDateToZeroTime(new Date(endDate));
+    const startDateFormat = setToMidnight(new Date(startDate));
+    const endDateFormat = setToMidnight(new Date(endDate));
 
     const votersCount = await this.metricsRepository.getVotersCount({
       startDate: startDateFormat,

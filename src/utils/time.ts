@@ -15,10 +15,12 @@ export const removeMillisecondsFromIsoDate = (date: Date): string => {
   return `${date.toISOString().slice(0, -5)}Z`;
 };
 
-export const setDateToZeroTime = (day: Date): Date => {
-  day.setUTCHours(0);
-  day.setUTCMinutes(0);
-  day.setUTCSeconds(0);
+export const setToMidnight = (day: Date): Date => {
+  const date = new Date(day);
 
-  return day;
+  date.setUTCHours(0);
+  date.setUTCMinutes(0);
+  date.setUTCSeconds(0);
+
+  return date;
 };

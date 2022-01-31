@@ -297,9 +297,9 @@
         }
       }
     },
-    "/metrics/voters/startDate={startDate}&endDate={endDate}": {
+    "/metrics/voters?startDate={startDate}&endDate={endDate}": {
       "get": {
-        "summary": "Returns the number of times each voters",
+        "summary": "Returns each voters vote count of given time interval",
         "tags": ["metrics"],
         "security": [
           {
