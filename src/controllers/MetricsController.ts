@@ -22,8 +22,8 @@ class MetricsController {
       return;
     }
 
-    const startDateFormat = setToMidnight(new Date(startDate));
-    const endDateFormat = setToMidnight(new Date(endDate));
+    const startDateFormat = setToMidnight(startDate);
+    const endDateFormat = setToMidnight(endDate);
 
     const votersCount = await this.metricsRepository.getVotersCount({
       startDate: startDateFormat,
