@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import { MetricsRepository } from '../repositories/MetricsRepository';
-import { setToMidnight } from '../utils/time';
+import { getDateAtMidnight } from '../utils/time';
 import isValid from 'date-fns/isValid';
 
 @injectable()
@@ -22,8 +22,8 @@ class MetricsController {
       return;
     }
 
-    const startDateFormat = setToMidnight(startDate);
-    const endDateFormat = setToMidnight(endDate);
+    const startDateFormat = getDateAtMidnight(startDate);
+    const endDateFormat = getDateAtMidnight(endDate);
 
     const votersCount = await this.metricsRepository.getVotersCount({
       startDate: startDateFormat,
