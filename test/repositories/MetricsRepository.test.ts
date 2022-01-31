@@ -22,7 +22,7 @@ describe('MetricsRepository', () => {
     metricsRepository = container.get(MetricsRepository);
   });
 
-  describe('#getLeaves', () => {
+  describe('#getVotersCount', () => {
     it('returns only the voter count', async () => {
       const votersCount = await metricsRepository.getVotersCount({
         startDate: new Date('2021-12-01'),

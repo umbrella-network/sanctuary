@@ -7,7 +7,6 @@ import isValid from 'date-fns/isValid';
 
 @injectable()
 class MetricsController {
-  // @inject(MetricsRepository) metricsRepository!: MetricsRepository;
   @inject(MetricsRepository) metricsRepository!: MetricsRepository;
   router: express.Router;
 
@@ -15,7 +14,7 @@ class MetricsController {
     this.router = express
       .Router()
       .use(authenticationMiddleware.apply)
-      .get('/voters:startDate&:endDate', this.getVotersCount);
+      .get('/voters/:startDate&:endDate', this.getVotersCount);
   }
 
   getVotersCount = async (request: Request, response: Response): Promise<void> => {
@@ -33,7 +32,7 @@ class MetricsController {
       endDate: endDateFormat,
     });
 
-    response.send({ data: votersCount });
+    response.send(votersCount);
   };
 }
 
