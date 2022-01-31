@@ -718,36 +718,6 @@
               "example": "12"
             }
           }
-        },
-        "properties": {
-          "proof": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "hex",
-              "example": "0xca8d98e14e188c03edee74b2f52664bdf6804dbb36828484793f41817f590b78"
-            }
-          },
-          "_id": {
-            "type": "string",
-            "example": "block::169269::leaf::SUSHI-USDT"
-          },
-          "blockId": {
-            "type": "number",
-            "example": "169269"
-          },
-          "key": {
-            "type": "string",
-            "example": "SUSHI-USDT"
-          },
-          "__v": {
-            "type": "number"
-          },
-          "value": {
-            "type": "string",
-            "format": "hex",
-            "example": "0x0000000000000000000000000000000000000000000000005b50db233e120000"
-          }
         }
       },
       "Error": {
