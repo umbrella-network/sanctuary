@@ -310,7 +310,7 @@
           {
             "name": "startDate",
             "in": "query",
-            "description": "The start date of period",
+            "description": "The start date of period. This date is inclusive",
             "required": true,
             "type": "string",
             "example": "2021-12-01"
@@ -318,7 +318,7 @@
           {
             "name": "endDate",
             "in": "query",
-            "description": "The end date of period",
+            "description": "The end date of period. This date is not inclusive.",
             "required": true,
             "type": "string",
             "example": "2022-01-01"
