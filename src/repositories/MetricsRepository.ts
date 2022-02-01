@@ -16,6 +16,7 @@ export class MetricsRepository {
             $gte: startDate,
             $lt: endDate,
           },
+          status: 'finalized',
         },
       },
       {
