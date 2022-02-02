@@ -28,7 +28,7 @@ export class ProjectAuthUtils {
     return apiKeyVerificationResult;
   }
 
-  async verifyRestrictApiKey(request: Request): Promise<{ apiKey?: string; errorMessage?: string }> {
+  verifyRestrictApiKey(request: Request): { apiKey?: string; errorMessage?: string } {
     const {
       headers: { authorization: authorizationHeader },
     } = request;

@@ -47,10 +47,10 @@ export class AuthenticationMiddleware {
     }
   };
 
-  restrictAccess = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
+  restrictAccess = (request: Request, response: Response, next: NextFunction): void => {
     this.checkHeaderAuthorization(request);
 
-    const apiKey = await this.projectAuthenticator.verifyRestrictApiKey(request);
+    const apiKey = this.projectAuthenticator.verifyRestrictApiKey(request);
     if (apiKey?.apiKey) {
       next();
     } else {
