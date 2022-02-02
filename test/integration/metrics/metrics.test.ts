@@ -35,8 +35,12 @@ describe('/metrics', async () => {
   describe('/metrics/voters', async () => {
     describe('GET /metrics/voters', async () => {
       describe('when an invalid bearer token is provided', async () => {
-        it('responds with HTTP 401 Unauthorized', async () => {
+        it('responds with HTTP 401 Unauthorized when no bearer token is given', async () => {
           const res = await request(app).get('/metrics/voters');
+          expect(res.status).to.eq(401);
+        });
+        it('responds with HTTP 401 Unauthorized when no bearer token is wrong', async () => {
+          const res = await request(app).get('/metrics/voters').set('Authorization', 'Bearer 123');
           expect(res.status).to.eq(401);
         });
       });

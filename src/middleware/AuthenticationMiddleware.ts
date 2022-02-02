@@ -54,15 +54,19 @@ export class AuthenticationMiddleware {
     if (apiKey?.apiKey) {
       next();
     } else {
-      this.userAuthenticator(request, response, next);
+      this.thowUnauthorizedError();
     }
   };
 
   private checkHeaderAuthorization = (request: Request) => {
     if (!request.headers.authorization) {
-      const error = new Error();
-      error.name = 'UnauthorizedError';
-      throw error;
+      this.thowUnauthorizedError();
     }
+  };
+
+  private thowUnauthorizedError = (): void => {
+    const error = new Error();
+    error.name = 'UnauthorizedError';
+    throw error;
   };
 }
