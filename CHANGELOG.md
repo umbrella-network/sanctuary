@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Added
 - Create metrics/voters endpoint to get each voters vote count of given time interval
+- Create restrictAccess method in AuthenticationMiddleware
+- Use restrictAccess in metrics routes
 
 ## [4.8.0] - 2022-01-27
 ### Added
