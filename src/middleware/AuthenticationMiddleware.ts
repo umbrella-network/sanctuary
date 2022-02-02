@@ -51,7 +51,6 @@ export class AuthenticationMiddleware {
     this.checkHeaderAuthorization(request);
 
     const apiKey = await this.projectAuthenticator.verifyRestrictApiKey(request);
-    console.log('******', apiKey);
     if (apiKey?.apiKey) {
       next();
     } else {
