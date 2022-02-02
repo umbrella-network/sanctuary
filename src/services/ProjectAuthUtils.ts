@@ -33,10 +33,6 @@ export class ProjectAuthUtils {
       headers: { authorization: authorizationHeader },
     } = request;
 
-    if (!authorizationHeader) {
-      return { errorMessage: 'No authorization header' };
-    }
-
     const apiKey = authorizationHeader.replace('Bearer ', '');
 
     if (apiKey !== this.settings.api.restrict.apiKey) {
