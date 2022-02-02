@@ -14,7 +14,7 @@ class MetricsController {
     this.router = express.Router().use(authenticationMiddleware.apply).get('/voters', this.getVotersCount);
   }
 
-  getVotersCount = async (request: Request, response: Response): Promise<void> => {
+  private getVotersCount = async (request: Request, response: Response): Promise<void> => {
     const { startDate, endDate } = <{ startDate: string; endDate: string }>request.query;
 
     if (!isValid(new Date(startDate)) || !isValid(new Date(endDate))) {
