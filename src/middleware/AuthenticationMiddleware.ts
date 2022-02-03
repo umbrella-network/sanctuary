@@ -34,11 +34,7 @@ export class AuthenticationMiddleware {
   }
 
   apply = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-    if (!request.headers.authorization) {
-      const error = new Error();
-      error.name = 'UnauthorizedError';
-      throw error;
-    }
+    this.checkHeaderAuthorization(request);
 
     const projectAuthentication = await this.projectAuthenticator.verifyApiKey(request);
 
@@ -49,5 +45,28 @@ export class AuthenticationMiddleware {
     } else {
       this.userAuthenticator(request, response, next);
     }
+  };
+
+  restrictAccess = (request: Request, response: Response, next: NextFunction): void => {
+    this.checkHeaderAuthorization(request);
+
+    const apiKey = this.projectAuthenticator.verifyRestrictApiKey(request);
+    if (apiKey?.apiKey) {
+      next();
+    } else {
+      this.throwUnauthorizedError();
+    }
+  };
+
+  private checkHeaderAuthorization = (request: Request) => {
+    if (!request.headers.authorization) {
+      this.throwUnauthorizedError();
+    }
+  };
+
+  private throwUnauthorizedError = (): void => {
+    const error = new Error();
+    error.name = 'UnauthorizedError';
+    throw error;
   };
 }

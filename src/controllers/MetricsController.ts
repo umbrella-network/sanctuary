@@ -11,7 +11,7 @@ class MetricsController {
   router: express.Router;
 
   constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
-    this.router = express.Router().use(authenticationMiddleware.apply).get('/voters', this.getVotersCount);
+    this.router = express.Router().use(authenticationMiddleware.restrictAccess).get('/voters', this.getVotersCount);
   }
 
   private getVotersCount = async (request: Request, response: Response): Promise<void> => {

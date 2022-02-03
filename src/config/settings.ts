@@ -140,6 +140,11 @@ const settings: Settings = {
       blockSearchInterval: parseInt(process.env.BLOCK_SEARCH_INTERVAL || '6', 10),
     },
   },
+  api: {
+    restrict: {
+      apiKey: process.env.RESTRICT_API_KEY as string,
+    },
+  },
 };
 
 export default settings;

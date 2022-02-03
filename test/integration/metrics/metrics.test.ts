@@ -6,9 +6,9 @@ import { getContainer } from '../../../src/lib/getContainer';
 import { loadTestEnv } from '../../helpers';
 import request from 'supertest';
 import { Application } from 'express';
-import createJWKSMock, { JWKSMock } from 'mock-jwks';
 import { after } from 'mocha';
 import nock from 'nock';
+import settings from '../../../src/config/settings';
 import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
 
 describe('/metrics', async () => {
@@ -18,7 +18,9 @@ describe('/metrics', async () => {
   before(async () => {
     loadTestEnv();
     await setupDatabase();
+    settings.api.restrict.apiKey = 'testToken';
     container = getContainer();
+    container.rebind('Settings').toConstantValue(settings);
     app = container.get(Server).app;
   });
 
@@ -33,39 +35,18 @@ describe('/metrics', async () => {
   describe('/metrics/voters', async () => {
     describe('GET /metrics/voters', async () => {
       describe('when an invalid bearer token is provided', async () => {
-        it('responds with HTTP 401 Unauthorized', async () => {
+        it('responds with HTTP 401 Unauthorized when no bearer token is given', async () => {
           const res = await request(app).get('/metrics/voters');
+          expect(res.status).to.eq(401);
+        });
+        it('responds with HTTP 401 Unauthorized when no bearer token is wrong', async () => {
+          const res = await request(app).get('/metrics/voters').set('Authorization', 'Bearer 123');
           expect(res.status).to.eq(401);
         });
       });
 
       describe('when a valid bearer token is provided', async () => {
-        let jwksMock: JWKSMock;
-        let accessToken: string;
-        const profile = {
-          user_id: 'USER_ID',
-          username: 'test.user',
-          name: 'Test User',
-          email: 'test.user@example.com',
-        };
-
-        beforeEach(async () => {
-          jwksMock = createJWKSMock('https://example.com/');
-          await jwksMock.start();
-
-          accessToken = jwksMock.token({
-            aud: 'TEST_AUDIENCE',
-            iss: 'https://example.com/',
-            sub: 'USER_ID',
-          });
-
-          nock('https://test.auth0.com').post('/oauth/token').reply(200, 'MANAGEMENT_API_ACCESS_TOKEN');
-          nock('https://test.auth0.com').get('/api/v2/users/USER_ID').reply(200, profile);
-        });
-
-        afterEach(async () => {
-          await jwksMock.stop();
-        });
+        const accessToken = 'testToken';
 
         describe('when a valid query param is provided', () => {
           it('should response with status 200', async () => {

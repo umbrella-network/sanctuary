@@ -6,6 +6,7 @@ import { IApiKey } from '../models/ApiKey';
 import Token from '../types/Token';
 import UsageMetricsRepository from './analytics/UsageMetricsRepository';
 import { Logger } from 'winston';
+import Settings from '../types/Settings';
 
 export type ApiKeyFromAuthHeaderInterface =
   | { apiKey: IApiKey; errorMessage?: void }
@@ -14,6 +15,8 @@ export type ApiKeyFromAuthHeaderInterface =
 @injectable()
 export class ProjectAuthUtils {
   @inject('Logger') logger!: Logger;
+  @inject('Settings')
+  private settings!: Settings;
 
   async verifyApiKey(request: Request): Promise<ApiKeyFromAuthHeaderInterface> {
     const apiKeyVerificationResult = await this.verifyApiKeyFromAuthHeader(request.headers.authorization);
@@ -23,6 +26,20 @@ export class ProjectAuthUtils {
     }
 
     return apiKeyVerificationResult;
+  }
+
+  verifyRestrictApiKey(request: Request): { apiKey?: string; errorMessage?: string } {
+    const {
+      headers: { authorization: authorizationHeader },
+    } = request;
+
+    const apiKey = authorizationHeader.replace('Bearer ', '');
+
+    if (apiKey !== this.settings.api.restrict.apiKey) {
+      return { errorMessage: 'Unknown API key' };
+    }
+
+    return { apiKey };
   }
 
   async registerUsage(request: Request, apiKey: IApiKey): Promise<void> {
