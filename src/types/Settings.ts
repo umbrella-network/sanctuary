@@ -95,6 +95,11 @@ type Settings = {
       blockSearchInterval: number;
     };
   };
+  api: {
+    restrict: {
+      apiKey: string;
+    };
+  };
 };
 
 export default Settings;

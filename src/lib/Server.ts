@@ -11,6 +11,7 @@ import HealthController from '../controllers/HealthController';
 import { BlocksController } from '../controllers/BlocksController';
 import ProofsController from '../controllers/ProofsController';
 import UsageMetricsController from '../controllers/UsageMetricsController';
+import MetricsController from '../controllers/MetricsController';
 import Settings from '../types/Settings';
 import ApiKeysController from '../controllers/ApiKeysController';
 import ProjectsController from '../controllers/ProjectsController';
@@ -39,6 +40,7 @@ class Server {
     @inject(KeysController) keysController: KeysController,
     @inject(ProofsController) proofsController: ProofsController,
     @inject(UsageMetricsController) usageMetricsController: UsageMetricsController,
+    @inject(MetricsController) metricsController: MetricsController,
     @inject(ApiKeysController) apiKeyController: ApiKeysController,
     @inject(ProjectsController) projectsController: ProjectsController,
     @inject(InfoController) infoController: InfoController,
@@ -61,6 +63,7 @@ class Server {
       .use('/keys', keysController.router)
       .use('/proofs', proofsController.router)
       .use('/usage-metrics', usageMetricsController.router)
+      .use('/metrics', metricsController.router)
       .use('/api-keys', apiKeyController.router)
       .use('/projects', projectsController.router)
       .use('/info', infoController.router)
