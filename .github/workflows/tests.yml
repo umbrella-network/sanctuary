@@ -45,24 +45,17 @@ jobs:
       
       - name: Create .testing.env for unit tests
         run: |
-          echo -n "" > ./.testing.env;
           echo "MONGODB_URL=mongodb://localhost:27017/sanctuary" >> ./.testing.env;
-          echo "REDIS_URL=redis://localhost:6379" >> ./.testing.env;
 
       - name: Run unit tests
         run: npm run test
 
       - name: Recreate .testing.env for e2e tests
         run: |
-          echo -n "" > ./.testing.env;
-          echo "PORT=3003" >> ./.testing.env;
-          echo "AUTH_PRIVATE_KEY=keyboard cat" >> ./.testing.env;
-          echo "APP_URL=http://localhost:3003" >> ./.testing.env;
-          echo "MONGODB_URL=mongodb://localhost:27017/sanctuary" >> ./.testing.env;
+          echo "MONGODB_URL=mongodb://localhost:27017/sanctuary-test" >> ./.testing.env;
       
-      # Removing E2E tests for now
-      # - name: Run End-to-end tests
-      #   run: npm run test:e2e
+      - name: Run End-to-end tests
+        run: npm run test:e2e
   remote_tests:
     runs-on: ubuntu-latest
     needs: tests
