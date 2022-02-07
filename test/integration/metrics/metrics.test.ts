@@ -49,7 +49,7 @@ describe('/metrics', async () => {
         const accessToken = 'testToken';
 
         describe('when a valid query param is provided', () => {
-          it('should response with status 200', async () => {
+          it('responds with status 200', async () => {
             const res = await request(app)
               .get('/metrics/voters?startDate=2021-12-01&endDate=2022-01-01')
               .set('Authorization', `Bearer ${accessToken}`);
@@ -59,26 +59,26 @@ describe('/metrics', async () => {
         });
 
         describe('when an invalid query param is provided', () => {
-          it('should response with status 400 when missing startDate and endDate', async () => {
+          it('responds with status 400 when missing startDate and endDate', async () => {
             const res = await request(app).get('/metrics/voters').set('Authorization', `Bearer ${accessToken}`);
 
             expect(res.status).to.eq(400);
           });
-          it('should response with status 400 when missing startDate', async () => {
+          it('responds with status 400 when missing startDate', async () => {
             const res = await request(app)
               .get('/metrics/voters?endDate=2022-01-01')
               .set('Authorization', `Bearer ${accessToken}`);
 
             expect(res.status).to.eq(400);
           });
-          it('should response with status 400 when missing endDate', async () => {
+          it('responds with status 400 when missing endDate', async () => {
             const res = await request(app)
               .get('/metrics/voters?startDate=2022-12-01')
               .set('Authorization', `Bearer ${accessToken}`);
 
             expect(res.status).to.eq(400);
           });
-          it('should response with status 400 when invalid date is provided', async () => {
+          it('responds with status 400 when invalid date is provided', async () => {
             const res = await request(app)
               .get('/metrics/voters?startDate=Invalid')
               .set('Authorization', `Bearer ${accessToken}`);
