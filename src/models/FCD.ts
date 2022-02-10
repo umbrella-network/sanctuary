@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IFCD extends Document {
   key: string;
-  value: number | string;
+  value: number | bigint | string;
   dataTimestamp: Date;
   chainId: string;
 }

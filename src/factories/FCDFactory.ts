@@ -3,7 +3,7 @@ import FCD, { IFCD } from '../models/FCD';
 
 export interface FCDFactoryProps {
   key: string;
-  value: number | string;
+  value: number | bigint | string;
   dataTimestamp: Date;
   chainId: string;
 }
