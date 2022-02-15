@@ -22,10 +22,9 @@
     "start": "node dist/server.js",
     "start:worker": "node dist/worker.js",
     "start:scheduler": "node dist/scheduler.js",
-    "test": "cross-env NODE_ENV=testing mocha --require ts-node/register --ui bdd 'test/**/*.test.ts'",
-    "test:watch": "cross-env NODE_ENV=testing mocha --watch --require ts-node/register --ui bdd 'test/**/*.test.ts'",
-    "test:e2e:only-tests": "cross-env NODE_ENV=testing mocha --require ts-node/register --ui bdd 'test/**/*.e2e.ts'",
-    "test:e2e": "start-server-and-test 'cross-env NODE_ENV=testing npm run start:dev' http://localhost:3003/health test:e2e:only-tests",
+    "test": "cross-env NODE_ENV=testing MONGODB_URL='mongodb://localhost:27017/sanctuary-test' mocha --require ts-node/register --ui bdd 'test/**/*.test.ts'",
+    "test:watch": "cross-env NODE_ENV=testing MONGODB_URL='mongodb://localhost:27017/sanctuary-test' mocha --watch --require ts-node/register --ui bdd 'test/**/*.test.ts'",
+    "test:e2e": "cross-env NODE_ENV=testing MONGODB_URL='mongodb://localhost:27017/sanctuary-test' mocha --require ts-node/register --ui bdd 'test/**/*.e2e.ts'",
     "task": "node dist/tasks.js"
   },
   "devDependencies": {

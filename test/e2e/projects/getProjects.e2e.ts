@@ -1,80 +1,72 @@
-import axios from 'axios';
-import { loadTestEnv } from '../../helpers';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import User from '../../../src/models/LocalUser';
-import Project from '../../../src/models/Project';
-import mongoose from 'mongoose';
+import 'reflect-metadata';
+import { Container } from 'inversify';
+import { expect } from 'chai';
+import request from 'supertest';
+import { Application } from 'express';
 
-chai.use(chaiAsPromised);
+import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
+import { setupJWKSMock, teardownTestUser, TestAuthHarness } from '../../helpers/authHelpers';
+import { getContainer } from '../../../src/lib/getContainer';
+import Server from '../../../src/lib/Server';
 
-describe('Get projects', () => {
-  const config = loadTestEnv();
-  const appAxios = axios.create({ baseURL: config.APP_URL });
-  let accessToken: string;
+describe('getProjects', () => {
+  let authHarness: TestAuthHarness;
+  let container: Container;
+  let app: Application;
 
   before(async () => {
-    await mongoose.connect(config.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
-  });
+    await setupDatabase();
 
-  beforeEach(async () => {
-    await User.deleteMany({});
-    await Project.deleteMany({});
-
-    await appAxios.post('/users', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    const response = await appAxios.post('/auth', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    accessToken = response.data.token;
+    container = getContainer();
+    app = container.get(Server).app;
   });
 
   after(async () => {
-    await User.deleteMany({});
-    await Project.deleteMany({});
-
-    await mongoose.connection.close();
+    await teardownTestUser();
+    await teardownDatabase();
   });
 
-  it('responds with 403 if no access token was provided', async () => {
-    await expect(
-      appAxios.get('/projects', {
-        headers: {
-          authorization: '',
-        },
-      })
-    ).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(403);
-    });
-  });
+  describe('GET /projects', () => {
+    describe('when no bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/projects');
 
-  it('returns projects', async () => {
-    await appAxios.post(
-      '/projects',
-      {
-        name: 'Project name',
-      },
-      {
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    const response = await appAxios.get('/projects', {
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
+        expect(response.status).to.eq(401);
+      });
     });
 
-    expect(response.status).to.be.eq(200);
-    expect(response.data).to.have.property('projects').that.is.an('array').with.lengthOf(1);
-    const [project] = response.data.projects;
-    expect(project).to.have.property('name', 'Project name');
+    describe('when an invalid bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/projects').set('Authorization', 'Bearer wrgonBearer');
+
+        expect(response.status).to.eq(401);
+      });
+    });
+
+    describe('when a valid bearer token is provided', () => {
+      beforeEach(async () => {
+        authHarness = await setupJWKSMock();
+      });
+
+      afterEach(async () => {
+        await authHarness.jwksMock.stop();
+      });
+
+      it('returns projects', async () => {
+        await request(app)
+          .post('/projects')
+          .send({
+            name: 'Project name',
+          })
+          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+        const response = await request(app).get('/projects').set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const [project] = response.body.projects;
+
+        expect(response.status).to.be.eq(200);
+        expect(response.body).to.have.property('projects').that.is.an('array').with.lengthOf(1);
+        expect(project).to.have.property('name', 'Project name');
+      });
+    });
   });
 });

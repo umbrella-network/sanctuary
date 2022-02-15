@@ -94,6 +94,7 @@ class ApiKeysController {
     const project = await Project.findOne({ _id: apiKey.projectId, ownerId: translateAuth0UserId(request.user.sub) });
     if (!project) {
       response.status(403).send({ error: 'You do not own this project' });
+      return;
     }
 
     await apiKey.deleteOne();
@@ -118,6 +119,7 @@ class ApiKeysController {
     const project = await Project.findOne({ _id: apiKey.projectId, ownerId: translateAuth0UserId(request.user.sub) });
     if (!project) {
       response.status(403).send({ error: 'You do not own this project' });
+      return;
     }
 
     const { description, expiresAt } = request.body;

@@ -1,95 +1,86 @@
-import axios from 'axios';
-import { loadTestEnv } from '../../helpers';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import User from '../../../src/models/LocalUser';
-import Project from '../../../src/models/Project';
-import mongoose from 'mongoose';
+import 'reflect-metadata';
+import { Container } from 'inversify';
+import { expect } from 'chai';
+import request from 'supertest';
+import { Application } from 'express';
 
-chai.use(chaiAsPromised);
+import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
+import { setupJWKSMock, TestAuthHarness } from '../../helpers/authHelpers';
+import { getContainer } from '../../../src/lib/getContainer';
+import Server from '../../../src/lib/Server';
 
-describe('Delete projects', () => {
-  const config = loadTestEnv();
-  const appAxios = axios.create({ baseURL: config.APP_URL });
-  let accessToken: string;
+describe('deletingProjects', () => {
+  let authHarness: TestAuthHarness;
+  let container: Container;
+  let app: Application;
 
   before(async () => {
-    await mongoose.connect(config.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
-  });
+    await setupDatabase();
 
-  beforeEach(async () => {
-    await User.deleteMany({});
-    await Project.deleteMany({});
-
-    await appAxios.post('/users', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    const response = await appAxios.post('/auth', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    accessToken = response.data.token;
+    container = getContainer();
+    app = container.get(Server).app;
   });
 
   after(async () => {
-    await User.deleteMany({});
-    await Project.deleteMany({});
-
-    await mongoose.connection.close();
+    await teardownDatabase();
   });
 
-  it('responds with 403 if no access token was provided', async () => {
-    await expect(
-      appAxios.delete('/projects/1', {
-        headers: {
-          authorization: '',
-        },
-      })
-    ).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(403);
-    });
-  });
+  describe('DELETE /projects/:id', () => {
+    describe('when no bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).delete('/projects/1');
 
-  it('responds with 404 if project with given id does not exist', async () => {
-    await expect(
-      appAxios.delete('/projects/1', {
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-      })
-    ).to.be.rejected.then((error) => {
-      expect(error.response.status).to.be.eq(404);
-    });
-  });
-
-  it('deletes project', async () => {
-    const { data: project } = await appAxios.post(
-      '/projects',
-      { name: 'Project name' },
-      {
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    const response = await appAxios.delete(`/projects/${project._id}`, {
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
+        expect(response.status).to.eq(401);
+      });
     });
 
-    expect(response.status).to.be.eq(200);
+    describe('when an invalid bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).delete('/projects/1').set('Authorization', 'Bearer wrgonBearer');
 
-    const responseAfterDeletion = await appAxios.get('/projects', {
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
+        expect(response.status).to.eq(401);
+      });
     });
 
-    expect(responseAfterDeletion.data.projects).to.be.empty;
+    describe('when a valid bearer token is provided', () => {
+      beforeEach(async () => {
+        authHarness = await setupJWKSMock();
+      });
+
+      afterEach(async () => {
+        await authHarness.jwksMock.stop();
+      });
+
+      describe('when project with given id does not exist is provided', () => {
+        it('responds with 404', async () => {
+          const response = await request(app)
+            .delete('/projects/1')
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+          expect(response.status).to.be.eq(404);
+        });
+      });
+
+      describe('when project with given id that exist is provided', () => {
+        it('deletes project', async () => {
+          const { body: project } = await request(app)
+            .post('/projects')
+            .send({ name: 'Project name' })
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+          const response = await request(app)
+            .delete(`/projects/${project._id}`)
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+          expect(response.status).to.be.eq(200);
+
+          const responseAfterDeletion = await request(app)
+            .get('/projects')
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+          expect(responseAfterDeletion.body.projects).to.be.empty;
+        });
+      });
+    });
   });
 });

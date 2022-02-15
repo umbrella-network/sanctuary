@@ -1,23 +1,25 @@
 import 'reflect-metadata';
+import request from 'supertest';
+import { Application } from 'express';
+import createJWKSMock, { JWKSMock } from 'mock-jwks';
+import nock from 'nock';
 import { expect } from 'chai';
+
 import Server from '../../../src/lib/Server';
 import { Container } from 'inversify';
 import { getContainer } from '../../../src/lib/getContainer';
 import { loadTestEnv } from '../../helpers';
-import request from 'supertest';
-import { Application } from 'express';
-import createJWKSMock, { JWKSMock } from 'mock-jwks';
-import { after } from 'mocha';
-import nock from 'nock';
 import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
 
-describe('/profile', async () => {
+describe('profile', () => {
   let container: Container;
   let app: Application;
+  let jwksMock: JWKSMock;
 
   before(async () => {
     loadTestEnv();
     await setupDatabase();
+
     container = getContainer();
     app = container.get(Server).app;
   });
@@ -31,16 +33,24 @@ describe('/profile', async () => {
     nock.cleanAll();
   });
 
-  describe('GET /profile', async () => {
-    describe('when an invalid bearer token is provided', async () => {
+  describe('GET /profile', () => {
+    describe('when no bearer token is provided', () => {
       it('responds with HTTP 401 Unauthorized', async () => {
-        const res = await request(app).get('/profile');
-        expect(res.status).to.eq(401);
+        const response = await request(app).get('/profile');
+
+        expect(response.status).to.eq(401);
       });
     });
 
-    describe('when a valid bearer token is provided', async () => {
-      let jwksMock: JWKSMock;
+    describe('when an invalid bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/profile').set('Authorization', 'Bearer wrgonBearer');
+
+        expect(response.status).to.eq(401);
+      });
+    });
+
+    describe('when a valid bearer token is provided', () => {
       let accessToken: string;
       const profile = { user_id: 'USER_ID', username: 'test.user', name: 'Test User', email: 'test.user@example.com' };
 
@@ -64,8 +74,8 @@ describe('/profile', async () => {
 
       it('responds with the user profile', async () => {
         const res = await request(app).get('/profile').set('Authorization', `Bearer ${accessToken}`);
-
         const profile = res.body.data;
+
         expect(res.status).to.eq(200);
         expect(profile.id).to.eq('USER_ID');
         expect(profile.username).to.eq('test.user');
@@ -75,15 +85,27 @@ describe('/profile', async () => {
     });
   });
 
-  describe('PUT /profile', async () => {
-    describe('when an invalid bearer token is provided', async () => {
+  describe('PUT /profile', () => {
+    describe('when no bearer token is provided', () => {
       it('responds with HTTP 401 Unauthorized', async () => {
-        const res = await request(app).put('/profile').send({ email: 'new.email@example.com' });
-        expect(res.status).to.eq(401);
+        const response = await request(app).put('/profile').send({ email: 'new.email@example.com' });
+
+        expect(response.status).to.eq(401);
       });
     });
 
-    describe('when a valid bearer token is provided', async () => {
+    describe('when an invalid bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app)
+          .put('/profile')
+          .send({ email: 'new.email@example.com' })
+          .set('Authorization', 'Bearer wrgonBearer');
+
+        expect(response.status).to.eq(401);
+      });
+    });
+
+    describe('when a valid bearer token is provided', () => {
       let jwksMock: JWKSMock;
       let accessToken: string;
       const profile = { user_id: 'USER_ID', username: 'test.user', name: 'Test User', email: 'test.user@example.com' };
@@ -111,8 +133,8 @@ describe('/profile', async () => {
           .put('/profile')
           .set('Authorization', `Bearer ${accessToken}`)
           .send({ data: { password: 'NEW_PASSWORD' } });
-
         const profile = res.body.data;
+
         expect(res.status).to.eq(200);
         expect(profile.id).to.eq('USER_ID');
         expect(profile.username).to.eq('test.user');
