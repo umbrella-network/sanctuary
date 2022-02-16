@@ -60,7 +60,7 @@ const settings: Settings = {
         startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '5000', 10), // for BSC 5K is max
         confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
-        providerUrl: 'https://data-seed-prebsc-1-s2.binance.org:8545/', // we can't have default providers set up
+        providerUrl: process.env.BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
       ethereum: {
