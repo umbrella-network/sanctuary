@@ -73,7 +73,7 @@ npm run start
 
 ## Testing
 
-### Unit Tests
+### Setup
 
 Create ./.testing.env and fill it with settings.
 ```shell script
@@ -85,6 +85,8 @@ It will initilize database and control cache dependencies.
 ```shell script
 docker-compose -f docker-compose.yml up 
 ```
+
+### Unit Tests
 
 In another terminal run the unit tests command.
 ```shell script
@@ -92,17 +94,6 @@ npm run test
 ```
 
 ### E2E Tests
-
-Create ./.testing.env and fill it with settings.
-```shell script
-echo "MONGODB_URL=mongodb://localhost:27017/sanctuary-test" >> ./.testing.env;
-```
-
-After that start the docker.
-It will initilize database and control cache dependencies.
-```shell script
-docker-compose -f docker-compose.yml up 
-```
 
 In another terminal run the e2e tests command. 
 At the moment the server starts to respond it will run the e2e tests. 
