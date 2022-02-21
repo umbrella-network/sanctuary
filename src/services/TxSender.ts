@@ -78,7 +78,7 @@ export class TxSender {
       nonce: await this.wallet.getTransactionCount('latest'),
       gasLimit: 21000,
       gasPrice: isTxType2 ? undefined : higherGasPrice,
-      maxPriorityFeePerGas: isTxType2 ? gasEstimation.maxPriorityFeePerGas * 1.5 : undefined,
+      maxPriorityFeePerGas: isTxType2 ? Math.ceil(gasEstimation.maxPriorityFeePerGas * 1.5) : undefined,
       maxFeePerGas: isTxType2 ? higherGasPrice : undefined,
     };
 
