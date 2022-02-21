@@ -58,7 +58,7 @@ export class GasEstimator {
     return (
       `isTxType2: ${isTxType2 ? 'yes' : 'no'}, ` +
       `gasPrice: ${GasEstimator.formatGwei(gasPrice)} Gwei, ` +
-      `baseFeePerGas: ${GasEstimator.formatGwei(baseFeePerGas)} Gwei, ` +
+      `baseFeePerGas: ${baseFeePerGas > 1e6 ? GasEstimator.formatGwei(baseFeePerGas) + 'Gwei' : baseFeePerGas}, ` +
       `maxPriorityFee: ${maxPriorityFeePerGas ? GasEstimator.formatGwei(maxPriorityFeePerGas) : '-'} Gwei, ` +
       `maxFee: ${maxFeePerGas ? GasEstimator.formatGwei(maxFeePerGas) : '-'} Gwei, ` +
       `min: ${GasEstimator.formatGwei(min)} Gwei, ` +
@@ -195,7 +195,7 @@ export class GasEstimator {
 
     const avg = Math.trunc(sum / bottomFees.length);
     const estimatedFee = bottomFees.filter((p) => p < avg).pop(); // get price that is in a middle
-    return Math.ceil(estimatedFee);
+    return Math.ceil(Math.max(minFee, estimatedFee || bottomFees.pop()));
   };
 
   private static formatGwei = (wei: number): number => Math.round((wei / 1e9) * 1e4) / 1e4;
