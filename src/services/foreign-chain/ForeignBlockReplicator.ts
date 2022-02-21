@@ -182,7 +182,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return [true, undefined];
   };
 
-  private latestForeignBlock = async (): Promise<IForeignBlock> => ForeignBlock.findOne().sort({ blockId: -1 });
+  private latestForeignBlock = async (): Promise<IForeignBlock> =>
+    ForeignBlock.findOne({ foreignChainId: this.chainId }).sort({ blockId: -1 });
 
   private blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
     // we need to wait for confirmations before we replicate block
