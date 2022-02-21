@@ -162,13 +162,17 @@ export class GasEstimator {
       ? GasEstimator.calcMaxPriorityFeePerGas(params.maxPriorityFees, params.feeData)
       : undefined;
 
+    const maxFeePerGas = isTxType2
+      ? GasEstimator.calcMaxFeePerGas(gasPrice, maxPriorityFeePerGas, params.maxGasPrice)
+      : undefined;
+
     return {
       ...params.metrics,
       gasPrice,
       maxPriorityFeePerGas,
-      maxFeePerGas: isTxType2
-        ? GasEstimator.calcMaxFeePerGas(gasPrice, maxPriorityFeePerGas, params.maxGasPrice)
-        : undefined,
+      // polygon gas is so crazy, that it is possible to maxFeePerGas < maxPriorityFeePerGas, this is a fix:
+      maxFeePerGas:
+        maxFeePerGas < maxPriorityFeePerGas ? maxPriorityFeePerGas + params.metrics.baseFeePerGas : maxFeePerGas,
     };
   }
 
