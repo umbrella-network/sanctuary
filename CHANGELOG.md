@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.9.7] - 2022-02-21
+### Fixed
+- make sure `maxPriorityFeePerGas` is integer when canceling tx
+
 ## [4.9.6] - 2022-02-21
 ### Fixed
 - do not scan for chains if nothing changed
