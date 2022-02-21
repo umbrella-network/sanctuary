@@ -178,7 +178,7 @@ export class GasEstimator {
     Math.min(maxGasPrice, 2 * baseFee + maxPriorityFee);
 
   private static calcMaxPriorityFeePerGas = (fees: number[], feeData: FeeData): number => {
-    const minFee = feeData.maxPriorityFeePerGas ? feeData.maxPriorityFeePerGas.toNumber() : 2.5;
+    const minFee = feeData.maxPriorityFeePerGas ? Math.max(feeData.maxPriorityFeePerGas.toNumber(), 1.5) : 2.5;
     const sortedFees = fees.sort(); // from lower -> higher
 
     const bottomFees = sortedFees
@@ -191,7 +191,9 @@ export class GasEstimator {
       sum += p;
     });
 
-    const avg = sum / bottomFees.length;
+    if (sum === 0) return minFee;
+
+    const avg = Math.trunc(sum / bottomFees.length);
     const estimatedFee = bottomFees.filter((p) => p < avg).pop(); // get price that is in a middle
     return Math.ceil(estimatedFee);
   };
