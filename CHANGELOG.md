@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.9.2] - 2022-02-21
+### Fixed
+- check latest foreign block id for proper chain
+
 ## [4.9.1] - 2022-02-16
 ### Changed
 - Activate e2e tests in CI
