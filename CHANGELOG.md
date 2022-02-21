@@ -6,13 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.9.5] - 2022-02-21
+### Fixed
+- make sure `maxFeePerGas` is higher than `maxPriorityFeePerGas` (polygon fix)
+
 ## [4.9.4] - 2022-02-21
 ### Fixed
-- make sure `maxPriorityFee` is not empty for tx type 2
+- make sure `maxPriorityFee` is not empty for tx type 2 (polygon fix)
 
 ## [4.9.3] - 2022-02-21
 ### Fixed
-- make sure `maxPriorityFee` is not empty for tx type 2
+- make sure `maxPriorityFee` is not empty for tx type 2 (polygon fix)
 
 ## [4.9.2] - 2022-02-21
 ### Fixed
