@@ -71,6 +71,36 @@ npm run start:worker -- --worker BlockSynchronizerWorker
 npm run start
 ```
 
+## Testing
+
+### Setup
+
+Create ./.testing.env and fill it with settings.
+```shell script
+echo "MONGODB_URL=mongodb://localhost:27017/sanctuary-test" >> ./.testing.env;
+```
+
+After that start the docker.
+It will initilize database and control cache dependencies.
+```shell script
+docker-compose -f docker-compose.yml up 
+```
+
+### Unit Tests
+
+In another terminal run the unit tests command.
+```shell script
+npm run test
+```
+
+### E2E Tests
+
+In another terminal run the e2e tests command. 
+At the moment the server starts to respond it will run the e2e tests. 
+```shell script
+npm run test:e2e
+```
+
 ## Building & Releasing
 
 First, compile the application:
@@ -89,7 +119,7 @@ $ npm run start
 
 # API Reference
 
-We document our API using swagger. Access `http://localhost:3003/docs` after the server starts to explore the available endpoints. 
+We document our API using swagger. Access `http://localhost:3000/docs` after the server starts to explore the available endpoints. 
 
 # MultiChain development
 

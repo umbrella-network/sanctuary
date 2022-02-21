@@ -3,22 +3,18 @@ import { Container } from 'inversify';
 import { expect } from 'chai';
 import request from 'supertest';
 import { Application } from 'express';
-import nock from 'nock';
 
 import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
-import { setupJWKSMock, teardownTestUser, TestAuthHarness } from '../../helpers/authHelpers';
+import { setupJWKSMock, TestAuthHarness } from '../../helpers/authHelpers';
 import { getContainer } from '../../../src/lib/getContainer';
 import Server from '../../../src/lib/Server';
-import { loadTestEnv } from '../../helpers';
 
-describe('createProjects', () => {
+describe('deletingProjects', () => {
   let authHarness: TestAuthHarness;
   let container: Container;
   let app: Application;
 
   before(async () => {
-    nock.activate();
-    loadTestEnv();
     await setupDatabase();
 
     container = getContainer();
@@ -26,14 +22,13 @@ describe('createProjects', () => {
   });
 
   after(async () => {
-    await teardownTestUser();
     await teardownDatabase();
   });
 
-  describe('POST /projects', () => {
+  describe('DELETE /projects/:id', () => {
     describe('when no bearer token is provided', () => {
       it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).post('/projects');
+        const response = await request(app).delete('/projects/1');
 
         expect(response.status).to.eq(401);
       });
@@ -41,7 +36,7 @@ describe('createProjects', () => {
 
     describe('when an invalid bearer token is provided', () => {
       it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).post('/projects').set('Authorization', 'Bearer wrgonBearer');
+        const response = await request(app).delete('/projects/1').set('Authorization', 'Bearer wrgonBearer');
 
         expect(response.status).to.eq(401);
       });
@@ -56,30 +51,34 @@ describe('createProjects', () => {
         await authHarness.jwksMock.stop();
       });
 
-      describe('when no project name is provided', () => {
-        it('responds with 400', async () => {
+      describe('when project with given id does not exist is provided', () => {
+        it('responds with 404', async () => {
           const response = await request(app)
-            .post('/projects')
-            .send({
-              name: '',
-            })
+            .delete('/projects/1')
             .set('Authorization', `Bearer ${authHarness.accessToken}`);
 
-          expect(response.status).to.be.eq(400);
+          expect(response.status).to.be.eq(404);
         });
       });
 
-      describe('when project name is provided and input is valid', () => {
-        it('creates project', async () => {
-          const response = await request(app)
+      describe('when project with given id that exist is provided', () => {
+        it('deletes project', async () => {
+          const { body: project } = await request(app)
             .post('/projects')
-            .send({
-              name: 'Project name',
-            })
+            .send({ name: 'Project name' })
             .set('Authorization', `Bearer ${authHarness.accessToken}`);
 
-          expect(response.status).to.be.eq(201);
-          expect(response.body).to.have.property('name', 'Project name');
+          const response = await request(app)
+            .delete(`/projects/${project._id}`)
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+          expect(response.status).to.be.eq(200);
+
+          const responseAfterDeletion = await request(app)
+            .get('/projects')
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+          expect(responseAfterDeletion.body.projects).to.be.empty;
         });
       });
     });

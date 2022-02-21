@@ -1,166 +1,275 @@
-import axios from 'axios';
+import 'reflect-metadata';
+import request from 'supertest';
+import { expect } from 'chai';
+import { Application } from 'express';
+import { Container } from 'inversify';
+
 import { loadTestEnv } from '../../helpers';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import User from '../../../src/models/LocalUser';
-import Project from '../../../src/models/Project';
-import ApiKey from '../../../src/models/ApiKey';
-import Block from '../../../src/models/Block';
+import Block, { IBlock } from '../../../src/models/Block';
 import Leaf from '../../../src/models/Leaf';
 import { inputForBlockModel } from '../../fixtures/inputForBlockModel';
-import mongoose from 'mongoose';
+import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
+import { setupJWKSMock, TestAuthHarness } from '../../helpers/authHelpers';
+import { getContainer } from '../../../src/lib/getContainer';
+import Server from '../../../src/lib/Server';
 
-chai.use(chaiAsPromised);
-
-describe('Getting blocks', () => {
-  const config = loadTestEnv();
-  const appAxios = axios.create({ baseURL: config.APP_URL });
-  let apiKey: string;
+describe('getBlocks', () => {
+  let container: Container;
+  let app: Application;
+  let authHarness: TestAuthHarness;
 
   before(async () => {
-    await mongoose.connect(config.MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true });
-  });
-
-  beforeEach(async () => {
-    await User.deleteMany({});
-    await Project.deleteMany({});
-    await ApiKey.deleteMany({});
-    await Block.deleteMany({});
-    await Leaf.deleteMany({});
-
-    await appAxios.post('/users', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    const response = await appAxios.post('/auth', {
-      email: 'example@example.com',
-      password: 'valid_password',
-    });
-
-    const accessToken = response.data.token;
-
-    const createProjectResponse = await appAxios.post(
-      '/projects',
-      { name: 'First project' },
-      { headers: { authorization: `Bearer ${accessToken}` } }
-    );
-
-    const createApiKeyResponse = await appAxios.post(
-      '/api-keys',
-      { projectId: createProjectResponse.data._id },
-      { headers: { authorization: `Bearer ${accessToken}` } }
-    );
-
-    apiKey = createApiKeyResponse.data.key;
+    loadTestEnv();
+    await setupDatabase();
+    container = getContainer();
+    app = container.get(Server).app;
   });
 
   after(async () => {
-    await User.deleteMany({});
-    await Project.deleteMany({});
-    await ApiKey.deleteMany({});
-    await Block.deleteMany({});
-    await Leaf.deleteMany({});
-
-    await mongoose.connection.close();
+    await teardownDatabase();
   });
 
-  it('returns only finalized blocks', async () => {
-    await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new' },
-      { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'completed' },
-      { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed' },
-      { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized' },
-    ]);
+  describe('GET /blocks', () => {
+    describe('when no bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/blocks');
+        expect(response.status).to.eq(401);
+      });
+    });
 
-    const blocksResponse = await appAxios.get('/blocks', { headers: { authorization: `Bearer ${apiKey}` } });
-    const blocks = blocksResponse.data;
-    expect(blocks).to.be.an('array').with.lengthOf(1);
-    expect(blocks[0]).to.have.property('status', 'finalized');
-  });
+    describe('when an invalid bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/blocks').set('Authorization', 'Bearer wrgonBearer');
+        expect(response.status).to.eq(401);
+      });
+    });
 
-  it('returns blocks sorted in descending order by their height', async () => {
-    await Block.create([
-      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
-      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
-      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
-      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
-    ]);
+    describe('when a valid bearer token is provided', () => {
+      beforeEach(async () => {
+        authHarness = await setupJWKSMock();
+      });
 
-    const blocksResponse = await appAxios.get('/blocks', { headers: { authorization: `Bearer ${apiKey}` } });
-    const blocks: Record<string, unknown>[] = blocksResponse.data;
+      afterEach(async () => {
+        await authHarness.jwksMock.stop();
+        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+      });
 
-    expect(blocks).to.be.an('array').with.lengthOf(4);
+      it('returns only finalized blocks', async () => {
+        await Block.create([
+          { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new' },
+          { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'completed' },
+          { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed' },
+          { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized' },
+        ]);
 
-    blocks.forEach((block, i) => {
-      if (i === 0) {
-        return;
-      }
+        const blocksResponse = await request(app)
+          .get('/blocks')
+          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const blocks = blocksResponse.body;
 
-      expect(block.blockId).to.be.lessThan(blocks[i - 1].blockId as number);
+        expect(blocks).to.be.an('array').with.lengthOf(1);
+        expect(blocks[0]).to.have.property('status', 'finalized');
+      });
+
+      it('returns blocks sorted in descending order by their height', async () => {
+        await Block.create([
+          { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
+          { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+          { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+          { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+        ]);
+        const blocksResponse = await request(app)
+          .get('/blocks')
+          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const blocks: IBlock[] = blocksResponse.body;
+
+        expect(blocks).to.be.an('array').with.lengthOf(4);
+
+        blocks.forEach((block, i) => {
+          if (i === 0) {
+            return;
+          }
+
+          expect(block.blockId).to.be.lessThan(blocks[i - 1].blockId);
+        });
+      });
     });
   });
 
-  it('returns blocks respecting limit and offset parameters', async () => {
-    await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
-      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
-      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
-      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
-    ]);
+  describe('GET /blocks?limit=<n>&offset=<n>', () => {
+    describe('when no bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/blocks?limit=2&offset=1');
 
-    const blocksResponse = await appAxios.get('/blocks', {
-      params: { limit: 2, offset: 1 },
-      headers: { authorization: `Bearer ${apiKey}` },
+        expect(response.status).to.eq(401);
+      });
     });
-    const blocks: Record<string, unknown>[] = blocksResponse.data;
 
-    expect(blocks).to.be.an('array').with.lengthOf(2);
-    expect(blocks[0]).to.have.property('blockId', 3);
-    expect(blocks[1]).to.have.property('blockId', 2);
+    describe('when an invalid bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/blocks?limit=2&offset=1').set('Authorization', 'Bearer wrgonBearer');
+
+        expect(response.status).to.eq(401);
+      });
+    });
+
+    describe('when a valid bearer token is provided', () => {
+      beforeEach(async () => {
+        authHarness = await setupJWKSMock();
+      });
+
+      afterEach(async () => {
+        await authHarness.jwksMock.stop();
+        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+      });
+
+      it('returns blocks respecting limit and offset parameters', async () => {
+        await Block.create([
+          { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+          { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+          { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+          { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
+        ]);
+
+        const blocksResponse = await request(app)
+          .get('/blocks?limit=2&offset=1')
+          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const blocks: IBlock[] = blocksResponse.body;
+
+        expect(blocks).to.be.an('array').with.lengthOf(2);
+        expect(blocks[0]).to.have.property('blockId', 3);
+        expect(blocks[1]).to.have.property('blockId', 2);
+      });
+    });
   });
 
-  it("returns block by it's id", async () => {
-    await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
-      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
-      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
-      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
-    ]);
+  describe('GET /blocks/:blockId', () => {
+    describe('when no bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/blocks/1');
 
-    const blockResponse = await appAxios.get('/blocks/1', {
-      params: { limit: 2, offset: 1 },
-      headers: { authorization: `Bearer ${apiKey}` },
+        expect(response.status).to.eq(401);
+      });
     });
-    const block: Record<string, unknown> = blockResponse.data.data;
 
-    expect(block).to.have.property('_id', 'block::1');
+    describe('when an invalid bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/blocks/1').set('Authorization', 'Bearer wrgonBearer');
+
+        expect(response.status).to.eq(401);
+      });
+    });
+
+    describe('when a valid bearer token is provided', () => {
+      describe('when an invalid block id is provided', () => {
+        beforeEach(async () => {
+          authHarness = await setupJWKSMock();
+        });
+
+        afterEach(async () => {
+          await authHarness.jwksMock.stop();
+          await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+        });
+
+        it('returns with HTTP 404', async () => {
+          await Block.create([
+            { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+            { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+            { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+            { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
+          ]);
+
+          const blocksResponse = await request(app)
+            .get('/blocks/999')
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+
+          expect(blocksResponse.status).to.eq(404);
+        });
+      });
+
+      describe('when a valid block id is provided', () => {
+        beforeEach(async () => {
+          authHarness = await setupJWKSMock();
+        });
+
+        afterEach(async () => {
+          await authHarness.jwksMock.stop();
+          await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+        });
+
+        it('returns block by its id', async () => {
+          await Block.create([
+            { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+            { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+            { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+            { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
+          ]);
+
+          const blocksResponse = await request(app)
+            .get('/blocks/1')
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+          const blocks: Record<string, unknown> = blocksResponse.body;
+
+          expect(blocks.data).to.have.property('_id', 'block::1');
+        });
+      });
+    });
   });
 
-  it('returns leaves for a block', async () => {
-    await Block.create([
-      { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
-      { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
-      { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
-      { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
-    ]);
+  describe('GET /blocks/:blockId/leaves', () => {
+    describe('when no bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/blocks/1/leaves');
 
-    await Leaf.create([
-      { _id: 'leaf::block::1::a', blockId: 1, key: 'a', value: '0x0', proof: [] },
-      { _id: 'leaf::block::1::b', blockId: 1, key: 'b', value: '0x0', proof: [] },
-      { _id: 'leaf::block::2::a', blockId: 2, key: 'a', value: '0x0', proof: [] },
-      { _id: 'leaf::block::2::b', blockId: 2, key: 'b', value: '0x0', proof: [] },
-      { _id: 'leaf::block::3::a', blockId: 3, key: 'a', value: '0x0', proof: [] },
-      { _id: 'leaf::block::4::a', blockId: 4, key: 'a', value: '0x0', proof: [] },
-    ]);
+        expect(response.status).to.eq(401);
+      });
+    });
 
-    const leavesResponse = await appAxios.get('/blocks/1/leaves', { headers: { authorization: `Bearer ${apiKey}` } });
-    const leaves: Record<string, unknown>[] = leavesResponse.data;
+    describe('when an invalid bearer token is provided', () => {
+      it('responds with HTTP 401 Unauthorized', async () => {
+        const response = await request(app).get('/blocks/1/leaves').set('Authorization', 'Bearer wrgonBearer');
 
-    expect(leaves).to.be.an('array').with.lengthOf(2);
+        expect(response.status).to.eq(401);
+      });
+    });
 
-    leaves.forEach((leaf) => {
-      expect(leaf).to.have.property('blockId', 1);
+    describe('when a valid bearer token is provided', () => {
+      beforeEach(async () => {
+        authHarness = await setupJWKSMock();
+      });
+
+      afterEach(async () => {
+        await authHarness.jwksMock.stop();
+        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+      });
+
+      it('returns leaves for a block', async () => {
+        await Block.create([
+          { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
+          { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
+          { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
+          { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
+        ]);
+
+        await Leaf.create([
+          { _id: 'leaf::block::1::a', blockId: 1, key: 'a', value: '0x0', proof: [] },
+          { _id: 'leaf::block::1::b', blockId: 1, key: 'b', value: '0x0', proof: [] },
+          { _id: 'leaf::block::2::a', blockId: 2, key: 'a', value: '0x0', proof: [] },
+          { _id: 'leaf::block::2::b', blockId: 2, key: 'b', value: '0x0', proof: [] },
+          { _id: 'leaf::block::3::a', blockId: 3, key: 'a', value: '0x0', proof: [] },
+          { _id: 'leaf::block::4::a', blockId: 4, key: 'a', value: '0x0', proof: [] },
+        ]);
+
+        const leavesResponse = await request(app)
+          .get('/blocks/1/leaves')
+          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const leaves: Record<string, unknown>[] = leavesResponse.body;
+
+        expect(leaves).to.be.an('array').with.lengthOf(2);
+        leaves.forEach((leaf) => {
+          expect(leaf).to.have.property('blockId', 1);
+        });
+      });
     });
   });
 });
