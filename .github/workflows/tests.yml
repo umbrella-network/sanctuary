@@ -45,13 +45,15 @@ jobs:
       
       - name: Create .testing.env for unit tests
         run: |
-          echo "MONGODB_URL=mongodb://localhost:27017/sanctuary" >> ./.testing.env;
+          echo -n "" > ./.testing.env;
+          echo "MONGODB_URL=mongodb://localhost:27017/sanctuary-test" >> ./.testing.env;
 
       - name: Run unit tests
         run: npm run test
 
       - name: Recreate .testing.env for e2e tests
         run: |
+          echo -n "" > ./.testing.env;
           echo "MONGODB_URL=mongodb://localhost:27017/sanctuary-test" >> ./.testing.env;
       
       - name: Run End-to-end tests
