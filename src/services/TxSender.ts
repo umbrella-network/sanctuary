@@ -39,6 +39,7 @@ export class TxSender {
   ): Promise<TransactionReceipt> => {
     const gasEstimation = await GasEstimator.apply(this.wallet.provider, minGasPrice, maxGasPrice);
     const { gasPrice, maxPriorityFeePerGas, maxFeePerGas, isTxType2 } = gasEstimation;
+
     const gas = {
       type: isTxType2 ? 2 : 0,
       gasPrice: isTxType2 ? undefined : gasPrice,

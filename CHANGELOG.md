@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.9.3] - 2022-02-21
+### Fixed
+- make sure `maxPriorityFee` is not empty for tx type 2
+
 ## [4.9.2] - 2022-02-21
 ### Fixed
 - check latest foreign block id for proper chain
