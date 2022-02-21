@@ -1,11 +1,11 @@
 import { Logger } from 'winston';
-import { ABI } from '@umb-network/toolbox';
+import { ABI, ContractRegistry } from '@umb-network/toolbox';
 import { inject, injectable } from 'inversify';
 import ChainInstance, { IChainInstance } from '../models/ChainInstance';
 import { Blockchain } from '../lib/Blockchain';
 import { Contract, Event } from 'ethers';
 import { LogRegistered } from '../types/events';
-import { CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
+import { CHAIN_CONTRACT_NAME, CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import Block, { IBlock } from '../models/Block';
 import Settings from '../types/Settings';
@@ -23,13 +23,33 @@ class ChainSynchronizer {
 
   private blockchain!: Blockchain;
   private chainContract!: BaseChainContract;
+  private registry!: ContractRegistry;
 
   apply = async (chainId: string): Promise<void> => {
     this.blockchain = this.blockchainRepository.get(chainId);
     this.chainContract = this.chainContractRepository.get(chainId);
 
+    this.registry = new ContractRegistry(this.blockchain.getProvider(), this.blockchain.getContractRegistryAddress());
+
+    if (await this.chainUpToDate()) {
+      this.logger.info(`[${this.blockchain.chainId}] chain up to date.`);
+      return;
+    }
+
     const blockNumber = await this.blockchain.getBlockNumber();
     await this.synchronizeChains(blockNumber);
+  };
+
+  private chainUpToDate = async (): Promise<boolean> => {
+    const currentChainAddress = await this.registry.getAddress(CHAIN_CONTRACT_NAME);
+    const id = ChainSynchronizer.chainInstanceId(this.blockchain.chainId, currentChainAddress);
+    const results = await ChainInstance.findById(id);
+
+    if (results) {
+      this.logger.info(`[${this.blockchain.chainId}] chain ${results.address}, at anchor ${results.anchor}`);
+    }
+
+    return !!results;
   };
 
   private synchronizeChains = async (currentBlockNumber: number): Promise<void> => {
@@ -67,7 +87,7 @@ class ChainSynchronizer {
 
         return ChainInstance.findOneAndUpdate(
           {
-            _id: `chain::${chainId}::${destination}`,
+            _id: ChainSynchronizer.chainInstanceId(chainId, destination),
           },
           {
             anchor: anchor,
@@ -139,6 +159,10 @@ class ChainSynchronizer {
     return events
       .map(ChainSynchronizer.toLogRegistered)
       .filter((logRegistered) => logRegistered.bytes32 === CHAIN_CONTRACT_NAME_BYTES32);
+  }
+
+  private static chainInstanceId(chainId: string, chainAddress: string): string {
+    return `chain::${chainId}::${chainAddress}`;
   }
 
   private static toLogRegistered(event: Event): LogRegistered {
