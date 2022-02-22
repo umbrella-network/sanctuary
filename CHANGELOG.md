@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.9.8] - 2022-02-22
+### Changed
+- small improvements how `maxFeePerGas` is calulated
+
+### Fix
+- make sure `maxFeePerGas` is higher than `maxPriorityFeePerGas` when canceling tx
+
 ## [4.9.7] - 2022-02-21
 ### Fixed
 - make sure `maxPriorityFeePerGas` is integer when canceling tx
