@@ -111,6 +111,22 @@ const settings: Settings = {
           },
         },
       },
+      arbitrum: {
+        startBlockNumber: parseInt(process.env.ARBITRUM_START_BLOCK_NUMBER || '6655399', 10),
+        scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.ARBITRUM_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.ARBITRUM_REGISTRY_CONTRACT_ADDRESS,
+        transactions: {
+          waitForBlockTime: parseInt(process.env.ARBITRUM_WAIT_FOR_BLOCK_TIME || '1000'),
+          minGasPrice: parseInt(process.env.ARBITRUM_MIN_GAS_PRICE || '500000000', 10),
+          maxGasPrice: parseInt(process.env.ARBITRUM_MAX_GAS_PRICE || '250000000000', 10),
+          mintBalance: {
+            warningLimit: process.env.ARBITRUM_BALANCE_WARN || '0.05',
+            errorLimit: process.env.ARBITRUM_BALANCE_ERROR || '0.005',
+          },
+        },
+      },
     },
   },
   auth: {

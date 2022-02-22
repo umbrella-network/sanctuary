@@ -66,6 +66,7 @@ type Settings = {
       ethereum: BlockchainSettings;
       polygon: BlockchainSettings;
       avax: BlockchainSettings;
+      arbitrum: BlockchainSettings;
     };
   };
   auth: {
