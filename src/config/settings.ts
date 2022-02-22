@@ -25,6 +25,10 @@ const settings: Settings = {
         interval: parseInt(process.env.AVALANCHE_REPLICATION_INTERVAL || '10000'),
         lockTTL: parseInt(process.env.AVALANCHE_REPLICATION_LOCK_TTL || '5000'),
       },
+      arbitrum: {
+        interval: parseInt(process.env.ARBITRUM_REPLICATION_INTERVAL || '10000'),
+        lockTTL: parseInt(process.env.ARBITRUM_REPLICATION_LOCK_TTL || '5000'),
+      },
     },
   },
   redis: {
