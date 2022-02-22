@@ -69,7 +69,10 @@ export class TxSender {
     gasEstimation: GasEstimation
   ): Promise<boolean> => {
     const { isTxType2 } = gasEstimation;
+    const maxPriorityFeePerGas = isTxType2 ? Math.ceil(gasEstimation.maxPriorityFeePerGas * 1.5) : undefined;
     const higherGasPrice = Math.max(gasEstimation.gasPrice, prevGasPrice) * 2;
+    // maxFeePerGas can not be less than maxPriorityFeePerGas
+    const maxFeePerGas = isTxType2 ? Math.max(higherGasPrice, maxPriorityFeePerGas + 1) : undefined;
 
     const txData = <TransactionRequest>{
       from: this.wallet.address,
@@ -78,8 +81,8 @@ export class TxSender {
       nonce: await this.wallet.getTransactionCount('latest'),
       gasLimit: 21000,
       gasPrice: isTxType2 ? undefined : higherGasPrice,
-      maxPriorityFeePerGas: isTxType2 ? Math.ceil(gasEstimation.maxPriorityFeePerGas * 1.5) : undefined,
-      maxFeePerGas: isTxType2 ? higherGasPrice : undefined,
+      maxPriorityFeePerGas,
+      maxFeePerGas,
     };
 
     this.logger.warn(`[${this.chainId}] sending canceling tx, nonce: ${txData.nonce}, gasPrice: ${higherGasPrice}`);

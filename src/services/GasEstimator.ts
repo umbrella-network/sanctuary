@@ -121,15 +121,13 @@ export class GasEstimator {
   }
 
   private static estimate = (params: EstimateParams): GasEstimation => {
-    const minPrice = Math.min(Math.max(params.metrics.baseFeePerGas, params.minGasPrice), params.maxGasPrice);
+    let baseFee = Math.min(Math.max(params.metrics.baseFeePerGas, params.minGasPrice), params.maxGasPrice);
 
-    if (params.prices.length < 2) {
-      return GasEstimator.makeGasEstimation(minPrice, params);
+    if (params.prices.length > 2 && !params.metrics.isTxType2) {
+      baseFee = GasEstimator.customEstimation(params);
     }
 
-    const gasPrice = params.metrics.isTxType2 ? minPrice : GasEstimator.customEstimation(params);
-
-    return GasEstimator.makeGasEstimation(gasPrice, params);
+    return GasEstimator.makeGasEstimation(baseFee, params);
   };
 
   private static customEstimation = (params: EstimateParams): number => {
@@ -155,7 +153,7 @@ export class GasEstimator {
     return Math.ceil(Math.min(maxGasPrice, Math.max(minGasPrice, estimatedPrice, metrics.avg))) + 1;
   };
 
-  private static makeGasEstimation(gasPrice: number, params: EstimateParams): GasEstimation {
+  private static makeGasEstimation(baseFee: number, params: EstimateParams): GasEstimation {
     const { isTxType2 } = params.metrics;
 
     const maxPriorityFeePerGas = isTxType2
@@ -163,21 +161,20 @@ export class GasEstimator {
       : undefined;
 
     const maxFeePerGas = isTxType2
-      ? GasEstimator.calcMaxFeePerGas(gasPrice, maxPriorityFeePerGas, params.maxGasPrice)
+      ? GasEstimator.calcMaxFeePerGas(baseFee, maxPriorityFeePerGas, params.maxGasPrice)
       : undefined;
 
     return {
       ...params.metrics,
-      gasPrice,
+      gasPrice: baseFee,
       maxPriorityFeePerGas,
       // polygon gas is so crazy, that it is possible to maxFeePerGas < maxPriorityFeePerGas, this is a fix:
-      maxFeePerGas:
-        maxFeePerGas < maxPriorityFeePerGas ? maxPriorityFeePerGas + params.metrics.baseFeePerGas : maxFeePerGas,
+      maxFeePerGas: maxFeePerGas < maxPriorityFeePerGas ? maxPriorityFeePerGas + baseFee : maxFeePerGas,
     };
   }
 
-  //  Doubling the Base Fee when calculating the Max Fee ensures that your transaction
-  //  will remain marketable for six consecutive 100% full blocks.
+  // Doubling the Base Fee when calculating the Max Fee ensures that your transaction
+  // will remain marketable for six consecutive 100% full blocks.
   private static calcMaxFeePerGas = (baseFee: number, maxPriorityFee: number, maxGasPrice: number): number =>
     Math.min(maxGasPrice, 2 * baseFee + maxPriorityFee);
 
