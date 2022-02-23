@@ -116,7 +116,7 @@ const settings: Settings = {
         },
       },
       arbitrum: {
-        startBlockNumber: parseInt(process.env.ARBITRUM_START_BLOCK_NUMBER || '6655399', 10),
+        startBlockNumber: parseInt(process.env.ARBITRUM_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
         confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ARBITRUM_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
