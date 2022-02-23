@@ -7,6 +7,7 @@ import {
   AvalancheBlockReplicator,
   EthereumBlockReplicator,
   PolygonBlockReplicator,
+  ArbitrumBlockReplicator,
 } from '../../src/services/foreign-chain';
 import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
 import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
@@ -30,6 +31,7 @@ describe('ForeignChainReplicator', () => {
   let avalancheBlockReplicator: StubbedInstance<AvalancheBlockReplicator>;
   let ethereumBlockReplicator: StubbedInstance<EthereumBlockReplicator>;
   let polygonBlockReplicator: StubbedInstance<PolygonBlockReplicator>;
+  let arbitrumBlockReplicator: StubbedInstance<ArbitrumBlockReplicator>;
   let foreignChainStatus: SinonStub;
   let wallet: Wallet;
   let replicationStatus: ReplicationStatus;
@@ -50,6 +52,7 @@ describe('ForeignChainReplicator', () => {
         avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
         ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
         polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
+        arbitrumBlockReplicator = stubConstructor(ArbitrumBlockReplicator);
         blockchainRepository = createStubInstance(BlockchainRepository);
         provider = createStubInstance(ethers.providers.Provider);
         wallet = Wallet.createRandom();
@@ -71,6 +74,7 @@ describe('ForeignChainReplicator', () => {
         container.bind(AvalancheBlockReplicator).toConstantValue(avalancheBlockReplicator);
         container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
         container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
+        container.bind(ArbitrumBlockReplicator).toConstantValue(arbitrumBlockReplicator);
         container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
         container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
 
@@ -78,14 +82,17 @@ describe('ForeignChainReplicator', () => {
         avalancheBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
         ethereumBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
         polygonBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
+        arbitrumBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
         block = stubConstructor(Block);
         avalancheBlockReplicator.resolvePendingBlocks.resolves([block]);
         ethereumBlockReplicator.resolvePendingBlocks.resolves([block]);
         polygonBlockReplicator.resolvePendingBlocks.resolves([block]);
+        arbitrumBlockReplicator.resolvePendingBlocks.resolves([block]);
         replicationStatus = { blocks: [block], anchors: [1], fcds: [{ keys: [], values: [] }] };
         avalancheBlockReplicator.replicate.resolves(replicationStatus);
         ethereumBlockReplicator.replicate.resolves(replicationStatus);
         polygonBlockReplicator.replicate.resolves(replicationStatus);
+        arbitrumBlockReplicator.replicate.resolves(replicationStatus);
 
         foreignBlock = stubObject<IForeignBlock>(new ForeignBlock(mockForeignBlockFactory.attributes()));
         foreignBlock.save.resolves();
@@ -114,6 +121,7 @@ describe('ForeignChainReplicator', () => {
         avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
         ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
         polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
+        arbitrumBlockReplicator = stubConstructor(ArbitrumBlockReplicator);
         blockchainRepository = createStubInstance(BlockchainRepository);
         provider = createStubInstance(ethers.providers.Provider);
 
@@ -136,6 +144,7 @@ describe('ForeignChainReplicator', () => {
         container.bind(AvalancheBlockReplicator).toConstantValue(avalancheBlockReplicator);
         container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
         container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
+        container.bind(ArbitrumBlockReplicator).toConstantValue(arbitrumBlockReplicator);
         container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
         container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
 
@@ -143,14 +152,17 @@ describe('ForeignChainReplicator', () => {
         avalancheBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
         ethereumBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
         polygonBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
+        arbitrumBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));
         block = stubConstructor(Block);
         avalancheBlockReplicator.resolvePendingBlocks.resolves([block]);
         ethereumBlockReplicator.resolvePendingBlocks.resolves([block]);
         polygonBlockReplicator.resolvePendingBlocks.resolves([block]);
+        arbitrumBlockReplicator.resolvePendingBlocks.resolves([block]);
         replicationStatus = { blocks: [block], anchors: [1], fcds: [{ keys: [], values: [] }] };
         avalancheBlockReplicator.replicate.resolves(replicationStatus);
         ethereumBlockReplicator.replicate.resolves(replicationStatus);
         polygonBlockReplicator.replicate.resolves(replicationStatus);
+        arbitrumBlockReplicator.replicate.resolves(replicationStatus);
 
         foreignBlock = stubObject<IForeignBlock>(new ForeignBlock(mockForeignBlockFactory.attributes()));
         foreignBlock.save.resolves();
