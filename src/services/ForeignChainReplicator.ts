@@ -6,6 +6,7 @@ import {
   EthereumBlockReplicator,
   PolygonBlockReplicator,
   IForeignBlockReplicator,
+  ArbitrumBlockReplicator,
 } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IForeignBlock } from '../models/ForeignBlock';
@@ -32,12 +33,14 @@ export class ForeignChainReplicator {
   constructor(
     @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
     @inject(PolygonBlockReplicator) polygonBlockReplicator: PolygonBlockReplicator,
-    @inject(AvalancheBlockReplicator) avalancheBlockReplicator: AvalancheBlockReplicator
+    @inject(AvalancheBlockReplicator) avalancheBlockReplicator: AvalancheBlockReplicator,
+    @inject(ArbitrumBlockReplicator) arbitrumBlockReplicator: ArbitrumBlockReplicator
   ) {
     this.replicators = {
       ethereum: ethereumBlockReplicator,
       polygon: polygonBlockReplicator,
       avax: avalancheBlockReplicator,
+      arbitrum: arbitrumBlockReplicator,
     };
   }
 
