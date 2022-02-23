@@ -126,7 +126,7 @@ describe('ForeignChainReplicator', () => {
         provider = createStubInstance(ethers.providers.Provider);
 
         wallet = Wallet.createRandom();
-        sinon.stub(wallet, 'getBalance').resolves(parseEther('0.01'));
+        sinon.stub(wallet, 'getBalance').resolves(parseEther('0.001'));
 
         blockchainRepository.get.returns({
           chainId: 'ethereum',
