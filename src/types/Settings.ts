@@ -34,6 +34,7 @@ type Settings = {
       ethereum: ForeignChainReplicationSettings;
       polygon: ForeignChainReplicationSettings;
       avax: ForeignChainReplicationSettings;
+      arbitrum: ForeignChainReplicationSettings;
     };
   };
   redis: {
@@ -66,6 +67,7 @@ type Settings = {
       ethereum: BlockchainSettings;
       polygon: BlockchainSettings;
       avax: BlockchainSettings;
+      arbitrum: BlockchainSettings;
     };
   };
   auth: {

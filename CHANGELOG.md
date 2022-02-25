@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.10.0] - 2022-02-23
+### Added
+- Arbitrum replicator
+
 ## [4.9.8] - 2022-02-22
 ### Changed
 - small improvements how `maxFeePerGas` is calulated
