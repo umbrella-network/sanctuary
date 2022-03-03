@@ -1,5 +1,6 @@
 FROM node:15-alpine
-RUN apk add bash python make g++
+#RUN apk add bash python make g++
+RUN apk add bash python git make g++
 RUN adduser -D runner
 RUN mkdir -p /home/runner/app
 WORKDIR /home/runner/app
