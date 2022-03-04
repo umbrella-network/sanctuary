@@ -44,7 +44,7 @@ describe('profile', () => {
 
     describe('when an invalid bearer token is provided', () => {
       it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/profile').set('Authorization', 'Bearer wrgonBearer');
+        const response = await request(app).get('/profile').set('Authorization', 'Bearer wrongBearer');
 
         expect(response.status).to.eq(401);
       });
@@ -99,7 +99,7 @@ describe('profile', () => {
         const response = await request(app)
           .put('/profile')
           .send({ email: 'new.email@example.com' })
-          .set('Authorization', 'Bearer wrgonBearer');
+          .set('Authorization', 'Bearer wrongBearer');
 
         expect(response.status).to.eq(401);
       });

@@ -3,15 +3,15 @@ import express, { Request, Response } from 'express';
 import Project from '../models/Project';
 import ApiKey from '../models/ApiKey';
 import UsageMetricsRepository from '../services/analytics/UsageMetricsRepository';
-import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { ProtectedMiddleware } from '../middleware/ProtectedMiddleware';
 import { translateAuth0UserId } from '../lib/translateAuth0UserId';
 
 @injectable()
 class UsageMetricsController {
   router: express.Router;
 
-  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
-    this.router = express.Router().use(authenticationMiddleware.apply).get('/', this.index);
+  constructor(@inject(ProtectedMiddleware) protectedMiddleware: ProtectedMiddleware) {
+    this.router = express.Router().use(protectedMiddleware.apply).get('/', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {

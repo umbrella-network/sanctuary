@@ -1,70 +1,48 @@
-import { inject, injectable, postConstruct } from 'inversify';
-import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
-import { Request, Response, NextFunction } from 'express';
-import Settings from '../types/Settings';
-import jwt, { RequestHandler } from 'express-jwt';
+import { inject, injectable } from 'inversify';
 import jwksRsa from 'jwks-rsa';
+import { Request, Response, NextFunction } from 'express';
+import jwt, { RequestHandler } from 'express-jwt';
+
+import Settings from '../types/Settings';
 
 @injectable()
-export class AuthenticationMiddleware {
+export abstract class AuthenticationMiddleware {
   @inject('Settings')
   private settings!: Settings;
 
-  @inject(ProjectAuthUtils)
-  private projectAuthenticator: ProjectAuthUtils;
+  abstract apply: (request: Request, response: Response, next: NextFunction) => Promise<void>;
 
-  private userAuthenticator!: RequestHandler;
+  getAuthorizationHeader = (request: Request): string | null => {
+    if (request.headers.authorization?.split(' ')[0] === 'Bearer') {
+      return request.headers.authorization.split(' ')[1];
+    }
 
-  @postConstruct()
-  setup(): void {
+    if (request.headers.authorization) {
+      return request.headers.authorization;
+    }
+
+    return null;
+  };
+
+  setupRequestHandler = (credentialsRequired = true): RequestHandler => {
     const { audience, domain } = this.settings.auth.jwt;
 
-    this.userAuthenticator = jwt({
+    return <RequestHandler>jwt({
       audience,
       issuer: `https://${domain}/`,
       algorithms: ['RS256', 'HS256'],
-      credentialsRequired: true,
+      credentialsRequired,
       secret: jwksRsa.expressJwtSecret({
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
         jwksUri: `https://${domain}/.well-known/jwks.json`,
       }),
+      getToken: this.getAuthorizationHeader,
     });
-  }
-
-  apply = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-    this.checkHeaderAuthorization(request);
-
-    const projectAuthentication = await this.projectAuthenticator.verifyApiKey(request);
-
-    if (projectAuthentication?.apiKey) {
-      request.params['currentProjectId'] = projectAuthentication.apiKey.projectId; //TODO: deprecate
-      request.project = { id: projectAuthentication.apiKey.projectId };
-      next();
-    } else {
-      this.userAuthenticator(request, response, next);
-    }
   };
 
-  restrictAccess = (request: Request, response: Response, next: NextFunction): void => {
-    this.checkHeaderAuthorization(request);
-
-    const apiKey = this.projectAuthenticator.verifyRestrictApiKey(request);
-    if (apiKey?.apiKey) {
-      next();
-    } else {
-      this.throwUnauthorizedError();
-    }
-  };
-
-  private checkHeaderAuthorization = (request: Request) => {
-    if (!request.headers.authorization) {
-      this.throwUnauthorizedError();
-    }
-  };
-
-  private throwUnauthorizedError = (): void => {
+  throwUnauthorizedError = (): void => {
     const error = new Error();
     error.name = 'UnauthorizedError';
     throw error;

@@ -1,7 +1,8 @@
 import { inject, injectable, postConstruct } from 'inversify';
 import StatsdClient from 'statsd-client';
-import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import { Request, Response, Router } from 'express';
+
+import { UnprotectedMiddleware } from '../middleware/UnprotectedMiddleware';
 import { BlockRepository } from '../repositories/BlockRepository';
 import Leaf from '../models/Leaf';
 import Settings from '../types/Settings';
@@ -11,8 +12,8 @@ export class BlocksController {
   @inject('StatsdClient')
   private statsdClient?: StatsdClient;
 
-  @inject(AuthenticationMiddleware)
-  private authenticationMiddleware: AuthenticationMiddleware;
+  @inject(UnprotectedMiddleware)
+  private unprotectedMiddleware: UnprotectedMiddleware;
 
   @inject(BlockRepository)
   private blockRepository: BlockRepository;
@@ -25,7 +26,7 @@ export class BlocksController {
   @postConstruct()
   setup(): void {
     this.router = Router()
-      .use(this.authenticationMiddleware.apply)
+      .use(this.unprotectedMiddleware.apply)
       .get('/', this.index)
       .get('/latest', this.latest)
       .get('/:blockId', this.show)
@@ -36,7 +37,6 @@ export class BlocksController {
     await this.statsdClient?.increment('sanctuary.blocks-controller.index', 1, {
       projectId: request.params.currentProjectId,
     });
-
     const chainId = this.extractChainId(request);
     const offset = parseInt(<string>request.query.offset || '0');
     const limit = Math.min(parseInt(<string>request.query.limit || '100'), 100);
@@ -47,6 +47,7 @@ export class BlocksController {
   latest = async (request: Request, response: Response): Promise<void> => {
     const chainId = this.extractChainId(request);
     const latestBlock = await this.blockRepository.findLatest({ chainId });
+
     response.send({ data: latestBlock });
   };
 
@@ -77,7 +78,18 @@ export class BlocksController {
 
     if (block) {
       const leaves = await Leaf.find({ blockId: parseInt(request.params.blockId, 10) });
-      response.send(leaves);
+
+      if (response.locals.isAuthorized) {
+        response.send(leaves);
+        return;
+      }
+
+      response.send(
+        leaves.map((leave) => {
+          leave.proof = [];
+          return leave;
+        })
+      );
     } else {
       response.status(404).end();
     }

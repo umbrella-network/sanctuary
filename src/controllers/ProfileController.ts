@@ -1,6 +1,6 @@
 import { inject, injectable, postConstruct } from 'inversify';
 import { NextFunction, Request, Response, Router } from 'express';
-import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { ProtectedMiddleware } from '../middleware/ProtectedMiddleware';
 import { UserNotFoundError, UserRepository, UserUpdateError } from '../repositories/UserRepository';
 import { MetricsMiddleware } from '../middleware/MetricsMiddleware';
 import { Logger } from 'winston';
@@ -10,8 +10,8 @@ export class ProfileController {
   @inject('Logger')
   private logger!: Logger;
 
-  @inject(AuthenticationMiddleware)
-  private authenticationMiddleware!: AuthenticationMiddleware;
+  @inject(ProtectedMiddleware)
+  private protectedMiddleware!: ProtectedMiddleware;
 
   @inject(MetricsMiddleware)
   private metricsMiddleware!: MetricsMiddleware;
@@ -26,7 +26,7 @@ export class ProfileController {
     this.router = Router();
 
     this.router
-      .use(this.authenticationMiddleware.apply)
+      .use(this.protectedMiddleware.apply)
       .get('/', this.show)
       .put('/', this.update)
       .patch('/', this.update)

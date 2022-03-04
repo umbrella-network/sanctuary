@@ -40,16 +40,16 @@ describe('getForeignBlocks', () => {
 
   describe('GET /blocks:chainId', () => {
     describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get('/blocks?chainId=ethereum');
 
-        expect(response.status).to.eq(401);
+        expect(response.status).to.eq(200);
       });
     });
 
     describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks?chainId=ethereum').set('Authorization', 'Bearer wrgonBearer');
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks?chainId=ethereum').set('Authorization', 'Bearer wrongBearer');
 
         expect(response.status).to.eq(401);
       });
@@ -116,20 +116,20 @@ describe('getForeignBlocks', () => {
     });
 
     describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get(
           `/blocks/${foreignBlock.blockId}?chainId=${foreignBlock.foreignChainId}`
         );
 
-        expect(response.status).to.eq(401);
+        expect(response.status).to.eq(200);
       });
     });
 
     describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+      it('responds with HTTP 401', async () => {
         const response = await request(app)
           .get(`/blocks/${foreignBlock.blockId}?chainId=${foreignBlock.foreignChainId}`)
-          .set('Authorization', 'Bearer wrgonBearer');
+          .set('Authorization', 'Bearer wrongBearer');
 
         expect(response.status).to.eq(401);
       });

@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import Project from '../models/Project';
 import ApiKey from '../models/ApiKey';
 import cryptoRandomString from 'crypto-random-string';
-import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { ProtectedMiddleware } from '../middleware/ProtectedMiddleware';
 import { translateAuth0UserId } from '../lib/translateAuth0UserId';
 
 interface ICreateApiKeyReqBody {
@@ -26,10 +26,10 @@ interface IEditApiKeyReqBody {
 class ApiKeysController {
   router: express.Router;
 
-  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
+  constructor(@inject(ProtectedMiddleware) protectedMiddleware: ProtectedMiddleware) {
     this.router = express
       .Router()
-      .use(authenticationMiddleware.apply)
+      .use(protectedMiddleware.apply)
       .post('/', this.create)
       .get('/', this.index)
       .delete('/:id', this.delete)

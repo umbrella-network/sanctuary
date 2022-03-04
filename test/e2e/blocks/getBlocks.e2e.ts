@@ -12,6 +12,11 @@ import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
 import { setupJWKSMock, TestAuthHarness } from '../../helpers/authHelpers';
 import { getContainer } from '../../../src/lib/getContainer';
 import Server from '../../../src/lib/Server';
+import { blockAndLeafFactory } from '../../mocks/factories/blockFactory';
+import Project, { IProject } from '../../../src/models/Project';
+import { projectFactory } from '../../mocks/factories/projectFactory';
+import { apiKeyFactory } from '../../mocks/factories/apiKeyFactory';
+import ApiKey, { IApiKey } from '../../../src/models/ApiKey';
 
 describe('getBlocks', () => {
   let container: Container;
@@ -31,15 +36,16 @@ describe('getBlocks', () => {
 
   describe('GET /blocks', () => {
     describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get('/blocks');
-        expect(response.status).to.eq(401);
+        expect(response.status).to.eq(200);
       });
     });
 
     describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks').set('Authorization', 'Bearer wrgonBearer');
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks').set('Authorization', 'Bearer wrongBearer');
+
         expect(response.status).to.eq(401);
       });
     });
@@ -98,16 +104,16 @@ describe('getBlocks', () => {
 
   describe('GET /blocks?limit=<n>&offset=<n>', () => {
     describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get('/blocks?limit=2&offset=1');
 
-        expect(response.status).to.eq(401);
+        expect(response.status).to.eq(200);
       });
     });
 
     describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks?limit=2&offset=1').set('Authorization', 'Bearer wrgonBearer');
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks?limit=2&offset=1').set('Authorization', 'Bearer wrongBearer');
 
         expect(response.status).to.eq(401);
       });
@@ -145,16 +151,25 @@ describe('getBlocks', () => {
 
   describe('GET /blocks/:blockId', () => {
     describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+      beforeEach(async () => {
+        await blockAndLeafFactory();
+      });
+
+      afterEach(async () => {
+        await authHarness.jwksMock.stop();
+        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+      });
+
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get('/blocks/1');
 
-        expect(response.status).to.eq(401);
+        expect(response.status).to.eq(200);
       });
     });
 
     describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks/1').set('Authorization', 'Bearer wrgonBearer');
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks/1').set('Authorization', 'Bearer wrongBearer');
 
         expect(response.status).to.eq(401);
       });
@@ -218,56 +233,89 @@ describe('getBlocks', () => {
 
   describe('GET /blocks/:blockId/leaves', () => {
     describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+      beforeEach(async () => {
+        await await blockAndLeafFactory();
+      });
+
+      afterEach(async () => {
+        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+      });
+
+      it('responds with HTTP 200 with empty proof', async () => {
         const response = await request(app).get('/blocks/1/leaves');
 
-        expect(response.status).to.eq(401);
+        expect(response.status).to.eq(200);
+        expect(response.body[0].proof).to.eqls([]);
       });
     });
 
     describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks/1/leaves').set('Authorization', 'Bearer wrgonBearer');
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks/1/leaves').set('Authorization', 'Bearer wrongBearer');
 
         expect(response.status).to.eq(401);
       });
     });
 
     describe('when a valid bearer token is provided', () => {
-      beforeEach(async () => {
-        authHarness = await setupJWKSMock();
+      describe('when token is from portal API Key', () => {
+        let project: IProject;
+        let apiKey: IApiKey;
+
+        beforeEach(async () => {
+          authHarness = await setupJWKSMock();
+          project = await Project.create({ ...projectFactory.build(), ownerId: 'USER_ID', ownerType: 'User' });
+          apiKey = await ApiKey.create({
+            ...apiKeyFactory.build(),
+            key: 'da183891662f227ef72435abf792443324869f831c2766a9bf5f156d41a6ce44',
+            projectId: project.id,
+          });
+        });
+
+        afterEach(async () => {
+          await authHarness.jwksMock.stop();
+          await Promise.all([Block.deleteMany(), Leaf.deleteMany(), Project.deleteMany(), ApiKey.deleteMany()]);
+        });
+
+        it('returns leaves for a block', async () => {
+          await blockAndLeafFactory();
+
+          const leavesResponse = await request(app)
+            .get('/blocks/1/leaves')
+            .set('Authorization', `Bearer ${apiKey.key}`);
+          const leaves: Record<string, unknown>[] = leavesResponse.body;
+
+          expect(leaves).to.be.an('array').with.lengthOf(2);
+          leaves.forEach((leaf, index) => {
+            expect(leaf).to.have.property('blockId', 1);
+            expect(leaf.proof).to.eql([`proof${index + 1}`]);
+          });
+        });
       });
 
-      afterEach(async () => {
-        await authHarness.jwksMock.stop();
-        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
-      });
+      describe('when token is not from portal API Key', () => {
+        beforeEach(async () => {
+          authHarness = await setupJWKSMock();
+        });
 
-      it('returns leaves for a block', async () => {
-        await Block.create([
-          { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
-          { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
-          { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
-          { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
-        ]);
+        afterEach(async () => {
+          await authHarness.jwksMock.stop();
+          await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+        });
 
-        await Leaf.create([
-          { _id: 'leaf::block::1::a', blockId: 1, key: 'a', value: '0x0', proof: [] },
-          { _id: 'leaf::block::1::b', blockId: 1, key: 'b', value: '0x0', proof: [] },
-          { _id: 'leaf::block::2::a', blockId: 2, key: 'a', value: '0x0', proof: [] },
-          { _id: 'leaf::block::2::b', blockId: 2, key: 'b', value: '0x0', proof: [] },
-          { _id: 'leaf::block::3::a', blockId: 3, key: 'a', value: '0x0', proof: [] },
-          { _id: 'leaf::block::4::a', blockId: 4, key: 'a', value: '0x0', proof: [] },
-        ]);
+        it('returns leaves for a block with proof empty', async () => {
+          await blockAndLeafFactory();
 
-        const leavesResponse = await request(app)
-          .get('/blocks/1/leaves')
-          .set('Authorization', `Bearer ${authHarness.accessToken}`);
-        const leaves: Record<string, unknown>[] = leavesResponse.body;
+          const leavesResponse = await request(app)
+            .get('/blocks/1/leaves')
+            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+          const leaves: Record<string, unknown>[] = leavesResponse.body;
 
-        expect(leaves).to.be.an('array').with.lengthOf(2);
-        leaves.forEach((leaf) => {
-          expect(leaf).to.have.property('blockId', 1);
+          expect(leaves).to.be.an('array').with.lengthOf(2);
+          leaves.forEach((leaf) => {
+            expect(leaf).to.have.property('blockId', 1);
+            expect(leaf.proof).to.eql([]);
+          });
         });
       });
     });

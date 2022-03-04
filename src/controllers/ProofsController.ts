@@ -3,7 +3,6 @@ import express, { Request, Response } from 'express';
 import Leaf from '../models/Leaf';
 import { BlockStatus } from '../types/blocks';
 import StatsdClient from 'statsd-client';
-import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import Settings from '../types/Settings';
 import { BlockRepository } from '../repositories/BlockRepository';
 
@@ -20,8 +19,8 @@ class ProofsController {
 
   router: express.Router;
 
-  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
-    this.router = express.Router().use(authenticationMiddleware.apply).get('/', this.index);
+  constructor() {
+    this.router = express.Router().get('/', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
