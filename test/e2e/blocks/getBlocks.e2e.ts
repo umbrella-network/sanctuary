@@ -9,14 +9,15 @@ import Block, { IBlock } from '../../../src/models/Block';
 import Leaf from '../../../src/models/Leaf';
 import { inputForBlockModel } from '../../fixtures/inputForBlockModel';
 import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
-import { setupJWKSMock, TestAuthHarness } from '../../helpers/authHelpers';
+import { setupApiKey, teardownTestUser } from '../../helpers/authHelpers';
 import { getContainer } from '../../../src/lib/getContainer';
 import Server from '../../../src/lib/Server';
+import { blockAndLeafFactory } from '../../mocks/factories/blockFactory';
+import { IApiKey } from '../../../src/models/ApiKey';
 
 describe('getBlocks', () => {
   let container: Container;
   let app: Application;
-  let authHarness: TestAuthHarness;
 
   before(async () => {
     loadTestEnv();
@@ -30,28 +31,30 @@ describe('getBlocks', () => {
   });
 
   describe('GET /blocks', () => {
-    describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+    describe('when no API Key is provided', () => {
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get('/blocks');
+        expect(response.status).to.eq(200);
+      });
+    });
+
+    describe('when an invalid API Key is provided', () => {
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks').set('Authorization', 'Bearer wrongBearer');
+
         expect(response.status).to.eq(401);
       });
     });
 
-    describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks').set('Authorization', 'Bearer wrgonBearer');
-        expect(response.status).to.eq(401);
-      });
-    });
+    describe('when a valid API Key is provided', () => {
+      let apiKey: IApiKey;
 
-    describe('when a valid bearer token is provided', () => {
       beforeEach(async () => {
-        authHarness = await setupJWKSMock();
+        apiKey = await setupApiKey();
       });
 
       afterEach(async () => {
-        await authHarness.jwksMock.stop();
-        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+        await Promise.all([Block.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
       });
 
       it('returns only finalized blocks', async () => {
@@ -62,9 +65,7 @@ describe('getBlocks', () => {
           { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized' },
         ]);
 
-        const blocksResponse = await request(app)
-          .get('/blocks')
-          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const blocksResponse = await request(app).get('/blocks').set('Authorization', `${apiKey.key}`);
         const blocks = blocksResponse.body;
 
         expect(blocks).to.be.an('array').with.lengthOf(1);
@@ -78,9 +79,7 @@ describe('getBlocks', () => {
           { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
           { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
         ]);
-        const blocksResponse = await request(app)
-          .get('/blocks')
-          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const blocksResponse = await request(app).get('/blocks').set('Authorization', `${apiKey.key}`);
         const blocks: IBlock[] = blocksResponse.body;
 
         expect(blocks).to.be.an('array').with.lengthOf(4);
@@ -97,30 +96,31 @@ describe('getBlocks', () => {
   });
 
   describe('GET /blocks?limit=<n>&offset=<n>', () => {
-    describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+    describe('when no API Key is provided', () => {
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get('/blocks?limit=2&offset=1');
 
+        expect(response.status).to.eq(200);
+      });
+    });
+
+    describe('when an invalid API Key is provided', () => {
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks?limit=2&offset=1').set('Authorization', 'Bearer wrongBearer');
+
         expect(response.status).to.eq(401);
       });
     });
 
-    describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks?limit=2&offset=1').set('Authorization', 'Bearer wrgonBearer');
+    describe('when a valid API Key is provided', () => {
+      let apiKey: IApiKey;
 
-        expect(response.status).to.eq(401);
-      });
-    });
-
-    describe('when a valid bearer token is provided', () => {
       beforeEach(async () => {
-        authHarness = await setupJWKSMock();
+        apiKey = await setupApiKey();
       });
 
       afterEach(async () => {
-        await authHarness.jwksMock.stop();
-        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+        await Promise.all([Block.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
       });
 
       it('returns blocks respecting limit and offset parameters', async () => {
@@ -131,9 +131,7 @@ describe('getBlocks', () => {
           { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
         ]);
 
-        const blocksResponse = await request(app)
-          .get('/blocks?limit=2&offset=1')
-          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const blocksResponse = await request(app).get('/blocks?limit=2&offset=1').set('Authorization', `${apiKey.key}`);
         const blocks: IBlock[] = blocksResponse.body;
 
         expect(blocks).to.be.an('array').with.lengthOf(2);
@@ -144,30 +142,43 @@ describe('getBlocks', () => {
   });
 
   describe('GET /blocks/:blockId', () => {
-    describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+    describe('when no API Key is provided', () => {
+      beforeEach(async () => {
+        await blockAndLeafFactory();
+      });
+
+      afterEach(async () => {
+        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+      });
+
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get('/blocks/1');
 
+        expect(response.status).to.eq(200);
+      });
+    });
+
+    describe('when an invalid API Key is provided', () => {
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks/1').set('Authorization', 'Bearer wrongBearer');
+
         expect(response.status).to.eq(401);
       });
     });
 
-    describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks/1').set('Authorization', 'Bearer wrgonBearer');
+    describe('when a valid API Key is provided', () => {
+      let apiKey: IApiKey;
 
-        expect(response.status).to.eq(401);
+      beforeEach(async () => {
+        apiKey = await setupApiKey();
       });
-    });
 
-    describe('when a valid bearer token is provided', () => {
+      afterEach(async () => {
+        await Promise.all([Block.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
+      });
+
       describe('when an invalid block id is provided', () => {
-        beforeEach(async () => {
-          authHarness = await setupJWKSMock();
-        });
-
         afterEach(async () => {
-          await authHarness.jwksMock.stop();
           await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
         });
 
@@ -179,21 +190,14 @@ describe('getBlocks', () => {
             { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
           ]);
 
-          const blocksResponse = await request(app)
-            .get('/blocks/999')
-            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+          const blocksResponse = await request(app).get('/blocks/999').set('Authorization', `${apiKey.key}`);
 
           expect(blocksResponse.status).to.eq(404);
         });
       });
 
       describe('when a valid block id is provided', () => {
-        beforeEach(async () => {
-          authHarness = await setupJWKSMock();
-        });
-
         afterEach(async () => {
-          await authHarness.jwksMock.stop();
           await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
         });
 
@@ -205,9 +209,7 @@ describe('getBlocks', () => {
             { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
           ]);
 
-          const blocksResponse = await request(app)
-            .get('/blocks/1')
-            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+          const blocksResponse = await request(app).get('/blocks/1').set('Authorization', `${apiKey.key}`);
           const blocks: Record<string, unknown> = blocksResponse.body;
 
           expect(blocks.data).to.have.property('_id', 'block::1');
@@ -217,57 +219,52 @@ describe('getBlocks', () => {
   });
 
   describe('GET /blocks/:blockId/leaves', () => {
-    describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks/1/leaves');
-
-        expect(response.status).to.eq(401);
-      });
-    });
-
-    describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks/1/leaves').set('Authorization', 'Bearer wrgonBearer');
-
-        expect(response.status).to.eq(401);
-      });
-    });
-
-    describe('when a valid bearer token is provided', () => {
+    describe('when no API Key is provided', () => {
       beforeEach(async () => {
-        authHarness = await setupJWKSMock();
+        await blockAndLeafFactory();
       });
 
       afterEach(async () => {
-        await authHarness.jwksMock.stop();
         await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
       });
 
+      it('responds with HTTP 200 with empty proof', async () => {
+        const response = await request(app).get('/blocks/1/leaves');
+
+        expect(response.status).to.eq(200);
+        expect(response.body[0].proof).to.eqls([]);
+      });
+    });
+
+    describe('when an invalid API Key is provided', () => {
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks/1/leaves').set('Authorization', 'wrongAPIKey');
+
+        expect(response.status).to.eq(401);
+      });
+    });
+
+    describe('when a valid API Key is provided', () => {
+      let apiKey: IApiKey;
+
+      beforeEach(async () => {
+        apiKey = await setupApiKey();
+      });
+
+      afterEach(async () => {
+        await Promise.all([Block.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
+      });
+
       it('returns leaves for a block', async () => {
-        await Block.create([
-          { ...inputForBlockModel, _id: 'block::1', blockId: 1 },
-          { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
-          { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
-          { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
-        ]);
+        await blockAndLeafFactory();
 
-        await Leaf.create([
-          { _id: 'leaf::block::1::a', blockId: 1, key: 'a', value: '0x0', proof: [] },
-          { _id: 'leaf::block::1::b', blockId: 1, key: 'b', value: '0x0', proof: [] },
-          { _id: 'leaf::block::2::a', blockId: 2, key: 'a', value: '0x0', proof: [] },
-          { _id: 'leaf::block::2::b', blockId: 2, key: 'b', value: '0x0', proof: [] },
-          { _id: 'leaf::block::3::a', blockId: 3, key: 'a', value: '0x0', proof: [] },
-          { _id: 'leaf::block::4::a', blockId: 4, key: 'a', value: '0x0', proof: [] },
-        ]);
-
-        const leavesResponse = await request(app)
-          .get('/blocks/1/leaves')
-          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        const leavesResponse = await request(app).get('/blocks/1/leaves').set('Authorization', `${apiKey.key}`);
         const leaves: Record<string, unknown>[] = leavesResponse.body;
 
         expect(leaves).to.be.an('array').with.lengthOf(2);
-        leaves.forEach((leaf) => {
+        leaves.forEach((leaf, index) => {
           expect(leaf).to.have.property('blockId', 1);
+          expect(leaf.proof).to.eql([`proof${index + 1}`]);
         });
       });
     });

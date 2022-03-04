@@ -40,7 +40,7 @@ describe('metrics', () => {
 
       describe('when an invalid bearer token is provided', () => {
         it('responds with HTTP 401 Unauthorized', async () => {
-          const response = await request(app).get('/metrics/voters').set('Authorization', 'Bearer wrgonBearer');
+          const response = await request(app).get('/metrics/voters').set('Authorization', 'Bearer wrongBearer');
 
           expect(response.status).to.eq(401);
         });

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import express, { Request, Response } from 'express';
-import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
+import { RestrictedMiddleware } from '../middleware/RestrictedMiddleware';
 import { MetricsRepository } from '../repositories/MetricsRepository';
 import { getDateAtMidnight } from '../utils/time';
 import isValid from 'date-fns/isValid';
@@ -10,8 +10,8 @@ class MetricsController {
   @inject(MetricsRepository) metricsRepository!: MetricsRepository;
   router: express.Router;
 
-  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
-    this.router = express.Router().use(authenticationMiddleware.restrictAccess).get('/voters', this.getVotersCount);
+  constructor(@inject(RestrictedMiddleware) restrictedMiddleware: RestrictedMiddleware) {
+    this.router = express.Router().use(restrictedMiddleware.apply).get('/voters', this.getVotersCount);
   }
 
   private getVotersCount = async (request: Request, response: Response): Promise<void> => {

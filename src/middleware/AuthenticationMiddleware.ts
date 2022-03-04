@@ -1,9 +1,11 @@
 import { inject, injectable, postConstruct } from 'inversify';
-import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
 import { Request, Response, NextFunction } from 'express';
-import Settings from '../types/Settings';
 import jwt, { RequestHandler } from 'express-jwt';
 import jwksRsa from 'jwks-rsa';
+
+import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
+import { getAuthorizationHeader } from '../utils/getAuthorizationHeader';
+import Settings from '../types/Settings';
 
 @injectable()
 export class AuthenticationMiddleware {
@@ -19,7 +21,7 @@ export class AuthenticationMiddleware {
   setup(): void {
     const { audience, domain } = this.settings.auth.jwt;
 
-    this.userAuthenticator = jwt({
+    this.userAuthenticator = <RequestHandler>jwt({
       audience,
       issuer: `https://${domain}/`,
       algorithms: ['RS256', 'HS256'],
@@ -30,12 +32,11 @@ export class AuthenticationMiddleware {
         jwksRequestsPerMinute: 5,
         jwksUri: `https://${domain}/.well-known/jwks.json`,
       }),
+      getToken: getAuthorizationHeader,
     });
   }
 
   apply = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-    this.checkHeaderAuthorization(request);
-
     const projectAuthentication = await this.projectAuthenticator.verifyApiKey(request);
 
     if (projectAuthentication?.apiKey) {
@@ -44,23 +45,6 @@ export class AuthenticationMiddleware {
       next();
     } else {
       this.userAuthenticator(request, response, next);
-    }
-  };
-
-  restrictAccess = (request: Request, response: Response, next: NextFunction): void => {
-    this.checkHeaderAuthorization(request);
-
-    const apiKey = this.projectAuthenticator.verifyRestrictApiKey(request);
-    if (apiKey?.apiKey) {
-      next();
-    } else {
-      this.throwUnauthorizedError();
-    }
-  };
-
-  private checkHeaderAuthorization = (request: Request) => {
-    if (!request.headers.authorization) {
-      this.throwUnauthorizedError();
     }
   };
 
