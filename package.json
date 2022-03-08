@@ -1,6 +1,6 @@
 {
   "name": "sanctuary",
-  "version": "4.10.0",
+  "version": "4.11.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
@@ -79,7 +79,7 @@
   "dependencies": {
     "@influxdata/influxdb-client": "^1.14.0",
     "@influxdata/influxdb-client-apis": "^1.14.0",
-    "@umb-network/toolbox": "~5.1.0-alpha.0",
+    "@umb-network/toolbox": "~5.7.0",
     "auth0": "^2.37.0",
     "axios": "~0.21.1",
     "bcrypt": "~5.0.0",

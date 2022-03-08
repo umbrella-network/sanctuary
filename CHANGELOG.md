@@ -6,13 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.11.0] - 2022-03-07
+### Changed
+- updated umb toolbox sdk version to accept negative numbers
+- increased default value of Arbitrum `mintBalance` `errorLimit`
+
 ## [4.10.0] - 2022-02-23
 ### Added
 - Arbitrum replicator
 
 ## [4.9.8] - 2022-02-22
 ### Changed
-- small improvements how `maxFeePerGas` is calulated
+- small improvements how `maxFeePerGas` is calculated
 
 ### Fix
 - make sure `maxFeePerGas` is higher than `maxPriorityFeePerGas` when canceling tx

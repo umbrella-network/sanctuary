@@ -127,7 +127,7 @@ const settings: Settings = {
           maxGasPrice: parseInt(process.env.ARBITRUM_MAX_GAS_PRICE || '250000000000', 10),
           mintBalance: {
             warningLimit: process.env.ARBITRUM_BALANCE_WARN || '0.05',
-            errorLimit: process.env.ARBITRUM_BALANCE_ERROR || '0.005',
+            errorLimit: process.env.ARBITRUM_BALANCE_ERROR || '0.01',
           },
         },
       },
