@@ -5,7 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
+## [4.11.2] - 2022-03-09
+### Fixed
+- Update Git workflows when merging to main
 ## [4.11.1] - 2022-03-09
 ### Added
 - log details about issue with `BlockRepository.findLatest()`
