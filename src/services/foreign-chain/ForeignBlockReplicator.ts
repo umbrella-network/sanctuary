@@ -4,7 +4,7 @@ import newrelic from 'newrelic';
 
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import { LeafKeyCoder, LeafValueCoder } from '@umb-network/toolbox';
-import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts/index';
+import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts';
 
 import Block, { IBlock } from '../../models/Block';
 import ForeignBlock, { IForeignBlock } from '../../models/ForeignBlock';
