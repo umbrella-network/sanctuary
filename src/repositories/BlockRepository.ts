@@ -1,4 +1,5 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { Logger } from 'winston';
 import Block, { IBlock } from '../models/Block';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 import { BlockStatus } from '../types/blocks';
@@ -22,6 +23,8 @@ export type LatestProps = {
 
 @injectable()
 export class BlockRepository {
+  @inject('Logger') protected logger!: Logger;
+
   async find(props: FindProps): Promise<IBlock[]> {
     const { chainId, offset, limit } = props;
 
@@ -64,12 +67,17 @@ export class BlockRepository {
     const { chainId, status } = props;
 
     if (chainId) {
-      const foreignBlock = await ForeignBlock.findOne({ foreignChainId: chainId }).sort({ blockId: -1 });
-      const query = omitBy({ blockId: foreignBlock.blockId, status }, isUndefined);
-      const block = await Block.findOne(query);
-      if (!block || !foreignBlock) return;
+      try {
+        const foreignBlock = await ForeignBlock.findOne({ foreignChainId: chainId }).sort({ blockId: -1 });
+        const query = omitBy({ blockId: foreignBlock.blockId, status }, isUndefined);
+        const block = await Block.findOne(query);
+        if (!block || !foreignBlock) return;
 
-      return this.augmentBlockWithReplicationData(block, foreignBlock);
+        return this.augmentBlockWithReplicationData(block, foreignBlock);
+      } catch (e) {
+        this.logger.error(`unable to find latest block for chainId ${chainId} and status ${status}`);
+        throw e;
+      }
     } else {
       const query = omitBy({ status }, isUndefined);
       return Block.findOne(query).sort({ blockId: -1 });

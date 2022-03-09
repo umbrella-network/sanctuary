@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.11.1] - 2022-03-09
+### Added
+- log details about issue with `BlockRepository.findLatest()`
+
 ## [4.11.0] - 2022-03-07
 ### Changed
 - updated umb toolbox sdk version to accept negative numbers
