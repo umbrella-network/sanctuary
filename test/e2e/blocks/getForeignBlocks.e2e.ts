@@ -12,7 +12,8 @@ import { blockFactory } from '../../mocks/factories/blockFactory';
 import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
 import { getContainer } from '../../../src/lib/getContainer';
 import { loadTestEnv } from '../../helpers';
-import { setupJWKSMock, TestAuthHarness } from '../../helpers/authHelpers';
+import { setupApiKey, teardownTestUser } from '../../helpers/authHelpers';
+import { IApiKey } from '../../../src/models/ApiKey';
 
 const createBlocks = async (numberOfBlocks = 3): Promise<void> => {
   for (let i = 0; i < numberOfBlocks; i++) {
@@ -24,7 +25,6 @@ describe('getForeignBlocks', () => {
   let container: Container;
   let app: Application;
   let response: request.Response;
-  let authHarness: TestAuthHarness;
 
   before(async () => {
     loadTestEnv();
@@ -39,40 +39,38 @@ describe('getForeignBlocks', () => {
   });
 
   describe('GET /blocks:chainId', () => {
-    describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+    describe('when no API Key is provided', () => {
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get('/blocks?chainId=ethereum');
 
+        expect(response.status).to.eq(200);
+      });
+    });
+
+    describe('when an invalid API Key is provided', () => {
+      it('responds with HTTP 401', async () => {
+        const response = await request(app).get('/blocks?chainId=ethereum').set('Authorization', 'wrongAPIKey');
+
         expect(response.status).to.eq(401);
       });
     });
 
-    describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).get('/blocks?chainId=ethereum').set('Authorization', 'Bearer wrgonBearer');
-
-        expect(response.status).to.eq(401);
-      });
-    });
-
-    describe('when a valid bearer token is provided', () => {
+    describe('when a valid API Key is provided', () => {
       let subject: IForeignBlock[];
+      let apiKey: IApiKey;
+
       const chainId = 'ethereum';
 
       before(async () => {
+        apiKey = await setupApiKey();
         await createBlocks();
 
-        authHarness = await setupJWKSMock();
-        response = await request(app)
-          .get(`/blocks?chainId=${chainId}`)
-          .set('Authorization', `Bearer ${authHarness.accessToken}`);
+        response = await request(app).get(`/blocks?chainId=${chainId}`).set('Authorization', `${apiKey.key}`);
         subject = response.body;
       });
 
       after(async () => {
-        await authHarness.jwksMock.stop();
-        await Block.deleteMany();
-        await ForeignBlock.deleteMany({});
+        await Promise.all([Block.deleteMany(), ForeignBlock.deleteMany(), teardownTestUser()]);
       });
 
       it('responds with HTTP 200', async () => {
@@ -115,38 +113,40 @@ describe('getForeignBlocks', () => {
       await ForeignBlock.deleteMany({});
     });
 
-    describe('when no bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+    describe('when no API Key is provided', () => {
+      it('responds with HTTP 200', async () => {
         const response = await request(app).get(
           `/blocks/${foreignBlock.blockId}?chainId=${foreignBlock.foreignChainId}`
         );
 
-        expect(response.status).to.eq(401);
+        expect(response.status).to.eq(200);
       });
     });
 
-    describe('when an invalid bearer token is provided', () => {
-      it('responds with HTTP 401 Unauthorized', async () => {
+    describe('when an invalid API Key is provided', () => {
+      it('responds with HTTP 401', async () => {
         const response = await request(app)
           .get(`/blocks/${foreignBlock.blockId}?chainId=${foreignBlock.foreignChainId}`)
-          .set('Authorization', 'Bearer wrgonBearer');
+          .set('Authorization', 'wrongAPIKey');
 
         expect(response.status).to.eq(401);
       });
     });
 
-    describe('when a valid bearer token is provided', () => {
+    describe('when a valid API Key is provided', () => {
       describe('when a invalid chainId is provided', () => {
+        let apiKey: IApiKey;
+
         before(async () => {
-          authHarness = await setupJWKSMock();
+          apiKey = await setupApiKey();
           response = await request(app)
             .get(`/blocks/${foreignBlock.blockId}?chainId=wrongChainId`)
-            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+            .set('Authorization', `${apiKey.key}`);
           subject = response.body.data;
         });
 
         after(async () => {
-          await authHarness.jwksMock.stop();
+          await teardownTestUser();
         });
 
         it('responds with HTTP 404', async () => {
@@ -155,16 +155,18 @@ describe('getForeignBlocks', () => {
       });
 
       describe('when a valid chainId is provided', () => {
+        let apiKey: IApiKey;
+
         before(async () => {
-          authHarness = await setupJWKSMock();
+          apiKey = await setupApiKey();
           response = await request(app)
             .get(`/blocks/${foreignBlock.blockId}?chainId=${foreignBlock.foreignChainId}`)
-            .set('Authorization', `Bearer ${authHarness.accessToken}`);
+            .set('Authorization', `${apiKey.key}`);
           subject = response.body.data;
         });
 
         after(async () => {
-          await authHarness.jwksMock.stop();
+          await teardownTestUser();
         });
 
         it('responds with HTTP 200', async () => {
