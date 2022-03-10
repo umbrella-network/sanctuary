@@ -1,16 +1,19 @@
-import { inject, injectable } from 'inversify';
-import express, { Request, Response } from 'express';
+import { inject, injectable, postConstruct } from 'inversify';
+import express, { Request, Response, Router } from 'express';
 import Leaf from '../models/Leaf';
 import { BlockStatus } from '../types/blocks';
 import StatsdClient from 'statsd-client';
-import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import Settings from '../types/Settings';
 import { BlockRepository } from '../repositories/BlockRepository';
+import { ProjectAuthenticationMiddleware } from '../middleware/ProjectAuthenticationMiddleware';
 
 @injectable()
 class ProofsController {
   @inject('StatsdClient')
   private statsdClient?: StatsdClient;
+
+  @inject(ProjectAuthenticationMiddleware)
+  private projectAuthenticationMiddleware: ProjectAuthenticationMiddleware;
 
   @inject(BlockRepository)
   private blockRepository: BlockRepository;
@@ -20,8 +23,9 @@ class ProofsController {
 
   router: express.Router;
 
-  constructor(@inject(AuthenticationMiddleware) authenticationMiddleware: AuthenticationMiddleware) {
-    this.router = express.Router().use(authenticationMiddleware.apply).get('/', this.index);
+  @postConstruct()
+  setup(): void {
+    this.router = this.router = Router().use(this.projectAuthenticationMiddleware.apply).get('/', this.index);
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
@@ -35,7 +39,26 @@ class ProofsController {
     if (block) {
       const keys = (request.query.keys || []) as string[];
       const leaves = await Leaf.find({ blockId: block.blockId, key: { $in: keys } });
-      response.send({ data: { block, keys, leaves } });
+
+      if (response.locals.isAuthorized) {
+        const data = { block, keys, leaves };
+
+        response.send({ data });
+        return;
+      }
+
+      const data = {
+        block,
+        keys,
+        leaves: leaves.map((leaf) => {
+          leaf.proof = [];
+          return leaf;
+        }),
+      };
+
+      response.send({
+        data,
+      });
     } else {
       response.send({ data: {} });
     }

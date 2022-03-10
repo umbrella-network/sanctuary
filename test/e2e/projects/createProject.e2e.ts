@@ -41,7 +41,7 @@ describe('createProjects', () => {
 
     describe('when an invalid bearer token is provided', () => {
       it('responds with HTTP 401 Unauthorized', async () => {
-        const response = await request(app).post('/projects').set('Authorization', 'Bearer wrgonBearer');
+        const response = await request(app).post('/projects').set('Authorization', 'Bearer wrongBearer');
 
         expect(response.status).to.eq(401);
       });

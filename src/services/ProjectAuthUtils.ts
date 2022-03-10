@@ -28,13 +28,7 @@ export class ProjectAuthUtils {
     return apiKeyVerificationResult;
   }
 
-  verifyRestrictApiKey(request: Request): { apiKey?: string; errorMessage?: string } {
-    const {
-      headers: { authorization: authorizationHeader },
-    } = request;
-
-    const apiKey = authorizationHeader.replace('Bearer ', '');
-
+  verifyRestrictApiKey(apiKey: string): { apiKey?: string; errorMessage?: string } {
     if (apiKey !== this.settings.api.restrict.apiKey) {
       return { errorMessage: 'Unknown API key' };
     }
