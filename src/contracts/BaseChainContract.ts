@@ -37,7 +37,16 @@ export abstract class BaseChainContract {
 
   async resolveStatus<T>(): Promise<T> {
     const chain = await this.resolveContract();
-    const status = await chain.contract.getStatus();
+    const chainContractStatus = await chain.contract.getStatus();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const status: any = {};
+
+    Object.keys(chainContractStatus).forEach((key) => {
+      if (Number.isNaN(Number(key))) {
+        status[key] = chainContractStatus[key];
+      }
+    });
+
     return { chainAddress: chain.contract.address, ...status };
   }
 

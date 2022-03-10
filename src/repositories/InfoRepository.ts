@@ -44,11 +44,10 @@ export class InfoRepository {
     const status = await this.getStatus(chainContract);
     const contractRegistryAddress = this.getContractRegistryAddress(chainId);
     const chainContractAddress = this.getChainContractAddress(status);
-    let info: Info = { status, network, contractRegistryAddress, chainContractAddress, version, environment };
+    const info: Info = { status, network, contractRegistryAddress, chainContractAddress, version, environment };
 
     if (!chainId) {
-      const stakingBankAddress = await this.getStakingBankAddress();
-      info = { ...info, stakingBankAddress };
+      info.stakingBankAddress = await this.getStakingBankAddress();
     }
 
     return info;
