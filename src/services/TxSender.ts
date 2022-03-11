@@ -37,6 +37,8 @@ export class TxSender {
     timeoutSec: number,
     transactionRequest: TransactionRequest = {}
   ): Promise<TransactionReceipt> => {
+    this.logger.info(`[${this.chainId}] submitting tx`);
+
     const gasEstimation = await GasEstimator.apply(this.wallet.provider, minGasPrice, maxGasPrice);
     const { gasPrice, maxPriorityFeePerGas, maxFeePerGas, isTxType2 } = gasEstimation;
 
@@ -47,7 +49,7 @@ export class TxSender {
       maxFeePerGas: isTxType2 ? maxFeePerGas : undefined,
     };
 
-    this.logger.info(`[${this.chainId}] submitting tx, gas metrics: ${GasEstimator.printable(gasEstimation)}`);
+    this.logger.info(`[${this.chainId}] gas metrics: ${GasEstimator.printable(gasEstimation)}`);
 
     const { tx, receipt, timeoutMs } = await this.executeTx(fn, { ...gas, ...transactionRequest }, timeoutSec * 1000);
 
