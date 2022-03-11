@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.12.1] - 2022-03-11
+### Added
+- add logs to see more information about polygon RPC issue
+
 ## [4.12.0] - 2022-03-10
 ### Changed
 - hide proofs when user does not provide api key
