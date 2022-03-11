@@ -259,11 +259,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         return await transaction(transactionRequest);
       } catch (e) {
         if (!ForeignBlockReplicator.isNonceError(e)) {
-          this.logger.error(
-            `[${this.chainId}] tx error, maxFeePerGas: ${transactionRequest.maxFeePerGas.toString()}, data: ${
-              transactionRequest.data
-            }`
-          );
+          this.logger.error(`[${this.chainId}] tx error ${JSON.stringify(transactionRequest)}`);
           throw e;
         }
 
