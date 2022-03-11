@@ -100,7 +100,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     if (!lastForeignBlock || lastForeignBlock.blockId !== status.lastId) {
       // in theory this can happen if we submit block but mongo will not be able to save it
       this.logger.error(
-        `[${this.chainId}] Houston we have a problem: block ${status.lastId} is not present in DB, last blockId is: ${lastForeignBlock?.blockId}`
+        `[${this.chainId}] Detected missing block ${status.lastId}, not present in DB, last blockId in DB: ${lastForeignBlock?.blockId}`
       );
     }
 
@@ -117,6 +117,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     if (!fetchedFCDs.keys.length) {
       this.logger.warn(`[${this.chainId}] No FCDs found for replication`);
+    } else {
+      this.logger.info(`[${this.chainId}] replicating ${fetchedFCDs.keys.length} FCDs`);
     }
 
     const receipt = await this.replicateBlock(
@@ -257,6 +259,11 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         return await transaction(transactionRequest);
       } catch (e) {
         if (!ForeignBlockReplicator.isNonceError(e)) {
+          this.logger.error(
+            `[${this.chainId}] tx error, maxFeePerGas: ${transactionRequest.maxFeePerGas.toString()}, data: ${
+              transactionRequest.data
+            }`
+          );
           throw e;
         }
 
