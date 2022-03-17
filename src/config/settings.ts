@@ -165,6 +165,7 @@ const settings: Settings = {
       apiKey: process.env.RESTRICT_API_KEY as string,
     },
   },
+  name: process.env.NEW_RELIC_APP_NAME || process.env.NAME || 'default',
 };
 
 export default settings;
