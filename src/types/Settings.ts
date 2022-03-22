@@ -102,6 +102,7 @@ type Settings = {
       apiKey: string;
     };
   };
+  name: string;
 };
 
 export default Settings;
