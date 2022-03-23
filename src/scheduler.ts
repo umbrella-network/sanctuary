@@ -8,7 +8,7 @@ import Settings, { ForeignChainReplicationSettings } from './types/Settings';
 import { Logger } from 'winston';
 import newrelic from 'newrelic';
 import logger from './lib/logger';
-import { ForeignChainsIds } from './types/ChainsIds';
+import { ChainsIds, ForeignChainsIds } from './types/ChainsIds';
 
 logger.info('Starting Scheduler...');
 

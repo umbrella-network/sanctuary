@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { ChainCurrencyEnum } from '../types/ChainCurrency';
-import { ChainsIds as ChainId, ForeignChainsIds } from '../types/ChainsIds';
+import { ChainsIds as ChainId, ForeignChainsIds, NonEvmChainsIds } from '../types/ChainsIds';
 import BalanceReporter, { BlockReport } from './BalanceReporter';
 
 type PromiseResultStatus = 'fulfilled' | 'rejected';
@@ -21,12 +21,20 @@ class ForeignChainBalanceReporter extends BalanceReporter {
   }
 
   private fetchBalanceOfReplicator = async (chainId: ChainId): Promise<BlockReport> => {
-    const blockchain = this.blockchainRepository.get(chainId);
-    const address = blockchain.wallet.address;
-    const balance = await blockchain.balanceOf(address);
+    let blockchain, address, balance;
+
+    if (NonEvmChainsIds.includes(chainId)) {
+      blockchain = this.blockchainRepository.getGeneric(chainId);
+      address = blockchain.wallet.address;
+      balance = blockchain.fromBaseCurrency(await blockchain.getWalletBalance());
+    } else {
+      blockchain = this.blockchainRepository.get(chainId);
+      address = blockchain.wallet.address;
+      balance = this.bigNumberToBalance(await blockchain.balanceOf(address));
+    }
 
     return {
-      balance: this.bigNumberToBalance(balance),
+      balance,
       address,
       chain: chainId.replace('ethereum', 'eth'),
       currency: ChainCurrencyEnum[chainId],
