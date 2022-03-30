@@ -12,7 +12,7 @@ class BlockLeafCountReporter {
     const { blockId } = await Block.findOne({ status: BlockStatus.Finalized }).sort({ blockId: -1 });
     const leaves = await Leaf.find({ blockId });
 
-    this.statsDClient?.gauge('Layer2DataPairs', leaves.length);
+    this.statsDClient?.gauge('Layer2DataPairs', leaves.length, { blockId });
   }
 }
 
