@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.12.4] - 2022-03-31
+### Changed
+- Updated `BlockLeafCountReporter` to send block ID on report.
+
 ## [4.12.3] - 2022-03-22
 ### Added
 - Add `name` env to use `NEW_RELIC_APP_NAME`
