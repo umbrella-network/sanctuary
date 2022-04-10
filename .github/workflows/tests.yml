@@ -49,6 +49,20 @@ jobs:
           echo "MONGODB_URL=mongodb://localhost:27017/sanctuary-test" >> ./.testing.env;
 
       - name: Run unit tests
+        env:
+          BLOCKCHAIN_PROVIDER_URL: "https://speedy-nodes-nyc.moralis.io/0dfb3a0716615332cec38c23/bsc/testnet"
+          REGISTRY_CONTRACT_ADDRESS: "0x8f98d3B5C911206C1Ac08B9938875620A03BCd59"
+          ETH_BLOCKCHAIN_PROVIDER_URL: "https://speedy-nodes-nyc.moralis.io/0dfb3a0716615332cec38c23/eth/kovan"
+          ETH_REGISTRY_CONTRACT_ADDRESS: "0x230A8CF6F74331491Bc7B724c8194b06Cc0486c9"
+          POLYGON_BLOCKCHAIN_PROVIDER_URL: "https://speedy-nodes-nyc.moralis.io/0dfb3a0716615332cec38c23/polygon/mumbai"
+          POLYGON_REGISTRY_CONTRACT_ADDRESS: "0xaB61f05a9dabCEd63c9100b623A4c29FfD9bf077"
+          AVALANCHE_BLOCKCHAIN_PROVIDER_URL: "https://api.avax-test.network/ext/bc/C/rpc"
+          AVALANCHE_REGISTRY_CONTRACT_ADDRESS: "0x65833489170A55374786B97C96e691949C60175a"
+          ARBITRUM_BLOCKCHAIN_PROVIDER_URL: "https://arbitrum-rinkeby.infura.io/v3/41367ca5932343298b672cd60fddc01d"
+          ARBITRUM_REGISTRY_CONTRACT_ADDRESS: "0x97e8922eac4fa07e958667E3e7AEa7a7fe3eC9f6"
+          SOLANA_BLOCKCHAIN_PROVIDER_URL: "https://api.devnet.solana.com/"
+          SOLANA_REPLICATOR_SECRET_KEY: ${{ secrets.SOLANA_REPLICATOR_SECRET_KEY }}
+          SOLANA_CHAIN_PROGRAM_ID: "ERfFoqbZzToYLBfDJeMTEXDM3upCMxG7K5eANgE1RZg3"
         run: npm run test
 
       - name: Recreate .testing.env for e2e tests

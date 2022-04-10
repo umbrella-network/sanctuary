@@ -4,10 +4,10 @@ import { Container } from 'inversify';
 import { ForeignChainReplicator } from '../../src/services/ForeignChainReplicator';
 import sinon, { createStubInstance, SinonStub } from 'sinon';
 import {
+  ArbitrumBlockReplicator,
   AvalancheBlockReplicator,
   EthereumBlockReplicator,
   PolygonBlockReplicator,
-  ArbitrumBlockReplicator,
 } from '../../src/services/foreign-chain';
 import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
 import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
@@ -17,7 +17,7 @@ import { ForeignChainStatus } from '../../src/types/ForeignChainStatus';
 import Block, { IBlock } from '../../src/models/Block';
 import { expect } from 'chai';
 import { foreignBlockFactory as mockForeignBlockFactory } from '../mocks/factories/foreignBlockFactory';
-import { ForeignChainsIds, TForeignChainsIds } from '../../src/types/ChainsIds';
+import { ForeignChainsIds, TForeignChainsIds, NonEvmChainsIds } from '../../src/types/ChainsIds';
 import { BlockchainRepository } from '../../src/repositories/BlockchainRepository';
 import { ethers, Wallet } from 'ethers';
 import { BlockchainSettings } from '../../src/types/Settings';
@@ -105,7 +105,7 @@ describe('ForeignChainReplicator', () => {
         sinon.restore();
       });
 
-      ForeignChainsIds.forEach((foreignChainId: TForeignChainsIds) => {
+      ForeignChainsIds.filter((x) => !NonEvmChainsIds.includes(x)).forEach((foreignChainId: TForeignChainsIds) => {
         it(`replicates blocks for ${foreignChainId}`, async () => {
           const result = <IForeignBlock[]>await subject(foreignChainId);
           expect(result.length).to.eq(1);
@@ -175,7 +175,7 @@ describe('ForeignChainReplicator', () => {
         sinon.restore();
       });
 
-      ForeignChainsIds.forEach((foreignChainId: TForeignChainsIds) => {
+      ForeignChainsIds.filter((x) => !NonEvmChainsIds.includes(x)).forEach((foreignChainId: TForeignChainsIds) => {
         it(`should not replicates blocks for ${foreignChainId}`, async () => {
           const result = <IForeignBlock[]>await subject(foreignChainId);
           expect(result).to.eq(undefined);
