@@ -8,6 +8,9 @@ import { SolanaProvider } from '../../lib/providers/SolanaProvider';
 import { SolanaWallet } from '../../lib/wallets/SolanaWallet';
 import { ChainBlockData, ChainFCDsData } from '../../models/ChainBlockData';
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
+import { Program } from '@project-serum/anchor';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { Chain, IDL } from '../SolanaChainProgram';
 
 import {
   IGenericForeignChainContract,
@@ -15,9 +18,6 @@ import {
   TransactionResult,
 } from './IGenericForeignChainContract';
 
-import { Program } from '@project-serum/anchor';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { Chain, IDL } from '../SolanaChainProgram';
 import {
   derivePDAFromBlockId,
   getPublicKeyForSeed,
@@ -31,7 +31,6 @@ import {
 export class SolanaForeignChainContract implements IGenericForeignChainContract {
   @inject('Logger') protected logger!: Logger;
 
-  //readonly registry: IRegistry;
   readonly settings: Settings;
   readonly blockchain: IGenericBlockchain;
   address: string;
@@ -98,7 +97,7 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
           key,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          encodeDataValue(value, key),
+          LeafValueCoder.encode(value, key),
           dataTimestamp,
           {
             accounts: {

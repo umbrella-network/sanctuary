@@ -146,8 +146,8 @@ const settings: Settings = {
           minGasPrice: null,
           maxGasPrice: null,
           mintBalance: {
-            warningLimit: process.env.SOLANA_BALANCE_WARN || '0.05',
-            errorLimit: process.env.SOLANA_BALANCE_ERROR || '0.01',
+            warningLimit: process.env.SOLANA_BALANCE_WARN || '0.1',
+            errorLimit: process.env.SOLANA_BALANCE_ERROR || '0.005',
           },
         },
       },

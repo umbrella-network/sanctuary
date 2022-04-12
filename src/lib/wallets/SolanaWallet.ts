@@ -27,6 +27,7 @@ export class SolanaWallet implements IWallet {
 
   async getBalance(): Promise<BigNumber> {
     const balance = await this.provider.connection.getBalance(this.wallet.publicKey);
+
     if (balance) {
       return BigNumber.from(balance);
     }

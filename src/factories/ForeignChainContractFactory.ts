@@ -1,12 +1,13 @@
 import { injectable } from 'inversify';
 import { ChainsIds } from '../types/ChainsIds';
+import { ForeignChainContract } from '../contracts/ForeignChainContract';
+import { BaseChainContractProps } from '../contracts/BaseChainContract';
+import { SolanaForeignChainContract } from '../contracts/generic/SolanaForeignChainContract';
+
 import {
   IGenericForeignChainContract,
   GenericForeignChainContractProps,
 } from '../contracts/generic/IGenericForeignChainContract';
-import { ForeignChainContract } from '../contracts/ForeignChainContract';
-import { BaseChainContractProps } from '../contracts/BaseChainContract';
-import { SolanaForeignChainContract } from '../contracts/generic/SolanaForeignChainContract';
 
 @injectable()
 export class ForeignChainContractFactory {
