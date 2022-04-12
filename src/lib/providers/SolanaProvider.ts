@@ -22,9 +22,10 @@ export class SolanaProvider implements IProvider {
     }
 
     this.wallet = new Wallet(getKeyPairFromSecretKeyString(settings.blockchain.solana.replicatorSecretKey));
+
     this.provider = new Provider(new web3.Connection(this.settings.providerUrl, 'confirmed'), this.wallet, {
       commitment: 'confirmed',
-      maxRetries: 20, // ?
+      maxRetries: 20, // review this at a later date
       preflightCommitment: 'confirmed',
       skipPreflight: false,
     });
@@ -32,15 +33,13 @@ export class SolanaProvider implements IProvider {
 
   async getBlockNumber(): Promise<number> {
     const latestBlockHashResponse = await this.provider.connection.getLatestBlockhash();
-    if (latestBlockHashResponse) {
-      return latestBlockHashResponse.lastValidBlockHeight;
-    }
 
-    return null;
+    return latestBlockHashResponse?.lastValidBlockHeight ?? null;
   }
 
   async getBalance(address: string): Promise<BigNumber> {
     const balance = await this.provider.connection.getBalance(new PublicKey(address));
+
     if (balance) {
       return BigNumber.from(balance);
     }

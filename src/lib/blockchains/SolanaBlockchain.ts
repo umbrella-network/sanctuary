@@ -19,11 +19,13 @@ export class SolanaBlockchain implements IGenericBlockchain {
     const { chainId, settings } = props;
     this.isHomeChain = chainId === settings.blockchain.homeChain.chainId;
     this.settings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[chainId];
+
     if (!this.settings.providerUrl) {
       return;
     }
 
     this.provider = new SolanaProvider(props);
+
     this.wallet = new SolanaWallet({
       provider: (<SolanaProvider>this.provider).provider,
       settings: settings,

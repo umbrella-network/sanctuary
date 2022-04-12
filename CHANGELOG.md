@@ -5,8 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [4.13.0] - 2022-04-10
 ### Added
-- Added `LastSavedBlockDeltaTime` event to report the latest finalized block timestamp 
+- Solana replication worker
+- Added `LastSavedBlockDeltaTime` event to report the latest finalized block timestamp
 
 ## [4.12.4] - 2022-03-31
 ### Changed

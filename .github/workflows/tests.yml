@@ -62,7 +62,7 @@ jobs:
           ARBITRUM_REGISTRY_CONTRACT_ADDRESS: "0x97e8922eac4fa07e958667E3e7AEa7a7fe3eC9f6"
           SOLANA_BLOCKCHAIN_PROVIDER_URL: "https://api.devnet.solana.com/"
           SOLANA_REPLICATOR_SECRET_KEY: ${{ secrets.SOLANA_REPLICATOR_SECRET_KEY }}
-          SOLANA_CHAIN_PROGRAM_ID: "ERfFoqbZzToYLBfDJeMTEXDM3upCMxG7K5eANgE1RZg3"
+          SOLANA_CHAIN_PROGRAM_ID: "4SPgs3L7Ey9VyRuZwx4X3y86LSAZXP2Hhpz9Sps4v3iT"
         run: npm run test
 
       - name: Recreate .testing.env for e2e tests

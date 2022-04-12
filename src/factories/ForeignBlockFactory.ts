@@ -23,6 +23,7 @@ export class ForeignBlockFactory {
     foreignBlock.blockId = props.block.blockId;
     foreignBlock.anchor = props.anchor;
     foreignBlock.chainAddress = props.chainAddress;
+
     if (NonEvmChainsIds.includes(<ChainsIds>props.foreignChainId)) {
       foreignBlock.minter = this.blockchainRepository.getGeneric(props.foreignChainId).wallet.address;
     } else {
