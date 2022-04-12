@@ -9,7 +9,7 @@ import { SolanaWallet } from '../../lib/wallets/SolanaWallet';
 import { ChainBlockData, ChainFCDsData } from '../../models/ChainBlockData';
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import { Program } from '@project-serum/anchor';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { PublicKey, SystemProgram, TransactionResponse } from '@solana/web3.js';
 import { Chain, IDL } from '../SolanaChainProgram';
 
 import {
@@ -70,15 +70,21 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
       }
     );
 
-    const [confirmedTransaction] = await Promise.all([
+    const [confirmedTransaction, confirmedFCDs] = await Promise.allSettled([
       (<SolanaProvider>this.blockchain.getProvider()).provider.connection.getTransaction(transactionSignature),
       this.submitFCDs(dataTimestamp, keys, values),
     ]);
 
     return {
       transactionHash: transactionSignature,
-      status: confirmedTransaction && confirmedTransaction.meta ? !confirmedTransaction.meta.err : false,
-      blockNumber: confirmedTransaction && confirmedTransaction.slot ? confirmedTransaction.slot : null,
+      status:
+        confirmedTransaction.status === 'fulfilled' && confirmedTransaction.value.meta
+          ? !confirmedTransaction.value.meta.err
+          : false,
+      blockNumber:
+        confirmedTransaction.status === 'fulfilled' && confirmedTransaction.value.slot
+          ? confirmedTransaction.value.slot
+          : null,
     };
   }
 
