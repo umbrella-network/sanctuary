@@ -97,7 +97,7 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
           key,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          LeafValueCoder.encode(value, key),
+          encodeDataValue(value, key),
           dataTimestamp,
           {
             accounts: {
