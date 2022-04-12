@@ -29,6 +29,10 @@ const settings: Settings = {
         interval: parseInt(process.env.ARBITRUM_REPLICATION_INTERVAL || '10000'),
         lockTTL: parseInt(process.env.ARBITRUM_REPLICATION_LOCK_TTL || '5000'),
       },
+      solana: {
+        interval: parseInt(process.env.SOLANA_REPLICATION_INTERVAL || '10000'),
+        lockTTL: parseInt(process.env.SOLANA_REPLICATION_LOCK_TTL || '5000'),
+      },
     },
   },
   redis: {
@@ -131,6 +135,26 @@ const settings: Settings = {
           },
         },
       },
+      solana: {
+        startBlockNumber: parseInt(process.env.SOLANA_START_BLOCK_NUMBER || '-100000', 10),
+        scanBatchSize: parseInt(process.env.SOLANA_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        confirmations: parseInt(process.env.SOLANA_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.SOLANA_BLOCKCHAIN_PROVIDER_URL,
+        contractRegistryAddress: null,
+        transactions: {
+          waitForBlockTime: parseInt(process.env.SOLANA_WAIT_FOR_BLOCK_TIME || '1000'),
+          minGasPrice: null,
+          maxGasPrice: null,
+          mintBalance: {
+            warningLimit: process.env.SOLANA_BALANCE_WARN || '0.1',
+            errorLimit: process.env.SOLANA_BALANCE_ERROR || '0.005',
+          },
+        },
+      },
+    },
+    solana: {
+      replicatorSecretKey: process.env.SOLANA_REPLICATOR_SECRET_KEY,
+      chainProgramPublicKeyInitString: process.env.SOLANA_CHAIN_PROGRAM_ID,
     },
   },
   auth: {

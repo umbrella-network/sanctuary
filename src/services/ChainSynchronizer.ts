@@ -13,6 +13,7 @@ import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { BaseChainContract } from '../contracts/BaseChainContract';
+import { ChainsIds } from '../types/ChainsIds';
 
 @injectable()
 class ChainSynchronizer {
@@ -26,6 +27,10 @@ class ChainSynchronizer {
   private registry!: ContractRegistry;
 
   apply = async (chainId: string): Promise<void> => {
+    if (chainId === ChainsIds.SOLANA) {
+      return;
+    }
+
     this.blockchain = this.blockchainRepository.get(chainId);
     this.chainContract = this.chainContractRepository.get(chainId);
 

@@ -43,14 +43,14 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   @inject(FCDRepository) fcdRepository!: FCDRepository;
 
   readonly chainId!: string;
-  private txSender!: TxSender;
-  private blockchain!: Blockchain;
-  private homeBlockchain!: Blockchain;
-  private homeChainContract!: ChainContract;
-  private foreignChainContract!: ForeignChainContract;
+  protected txSender!: TxSender;
+  protected blockchain!: Blockchain;
+  protected homeBlockchain!: Blockchain;
+  protected homeChainContract!: ChainContract;
+  protected foreignChainContract!: ForeignChainContract;
 
   @postConstruct()
-  private setup() {
+  protected setup() {
     this.homeBlockchain = this.blockchainRepository.get(this.settings.blockchain.homeChain.chainId);
     this.blockchain = this.blockchainRepository.get(this.chainId);
 
@@ -150,7 +150,10 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return { errors: [`[${this.chainId}] Tx for blockId ${block.blockId} failed`] };
   };
 
-  private async checkForRevertedBlocks(status: ForeignChainStatus, lastForeignBlock: IForeignBlock): Promise<boolean> {
+  protected async checkForRevertedBlocks(
+    status: ForeignChainStatus,
+    lastForeignBlock: IForeignBlock
+  ): Promise<boolean> {
     if (!lastForeignBlock) {
       return false;
     }
@@ -158,13 +161,13 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return (await this.reveredBlockResolver.apply(lastForeignBlock.blockId, status.nextBlockId, this.chainId)) > 0;
   }
 
-  private canMint = (chainStatus: ForeignChainStatus, dataTimestamp: number): boolean => {
+  protected canMint = (chainStatus: ForeignChainStatus, dataTimestamp: number): boolean => {
     const [ready, error] = this.chainReadyForNewBlock(chainStatus, dataTimestamp);
     error && this.logger.info(error);
     return ready;
   };
 
-  private chainReadyForNewBlock = (
+  protected chainReadyForNewBlock = (
     chainStatus: ForeignChainStatus,
     newDataTimestamp: number
   ): [ready: boolean, error: string | undefined] => {
@@ -184,10 +187,10 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return [true, undefined];
   };
 
-  private latestForeignBlock = async (): Promise<IForeignBlock> =>
+  protected latestForeignBlock = async (): Promise<IForeignBlock> =>
     ForeignBlock.findOne({ foreignChainId: this.chainId }).sort({ blockId: -1 });
 
-  private blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
+  protected blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
     // we need to wait for confirmations before we replicate block
     const homeChainConfirmations = this.settings.blockchain.homeChain.replicationConfirmations;
     const homeBlockNumber = await this.homeBlockchain.getBlockNumber();
@@ -207,7 +210,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       .limit(1);
   };
 
-  private verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {
+  protected verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {
     if (!blocks.length) {
       this.logger.info(`[${this.chainId}] nothing to replicate yet`);
       return false;
@@ -228,9 +231,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return true;
   };
 
-  private timestampToDate = (timestamp: number): Date => new Date(timestamp * 1000);
+  protected timestampToDate = (timestamp: number): Date => new Date(timestamp * 1000);
 
-  private replicateBlock = async (
+  protected replicateBlock = async (
     dataTimestamp: Date,
     root: string,
     keys: string[],
@@ -274,7 +277,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return null;
   };
 
-  private static isNonceError(e: Error): boolean {
+  protected static isNonceError(e: Error): boolean {
     return e.message.includes('nonce has already been used');
   }
 }

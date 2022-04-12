@@ -4,4 +4,5 @@ export enum ChainCurrencyEnum {
   ethereum = 'ETH',
   polygon = 'MATIC',
   bsc = 'BNB',
+  solana = 'SOL',
 }

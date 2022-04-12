@@ -2,11 +2,12 @@ import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
 import {
+  ArbitrumBlockReplicator,
   AvalancheBlockReplicator,
   EthereumBlockReplicator,
-  PolygonBlockReplicator,
   IForeignBlockReplicator,
-  ArbitrumBlockReplicator,
+  PolygonBlockReplicator,
+  SolanaBlockReplicator,
 } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IForeignBlock } from '../models/ForeignBlock';
@@ -14,8 +15,10 @@ import { IFCD } from '../models/FCD';
 import { FCDRepository } from '../repositories/FCDRepository';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import Settings from '../types/Settings';
-import { TForeignChainsIds } from '../types/ChainsIds';
+import { TForeignChainsIds, NonEvmChainsIds } from '../types/ChainsIds';
 import { parseEther } from 'ethers/lib/utils';
+import { BigNumber } from 'ethers';
+import { IGenericBlockchain } from '../lib/blockchains/IGenericBlockchain';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: TForeignChainsIds;
@@ -34,13 +37,15 @@ export class ForeignChainReplicator {
     @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
     @inject(PolygonBlockReplicator) polygonBlockReplicator: PolygonBlockReplicator,
     @inject(AvalancheBlockReplicator) avalancheBlockReplicator: AvalancheBlockReplicator,
-    @inject(ArbitrumBlockReplicator) arbitrumBlockReplicator: ArbitrumBlockReplicator
+    @inject(ArbitrumBlockReplicator) arbitrumBlockReplicator: ArbitrumBlockReplicator,
+    @inject(SolanaBlockReplicator) solanaBlockReplicator: SolanaBlockReplicator
   ) {
     this.replicators = {
       ethereum: ethereumBlockReplicator,
       polygon: polygonBlockReplicator,
       avax: avalancheBlockReplicator,
       arbitrum: arbitrumBlockReplicator,
+      solana: solanaBlockReplicator,
     };
   }
 
@@ -114,16 +119,27 @@ export class ForeignChainReplicator {
   };
 
   private checkBalanceIsEnough = async (chainId: TForeignChainsIds): Promise<void> => {
-    const blockchain = this.blockchainRepository.get(chainId);
+    const blockchain = NonEvmChainsIds.includes(chainId)
+      ? this.blockchainRepository.getGeneric(chainId)
+      : this.blockchainRepository.get(chainId);
+
     const balance = await blockchain.wallet.getBalance();
+    const toCurrency = NonEvmChainsIds.includes(chainId) ? (<IGenericBlockchain>blockchain).toBaseCurrency : parseEther;
 
+    this.testBalanceThreshold(chainId, balance, toCurrency);
+  };
+
+  private testBalanceThreshold = (
+    chainId: TForeignChainsIds,
+    balance: BigNumber,
+    toCurrency: (amount: string) => BigNumber
+  ) => {
     const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].transactions.mintBalance;
-
-    if (balance.lt(parseEther(errorLimit))) {
+    if (balance.lt(toCurrency(errorLimit))) {
       throw new Error(`Balance is lower than ${errorLimit}`);
     }
 
-    if (balance.lt(parseEther(warningLimit))) {
+    if (balance.lt(toCurrency(warningLimit))) {
       this.logger.warn(`Balance is lower than ${warningLimit}`);
     }
   };

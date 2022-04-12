@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.13.0] - 2022-04-10
+### Added
+- Solana replication worker
+- Added `LastSavedBlockDeltaTime` event to report the latest finalized block timestamp
+
 ## [4.12.4] - 2022-03-31
 ### Changed
 - Updated `BlockLeafCountReporter` to send block ID on report.

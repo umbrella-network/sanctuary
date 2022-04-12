@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import { IBlock } from '../models/Block';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
+import { ChainsIds, NonEvmChainsIds } from '../types/ChainsIds';
 
 export type FromBlockProps = {
   block: IBlock;
@@ -22,7 +23,13 @@ export class ForeignBlockFactory {
     foreignBlock.blockId = props.block.blockId;
     foreignBlock.anchor = props.anchor;
     foreignBlock.chainAddress = props.chainAddress;
-    foreignBlock.minter = this.blockchainRepository.get(props.foreignChainId).wallet.address;
+
+    if (NonEvmChainsIds.includes(<ChainsIds>props.foreignChainId)) {
+      foreignBlock.minter = this.blockchainRepository.getGeneric(props.foreignChainId).wallet.address;
+    } else {
+      foreignBlock.minter = this.blockchainRepository.get(props.foreignChainId).wallet.address;
+    }
+
     return foreignBlock;
   }
 }

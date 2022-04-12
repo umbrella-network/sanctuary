@@ -35,6 +35,7 @@ type Settings = {
       polygon: ForeignChainReplicationSettings;
       avax: ForeignChainReplicationSettings;
       arbitrum: ForeignChainReplicationSettings;
+      solana: ForeignChainReplicationSettings;
     };
   };
   redis: {
@@ -68,6 +69,11 @@ type Settings = {
       polygon: BlockchainSettings;
       avax: BlockchainSettings;
       arbitrum: BlockchainSettings;
+      solana: BlockchainSettings;
+    };
+    solana: {
+      replicatorSecretKey: string;
+      chainProgramPublicKeyInitString: string;
     };
   };
   auth: {

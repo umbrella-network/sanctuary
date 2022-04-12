@@ -4,13 +4,22 @@ export enum ChainsIds {
   BSC = 'bsc',
   ETH = 'ethereum',
   POLYGON = 'polygon',
+  SOLANA = 'solana',
 }
 
-export type TForeignChainsIds = ChainsIds.ARBITRUM | ChainsIds.AVALANCHE | ChainsIds.ETH | ChainsIds.POLYGON;
+export type TForeignChainsIds =
+  | ChainsIds.ARBITRUM
+  | ChainsIds.AVALANCHE
+  | ChainsIds.ETH
+  | ChainsIds.POLYGON
+  | ChainsIds.SOLANA;
 
 export const ForeignChainsIds: TForeignChainsIds[] = [
   ChainsIds.ARBITRUM,
   ChainsIds.AVALANCHE,
   ChainsIds.ETH,
   ChainsIds.POLYGON,
+  ChainsIds.SOLANA,
 ];
+
+export const NonEvmChainsIds: ChainsIds[] = [ChainsIds.SOLANA];
