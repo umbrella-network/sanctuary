@@ -171,24 +171,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     chainStatus: ForeignChainStatus,
     newDataTimestamp: number
   ): [ready: boolean, error: string | undefined] => {
-    // remove
-    if (this.chainId === 'solana') {
-      const padding = chainStatus.timePadding;
-      const lastDataTimestamp = chainStatus.lastDataTimestamp;
-      const lastId = chainStatus.lastId;
-      const nextBlockId = chainStatus.nextBlockId;
-      const chainAddress = chainStatus.chainAddress;
-
-      this.logger.info(
-        `[${this.chainId}] process.env.SOLANA_CHAIN_PROGRAM_ID: ${process.env.SOLANA_CHAIN_PROGRAM_ID},`
-      );
-
-      this.logger.info(
-        `[${this.chainId}] address: ${chainAddress}, ` +
-          `nextBlockId: ${nextBlockId}, lastDataTimestamp: ${lastDataTimestamp}`
-      );
-    }
-
     if (chainStatus.lastDataTimestamp + chainStatus.timePadding > newDataTimestamp) {
       return [false, `[${this.chainId}] skipping ${chainStatus.nextBlockId.toString()}: waiting for next round`];
     }
