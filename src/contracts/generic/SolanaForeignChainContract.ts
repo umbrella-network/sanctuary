@@ -70,16 +70,15 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
       }
     );
 
-    const confirmedTransaction = await (<SolanaProvider>(
-      this.blockchain.getProvider()
-    )).provider.connection.getTransaction(transactionSignature);
-
-    await this.submitFCDs(dataTimestamp, keys, values);
+    const [confirmedTransaction] = await Promise.all([
+      (<SolanaProvider>this.blockchain.getProvider()).provider.connection.getTransaction(transactionSignature),
+      this.submitFCDs(dataTimestamp, keys, values),
+    ]);
 
     return {
       transactionHash: transactionSignature,
-      status: !confirmedTransaction.meta.err,
-      blockNumber: confirmedTransaction.slot,
+      status: confirmedTransaction && confirmedTransaction.meta ? !confirmedTransaction.meta.err : false,
+      blockNumber: confirmedTransaction && confirmedTransaction.slot ? confirmedTransaction.slot : null,
     };
   }
 
@@ -97,7 +96,7 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
           key,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          LeafValueCoder.encode(value, key),
+          encodeDataValue(value, key),
           dataTimestamp,
           {
             accounts: {
