@@ -54,37 +54,48 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
   ): Promise<TransactionResult> {
     const [blockPda, seed] = await derivePDAFromBlockId(blockId, this.chainProgramId);
 
-    const transactionSignature = await this.chainProgram.rpc.submit(
-      seed,
-      blockId,
-      encodeBlockRoot(root),
-      dataTimestamp,
-      {
-        accounts: {
-          owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
-          authority: this.authorityPda,
-          block: blockPda,
-          status: this.statusPda,
-          systemProgram: SystemProgram.programId,
-        },
-      }
-    );
-
-    const [confirmedTransaction, confirmedFCDs] = await Promise.allSettled([
-      (<SolanaProvider>this.blockchain.getProvider()).provider.connection.getTransaction(transactionSignature),
+    const [submitSignature, fcdSignatures] = await Promise.allSettled([
+      this.chainProgram.rpc.submit(
+        seed,
+        blockId,
+        encodeBlockRoot(root),
+        dataTimestamp,
+        {
+          accounts: {
+            owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
+            authority: this.authorityPda,
+            block: blockPda,
+            status: this.statusPda,
+            systemProgram: SystemProgram.programId,
+          },
+        }
+      ),
       this.submitFCDs(dataTimestamp, keys, values),
     ]);
 
+    if(submitSignature.status === 'fulfilled') {
+      const confirmedTransaction = await (<SolanaProvider>this.blockchain.getProvider())
+        .provider
+        .connection
+        .getTransaction(submitSignature.value);
+
+      return {
+        transactionHash: submitSignature.value,
+        status:
+          confirmedTransaction && confirmedTransaction.meta
+            ? !confirmedTransaction.meta.err
+            : false,
+        blockNumber:
+          confirmedTransaction && confirmedTransaction.slot
+            ? confirmedTransaction.slot
+            : null,
+      };
+    }
+
     return {
-      transactionHash: transactionSignature,
-      status:
-        confirmedTransaction.status === 'fulfilled' && confirmedTransaction.value.meta
-          ? !confirmedTransaction.value.meta.err
-          : false,
-      blockNumber:
-        confirmedTransaction.status === 'fulfilled' && confirmedTransaction.value.slot
-          ? confirmedTransaction.value.slot
-          : null,
+      transactionHash: null,
+      status: false,
+      blockNumber: null,
     };
   }
 
