@@ -9,7 +9,7 @@ import { SolanaWallet } from '../../lib/wallets/SolanaWallet';
 import { ChainBlockData, ChainFCDsData } from '../../models/ChainBlockData';
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import { Program } from '@project-serum/anchor';
-import { PublicKey, SystemProgram, TransactionResponse } from '@solana/web3.js';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { Chain, IDL } from '../SolanaChainProgram';
 
 import {
