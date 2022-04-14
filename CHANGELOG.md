@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.13.2] - 2022-04-1
+### Fix
+- update Solana Chain to use parallel transactions for submit and FCDs
+
+## [4.13.1] - 2022-04-12
+### Fix
+- fix argument encoding for updateFirstClassData
+
 ## [4.13.0] - 2022-04-10
 ### Added
 - Solana replication worker

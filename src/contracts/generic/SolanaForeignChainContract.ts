@@ -54,12 +54,8 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
   ): Promise<TransactionResult> {
     const [blockPda, seed] = await derivePDAFromBlockId(blockId, this.chainProgramId);
 
-    const transactionSignature = await this.chainProgram.rpc.submit(
-      seed,
-      blockId,
-      encodeBlockRoot(root),
-      dataTimestamp,
-      {
+    const [submitSignature, fcdSignatures] = await Promise.allSettled([
+      this.chainProgram.rpc.submit(seed, blockId, encodeBlockRoot(root), dataTimestamp, {
         accounts: {
           owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
           authority: this.authorityPda,
@@ -67,19 +63,26 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
           status: this.statusPda,
           systemProgram: SystemProgram.programId,
         },
-      }
-    );
+      }),
+      this.submitFCDs(dataTimestamp, keys, values),
+    ]);
 
-    const confirmedTransaction = await (<SolanaProvider>(
-      this.blockchain.getProvider()
-    )).provider.connection.getTransaction(transactionSignature);
+    if (submitSignature.status === 'fulfilled') {
+      const confirmedTransaction = await (<SolanaProvider>(
+        this.blockchain.getProvider()
+      )).provider.connection.getTransaction(submitSignature.value);
 
-    await this.submitFCDs(dataTimestamp, keys, values);
+      return {
+        transactionHash: submitSignature.value,
+        status: confirmedTransaction && confirmedTransaction.meta ? !confirmedTransaction.meta.err : false,
+        blockNumber: confirmedTransaction && confirmedTransaction.slot ? confirmedTransaction.slot : null,
+      };
+    }
 
     return {
-      transactionHash: transactionSignature,
-      status: !confirmedTransaction.meta.err,
-      blockNumber: confirmedTransaction.slot,
+      transactionHash: null,
+      status: false,
+      blockNumber: null,
     };
   }
 
@@ -97,7 +100,7 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
           key,
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          LeafValueCoder.encode(value, key),
+          encodeDataValue(value, key),
           dataTimestamp,
           {
             accounts: {
