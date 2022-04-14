@@ -55,40 +55,27 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
     const [blockPda, seed] = await derivePDAFromBlockId(blockId, this.chainProgramId);
 
     const [submitSignature, fcdSignatures] = await Promise.allSettled([
-      this.chainProgram.rpc.submit(
-        seed,
-        blockId,
-        encodeBlockRoot(root),
-        dataTimestamp,
-        {
-          accounts: {
-            owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
-            authority: this.authorityPda,
-            block: blockPda,
-            status: this.statusPda,
-            systemProgram: SystemProgram.programId,
-          },
-        }
-      ),
+      this.chainProgram.rpc.submit(seed, blockId, encodeBlockRoot(root), dataTimestamp, {
+        accounts: {
+          owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
+          authority: this.authorityPda,
+          block: blockPda,
+          status: this.statusPda,
+          systemProgram: SystemProgram.programId,
+        },
+      }),
       this.submitFCDs(dataTimestamp, keys, values),
     ]);
 
-    if(submitSignature.status === 'fulfilled') {
-      const confirmedTransaction = await (<SolanaProvider>this.blockchain.getProvider())
-        .provider
-        .connection
-        .getTransaction(submitSignature.value);
+    if (submitSignature.status === 'fulfilled') {
+      const confirmedTransaction = await (<SolanaProvider>(
+        this.blockchain.getProvider()
+      )).provider.connection.getTransaction(submitSignature.value);
 
       return {
         transactionHash: submitSignature.value,
-        status:
-          confirmedTransaction && confirmedTransaction.meta
-            ? !confirmedTransaction.meta.err
-            : false,
-        blockNumber:
-          confirmedTransaction && confirmedTransaction.slot
-            ? confirmedTransaction.slot
-            : null,
+        status: confirmedTransaction && confirmedTransaction.meta ? !confirmedTransaction.meta.err : false,
+        blockNumber: confirmedTransaction && confirmedTransaction.slot ? confirmedTransaction.slot : null,
       };
     }
 
