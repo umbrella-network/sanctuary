@@ -22,7 +22,6 @@ class MetricsWorker extends BasicWorker {
       this.logger.debug(`Sending metrics to NewRelic ${job.data}`);
       const chains = Object.values(ChainsIds);
       await Promise.all(chains.map((chainId) => this.blockMintedReporter.call(chainId)));
-      await this.blockMintedReporter.call(ChainsIds.ETH);
       await this.blockLeafCountReporter.call();
 
       await this.homechainBalanceReporter.call();
