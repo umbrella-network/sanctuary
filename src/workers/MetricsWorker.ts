@@ -20,8 +20,8 @@ class MetricsWorker extends BasicWorker {
   apply = async (job: Bull.Job): Promise<void> => {
     try {
       this.logger.debug(`Sending metrics to NewRelic ${job.data}`);
-      await this.blockMintedReporter.call(ChainsIds.BSC);
-      await this.blockMintedReporter.call(ChainsIds.ETH);
+      const chains = Object.values(ChainsIds);
+      await Promise.all(chains.map((chainId) => this.blockMintedReporter.call(chainId)));
       await this.blockLeafCountReporter.call();
 
       await this.homechainBalanceReporter.call();
