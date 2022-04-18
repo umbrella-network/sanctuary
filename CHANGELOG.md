@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Enable `LastSavedBlockDeltaTime` for all chains
 
+## [4.14.0] - 2022-04-18
+### Added
+- Enable `LastSavedBlockDeltaTime` for all chains
+
 ## [4.13.2] - 2022-04-1
 ### Fix
 - update Solana Chain to use parallel transactions for submit and FCDs
