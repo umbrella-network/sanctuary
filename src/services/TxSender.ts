@@ -2,7 +2,7 @@
 import { Wallet } from 'ethers';
 import { TransactionResponse, TransactionReceipt } from '@ethersproject/providers';
 import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts';
-import { GasEstimator, GasEstimation } from './GasEstimator';
+import { GasEstimator, GasEstimation } from '@umb-network/toolbox';
 
 interface ILogger {
   info(msg: string, meta?: Record<string, unknown>): void;
