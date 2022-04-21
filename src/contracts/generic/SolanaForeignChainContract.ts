@@ -11,6 +11,8 @@ import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import { Program } from '@project-serum/anchor';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { Chain, IDL } from '../SolanaChainProgram';
+import { sleep } from '../../utils/callRetry';
+import { getLogger } from '../../lib/getLogger';
 
 import {
   IGenericForeignChainContract,
@@ -29,7 +31,7 @@ import {
 
 @injectable()
 export class SolanaForeignChainContract implements IGenericForeignChainContract {
-  @inject('Logger') protected logger!: Logger;
+  //@inject('Logger') protected logger!: Logger;
 
   readonly settings: Settings;
   readonly blockchain: IGenericBlockchain;
@@ -40,9 +42,12 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
   private statusPda!: PublicKey;
   private authorityPda!: PublicKey;
 
+  protected logger!: Logger;
+
   constructor(props: GenericForeignChainContractProps) {
     this.blockchain = props.blockchain;
     this.settings = props.settings;
+    this.logger = getLogger();
   }
 
   async submit(
@@ -68,15 +73,35 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
     ]);
 
     if (submitSignature.status === 'fulfilled') {
-      const confirmedTransaction = await (<SolanaProvider>(
-        this.blockchain.getProvider()
-      )).provider.connection.getTransaction(submitSignature.value);
+      const MAX_RETRIES = 1; // TODO - put in ENV VAR
+      let confirmedTransaction;
+      let retries = 0;
+
+      while (retries <= MAX_RETRIES) {
+        try {
+          confirmedTransaction = await (<SolanaProvider>(
+            this.blockchain.getProvider()
+          )).provider.connection.getTransaction(submitSignature.value);
+        } catch (e) {
+          this.logger.error(`[${this.blockchain.chainId}] Error confirming transaction: ${e}`);
+        }
+
+        if (confirmedTransaction) {
+          break;
+        }
+
+        await sleep(10000);
+        this.logger.info(`[${this.blockchain.chainId}] Failed to confirm submit transaction. Retrying`);
+        retries++;
+      }
 
       return {
         transactionHash: submitSignature.value,
         status: confirmedTransaction && confirmedTransaction.meta ? !confirmedTransaction.meta.err : false,
         blockNumber: confirmedTransaction && confirmedTransaction.slot ? confirmedTransaction.slot : null,
       };
+    } else {
+      this.logger.info(`[${this.blockchain.chainId}] Submit transaction failed.`);
     }
 
     return {
