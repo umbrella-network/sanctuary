@@ -43,7 +43,6 @@ logger.info('Starting Scheduler...');
   };
 
   for (const foreignChainId of ForeignChainsIds) {
-    if(foreignChainId === 'avax') { continue; } // REMOVE!
     const foreignChainReplicationSettings: ForeignChainReplicationSettings = (<
       Record<string, ForeignChainReplicationSettings>
     >settings.jobs.foreignChainReplication)[foreignChainId];

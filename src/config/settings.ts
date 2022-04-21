@@ -155,6 +155,8 @@ const settings: Settings = {
     solana: {
       replicatorSecretKey: process.env.SOLANA_REPLICATOR_SECRET_KEY,
       chainProgramPublicKeyInitString: process.env.SOLANA_CHAIN_PROGRAM_ID,
+      maxTransactionConfirmationRetries: parseInt(process.env.SOLANA_MAX_TRANSACTION_CONFIRMATION_RETRIES || '1'),
+      transactionConfirmationRetryTimeout: parseInt(process.env.SOLANA_MAX_TRANSACTION_CONFIRMATION_RETRIES || '10000'),
     },
   },
   auth: {
