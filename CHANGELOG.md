@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.16.0] - 2022-04-21
+### Added
+- retries for confirming solana submit transactions
+
 ## [4.15.0] - 2022-04-20
 ### Changed
 - Updated `TxSender` to use `GasEstimator` from SDK
