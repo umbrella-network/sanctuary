@@ -62,7 +62,8 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
         seed,
         blockId,
         root.startsWith('0x') ? Buffer.from(root.slice(2), 'hex') : Buffer.from(root, 'hex'),
-        dataTimestamp, {
+        dataTimestamp,
+        {
           accounts: {
             owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
             authority: this.authorityPda,
