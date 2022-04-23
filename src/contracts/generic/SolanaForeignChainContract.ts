@@ -58,15 +58,20 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
     const [blockPda, seed] = await derivePDAFromBlockId(blockId, this.chainProgramId);
 
     const [submitSignature, fcdSignatures] = await Promise.allSettled([
-      this.chainProgram.rpc.submit(seed, blockId, encodeBlockRoot(root), dataTimestamp, {
-        accounts: {
-          owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
-          authority: this.authorityPda,
-          block: blockPda,
-          status: this.statusPda,
-          systemProgram: SystemProgram.programId,
-        },
-      }),
+      this.chainProgram.rpc.submit(
+        seed,
+        blockId,
+        root.startsWith('0x') ? Buffer.from(root.slice(2), 'hex') : Buffer.from(root, 'hex'),
+        dataTimestamp, {
+          accounts: {
+            owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
+            authority: this.authorityPda,
+            block: blockPda,
+            status: this.statusPda,
+            systemProgram: SystemProgram.programId,
+          },
+        }
+      ),
       this.submitFCDs(dataTimestamp, keys, values),
     ]);
 
@@ -179,7 +184,7 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
 
   async resolveBlockData(chainAddress: string, blockId: number): Promise<ChainBlockData> {
     const block = await this.chainProgram.account.block.fetch(await this.getBlockPda(chainAddress, blockId));
-    const root = decodeBlockRoot(block.root);
+    const root = '0x' + Buffer.from(block.root).toString('hex');
 
     return {
       root: root,

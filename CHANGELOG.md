@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [4.16.0] - 2022-04-21
 ### Added
-- retries for confirming solana submit transactions
+- Added retries to `SolanaForeignChainContract` for confirming solana submit transactions
+
+### Changed
+- Updated `SolanaForeignChainContract` to use buffer to hex conversions for block root
 
 ## [4.15.0] - 2022-04-20
 ### Changed
