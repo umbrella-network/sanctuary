@@ -74,6 +74,8 @@ type Settings = {
     solana: {
       replicatorSecretKey: string;
       chainProgramPublicKeyInitString: string;
+      maxTransactionConfirmationRetries: number;
+      transactionConfirmationRetryTimeout: number;
     };
   };
   auth: {

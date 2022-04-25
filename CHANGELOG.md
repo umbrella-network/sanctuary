@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.16.0] - 2022-04-21
+### Added
+- Added retries to `SolanaForeignChainContract` for confirming solana submit transactions
+
+### Changed
+- Updated `SolanaForeignChainContract` to use buffer to hex conversions for block root
+
 ## [4.15.0] - 2022-04-20
 ### Changed
 - Updated `TxSender` to use `GasEstimator` from SDK

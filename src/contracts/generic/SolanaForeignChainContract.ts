@@ -9,9 +9,9 @@ import { SolanaWallet } from '../../lib/wallets/SolanaWallet';
 import { ChainBlockData, ChainFCDsData } from '../../models/ChainBlockData';
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import { Program } from '@project-serum/anchor';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
+import { PublicKey, SystemProgram, TransactionResponse } from '@solana/web3.js';
 import { Chain, IDL } from '../SolanaChainProgram';
-import { sleep } from '../../utils/callRetry';
+import { sleep } from '../../utils/sleep';
 import { getLogger } from '../../lib/getLogger';
 
 import {
@@ -31,8 +31,6 @@ import {
 
 @injectable()
 export class SolanaForeignChainContract implements IGenericForeignChainContract {
-  //@inject('Logger') protected logger!: Logger;
-
   readonly settings: Settings;
   readonly blockchain: IGenericBlockchain;
   address: string;
@@ -60,40 +58,26 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
     const [blockPda, seed] = await derivePDAFromBlockId(blockId, this.chainProgramId);
 
     const [submitSignature, fcdSignatures] = await Promise.allSettled([
-      this.chainProgram.rpc.submit(seed, blockId, encodeBlockRoot(root), dataTimestamp, {
-        accounts: {
-          owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
-          authority: this.authorityPda,
-          block: blockPda,
-          status: this.statusPda,
-          systemProgram: SystemProgram.programId,
-        },
-      }),
+      this.chainProgram.rpc.submit(
+        seed,
+        blockId,
+        root.startsWith('0x') ? Buffer.from(root.slice(2), 'hex') : Buffer.from(root, 'hex'),
+        dataTimestamp,
+        {
+          accounts: {
+            owner: (<SolanaWallet>this.blockchain.wallet).wallet.publicKey,
+            authority: this.authorityPda,
+            block: blockPda,
+            status: this.statusPda,
+            systemProgram: SystemProgram.programId,
+          },
+        }
+      ),
       this.submitFCDs(dataTimestamp, keys, values),
     ]);
 
     if (submitSignature.status === 'fulfilled') {
-      const MAX_RETRIES = 1; // TODO - put in ENV VAR
-      let confirmedTransaction;
-      let retries = 0;
-
-      while (retries <= MAX_RETRIES) {
-        try {
-          confirmedTransaction = await (<SolanaProvider>(
-            this.blockchain.getProvider()
-          )).provider.connection.getTransaction(submitSignature.value);
-        } catch (e) {
-          this.logger.error(`[${this.blockchain.chainId}] Error confirming transaction: ${e}`);
-        }
-
-        if (confirmedTransaction) {
-          break;
-        }
-
-        await sleep(10000);
-        this.logger.info(`[${this.blockchain.chainId}] Failed to confirm submit transaction. Retrying`);
-        retries++;
-      }
+      const confirmedTransaction = await this.confirmTransaction(submitSignature.value);
 
       return {
         transactionHash: submitSignature.value,
@@ -109,6 +93,31 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
       status: false,
       blockNumber: null,
     };
+  }
+
+  async confirmTransaction(signature: string): Promise<TransactionResponse> {
+    let confirmedTransaction;
+    let retries = 0;
+
+    while (retries <= this.settings.blockchain.solana.maxTransactionConfirmationRetries) {
+      try {
+        confirmedTransaction = await (<SolanaProvider>this.blockchain.getProvider()).provider.connection.getTransaction(
+          signature
+        );
+      } catch (e) {
+        this.logger.error(`[${this.blockchain.chainId}] Error confirming transaction: ${e}`);
+      }
+
+      if (confirmedTransaction) {
+        break;
+      }
+
+      await sleep(this.settings.blockchain.solana.transactionConfirmationRetryTimeout);
+      this.logger.info(`[${this.blockchain.chainId}] Failed to confirm submit transaction. Retrying`);
+      retries++;
+    }
+
+    return confirmedTransaction;
   }
 
   async submitFCDs(dataTimestamp: number, keys: string[], values: FeedValue[]): Promise<void> {
@@ -176,7 +185,7 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
 
   async resolveBlockData(chainAddress: string, blockId: number): Promise<ChainBlockData> {
     const block = await this.chainProgram.account.block.fetch(await this.getBlockPda(chainAddress, blockId));
-    const root = decodeBlockRoot(block.root);
+    const root = '0x' + Buffer.from(block.root).toString('hex');
 
     return {
       root: root,
