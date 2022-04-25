@@ -1,6 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+import { sleep } from './sleep';
 
 export const callRetry = async (url: string, retries = 3, delayMs = 500): Promise<AxiosResponse> => {
   const attempts = new Array(retries).fill(1);
