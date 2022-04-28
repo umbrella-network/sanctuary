@@ -9,6 +9,8 @@ import { Application } from 'express';
 
 import settings from '../../../src/config/settings';
 import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
+import Block from '../../../src/models/Block';
+import { inputForBlockModel } from '../../fixtures/inputForBlockModel';
 
 describe('metrics', () => {
   let container: Container;
@@ -95,6 +97,46 @@ describe('metrics', () => {
               expect(res.status).to.eq(400);
             });
           });
+        });
+      });
+    });
+  });
+
+  describe('/metrics/feed-percent', () => {
+    beforeEach(async () => {
+      await Block.create([{ ...inputForBlockModel, _id: 'block::4444', blockId: 4444, status: 'finalized' }]);
+    });
+
+    afterEach(async () => {
+      await Block.deleteMany();
+    });
+
+    const route = '/metrics/keys-frequency';
+
+    describe('GET /metrics/keys-frequency', () => {
+      describe('when no bearer token is provided', () => {
+        it('responds with HTTP 401 Unauthorized', async () => {
+          const response = await request(app).get(route);
+
+          expect(response.status).to.eq(401);
+        });
+      });
+
+      describe('when an invalid bearer token is provided', () => {
+        it('responds with HTTP 401 Unauthorized', async () => {
+          const response = await request(app).get(route).set('Authorization', 'Bearer wrongBearer');
+
+          expect(response.status).to.eq(401);
+        });
+      });
+
+      describe('when a valid bearer token is provided', async () => {
+        const accessToken = 'testToken';
+
+        it('responds with status 200', async () => {
+          const res = await request(app).get(route).set('Authorization', `Bearer ${accessToken}`);
+
+          expect(res.status).to.eq(200);
         });
       });
     });

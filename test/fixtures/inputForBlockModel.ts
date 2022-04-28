@@ -3,7 +3,7 @@ import { BlockStatus } from '../../src/types/blocks';
 export const inputForBlockModel = {
   _id: 'block::1',
   chainAddress: '0x1',
-  anchor: '1024',
+  anchor: 1024,
   blockId: 1,
   minter: '0xA405324F4b6EB7Bc76f1964489b3769cfc71445F',
   power: '1000000000000000000',

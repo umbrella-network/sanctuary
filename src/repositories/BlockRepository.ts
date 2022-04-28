@@ -84,6 +84,12 @@ export class BlockRepository {
     }
   }
 
+  async getLatestBlock(): Promise<IBlock> {
+    const block = await Block.find().sort('-blockId').limit(1);
+
+    return block[0];
+  }
+
   private augmentBlockCollectionWithReplicationData(blocks: IBlock[], foreignBlocks: IForeignBlock[]): IBlock[] {
     return blocks.map((block) => {
       const matchingForeignBlock = foreignBlocks.find((fb) => fb.blockId == block.blockId);
