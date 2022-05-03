@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.17.0] - 2022-05-02
+### Changed
+- Updated `ForeignBlockReplicator` to use `TxSender` from SDK
+
+### Removed
+- Deleted `TxSender`
+
 ## [4.16.0] - 2022-04-21
 ### Added
 - Added retries to `SolanaForeignChainContract` for confirming solana submit transactions

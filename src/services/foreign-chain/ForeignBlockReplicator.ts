@@ -3,7 +3,7 @@ import { Logger } from 'winston';
 import newrelic from 'newrelic';
 
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
-import { LeafKeyCoder, LeafValueCoder } from '@umb-network/toolbox';
+import { LeafKeyCoder, LeafValueCoder, TxSender } from '@umb-network/toolbox';
 import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts';
 
 import Block, { IBlock } from '../../models/Block';
@@ -16,7 +16,6 @@ import { ForeignChainContract } from '../../contracts/ForeignChainContract';
 import { ChainContract } from '../../contracts/ChainContract';
 
 import { IForeignBlockReplicator } from './IForeignBlockReplicator';
-import { TxSender } from '../TxSender';
 import Settings from '../../types/Settings';
 import { Blockchain } from '../../lib/Blockchain';
 import { FailedTransactionEvent } from '../../constants/ReportedMetricsEvents';
@@ -61,7 +60,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     this.txSender = new TxSender({
       wallet: this.blockchain.wallet,
-      logger: this.logger,
       chainId: this.chainId,
       waitForBlockTime: this.blockchain.settings.transactions.waitForBlockTime,
     });
