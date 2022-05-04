@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.17.1] - 2022-05-04
+### Changed
+- Updated env to pass CI tests on dev.
+
 ## [4.17.0] - 2022-05-02
 ### Changed
 - Updated `ForeignBlockReplicator` to use `TxSender` from SDK
