@@ -52,7 +52,7 @@ jobs:
         env:
           BLOCKCHAIN_PROVIDER_URL: 'https://speedy-nodes-nyc.moralis.io/0dfb3a0716615332cec38c23/bsc/testnet'
           REGISTRY_CONTRACT_ADDRESS: '0x8f98d3B5C911206C1Ac08B9938875620A03BCd59'
-          ETH_BLOCKCHAIN_PROVIDER_URL: 'https://api-kovan.etherscan.io/'
+          ETH_BLOCKCHAIN_PROVIDER_URL: 'https://kovan.infura.io/v3/41367ca5932343298b672cd60fddc01d'
           ETH_REGISTRY_CONTRACT_ADDRESS: '0x230A8CF6F74331491Bc7B724c8194b06Cc0486c9'
           POLYGON_BLOCKCHAIN_PROVIDER_URL: 'https://rpc-mumbai.maticvigil.com/'
           POLYGON_REGISTRY_CONTRACT_ADDRESS: '0xaB61f05a9dabCEd63c9100b623A4c29FfD9bf077'
