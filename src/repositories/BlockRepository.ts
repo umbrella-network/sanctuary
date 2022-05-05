@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
+import { isUndefined, omitBy } from 'lodash';
 import { Logger } from 'winston';
+
 import Block, { IBlock } from '../models/Block';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 import { BlockStatus } from '../types/blocks';
-import { isUndefined, omitBy } from 'lodash';
 
 export type FindProps = {
   offset: number;
@@ -19,6 +20,11 @@ export type FindOneProps = {
 export type LatestProps = {
   chainId?: string;
   status?: BlockStatus;
+};
+
+export type CountBlocksBetweenProps<T> = {
+  startDate: T;
+  endDate: T;
 };
 
 @injectable()
@@ -88,6 +94,16 @@ export class BlockRepository {
     const block = await Block.find().sort('-blockId').limit(1);
 
     return block[0];
+  }
+
+  async countBlocksFromPeriod({ startDate, endDate }: CountBlocksBetweenProps<Date>): Promise<number> {
+    return Block.find({
+      status: BlockStatus.Finalized,
+      dataTimestamp: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    }).countDocuments();
   }
 
   private augmentBlockCollectionWithReplicationData(blocks: IBlock[], foreignBlocks: IForeignBlock[]): IBlock[] {
