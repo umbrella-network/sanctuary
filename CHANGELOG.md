@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.18.0] - 2022-05-05
+### Added
+- Create metrics/keys-frequency endpoint to get frequency of appearance of keys in the latest 100 blocks
+
 ## [4.17.1] - 2022-05-04
 ### Changed
 - Updated env to pass CI tests on dev.

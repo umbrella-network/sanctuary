@@ -27,7 +27,7 @@ describe('LeafRepository', () => {
     leafRepository = container.get(LeafRepository);
   });
 
-  describe('#getLeaves', () => {
+  describe('#getKeys', () => {
     it('returns only the keys of the leaves', async () => {
       const keys = await leafRepository.getKeys();
 
