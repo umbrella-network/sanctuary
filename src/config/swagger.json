@@ -405,6 +405,42 @@
         }
       }
     },
+    "/signatures": {
+      "get": {
+        "summary": "Returns the participation rate of voters in the latest given interval of blocks. If period is not defined, by default it will use today's date -1 hour.",
+        "tags": ["signatures"],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "The start date of period. This date is inclusive. Date format must be yyyy-mm-dd.",
+            "required": false,
+            "type": "string",
+            "example": "2022-01-01"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "The end date of period. This date is not inclusive. Date format must be yyyy-mm-dd.",
+            "required": false,
+            "type": "string",
+            "example": "2022-02-01"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of signatures with their respective participation rate on the latest blocks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Signatures"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/proofs": {
       "get": {
         "summary": "Returns the latest block height and proofs for a given set of leaf keys",
@@ -777,6 +813,22 @@
             "count": {
               "type": "number",
               "example": "100"
+            }
+          }
+        }
+      },
+      "Signatures": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string",
+              "example": "0xABCDEF123456"
+            },
+            "participationRate": {
+              "type": "number",
+              "example": "91.2"
             }
           }
         }

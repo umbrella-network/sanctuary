@@ -23,6 +23,7 @@ import { Logger } from 'winston';
 
 import swaggerDocument from '../config/swagger.json';
 import internalSwaggerDocument from '../config/swagger-internal.json';
+import SignatureController from '../controllers/SignatureController';
 
 @injectable()
 class Server {
@@ -44,7 +45,8 @@ class Server {
     @inject(ApiKeysController) apiKeyController: ApiKeysController,
     @inject(ProjectsController) projectsController: ProjectsController,
     @inject(InfoController) infoController: InfoController,
-    @inject(ProfileController) profileController: ProfileController
+    @inject(ProfileController) profileController: ProfileController,
+    @inject(SignatureController) signatureController: SignatureController
   ) {
     this.port = settings.port;
     this.logger = logger;
@@ -68,6 +70,7 @@ class Server {
       .use('/projects', projectsController.router)
       .use('/info', infoController.router)
       .use('/profile', profileController.router)
+      .use('/signatures', signatureController.router)
       .use(this.authErrorHandler)
       .use(this.generalErrorHandler);
 
