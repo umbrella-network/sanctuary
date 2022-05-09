@@ -40,16 +40,28 @@ login:
 publish-bsc:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-bsc01 -n dev
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-foreign-chain-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-foreign-chain-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-metrics-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-metrics-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-resolver-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-resolver-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-sync-worker-bsc01 -n dev
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-sync-worker-bsc01 -n dev	
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n dev
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n dev
 
 publish-sbx:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n sandbox
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc01 -n sandbox
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-worker-bsc01 -n sandbox
-	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-worker-bsc01 -n sandbox
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-foreign-chain-worker-bsc01 -n sandbox
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-foreign-chain-worker-bsc01 -n sandbox
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-metrics-worker-bsc01 -n sandbox
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-metrics-worker-bsc01 -n sandbox
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-resolver-worker-bsc01 -n sandbox
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-resolver-worker-bsc01 -n sandbox
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-sync-worker-bsc01 -n sandbox
+	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-sync-worker-bsc01 -n sandbox	
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n sandbox
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n sandbox
 
