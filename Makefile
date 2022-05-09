@@ -64,7 +64,7 @@ publish-sbx:
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-sync-worker-bsc01 -n sandbox	
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n sandbox
 	@kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n sandbox
-	
+
 dev: assume login build-dev update-stg-kubeconfig publish-bsc
 
 sbx: assume login update-stg-kubeconfig build-sbx publish-sbx
