@@ -1,7 +1,8 @@
 import { CountBlocksBetweenProps as Period } from '../repositories/BlockRepository';
 import { subDays, isValid } from 'date-fns';
 
-const MAX_PERIOD_RANGE = 7 * 24 * 60 * 60;
+const MAX_PERIOD_RANGE = 7;
+const MAX_PERIOD_RANGE_IN_SECONDS = MAX_PERIOD_RANGE * 24 * 60 * 60;
 export const MINUTE = 'm';
 export const HOUR = 'h';
 export const DAY = 'd';
@@ -37,7 +38,7 @@ export const getDateOrDefault = ({ startDate, endDate }: Period<string>): Period
 };
 
 const validatePeriod = (period: Period<Date>): Period<Date> => {
-  if (isPeriodRangeValid(period) && isPeriodBelowThreshold(period, MAX_PERIOD_RANGE)) {
+  if (isPeriodRangeValid(period) && isPeriodBelowThreshold(period, MAX_PERIOD_RANGE_IN_SECONDS)) {
     return period;
   }
 
@@ -51,7 +52,10 @@ const isPeriodRangeValid = (period: Period<Date>): boolean => {
   return period.endDate.getTime() > period.startDate.getTime();
 };
 
-const isPeriodBelowThreshold = ({ startDate, endDate }: Period<Date>, threshold = MAX_PERIOD_RANGE): boolean => {
+const isPeriodBelowThreshold = (
+  { startDate, endDate }: Period<Date>,
+  threshold = MAX_PERIOD_RANGE_IN_SECONDS
+): boolean => {
   const currentPeriodTime = endDate.getTime() / 1000 - startDate.getTime() / 1000;
   return currentPeriodTime < threshold;
 };
