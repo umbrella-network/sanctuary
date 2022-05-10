@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [4.19.0] - 2022-05-09
+### Added
+- Added `GET: /signatures` to get participation rate of each voter in given interval of blocks
+
 ## [4.18.0] - 2022-05-05
 ### Added
 - Create metrics/keys-frequency endpoint to get frequency of appearance of keys in the latest 100 blocks

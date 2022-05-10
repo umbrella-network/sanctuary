@@ -41,6 +41,7 @@ const BlockSchema: Schema = new Schema({
 BlockSchema.index({ blockId: -1 });
 BlockSchema.index({ blockId: 1 });
 BlockSchema.index({ status: 1 });
+BlockSchema.index({ dataTimestamp: 1 });
 BlockSchema.index({ 'synchronization.synchronizedAt': -1 });
 
 export default mongoose.model<IBlock>('Block', BlockSchema);
