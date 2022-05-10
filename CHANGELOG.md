@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 - Added `GET: /signatures` to get participation rate of each voter in given interval of blocks
 
+## [4.19.1] - 2022-05-10
+### Fixed
+- Fixed period validation in `GET: /signatures` to limit periods up to 7 days
+
 ## [4.19.0] - 2022-05-09
 ### Added
 - Added `GET: /signatures` to get participation rate of each voter in given interval of blocks
