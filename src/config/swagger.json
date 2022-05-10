@@ -407,7 +407,7 @@
     },
     "/signatures": {
       "get": {
-        "summary": "Returns the participation rate of voters in the latest given interval of blocks. If period is not defined, by default it will use today's date -1 hour.",
+        "summary": "Returns the participation rate of voters in the latest given interval of blocks. If period is not defined, by default it will use today's date -1 day. The period limit is 7 days. If the limit is exceeded in query, the end date - 7 days will be used as default.",
         "tags": ["signatures"],
         "parameters": [
           {

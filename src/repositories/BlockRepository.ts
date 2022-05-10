@@ -98,11 +98,11 @@ export class BlockRepository {
 
   async countBlocksFromPeriod({ startDate, endDate }: CountBlocksBetweenProps<Date>): Promise<number> {
     return Block.find({
-      status: BlockStatus.Finalized,
       dataTimestamp: {
         $gte: startDate,
         $lt: endDate,
       },
+      status: BlockStatus.Finalized,
     }).countDocuments();
   }
 
