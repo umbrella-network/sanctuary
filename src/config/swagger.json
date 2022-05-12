@@ -407,24 +407,24 @@
     },
     "/signatures": {
       "get": {
-        "summary": "Returns the participation rate of voters in the latest given interval of blocks. If period is not defined, by default it will use today's date -1 day. The period limit is 7 days. If the limit is exceeded in query, the end date - 7 days will be used as default.",
+        "summary": "Returns the participation rate of voters in the latest given interval of blocks.",
         "tags": ["signatures"],
         "parameters": [
           {
             "name": "startDate",
             "in": "query",
-            "description": "The start date of period. This date is inclusive. Date format must be yyyy-mm-dd.",
+            "description": "The start date of period (inclusive). Date format must be yyyy-mm-dd.",
             "required": false,
             "type": "string",
-            "example": "2022-01-01"
+            "example": "2022-02-10"
           },
           {
             "name": "endDate",
             "in": "query",
-            "description": "The end date of period. This date is not inclusive. Date format must be yyyy-mm-dd.",
+            "description": "The end date of period (inclusive). Date format must be yyyy-mm-dd.",
             "required": false,
             "type": "string",
-            "example": "2022-02-01"
+            "example": "2022-02-15"
           }
         ],
         "responses": {
@@ -434,6 +434,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Signatures"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Inserted period is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

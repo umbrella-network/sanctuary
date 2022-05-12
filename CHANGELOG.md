@@ -5,7 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-- Added `GET: /signatures` to get participation rate of each voter in given interval of blocks
+### Added
+- Added `MAX_SIGNATURE_SEARCH_RANGE` to control the range of the search
+
+### Changed
+- Update `GET: /signatures` to throw when period is invalid.
+
+### Fixed
+- Limit participation rate in `GET: /signatures` to 2 decimal numbers
+- Fix potential division by zero in `countSignatureRate`
 
 ## [4.19.1] - 2022-05-10
 ### Fixed
