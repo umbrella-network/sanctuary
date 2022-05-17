@@ -191,6 +191,11 @@ const settings: Settings = {
       apiKey: process.env.RESTRICT_API_KEY as string,
     },
   },
+  signatures: {
+    minSearchRange: 1,
+    maxSearchRange: parseInt(process.env.MAX_SIGNATURE_SEARCH_RANGE || '8', 10),
+    maxSearchRangeInSeconds: parseInt(process.env.MAX_SIGNATURE_SEARCH_RANGE || '8', 10) * 24 * 60 * 60,
+  },
   name: process.env.NEW_RELIC_APP_NAME || process.env.NAME || 'default',
 };
 
