@@ -110,6 +110,11 @@ type Settings = {
       apiKey: string;
     };
   };
+  signatures: {
+    minSearchRange: number;
+    maxSearchRange: number;
+    maxSearchRangeInSeconds: number;
+  };
   name: string;
 };
 

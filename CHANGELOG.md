@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.0.0] - 2022-05-17
+### Added
+- Added `MAX_SIGNATURE_SEARCH_RANGE` to control the range of the search
+
+### Changed
+- Update `GET: /signatures` to throw when period is invalid.
+
+### Fixed
+- Limit participation rate in `GET: /signatures` to 2 decimal numbers
+- Fix potential division by zero in `countSignatureRate`
+
 ## [4.19.1] - 2022-05-10
 ### Fixed
 - Fixed period validation in `GET: /signatures` to limit periods up to 7 days
