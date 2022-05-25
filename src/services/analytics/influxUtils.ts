@@ -1,11 +1,11 @@
 import { InfluxDB, HttpError } from '@influxdata/influxdb-client';
-import { OrgsAPI, BucketsAPI } from '@influxdata/influxdb-client-apis';
+import { OrgsAPI, BucketsAPI, Bucket } from '@influxdata/influxdb-client-apis';
 import { Point } from '@influxdata/influxdb-client';
 
 /**
  * If bucket name does not exist, it'll create one.
  */
-export async function eraseBucket(influxConn: InfluxDB, org: string, bucketName: string) {
+export async function eraseBucket(influxConn: InfluxDB, org: string, bucketName: string): Promise<Bucket> {
   const orgsAPI = new OrgsAPI(influxConn);
 
   const organizations = await orgsAPI.getOrgs({ org });

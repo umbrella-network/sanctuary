@@ -1,7 +1,7 @@
 import createJWKSMock, { JWKSMock } from 'mock-jwks';
 
-import User, { ILocalUser } from '../../src/models/LocalUser';
-import Project, { IProject } from '../../src/models/Project';
+import User from '../../src/models/LocalUser';
+import Project from '../../src/models/Project';
 import ApiKey, { IApiKey } from '../../src/models/ApiKey';
 import { projectFactory } from '../mocks/factories/projectFactory';
 import { apiKeyFactory } from '../mocks/factories/apiKeyFactory';
@@ -10,12 +10,6 @@ import { createHash } from 'crypto';
 export type TestAuthHarness = {
   accessToken: string;
   jwksMock: JWKSMock;
-};
-
-export type TestUserHarness = {
-  user: ILocalUser;
-  project: IProject;
-  apiKey: IApiKey;
 };
 
 export async function setupJWKSMock(): Promise<TestAuthHarness> {

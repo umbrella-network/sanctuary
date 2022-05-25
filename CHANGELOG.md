@@ -152,7 +152,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [4.9.0] - 2022-02-02
 ### Added
-- Create metrics/voters endpoint to get each voters vote count of given time interval
+- Create metrics/voters endpoint to get each voter's vote count of given time interval
 - Create restrictAccess method in AuthenticationMiddleware
 - Use restrictAccess in metrics routes
 
@@ -190,7 +190,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [4.7.1] - 2021-12-15
 ### Fixed
-- Whole foreing chain balance reporting process fails if can't fetch balance of one of them 
+- Whole foreign chain balance reporting process fails if it can't fetch balance of one of them 
 
 ## [4.7.0] - 2021-11-02
 ### Added
@@ -293,7 +293,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [3.1.2] - 2021-08-19
 ### Changed
-- handling impossible case where block has no voters (it can potentially happen only when we redeploying sidechain)
+- handling impossible case where block has no voters (it can potentially happen only when redeploying sidechain)
 
 ## [3.1.1] - 2021-08-11
 ### Changed
@@ -397,7 +397,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - pull consensus data from blockchain
 
 ### Fixed
-- do not stuck on blocks when validators calls for data fail
+- prevent getting stuck on blocks when validators call for data fail
 
 ## [1.0.1] - 2021-05-25
 ### Changed
@@ -434,7 +434,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3.2] - 2021-05-03
 ### Fixed
-- Mark block as failed when validator can't be reached (not exists)
+- Mark block as failed when validator can't be reached (does not exist)
 
 ## [0.3.1] - 2021-05-03
 ### Added

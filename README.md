@@ -81,7 +81,7 @@ echo "MONGODB_URL=mongodb://localhost:27017/sanctuary-test" >> ./.testing.env;
 ```
 
 After that start the docker.
-It will initilize database and control cache dependencies.
+It will initialize database and control cache dependencies.
 ```shell script
 docker-compose -f docker-compose.yml up 
 ```

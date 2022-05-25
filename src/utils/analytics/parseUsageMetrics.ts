@@ -1,5 +1,4 @@
 import UsageMetrics from '../../types/analytics/UsageMetrics';
-import { sub, closestTo } from 'date-fns';
 import { LONG_NOTATION_FOR_MEASURE, removeMillisecondsFromIsoDate } from '../time';
 import { EVERY_N_FOR_PERIOD } from './usageMetricsUtils';
 import { orderBy } from 'lodash';
@@ -23,7 +22,7 @@ export const parseUsageMetrics = (rows: Array<any>, period?: string): Array<Usag
     });
   }
 
-  const { every, everyMeasure, bins } = EVERY_N_FOR_PERIOD[period];
+  const { everyMeasure } = EVERY_N_FOR_PERIOD[period];
   const subMeasure = LONG_NOTATION_FOR_MEASURE[everyMeasure];
 
   const endingTime = rows[rows.length - 1]._time;

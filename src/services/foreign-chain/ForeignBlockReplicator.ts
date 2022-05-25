@@ -5,6 +5,7 @@ import newrelic from 'newrelic';
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import { LeafKeyCoder, LeafValueCoder, TxSender } from '@umb-network/toolbox';
 import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts';
+import { TransactionReceipt } from '@ethersproject/providers';
 
 import Block, { IBlock } from '../../models/Block';
 import ForeignBlock, { IForeignBlock } from '../../models/ForeignBlock';
@@ -49,7 +50,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   protected foreignChainContract!: ForeignChainContract;
 
   @postConstruct()
-  protected setup() {
+  protected setup(): void {
     this.homeBlockchain = this.blockchainRepository.get(this.settings.blockchain.homeChain.chainId);
     this.blockchain = this.blockchainRepository.get(this.chainId);
 
@@ -239,7 +240,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     blockId: number,
     chainStatus: ForeignChainStatus,
     transactionRequest: TransactionRequest = {}
-  ) => {
+  ): Promise<TransactionReceipt> => {
     const fn = (tr: TransactionRequest) =>
       this.foreignChainContract.submit(
         TimeService.msToSec(dataTimestamp.getTime()),
