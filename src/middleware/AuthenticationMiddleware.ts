@@ -47,10 +47,4 @@ export class AuthenticationMiddleware {
       this.userAuthenticator(request, response, next);
     }
   };
-
-  private throwUnauthorizedError = (): void => {
-    const error = new Error();
-    error.name = 'UnauthorizedError';
-    throw error;
-  };
 }

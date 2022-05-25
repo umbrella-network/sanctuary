@@ -2,11 +2,6 @@ import Bull, { Queue, Worker } from 'bullmq';
 import { inject, injectable } from 'inversify';
 import IORedis from 'ioredis';
 
-export type WorkerType = {
-  start(): void;
-  enqueue<T>(params: T, opts?: Bull.JobsOptions): Promise<Bull.Job<T>>;
-};
-
 @injectable()
 abstract class BasicWorker {
   connection: IORedis.Redis;

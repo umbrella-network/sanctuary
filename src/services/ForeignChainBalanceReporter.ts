@@ -55,7 +55,7 @@ class ForeignChainBalanceReporter extends BalanceReporter {
 
   private logRejectedResults(rejectionMessages: string): void {
     if (rejectionMessages) {
-      this.logger.error(`[ForeignChainBalanceReporter] failed to fetch data from foreing chains ${rejectionMessages}`);
+      this.logger.error(`[ForeignChainBalanceReporter] failed to fetch data from foreign chains ${rejectionMessages}`);
     }
   }
 }

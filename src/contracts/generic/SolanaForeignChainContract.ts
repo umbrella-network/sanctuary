@@ -1,4 +1,4 @@
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { Logger } from 'winston';
 import { BigNumber } from 'ethers';
 import Settings from '../../types/Settings';
@@ -20,14 +20,7 @@ import {
   TransactionResult,
 } from './IGenericForeignChainContract';
 
-import {
-  derivePDAFromBlockId,
-  getPublicKeyForSeed,
-  encodeBlockRoot,
-  decodeBlockRoot,
-  derivePDAFromFCDKey,
-  encodeDataValue,
-} from '../../utils/solana';
+import { derivePDAFromBlockId, getPublicKeyForSeed, derivePDAFromFCDKey, encodeDataValue } from '../../utils/solana';
 
 @injectable()
 export class SolanaForeignChainContract implements IGenericForeignChainContract {
@@ -57,7 +50,7 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
   ): Promise<TransactionResult> {
     const [blockPda, seed] = await derivePDAFromBlockId(blockId, this.chainProgramId);
 
-    const [submitSignature, fcdSignatures] = await Promise.allSettled([
+    const [submitSignature] = await Promise.allSettled([
       this.chainProgram.rpc.submit(
         seed,
         blockId,

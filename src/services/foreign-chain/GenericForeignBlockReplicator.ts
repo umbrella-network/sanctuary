@@ -14,7 +14,7 @@ export abstract class GenericForeignBlockReplicator extends ForeignBlockReplicat
   protected genericForeignChainContract!: IGenericForeignChainContract;
 
   @postConstruct()
-  protected async setup() {
+  protected async setup(): Promise<void> {
     this.homeBlockchain = this.blockchainRepository.get(this.settings.blockchain.homeChain.chainId);
     this.genericBlockchain = this.blockchainRepository.getGeneric(this.chainId);
     this.homeChainContract = <ChainContract>(
