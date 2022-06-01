@@ -14,6 +14,13 @@ import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { BaseChainContract } from '../contracts/BaseChainContract';
 import { ChainsIds } from '../types/ChainsIds';
+import * as fastq from 'fastq';
+import type { queueAsPromised } from 'fastq';
+
+type SyncChainTask = {
+  batchFrom: number;
+  batchTo: number;
+};
 
 @injectable()
 class ChainSynchronizer {
@@ -41,12 +48,24 @@ class ChainSynchronizer {
       return;
     }
 
+    this.logger.info(`[${this.blockchain.chainId}] chain not up to date.`);
     const blockNumber = await this.blockchain.getBlockNumber();
     await this.synchronizeChains(blockNumber);
   };
 
   private chainUpToDate = async (): Promise<boolean> => {
-    const currentChainAddress = await this.registry.getAddress(CHAIN_CONTRACT_NAME);
+    this.logger.info(`[${this.blockchain.chainId}] checking if chain up to date.`);
+    let currentChainAddress;
+
+    try {
+      currentChainAddress = await this.registry.getAddress(CHAIN_CONTRACT_NAME);
+    } catch (e) {
+      this.logger.info(`[${this.blockchain.chainId}] unable to get address.  Trying provider again`);
+      this.registry = new ContractRegistry(this.blockchain.getProvider(), this.blockchain.getContractRegistryAddress());
+      currentChainAddress = await this.registry.getAddress(CHAIN_CONTRACT_NAME);
+    }
+
+    this.logger.info(`[${this.blockchain.chainId}] finding chain instance.`);
     const id = ChainSynchronizer.chainInstanceId(this.blockchain.chainId, currentChainAddress);
     const results = await ChainInstance.findById(id);
 
@@ -58,6 +77,8 @@ class ChainSynchronizer {
   };
 
   private synchronizeChains = async (currentBlockNumber: number): Promise<void> => {
+    this.logger.info(`[${this.blockchain.chainId}] calculating block number range.`);
+
     const [fromBlock, toBlock] = await this.calculateBlockNumberRange(
       this.blockchain.settings.startBlockNumber,
       currentBlockNumber
@@ -67,13 +88,17 @@ class ChainSynchronizer {
 
     const ranges = CreateBatchRanges.apply(fromBlock, toBlock, this.blockchain.settings.scanBatchSize);
 
-    const queue = [];
+    const worker = async (task: SyncChainTask) => {
+      await this.synchronizeChainsForBatch(task.batchFrom, task.batchTo);
+    };
 
-    for (const [batchFrom, batchTo] of ranges) {
-      queue.push(this.synchronizeChainsForBatch(batchFrom, batchTo));
-    }
+    const queue: queueAsPromised<SyncChainTask> = fastq.promise(worker, this.blockchain.settings.maxRequestConcurrency);
 
-    await Promise.all(queue);
+    ranges.map(([batchFrom, batchTo]) => {
+      queue.push({ batchFrom, batchTo });
+    });
+
+    await queue.drained();
   };
 
   private synchronizeChainsForBatch = async (fromBlock: number, toBlock: number): Promise<IChainInstance[]> => {
