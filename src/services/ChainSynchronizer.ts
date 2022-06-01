@@ -48,11 +48,13 @@ class ChainSynchronizer {
       return;
     }
 
+    this.logger.info(`[${this.blockchain.chainId}] chain not up to date.`);
     const blockNumber = await this.blockchain.getBlockNumber();
     await this.synchronizeChains(blockNumber);
   };
 
   private chainUpToDate = async (): Promise<boolean> => {
+    this.logger.info(`[${this.blockchain.chainId}] checking if chain up to date.`);
     let currentChainAddress;
 
     try {
@@ -63,6 +65,7 @@ class ChainSynchronizer {
       currentChainAddress = await this.registry.getAddress(CHAIN_CONTRACT_NAME);
     }
 
+    this.logger.info(`[${this.blockchain.chainId}] finding chain instance.`);
     const id = ChainSynchronizer.chainInstanceId(this.blockchain.chainId, currentChainAddress);
     const results = await ChainInstance.findById(id);
 
@@ -74,6 +77,8 @@ class ChainSynchronizer {
   };
 
   private synchronizeChains = async (currentBlockNumber: number): Promise<void> => {
+    this.logger.info(`[${this.blockchain.chainId}] calculating block number range.`);
+
     const [fromBlock, toBlock] = await this.calculateBlockNumberRange(
       this.blockchain.settings.startBlockNumber,
       currentBlockNumber
