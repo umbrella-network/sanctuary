@@ -67,6 +67,7 @@ const settings: Settings = {
       bsc: {
         startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.BLOCK_SCAN_BATCH_SIZE || '5000', 10), // for BSC 5K is max
+        maxRequestConcurrency: parseInt(process.env.MAX_REQUEST_CONCURRENCY || '20', 10),
         confirmations: parseInt(process.env.BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
@@ -74,6 +75,7 @@ const settings: Settings = {
       ethereum: {
         startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.ETH_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        maxRequestConcurrency: parseInt(process.env.ETH_MAX_REQUEST_CONCURRENCY || '20', 10),
         confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ETH_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
@@ -90,6 +92,7 @@ const settings: Settings = {
       polygon: {
         startBlockNumber: parseInt(process.env.POLYGON_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: Math.max(3500, parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '3500', 10)),
+        maxRequestConcurrency: parseInt(process.env.POLY_MAX_REQUEST_CONCURRENCY || '20', 10),
         confirmations: parseInt(process.env.POLYGON_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.POLYGON_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
@@ -105,7 +108,8 @@ const settings: Settings = {
       },
       avax: {
         startBlockNumber: parseInt(process.env.AVALANCHE_START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: parseInt(process.env.AVALANCHE_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        scanBatchSize: Math.max(2000, parseInt(process.env.AVALANCHE_BLOCK_SCAN_BATCH_SIZE || '2000', 10)),
+        maxRequestConcurrency: parseInt(process.env.AVALANCHE_MAX_REQUEST_CONCURRENCY || '20', 10),
         confirmations: parseInt(process.env.AVALANCHE_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.AVALANCHE_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.AVALANCHE_REGISTRY_CONTRACT_ADDRESS,
@@ -122,6 +126,7 @@ const settings: Settings = {
       arbitrum: {
         startBlockNumber: parseInt(process.env.ARBITRUM_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        maxRequestConcurrency: parseInt(process.env.ARBITRUM_MAX_REQUEST_CONCURRENCY || '20', 10),
         confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ARBITRUM_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.ARBITRUM_REGISTRY_CONTRACT_ADDRESS,
@@ -138,6 +143,7 @@ const settings: Settings = {
       solana: {
         startBlockNumber: parseInt(process.env.SOLANA_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.SOLANA_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        maxRequestConcurrency: parseInt(process.env.SOLANA_MAX_REQUEST_CONCURRENCY || '20', 10),
         confirmations: parseInt(process.env.SOLANA_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.SOLANA_BLOCKCHAIN_PROVIDER_URL,
         contractRegistryAddress: null,
