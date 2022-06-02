@@ -15,9 +15,7 @@ export default class UsageMetricsRepository {
 
     const rows = await influxUtils.collectRowsFromQuery(fluxQuery, influxConn, org, bucket);
 
-    const usageMetrics = parseUsageMetrics(rows, period);
-
-    return usageMetrics;
+    return parseUsageMetrics(rows, period);
   }
 
   static async register(apiKey: string, route: string, method: string): Promise<void> {

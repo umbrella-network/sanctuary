@@ -59,7 +59,7 @@ describe('updateApiKey', () => {
           authHarness = await setupJWKSMock();
           project = await Project.create({ ...projectFactory.build(), ownerId: 'USER_ID', ownerType: 'User' });
           response = await request(app)
-            .patch('/api-keys/wrognApiKey')
+            .patch('/api-keys/wrongApiKey')
             .set('Authorization', `Bearer ${authHarness.accessToken}`)
             .send({ description: 'A New Description' });
         });

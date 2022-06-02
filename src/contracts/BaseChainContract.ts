@@ -50,11 +50,6 @@ export abstract class BaseChainContract {
     return { chainAddress: chain.contract.address, ...status };
   }
 
-  async blocksCountOffset(): Promise<number> {
-    await this._assertContract();
-    return this.contract.blocksCountOffset();
-  }
-
   address = (): string => this.contract.address;
 
   async resolveBlockData(chainAddress: string, blockId: number): Promise<ChainBlockData> {

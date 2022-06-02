@@ -85,7 +85,7 @@ describe('getProofs', () => {
       });
 
       it('responds with HTTP 401', async () => {
-        const response = await request(app).get('/proofs?keys=a&keys=b').set('Authorization', 'Barear wrongAPI');
+        const response = await request(app).get('/proofs?keys=a&keys=b').set('Authorization', 'Bearer wrongAPI');
 
         expect(response.status).to.eq(401);
       });

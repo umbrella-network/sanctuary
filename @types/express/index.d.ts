@@ -1,4 +1,3 @@
-import Project from '../../src/models/Project';
 import StatsdClient from 'statsd-client';
 
 declare global {
