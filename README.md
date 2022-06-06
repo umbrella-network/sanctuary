@@ -9,6 +9,12 @@
 Retrieves raw block leaves from Umbrella sidechain blocks. Displays information about the leaves and allows users to
 retrieve Merkle proofs. Provides an API for retrieving block leaves and Merkle proofs.
 
+# Prerequisites
+
+- docker - [Install](https://docs.docker.com/engine/install/)
+- docker-compose - [Install](https://docs.docker.com/compose/install/)
+- node >= 15 - [Install](https://nodejs.org/en/download/)
+
 # Setup
 
 Install packages.
@@ -22,10 +28,6 @@ Setup a dotenv file (`.env`) with local configuration values. Example:
 ```shell script
 cp example.env .env
 ```
-
-# Docker Install
-
-Make sure docker is installed on the machine. Check if `docker info` is available.
 
 ## Run core services (redis and MongoDB) through docker-compose
 
