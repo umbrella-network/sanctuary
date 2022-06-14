@@ -23,7 +23,7 @@ describe('Solana', async () => {
       });
 
       it('all public keys should be unique', async () => {
-        const keys = [];
+        const keys: string[] = [];
         for (const { blockId } of testCases) {
           const [blockPublicKey] = await derivePDAFromBlockId(blockId, programId);
           keys.push(blockPublicKey.toBase58());
@@ -55,7 +55,7 @@ describe('Solana', async () => {
       ];
 
       it('the public keys should be unique', async () => {
-        const keys = [];
+        const keys: string[] = [];
         for (const { blockId } of similarTestCases) {
           const [blockPublicKey] = await derivePDAFromBlockId(blockId, programId);
           keys.push(blockPublicKey.toBase58());
