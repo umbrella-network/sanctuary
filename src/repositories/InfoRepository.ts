@@ -6,13 +6,11 @@ import { ForeignChainStatus } from '../types/ForeignChainStatus';
 import { BlockchainRepository } from './BlockchainRepository';
 import { ChainContractRepository } from './ChainContractRepository';
 import { BaseChainContract } from '../contracts/BaseChainContract';
+import { ChainsIds, NonEvmChainsIds } from '../types/ChainsIds';
+import { IGenericForeignChainContract } from '../contracts/generic/IGenericForeignChainContract';
+import { NetworkStatus } from '../types/Network';
 
 type FullChainStatus = ChainStatus | ForeignChainStatus | Error;
-
-type NetworkStatus = {
-  name: string;
-  id: number;
-};
 
 export type Info = {
   status: FullChainStatus;
@@ -53,7 +51,9 @@ export class InfoRepository {
     return info;
   };
 
-  private getStatus = async (chainContract: BaseChainContract): Promise<FullChainStatus> => {
+  private getStatus = async (
+    chainContract: BaseChainContract | IGenericForeignChainContract
+  ): Promise<FullChainStatus> => {
     try {
       return await chainContract.resolveStatus<ChainStatus | ForeignChainStatus>();
     } catch (e) {
@@ -61,8 +61,12 @@ export class InfoRepository {
     }
   };
 
-  private getChainContract = async (chainId: string): Promise<BaseChainContract> => {
+  private getChainContract = async (chainId: string): Promise<BaseChainContract | IGenericForeignChainContract> => {
     try {
+      if (NonEvmChainsIds.includes(<ChainsIds>chainId)) {
+        return await this.chainContractRepository.getGeneric(chainId);
+      }
+
       return await this.chainContractRepository.get(chainId);
     } catch (e) {
       return e;
@@ -79,6 +83,11 @@ export class InfoRepository {
 
   private getNetworkStatus = async (chainId: string): Promise<NetworkStatus> => {
     try {
+      if (NonEvmChainsIds.includes(<ChainsIds>chainId)) {
+        const network = await this.blockchainRepository.getGeneric(chainId).getProvider().getNetwork();
+        return { ...network };
+      }
+
       const network = await this.blockchainRepository.get(chainId).getProvider().getNetwork();
       return { name: network.name, id: network.chainId };
     } catch (e) {
@@ -91,6 +100,10 @@ export class InfoRepository {
 
   private getContractRegistryAddress = (chainId: string): string => {
     try {
+      if (NonEvmChainsIds.includes(<ChainsIds>chainId)) {
+        return this.blockchainRepository.getGeneric(chainId).getContractRegistryAddress();
+      }
+
       return this.blockchainRepository.get(chainId).getContractRegistryAddress();
     } catch (e) {
       return e.message;
