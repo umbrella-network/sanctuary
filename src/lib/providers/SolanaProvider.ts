@@ -6,6 +6,7 @@ import { BigNumber } from 'ethers';
 import { Provider, Wallet, web3 } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import { getKeyPairFromSecretKeyString } from '../../utils/solana';
+import { NetworkStatus } from '../../types/Network';
 
 export class SolanaProvider implements IProvider {
   readonly chainId = ChainsIds.SOLANA;
@@ -46,6 +47,12 @@ export class SolanaProvider implements IProvider {
 
     return null;
   }
+
+  getNetwork = (): NetworkStatus => {
+    const rpc = this.settings.providerUrl.split('.').includes('mainnet') ? 'mainnet' : 'devnet';
+
+    return { name: `solana-${rpc}`, id: 0 };
+  };
 
   async getTransactionCount(address: string): Promise<number> {
     // this will get updated, if we integrate program-derived nonces
