@@ -49,7 +49,8 @@ export class SolanaProvider implements IProvider {
   }
 
   getNetwork = (): NetworkStatus => {
-    const rpc = this.settings.providerUrl.split('.').includes('mainnet') ? 'mainnet' : 'devnet';
+    const mainnetRegExp = new RegExp(/(mainnet)/);
+    const rpc = mainnetRegExp.test(this.settings.providerUrl) ? 'mainnet' : 'devnet';
 
     return { name: `solana-${rpc}`, id: 0 };
   };
