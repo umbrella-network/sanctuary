@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [5.0.2] - 2022-06-15
 ### Fixed
+- Return correct solana network name
 - Return status and network when request info for non-evm chain
 
 ## [5.0.1] - 2022-05-30
