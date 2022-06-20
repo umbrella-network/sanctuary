@@ -38,9 +38,21 @@ docker-compose -f docker-compose.yml up
 docker-compose --env-file=.env -f docker-compose.yml up
 ```
 
+# Network
+
+Instructions how to run blockchain locally you can find in [phoenix](https://github.com/umbrella-network/phoenix), you need to:
+- start local blockchain node
+- deploy smart contracts to local blockchain node
+- get address of Chain and keys for validator
+
 # Commands
 
 ## Seed Mock Data - Optional
+
+Build docker imagine using docker-compose
+```shell script
+docker-compose -f docker-compose.yml up
+```
 
 ```shell script
 # Seed Mock Data - optional
@@ -102,11 +114,11 @@ Run Web API Service start script
 npm run start
 
 # run in the debug mode
-npm run start
+npm run start:dev
 ```
 
 ## Live
-In order to run the application you should run the scheduler, the start the BlockSynchronizerWorker worker and them the server.
+In order to run the application you should start the scheduler, the BlockSynchronizerWorker worker and them the server.
 
 ```shell script
 npm run start:scheduler
@@ -124,10 +136,11 @@ npm run start
 
 Create ./.testing.env and fill it with settings.
 ```shell script
+echo "" >> ./.testing.env;
 echo "MONGODB_URL=mongodb://localhost:27017/sanctuary-test" >> ./.testing.env;
 ```
 
-After that start the docker.
+Start docker.
 It will initialize database and control cache dependencies.
 ```shell script
 docker-compose -f docker-compose.yml up 

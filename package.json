@@ -1,10 +1,11 @@
 {
   "name": "sanctuary",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
   },
+  "license": "MIT",
   "scripts": {
     "lint": "eslint ./src/**/*.ts ./test/**/*.ts --max-warnings=0",
     "lint:fix": "eslint ./src/**/*.ts ./test/**/*.ts --fix",
