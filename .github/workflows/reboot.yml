@@ -1,0 +1,57 @@
+name: Restart-Sanctuary-prod
+on:
+  workflow_dispatch:
+  schedule:
+   - cron: "30 11 * * *"
+ 
+jobs: 
+  reboot:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install and configure kubectl
+      run: |
+        # VERSION=$(curl --silent https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+        # https://github.com/aws/aws-cli/issues/6920#issuecomment-1117981158
+        VERSION=${{ secrets.KUBE_VERSION }}
+        curl https://storage.googleapis.com/kubernetes-release/release/$VERSION/bin/linux/amd64/kubectl \
+          --progress-bar \
+          --location \
+          --remote-name
+        curl -LO "https://dl.k8s.io/$VERSION/bin/linux/amd64/kubectl.sha256"
+        echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+        install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        kubectl version --client
+        mkdir -p ~/.kube
+        echo ${{ secrets.KUBECONFIG }} | base64 --decode > ~/.kube/config.yaml
+
+    - name: Restart Sanctuary in prod
+      run: |
+        echo "Restarting sanctuary-foreign-chain-worker-bsc01"
+        kubectl rollout restart deployment/sanctuary-foreign-chain-worker-bsc01 -n prod
+        echo "Restarting sanctuary-metrics-worker-bsc01"
+        kubectl rollout restart deployment/sanctuary-metrics-worker-bsc01 -n prod
+        echo "Restarting sanctuary-resolver-worker-bsc01"
+        kubectl rollout restart deployment/sanctuary-resolver-worker-bsc01 -n prod
+        echo "Restarting sanctuary-scheduler-bsc01"
+        kubectl rollout restart deployment/sanctuary-scheduler-bsc01 -n prod
+        echo "Restarting sanctuary-sync-worker-bsc01"
+        kubectl rollout restart deployment/sanctuary-sync-worker-bsc01 -n prod
+
+  notify:
+    name: Discord Notification
+    runs-on: ubuntu-latest
+    needs:
+      - reboot
+    if: ${{ always() }} # You always want to be notified: success, failure, or cancelled
+
+    steps:
+      - name: Notify
+        uses: nobrayner/discord-webhook@v1
+        with:
+          avatar-url: 'https://github.com/github.png?size=50'
+          username: 'umb-dev'
+          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          discord-webhook: ${{ secrets.DISCORD_ENGINEERING_WEBHOOK }}
+          title: '${{ github.workflow }}: {{STATUS}}'
+          description: '${{ github.event_name }} trigged this {{STATUS}}!'
+          # include-details: 'false'
