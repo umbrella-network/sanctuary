@@ -19,21 +19,22 @@ jobs:
           --remote-name
         curl -LO "https://dl.k8s.io/$VERSION/bin/linux/amd64/kubectl.sha256"
         echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
-        install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        chmod +x kubectl
+        mv kubectl /usr/local/bin
         kubectl version --client
         mkdir -p ~/.kube
-        echo ${{ secrets.KUBECONFIG }} | base64 --decode > ~/.kube/config.yaml
+        echo ${{ secrets.KUBECONFIG_STG }} | base64 --decode > ~/.kube/config.yaml
 
     - name: Restart Sanctuary in prod
       run: |
-        echo "Restarting sanctuary-foreign-chain-worker-bsc01"
-        kubectl rollout restart deployment/sanctuary-foreign-chain-worker-bsc01 -n prod
-        echo "Restarting sanctuary-resolver-worker-bsc01"
-        kubectl rollout restart deployment/sanctuary-resolver-worker-bsc01 -n prod
-        echo "Restarting sanctuary-scheduler-bsc01"
-        kubectl rollout restart deployment/sanctuary-scheduler-bsc01 -n prod
-        echo "Restarting sanctuary-sync-worker-bsc01"
-        kubectl rollout restart deployment/sanctuary-sync-worker-bsc01 -n prod
+        echo "Restarting 'sanctuary foreign chain worker'"
+        kubectl rollout restart deployment/sanctuary-foreign-chain-worker-bsc01
+        echo "Restarting 'sanctuary resolver worker'"
+        kubectl rollout restart deployment/sanctuary-resolver-worker-bsc01
+        echo "Restarting 'sanctuary scheduler'"
+        kubectl rollout restart deployment/sanctuary-scheduler-bsc01
+        echo "Restarting 'sanctuary sync worker'"
+        kubectl rollout restart deployment/sanctuary-sync-worker-bsc01
 
   notify:
     name: Discord Notification
