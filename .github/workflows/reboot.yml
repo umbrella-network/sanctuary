@@ -23,15 +23,15 @@ jobs:
         mv kubectl /usr/local/bin
         kubectl version --client
         echo "${{ secrets.KUBECONFIG_STG }}" | base64 --decode > /tmp/config
-        export KUBECONFIG=/tmp/config
-        kubectl config get-contexts
-
+        
     - name: Tests
       run: |
+        export KUBECONFIG=/tmp/config
         kubectl config get-contexts
 
     - name: Restart Sanctuary in prod
       run: |
+        export KUBECONFIG=/tmp/config
         echo "Restarting 'sanctuary foreign chain worker'"
         kubectl rollout restart deployment/sanctuary-foreign-chain-worker-bsc01
         echo "Restarting 'sanctuary resolver worker'"
