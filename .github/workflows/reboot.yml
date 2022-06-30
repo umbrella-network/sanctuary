@@ -24,11 +24,7 @@ jobs:
         chmod +x kubectl
         mv kubectl /usr/local/bin
         kubectl version --client
-        echo "${{ secrets.KUBECONFIG_STG }}" | base64 --decode > $KUBECONFIG
-        
-    - name: Tests
-      run: |
-        kubectl config get-contexts
+        echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $KUBECONFIG
 
     - name: Restart Sanctuary in prod
       run: |
