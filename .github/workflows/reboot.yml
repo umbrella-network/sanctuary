@@ -28,6 +28,7 @@ jobs:
     - name: Tests
       run: |
         ls -la ~/.kube
+        cat ~/.kube/config.yaml
         kubectl config get-contexts
 
     - name: Restart Sanctuary in prod
