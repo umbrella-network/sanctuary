@@ -28,8 +28,6 @@ jobs:
       run: |
         echo "Restarting sanctuary-foreign-chain-worker-bsc01"
         kubectl rollout restart deployment/sanctuary-foreign-chain-worker-bsc01 -n prod
-        echo "Restarting sanctuary-metrics-worker-bsc01"
-        kubectl rollout restart deployment/sanctuary-metrics-worker-bsc01 -n prod
         echo "Restarting sanctuary-resolver-worker-bsc01"
         kubectl rollout restart deployment/sanctuary-resolver-worker-bsc01 -n prod
         echo "Restarting sanctuary-scheduler-bsc01"
