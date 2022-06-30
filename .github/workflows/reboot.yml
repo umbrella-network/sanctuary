@@ -25,6 +25,11 @@ jobs:
         mkdir -p ~/.kube
         echo "${{ secrets.KUBECONFIG_STG }}" | base64 --decode > ~/.kube/config.yaml
 
+    - name: Install and configure kubectl
+      run: |
+        ls -la ~/
+        kubectl config get-contexts
+        
     - name: Restart Sanctuary in prod
       run: |
         echo "Restarting 'sanctuary foreign chain worker'"
