@@ -23,7 +23,7 @@ jobs:
         mv kubectl /usr/local/bin
         kubectl version --client
         mkdir -p ~/.kube
-        echo ${{ secrets.KUBECONFIG_STG }} | base64 --decode > ~/.kube/config.yaml
+        echo "${{ secrets.KUBECONFIG_STG }}" | base64 --decode > ~/.kube/config.yaml
 
     - name: Restart Sanctuary in prod
       run: |
