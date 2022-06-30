@@ -24,6 +24,7 @@ jobs:
         kubectl version --client
         echo "${{ secrets.KUBECONFIG_STG }}" | base64 --decode > /tmp/config
         export KUBECONFIG=/tmp/config
+        kubectl config get-contexts
 
     - name: Tests
       run: |
