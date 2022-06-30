@@ -51,7 +51,7 @@ jobs:
           avatar-url: 'https://github.com/github.png?size=50'
           username: 'umb-dev'
           github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
-          discord-webhook: ${{ secrets.DISCORD_ENGINEERING_WEBHOOK }}
+          discord-webhook: ${{ secrets.DISCORD_APP_PROD_WEBHOOK }}
           title: '${{ github.workflow }}: {{STATUS}}'
           description: '${{ github.event_name }} trigged this {{STATUS}}!'
           # include-details: 'false'
