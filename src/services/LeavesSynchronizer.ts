@@ -2,7 +2,7 @@ import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import StakingBankContract from '../contracts/StakingBankContract';
 import Block, { IBlock } from '../models/Block';
-import Leaf, { ILeaf } from '../models/Leaf';
+import Leaf from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import { BlockFromPegasus } from '../types/blocks';
 import { ChainContract } from '../contracts/ChainContract';
@@ -16,6 +16,7 @@ import Settings from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { FCDRepository } from '../repositories/FCDRepository';
 import { TimeService } from './TimeService';
+import { BulkWriteOpResultObject } from 'mongodb';
 
 @injectable()
 class LeavesSynchronizer {
@@ -110,7 +111,12 @@ class LeavesSynchronizer {
       this.updateLeaves(resolvedLeaves, tree, savedBlock.blockId),
     ]);
 
-    this.logger.info(`Resolving finished with ${updatedLeaves.length} leaves and votes: ${savedBlock.votes.size}`);
+    this.logger.info(
+      `Resolving finished for ${savedBlock.blockId} with ${updatedLeaves.reduce<number>(
+        (acc, curr) => acc + curr.upsertedCount,
+        0
+      )} leaves and votes: ${savedBlock.votes.size}`
+    );
     return [true, root];
   };
 
@@ -167,32 +173,45 @@ class LeavesSynchronizer {
     resolvedLeaves: Map<string, string>,
     tree: SortedMerkleTree,
     blockId: number
-  ): Promise<void[]> => {
-    return Promise.all(
-      [...resolvedLeaves.entries()].map(async ([key, value]: [string, string]) => {
-        const proof = tree.getProofForKey(key);
-        const leaf = await this.createLeaf(proof, blockId, key, value);
-        this.logger.silly(`Created new leaf: ${leaf._id}/${leaf.blockId}, ${key} => ${value}`);
-      })
-    );
+  ): Promise<BulkWriteOpResultObject[]> => {
+    const batches = [];
+    let operations: { updateOne: Record<string, unknown> }[] = [];
+
+    [...resolvedLeaves.entries()].forEach(([key, value]: [string, string], i) => {
+      const proof = tree.getProofForKey(key);
+      operations.push(this.createLeafUpdateOperation(proof, blockId, key, value));
+      if (i % 500 === 0) {
+        batches.push(operations);
+        operations = [];
+      }
+    });
+
+    batches.push(operations);
+
+    return Promise.all(batches.map((batch) => Leaf.bulkWrite(batch)));
   };
 
-  private createLeaf = async (proof: string[], blockId: number, key: string, value: string): Promise<ILeaf> => {
-    return Leaf.findOneAndUpdate(
-      {
-        _id: `block::${blockId}::leaf::${key}`,
-        blockId: blockId,
-        key: key,
-      },
-      {
-        value: value,
-        proof: proof,
-      },
-      {
+  private createLeafUpdateOperation = (
+    proof: string[],
+    blockId: number,
+    key: string,
+    value: string
+  ): { updateOne: Record<string, unknown> } => {
+    return {
+      updateOne: {
+        filter: {
+          _id: `block::${blockId}::leaf::${key}`,
+          blockId: blockId,
+          key: key,
+        },
+        update: {
+          value: value,
+          proof: proof,
+        },
         new: true,
         upsert: true,
-      }
-    );
+      },
+    };
   };
 }
 
