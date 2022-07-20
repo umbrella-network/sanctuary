@@ -102,15 +102,22 @@ class LeavesSynchronizer {
   ): Promise<[boolean, string]> => {
     const resolvedLeaves: Map<string, string> = new Map(<[string, string][]>Object.entries(blockFromValidator.data));
     const tree = this.sortedMerkleTreeFactory.apply(resolvedLeaves);
-    const root = tree.getRoot(TimeService.msToSec(savedBlock.dataTimestamp.getTime()));
-    if (root != savedBlock.root) return [false, root];
+    const root = tree.getRoot();
+
+    if (root != savedBlock.root) {
+      this.logger.info(`checking squashedRoot for backwards compatibility for block ${savedBlock.blockId}`);
+      const squashedRoot = tree.getRoot(TimeService.msToSec(savedBlock.dataTimestamp.getTime()));
+      if (squashedRoot != savedBlock.root) return [false, squashedRoot];
+    }
 
     const [, updatedLeaves] = await Promise.all([
       this.updateFCD(savedBlock),
       this.updateLeaves(resolvedLeaves, tree, savedBlock.blockId),
     ]);
 
-    this.logger.info(`Resolving finished with ${updatedLeaves.length} leaves and votes: ${savedBlock.votes.size}`);
+    this.logger.info(
+      `Resolving finished for ${savedBlock.blockId} with ${updatedLeaves.length} leaves and votes: ${savedBlock.votes.size}`
+    );
     return [true, root];
   };
 
