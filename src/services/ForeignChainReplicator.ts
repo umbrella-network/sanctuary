@@ -126,21 +126,23 @@ export class ForeignChainReplicator {
     const balance = await blockchain.wallet.getBalance();
     const toCurrency = NonEvmChainsIds.includes(chainId) ? (<IGenericBlockchain>blockchain).toBaseCurrency : parseEther;
 
-    this.testBalanceThreshold(chainId, balance, toCurrency);
+    this.testBalanceThreshold(chainId, balance, toCurrency, blockchain.wallet.address);
   };
 
   private testBalanceThreshold = (
     chainId: TForeignChainsIds,
     balance: BigNumber,
-    toCurrency: (amount: string) => BigNumber
+    toCurrency: (amount: string) => BigNumber,
+    address: string
   ) => {
     const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].transactions.mintBalance;
+
     if (balance.lt(toCurrency(errorLimit))) {
-      throw new Error(`Balance is lower than ${errorLimit}`);
+      throw new Error(`[${chainId}] Balance (${address.slice(0, 10)}) is lower than ${errorLimit}`);
     }
 
     if (balance.lt(toCurrency(warningLimit))) {
-      this.logger.warn(`Balance is lower than ${warningLimit}`);
+      this.logger.warn(`[${chainId}] Balance (${address.slice(0, 10)}) is lower than ${warningLimit}`);
     }
   };
 }

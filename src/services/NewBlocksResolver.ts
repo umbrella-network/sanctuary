@@ -50,6 +50,9 @@ class NewBlocksResolver {
       this.blockchainRepository.get(this.settings.blockchain.homeChain.chainId).settings.scanBatchSize
     );
 
+    const { chainId } = this.settings.blockchain.homeChain;
+    this.logger.info(`[${chainId}] resolveBlockEvents(lastAnchor: ${lastAnchor}), ranges: ${ranges.length}`);
+
     // must be sync execution!
     for (const [batchFrom, batchTo] of ranges) {
       await this.resolveBatchOfEvents(batchFrom, batchTo);
