@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added github action to schedule daily and on demand rebooots
 - support for timestamp as block ID (backwards compatible)
 
+### Fixed
+- prioritise `START_BLOCK_NUMBER` over last anchor when `calculateBlockNumberRange` for chains discovery
+
 ## [5.0.3] - 2022-06-20
 ### Fixed
 - Return correct solana network name
