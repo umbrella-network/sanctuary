@@ -142,7 +142,21 @@ class ChainSynchronizer {
     startBlockNumber: number,
     endBlockNumber: number
   ): Promise<[number, number]> => {
+    const prefix = `[${this.blockchain.chainId}] `;
     const lastAnchor = await this.getLastSavedAnchor();
+
+    if (lastAnchor > endBlockNumber) {
+      this.logger.warn(
+        `${prefix}lastAnchor > endBlockNumber (${lastAnchor} > ${endBlockNumber}), are we switching blockchains?`
+      );
+
+      if (startBlockNumber < 0 || startBlockNumber > endBlockNumber) {
+        throw Error(`block mishmash: startBlockNumber: ${startBlockNumber}, endBlockNumber: ${endBlockNumber}`);
+      }
+
+      return [startBlockNumber, endBlockNumber];
+    }
+
     const lookBack = Math.max(0, startBlockNumber < 0 ? endBlockNumber + startBlockNumber : startBlockNumber);
     const fromBlock = lastAnchor > 0 ? lastAnchor : lookBack;
     return [fromBlock + 1, endBlockNumber];

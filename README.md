@@ -194,10 +194,4 @@ Use this commit to reproduce multichain steps:
 ```shell script
 # Deploy to dev
 make dev
-
-# Deploy to dev bsc
-make dev-bsc
-
-# Deploy to dev eth
-make dev-eth
 ```

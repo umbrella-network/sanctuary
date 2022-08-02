@@ -8,7 +8,7 @@ import { ChainContractRepository } from './ChainContractRepository';
 import { BaseChainContract } from '../contracts/BaseChainContract';
 import { ChainsIds, NonEvmChainsIds } from '../types/ChainsIds';
 import { IGenericForeignChainContract } from '../contracts/generic/IGenericForeignChainContract';
-import { NetworkStatus } from '../types/Network';
+import { NetworkStatus, NetworkStatusWithBlock } from '../types/Network';
 
 type FullChainStatus = ChainStatus | ForeignChainStatus | Error;
 
@@ -81,17 +81,20 @@ export class InfoRepository {
     }
   };
 
-  private getNetworkStatus = async (chainId: string): Promise<NetworkStatus> => {
+  private getNetworkStatus = async (chainId: string): Promise<NetworkStatusWithBlock> => {
     try {
       if (NonEvmChainsIds.includes(<ChainsIds>chainId)) {
         const network = await this.blockchainRepository.getGeneric(chainId).getProvider().getNetwork();
-        return { ...network };
+        const blockNumber = await this.blockchainRepository.getGeneric(chainId).getProvider().getBlockNumber();
+
+        return { ...network, blockNumber };
       }
 
       const network = await this.blockchainRepository.get(chainId).getProvider().getNetwork();
-      return { name: network.name, id: network.chainId };
+      const blockNumber = await this.blockchainRepository.get(chainId).getProvider().getBlockNumber();
+      return { name: network.name, id: network.chainId, blockNumber };
     } catch (e) {
-      return { name: e.message, id: -1 };
+      return { name: e.message, id: -1, blockNumber: -1 };
     }
   };
 
