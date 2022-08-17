@@ -82,6 +82,7 @@ class BlockSynchronizer {
     }
   }
 
+  // TODO adjust this to multichain DB!!
   getLastSavedBlockIdAndStartAnchor = async (): Promise<[number, number]> => {
     const lastSavedBlock = await Block.find({}).sort({ blockId: -1 }).limit(1).exec();
     return lastSavedBlock[0]

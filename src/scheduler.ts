@@ -1,15 +1,17 @@
 import './boot';
+import { Logger } from 'winston';
+import newrelic from 'newrelic';
+
 import Application from './lib/Application';
 import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
 import BlockResolverWorker from './workers/BlockResolverWorker';
 import MetricsWorker from './workers/MetricsWorker';
 import { ForeignChainReplicationWorker } from './workers';
-import Settings, { ForeignChainReplicationSettings } from './types/Settings';
-import { Logger } from 'winston';
-import newrelic from 'newrelic';
+import Settings, { SinglentonWorkerSchedulerSettings } from './types/Settings';
 import logger from './lib/logger';
-import { ForeignChainsIds } from './types/ChainsIds';
 import Migrations from './services/Migrations';
+import { ForeignChainsIds } from './types/ChainsIds';
+import { SingletonWorker } from './workers/SingletonWorker';
 
 logger.info('Starting Scheduler...');
 
@@ -23,16 +25,17 @@ logger.info('Starting Scheduler...');
 
   await Migrations.apply();
 
-  const scheduleForeignChainReplication = async (
-    foreignChainReplicationSettings: ForeignChainReplicationSettings,
+  const scheduleWorker = async (
+    worker: SingletonWorker,
+    workerSettings: SinglentonWorkerSchedulerSettings,
     chainId: string
   ): Promise<void> => {
     try {
-      await foreignChainReplicationWorker.enqueue(
+      await worker.enqueue(
         {
-          foreignChainId: chainId,
-          lockTTL: foreignChainReplicationSettings.lockTTL,
-          interval: foreignChainReplicationSettings.interval,
+          chainId,
+          lockTTL: workerSettings.lockTTL,
+          interval: workerSettings.interval,
         },
         {
           removeOnComplete: true,
@@ -46,13 +49,24 @@ logger.info('Starting Scheduler...');
   };
 
   for (const foreignChainId of ForeignChainsIds) {
-    const foreignChainReplicationSettings: ForeignChainReplicationSettings = (<
-      Record<string, ForeignChainReplicationSettings>
+    const foreignChainReplicationSettings: SinglentonWorkerSchedulerSettings = (<
+      Record<string, SinglentonWorkerSchedulerSettings>
     >settings.jobs.foreignChainReplication)[foreignChainId];
 
     setInterval(
-      async () => scheduleForeignChainReplication(foreignChainReplicationSettings, foreignChainId),
+      async () => scheduleWorker(foreignChainReplicationWorker, foreignChainReplicationSettings, foreignChainId),
       foreignChainReplicationSettings.interval
+    );
+  }
+
+  for (const chainId of Object.keys(settings.blockchain.multiChains)) {
+    const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
+      settings.jobs.foreignChainReplication
+    ))[chainId];
+
+    setInterval(
+      async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
+      settings.jobs.blockCreation.interval // TODO individual settings?
     );
   }
 
@@ -69,21 +83,6 @@ logger.info('Starting Scheduler...');
   setInterval(async () => {
     try {
       await blockSynchronizerWorker.enqueue(
-        {},
-        {
-          removeOnComplete: true,
-          removeOnFail: true,
-        }
-      );
-    } catch (e) {
-      newrelic.noticeError(e);
-      logger.error(e);
-    }
-  }, settings.jobs.blockCreation.interval);
-
-  setInterval(async () => {
-    try {
-      await blockResolverWorker.enqueue(
         {},
         {
           removeOnComplete: true,
