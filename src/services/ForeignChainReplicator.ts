@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import { ethers } from 'ethers';
 
-import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
+import { BlockChainDataFactory } from '../factories/BlockChainDataFactory';
 import {
   ArbitrumBlockReplicator,
   AvalancheBlockReplicator,
@@ -12,7 +12,7 @@ import {
   SolanaBlockReplicator,
 } from './foreign-chain';
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
-import { IForeignBlock } from '../models/ForeignBlock';
+import { IBlockChainData } from '../models/BlockChainData';
 import { IFCD } from '../models/FCD';
 import { FCDRepository } from '../repositories/FCDRepository';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
@@ -32,7 +32,7 @@ export type ForeignChainReplicatorProps = {
 export class ForeignChainReplicator {
   private readonly replicators: { [key: string]: IForeignBlockReplicator };
   @inject('Logger') logger!: Logger;
-  @inject(ForeignBlockFactory) foreignBlockFactory!: ForeignBlockFactory;
+  @inject(BlockChainDataFactory) blockChainDataFactory!: BlockChainDataFactory;
   @inject(FCDRepository) fcdRepository!: FCDRepository;
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
   @inject('Settings') private readonly settings: Settings;
@@ -54,7 +54,7 @@ export class ForeignChainReplicator {
     };
   }
 
-  async apply(props: ForeignChainReplicatorProps): Promise<IForeignBlock[] | undefined> {
+  async apply(props: ForeignChainReplicatorProps): Promise<IBlockChainData[] | undefined> {
     const { foreignChainId } = props;
     this.logger.info(`[${foreignChainId}] Foreign Chain Block Replication initiated`);
 
@@ -83,9 +83,9 @@ export class ForeignChainReplicator {
 
   private commit = async (
     replicationStatus: ReplicationStatus,
-    foreignChainId: string,
+    chainId: string,
     chainAddress: string
-  ): Promise<IForeignBlock[] | undefined> => {
+  ): Promise<IBlockChainData[] | undefined> => {
     if (!replicationStatus.blocks || replicationStatus.blocks.length == 0) return;
 
     if (replicationStatus.errors) {
@@ -98,14 +98,14 @@ export class ForeignChainReplicator {
       return;
     }
 
-    const foreignBlocks: IForeignBlock[] = [];
+    const foreignBlocks: IBlockChainData[] = [];
 
     for (let i = 0; i < replicationStatus.blocks.length; i++) {
       const block = replicationStatus.blocks[i];
       const anchor = replicationStatus.anchors[i];
       const fcds = replicationStatus.fcds[i];
-      const foreignBlock = this.foreignBlockFactory.fromBlock({ block, anchor, chainAddress, foreignChainId });
-      const saveData: Promise<IForeignBlock | IFCD>[] = [foreignBlock.save()];
+      const foreignBlock = this.blockChainDataFactory.fromBlock({ block, anchor, chainAddress, chainId });
+      const saveData: Promise<IBlockChainData | IFCD>[] = [foreignBlock.save()];
 
       fcds.keys.forEach((key, k) => {
         saveData.push(
@@ -113,7 +113,7 @@ export class ForeignChainReplicator {
             key,
             value: replicationStatus.fcds[i].values[k],
             dataTimestamp: block.dataTimestamp,
-            chainId: foreignChainId,
+            chainId,
           })
         );
       });

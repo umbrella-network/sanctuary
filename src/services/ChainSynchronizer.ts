@@ -7,15 +7,15 @@ import { Contract, Event } from 'ethers';
 import { LogRegistered } from '../types/events';
 import { CHAIN_CONTRACT_NAME, CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
 import { CreateBatchRanges } from './CreateBatchRanges';
-import Block, { IBlock } from '../models/Block';
 import Settings from '../types/Settings';
-import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { BaseChainContract } from '../contracts/BaseChainContract';
 import { ChainsIds } from '../types/ChainsIds';
 import * as fastq from 'fastq';
 import type { queueAsPromised } from 'fastq';
+import { BlockRepository } from '../repositories/BlockRepository';
+import { FullBlockData } from '../types/blocks';
 
 type SyncChainTask = {
   batchFrom: number;
@@ -26,6 +26,7 @@ type SyncChainTask = {
 class ChainSynchronizer {
   @inject('Logger') private logger!: Logger;
   @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
+  @inject(BlockRepository) private blockRepository!: BlockRepository;
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
   @inject('Settings') settings: Settings;
 
@@ -175,16 +176,14 @@ class ChainSynchronizer {
     return chains[0] ? chains[0].anchor : -1;
   };
 
-  private getLastBlock = async (): Promise<IBlock | IForeignBlock | undefined> => {
-    if (this.blockchain.chainId === this.settings.blockchain.homeChain.chainId) {
-      const blocks = await Block.find({}).limit(1).sort({ anchor: -1 }).exec();
-      return blocks.length ? blocks[0] : undefined;
-    }
+  private getLastBlock = async (): Promise<FullBlockData | undefined> => {
+    const blocks = await this.blockRepository.find({
+      chainId: this.blockchain.chainId,
+      offset: 0,
+      limit: 1,
+      sort: { anchor: -1 },
+    });
 
-    const blocks = await ForeignBlock.find({ foreignChainId: this.blockchain.chainId })
-      .limit(1)
-      .sort({ anchor: -1 })
-      .exec();
     return blocks.length ? blocks[0] : undefined;
   };
 

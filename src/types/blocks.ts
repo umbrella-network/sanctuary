@@ -9,6 +9,20 @@ export interface BlockFromPegasus {
   data: Record<string, HexStringWith0x>;
 }
 
+export interface FullBlockData {
+  chainAddress: string;
+  blockId: number;
+  status: string;
+  anchor: number;
+  dataTimestamp: Date;
+  root: string;
+  minter: string;
+  staked: string;
+  power: string;
+  voters: Array<string>;
+  votes: Map<string, string>;
+}
+
 export enum BlockStatus {
   New = 'new',
   Completed = 'completed',

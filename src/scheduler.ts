@@ -9,6 +9,7 @@ import { Logger } from 'winston';
 import newrelic from 'newrelic';
 import logger from './lib/logger';
 import { ForeignChainsIds } from './types/ChainsIds';
+import Migrations from './services/Migrations';
 
 logger.info('Starting Scheduler...');
 
@@ -19,6 +20,8 @@ logger.info('Starting Scheduler...');
   const blockResolverWorker = Application.get(BlockResolverWorker);
   const metricsWorker = Application.get(MetricsWorker);
   const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
+
+  await Migrations.apply();
 
   const scheduleForeignChainReplication = async (
     foreignChainReplicationSettings: ForeignChainReplicationSettings,

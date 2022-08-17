@@ -65,10 +65,7 @@ class ProofsController {
   };
 
   private extractChainId(request: Request): string | undefined {
-    const chainId = <string>request.query.chainId;
-    if (chainId == this.settings.blockchain.homeChain.chainId) return;
-
-    return chainId;
+    return <string>request.query.chainId || this.settings.blockchain.homeChain.chainId;
   }
 }
 

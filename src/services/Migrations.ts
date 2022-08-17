@@ -4,16 +4,20 @@ import Migration from '../models/Migration';
 import ChainInstance from '../models/ChainInstance';
 import Leaf from '../models/Leaf';
 import FCD from '../models/FCD';
-import ForeignBlock from '../models/ForeignBlock';
+import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
+import mongoose, { Model } from 'mongoose';
+import { sleep } from '../utils/sleep';
+import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
 
 class Migrations {
   static async apply(): Promise<void> {
     // await this.migrateTo100();
     // await this.migrateTo110();
-    await Migrations.migrateTo121();
-    await Migrations.migrateTo400();
-    await Migrations.migrateTo400_3();
-    await Migrations.migrateTo401();
+    // await Migrations.migrateTo121();
+    // await Migrations.migrateTo400();
+    // await Migrations.migrateTo400_3();
+    // await Migrations.migrateTo401();
+    await Migrations.migrateTo600();
   }
 
   private static hasMigration = async (v: string): Promise<boolean> => {
@@ -25,16 +29,24 @@ class Migrations {
     await new Migration({ _id: v, timestamp: new Date() }).save();
   };
 
-  private static wrapMigration = async (migrationId: string, callback: () => void) => {
+  private static wrapMigration = async (
+    migrationId: string,
+    callback: () => void,
+    callbackError?: (err: unknown) => void
+  ) => {
     try {
       if (!(await Migrations.hasMigration(migrationId))) {
-        console.log('Updating DB to match new schema', migrationId);
+        console.log('[Migrations] Updating DB to match new schema', migrationId);
         await callback();
         await Migrations.saveMigration(migrationId);
       }
     } catch (e) {
       newrelic.noticeError(e);
       console.error(e);
+
+      if (callbackError) {
+        callbackError(e);
+      }
     }
   };
 
@@ -134,7 +146,7 @@ class Migrations {
 
   private static migrateTo401 = async () => {
     await Migrations.wrapMigration('4.0.1', async () => {
-      const foreignBlocks = await ForeignBlock.find({ minter: { $exists: false } });
+      const foreignBlocks = await BlockChainData.find({ minter: { $exists: false } });
 
       await Promise.all(
         foreignBlocks.map((foreignBlock) => {
@@ -143,6 +155,112 @@ class Migrations {
         })
       );
     });
+  };
+
+  /**
+   * 1. Delete blockchaindatas since it is created automatically
+   * 2. Rename foreignblocks collection to blockchaindatas
+   * 3. Insert all blocks from blocks collection
+   *   into blockchaindatas collection setting foreignchainId='bsc'
+   */
+  private static migrateTo600 = async () => {
+    await sleep(15000); // this is necessary to blockchaindatas collection be created
+    const version = '6.0.0';
+    const startTime = new Date().getTime();
+    const indexesToRemove = ['blockId_1_foreignChainId_1', 'chainAddress_1', 'minter_1'];
+    const indexesToCreate = [{ blockId: -1 }, { anchor: -1 }];
+
+    await Migrations.wrapMigration(version, async () => {
+      const session = await mongoose.startSession();
+      try {
+        console.log(`[Migrations(${version})] Starting migration - ${startTime}`);
+        const db = mongoose.connection.db;
+        const blockChainDataCount = await BlockChainData.countDocuments({});
+        console.log(`[Migrations(${version})] blockChainDataCount ${blockChainDataCount}`);
+        if (blockChainDataCount > 0) {
+          throw new Error(`[Migrations(${version})] BlockChainData already have data`);
+        }
+        await db.dropCollection('blockchaindatas');
+        console.log(`[Migrations(${version})] Dropped collection`);
+        await Migrations.removeIndexes<IForeignBlock>(indexesToRemove, ForeignBlock);
+        console.log(`[Migrations(${version})] Removed indexes`);
+        await ForeignBlock.updateMany({}, { $rename: { foreignChainId: 'chainId' } });
+        console.log(`[Migrations(${version})] foreignChainId renamed to chainId`);
+        await db.collection('foreignblocks').rename('blockchaindatas');
+        console.log(`[Migrations(${version})] ForeignBlocks collection renamed to blockchaindatas`);
+        await Migrations.createIndexes<IBlockChainData>(indexesToCreate, BlockChainData);
+        console.log(`[Migrations(${version})] Created Indexes`);
+
+        const blocks = await Block.find();
+        const blockDatas = [];
+        const batchSize = 500;
+
+        for (let i = 0; i < blocks.length; i++) {
+          if (!blocks[i].anchor || !blocks[i].chainAddress || blocks[i].blockId || blocks[i].minter) {
+            console.warn(`Missing important field for block ${blocks[i]._id}`);
+            continue;
+          }
+
+          blockDatas.push({
+            _id: `block::bsc::${blocks[i].blockId}`,
+            anchor: blocks[i].anchor,
+            chainId: 'bsc',
+            chainAddress: blocks[i].chainAddress,
+            minter: blocks[i].minter,
+            blockId: blocks[i].blockId,
+          });
+        }
+
+        console.log(`[Migrations(${version})] blockData size: ${blockDatas.length}`);
+        const blockDataBatches = Migrations.splitIntoBatches(blockDatas, batchSize);
+
+        await session.withTransaction(async () => {
+          await Promise.all(
+            blockDataBatches.map((blockData) => {
+              return BlockChainData.insertMany(blockData);
+            })
+          );
+        });
+
+        await session.endSession();
+      } catch (e) {
+        await session.abortTransaction();
+        throw new Error(`[Migrations(${version})] Aborting transaction ${e}`);
+      } finally {
+        const endTime = new Date().getTime();
+        console.log(`[Migrations(${version})] Finish at ${endTime} after ${(endTime - startTime) / 1000} seconds`);
+      }
+    });
+  };
+
+  private static splitIntoBatches = (arr: unknown[], maxBatchSize: number): unknown[][] => {
+    const batches: unknown[][] = [];
+    const arrCopy = [...arr];
+
+    while (arrCopy.length) {
+      const batch = arrCopy.splice(0, maxBatchSize);
+      batches.push(batch);
+    }
+
+    return batches;
+  };
+
+  private static removeIndexes = async <T>(indexes: string[], model: Model<T>): Promise<void> => {
+    for (const indexToRemove of indexes) {
+      if (await model.collection.indexExists(indexToRemove)) {
+        await model.collection.dropIndex(indexToRemove);
+        console.log(`index ${indexToRemove} removed`);
+      }
+    }
+  };
+
+  private static createIndexes = async <T>(indexes: Record<string, unknown>[], model: Model<T>): Promise<void> => {
+    for (const indexToCreate of indexes) {
+      if (!(await model.collection.indexExists(Object.keys(indexToCreate)))) {
+        await model.collection.createIndex(indexToCreate);
+        console.log(`index ${Object.keys(indexToCreate)} created`);
+      }
+    }
   };
 }
 

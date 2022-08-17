@@ -5,8 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- Rename ForeignBlock model to BlockChainData
+- Execute migrations once before scheduling workers
 
-## [5.1.2] - 2022-09-30
+## [5.1.3] - 2022-09-30
 ### Changed
 - Add logger when with synchronizer blocks length
 - Sync newest blocks first (debugging)
