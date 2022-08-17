@@ -8,7 +8,7 @@ import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts';
 import { TransactionReceipt } from '@ethersproject/providers';
 
 import Block, { IBlock } from '../../models/Block';
-import ForeignBlock, { IForeignBlock } from '../../models/ForeignBlock';
+import BlockChainData, { IBlockChainData } from '../../models/BlockChainData';
 
 import { ForeignChainStatus } from '../../types/ForeignChainStatus';
 import { BlockStatus } from '../../types/blocks';
@@ -151,7 +151,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   protected async checkForRevertedBlocks(
     status: ForeignChainStatus,
-    lastForeignBlock: IForeignBlock
+    lastForeignBlock: IBlockChainData
   ): Promise<boolean> {
     if (!lastForeignBlock) {
       return false;
@@ -186,8 +186,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return [true, undefined];
   };
 
-  protected latestForeignBlock = async (): Promise<IForeignBlock> =>
-    ForeignBlock.findOne({ foreignChainId: this.chainId }).sort({ blockId: -1 });
+  protected latestForeignBlock = async (): Promise<IBlockChainData> =>
+    BlockChainData.findOne({ chainId: this.chainId }).sort({ blockId: -1 });
 
   protected blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
     // we need to wait for confirmations before we replicate block

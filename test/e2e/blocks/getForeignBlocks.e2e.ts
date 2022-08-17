@@ -5,8 +5,8 @@ import { Container } from 'inversify';
 import { Application } from 'express';
 
 import Server from '../../../src/lib/Server';
-import { createBlockFromForeignBlock, foreignBlockFactory } from '../../mocks/factories/foreignBlockFactory';
-import ForeignBlock, { IForeignBlock } from '../../../src/models/ForeignBlock';
+import { createBlockFromBlockChainData, blockChainDataFactory } from '../../mocks/factories/blockChainDataFactory';
+import BlockChainData, { IBlockChainData } from '../../../src/models/BlockChainData';
 import Block, { IBlock } from '../../../src/models/Block';
 import { blockFactory } from '../../mocks/factories/blockFactory';
 import { setupDatabase, teardownDatabase } from '../../helpers/databaseHelpers';
@@ -17,11 +17,11 @@ import { IApiKey } from '../../../src/models/ApiKey';
 
 const createBlocks = async (numberOfBlocks = 3): Promise<void> => {
   for (let i = 0; i < numberOfBlocks; i++) {
-    await createBlockFromForeignBlock();
+    await createBlockFromBlockChainData();
   }
 };
 
-describe('getForeignBlocks', () => {
+describe('getBlockChainDatas', () => {
   let container: Container;
   let app: Application;
   let response: request.Response;
@@ -56,7 +56,7 @@ describe('getForeignBlocks', () => {
     });
 
     describe('when a valid API Key is provided', () => {
-      let subject: IForeignBlock[];
+      let subject: IBlockChainData[];
       let apiKey: IApiKey;
 
       const chainId = 'ethereum';
@@ -70,7 +70,7 @@ describe('getForeignBlocks', () => {
       });
 
       after(async () => {
-        await Promise.all([Block.deleteMany(), ForeignBlock.deleteMany(), teardownTestUser()]);
+        await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), teardownTestUser()]);
       });
 
       it('responds with HTTP 200', async () => {
@@ -82,42 +82,40 @@ describe('getForeignBlocks', () => {
       });
 
       it('returns foreign blocks', async () => {
-        const foreignBlocks = await ForeignBlock.find({ foreignChainId: chainId });
+        const blockChainDatas = await BlockChainData.find({ chainId });
 
         for (const block of subject) {
-          const match = foreignBlocks.find((e) => {
+          const match = blockChainDatas.find((e) => {
             return e.blockId == block.blockId;
           });
 
-          expect(match).to.have.property('foreignChainId', chainId);
+          expect(match).to.have.property('chainId', chainId);
         }
       });
     });
   });
 
   describe('GET /blocks:blockId?chainId', () => {
-    let foreignBlock: IForeignBlock;
+    let blockChainData: IBlockChainData;
     let block: IBlock;
-    let subject: IForeignBlock;
+    let subject: IBlockChainData;
 
     before(async () => {
-      foreignBlock = new ForeignBlock(foreignBlockFactory.build());
-      await foreignBlock.save();
+      blockChainData = new BlockChainData(blockChainDataFactory.build());
+      await blockChainData.save();
 
-      block = new Block(blockFactory.build({ blockId: foreignBlock.blockId }));
+      block = new Block(blockFactory.build({ blockId: blockChainData.blockId }));
       await block.save();
     });
 
     after(async () => {
       await Block.deleteMany();
-      await ForeignBlock.deleteMany({});
+      await BlockChainData.deleteMany({});
     });
 
     describe('when no API Key is provided', () => {
       it('responds with HTTP 200', async () => {
-        const response = await request(app).get(
-          `/blocks/${foreignBlock.blockId}?chainId=${foreignBlock.foreignChainId}`
-        );
+        const response = await request(app).get(`/blocks/${blockChainData.blockId}?chainId=${blockChainData.chainId}`);
 
         expect(response.status).to.eq(200);
       });
@@ -126,7 +124,7 @@ describe('getForeignBlocks', () => {
     describe('when an invalid API Key is provided', () => {
       it('responds with HTTP 401', async () => {
         const response = await request(app)
-          .get(`/blocks/${foreignBlock.blockId}?chainId=${foreignBlock.foreignChainId}`)
+          .get(`/blocks/${blockChainData.blockId}?chainId=${blockChainData.chainId}`)
           .set('Authorization', 'wrongAPIKey');
 
         expect(response.status).to.eq(401);
@@ -140,7 +138,7 @@ describe('getForeignBlocks', () => {
         before(async () => {
           apiKey = await setupApiKey();
           response = await request(app)
-            .get(`/blocks/${foreignBlock.blockId}?chainId=wrongChainId`)
+            .get(`/blocks/${blockChainData.blockId}?chainId=wrongChainId`)
             .set('Authorization', `${apiKey.key}`);
           subject = response.body.data;
         });
@@ -160,7 +158,7 @@ describe('getForeignBlocks', () => {
         before(async () => {
           apiKey = await setupApiKey();
           response = await request(app)
-            .get(`/blocks/${foreignBlock.blockId}?chainId=${foreignBlock.foreignChainId}`)
+            .get(`/blocks/${blockChainData.blockId}?chainId=${blockChainData.chainId}`)
             .set('Authorization', `${apiKey.key}`);
           subject = response.body.data;
         });
@@ -181,8 +179,8 @@ describe('getForeignBlocks', () => {
           expect(subject.blockId).to.eq(block.blockId);
         });
 
-        it('returns the correct foreignBlock anchor', async () => {
-          expect(subject.anchor).to.eq(foreignBlock.anchor);
+        it('returns the correct blockChainData anchor', async () => {
+          expect(subject.anchor).to.eq(blockChainData.anchor);
         });
       });
     });

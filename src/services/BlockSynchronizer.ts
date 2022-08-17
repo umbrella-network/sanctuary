@@ -225,6 +225,8 @@ class BlockSynchronizer {
     blockId: number
   ): Promise<({ ok?: number; n?: number } & { deletedCount?: number })[]> => {
     const condition = { blockId: { $gte: blockId } };
+    // TODO for Dariusz - update this on adjusting resolver task
+    // only for chainId, and same rule as in other place, if there will be no BlockChainData after deletion for condition, then we should remove Block as well.
     return Promise.all([Block.deleteMany(condition), Leaf.deleteMany(condition)]);
   };
 
