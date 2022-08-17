@@ -14,6 +14,8 @@ import BlockSynchronizer from './BlockSynchronizer';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
+import { ChainsIds } from '../types/ChainsIds';
+import { Blockchain } from '../lib/Blockchain';
 
 @injectable()
 class NewBlocksResolver {
@@ -22,18 +24,21 @@ class NewBlocksResolver {
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
   @inject(BlockSynchronizer) blockSynchronizer!: BlockSynchronizer;
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
+  @inject(ChainContractRepository) chainContractRepository!: ChainContractRepository;
 
+  private blockchain!: Blockchain;
   private chainContract!: ChainContract;
+  private chainId!: string;
 
-  constructor(
-    @inject(ChainContractRepository) chainContractRepository: ChainContractRepository,
-    @inject('Settings') settings: Settings
-  ) {
-    this.chainContract = <ChainContract>chainContractRepository.get(settings.blockchain.homeChain.chainId);
-  }
+  apply = async (chainId: string): Promise<void> => {
+    if (chainId === ChainsIds.SOLANA) {
+      return;
+    }
 
-  apply = async (): Promise<void> => {
-    this.chainInstanceResolver.setup(this.settings.blockchain.homeChain.chainId);
+    this.chainId = chainId;
+    this.blockchain = this.blockchainRepository.get(chainId);
+    this.chainInstanceResolver.setup(chainId);
+    this.chainContract = <ChainContract>this.chainContractRepository.get(chainId);
 
     const [chainStatus, [, lastAnchor]] = await Promise.all([
       this.chainContract.resolveStatus<ChainStatus>(),
@@ -47,11 +52,10 @@ class NewBlocksResolver {
     const ranges = CreateBatchRanges.apply(
       lastAnchor,
       chainStatus.blockNumber.toNumber(),
-      this.blockchainRepository.get(this.settings.blockchain.homeChain.chainId).settings.scanBatchSize
+      this.blockchain.settings.scanBatchSize
     );
 
-    const { chainId } = this.settings.blockchain.homeChain;
-    this.logger.info(`[${chainId}] resolveBlockEvents(lastAnchor: ${lastAnchor}), ranges: ${ranges.length}`);
+    this.logger.info(`[${this.chainId}] resolveBlockEvents(lastAnchor: ${lastAnchor}), ranges: ${ranges.length}`);
 
     // must be sync execution!
     for (const [batchFrom, batchTo] of ranges) {
@@ -61,14 +65,15 @@ class NewBlocksResolver {
 
   private resolveBatchOfEvents = async (fromBlock: number, toBlock: number): Promise<void> => {
     const [logMintEvents, logVoteEvents] = await this.getChainLogsEvents(fromBlock, toBlock);
-    const { chainId } = this.settings.blockchain.homeChain;
 
     if (!logMintEvents.length) {
-      this.logger.warn(`[${chainId}] No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`);
+      this.logger.warn(
+        `[${this.chainId}] No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`
+      );
       return;
     }
 
-    this.logger.info(`[${chainId}] Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
+    this.logger.info(`[${this.chainId}] Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
     await this.saveNewBlocks((await this.processEvents(logMintEvents, logVoteEvents)).filter((e) => e != undefined));
   };
 
@@ -81,23 +86,25 @@ class NewBlocksResolver {
     }
 
     const anchors: number[] = [];
-    const { chainId } = this.settings.blockchain.homeChain;
 
     for (let i = fromBlockNumber; i < toBlockNumber; i++) {
       anchors.push(i);
     }
 
-    this.logger.info(`[${chainId}] Scanning for new blocks`, { fromBlock: fromBlockNumber, toBlock: toBlockNumber });
+    this.logger.info(`[${this.chainId}] Scanning for new blocks`, {
+      fromBlock: fromBlockNumber,
+      toBlock: toBlockNumber,
+    });
 
     const chainsInstancesForIds = await this.chainInstanceResolver.byAnchor(anchors);
     const uniqueChainsInstances = this.chainInstanceResolver.uniqueInstances(chainsInstancesForIds);
 
     if (!uniqueChainsInstances.length) {
-      this.noticeError(`[${chainId}] There is no Chain for anchors: ${fromBlockNumber} - ${toBlockNumber}`);
+      this.noticeError(`[${this.chainId}] There is no Chain for anchors: ${fromBlockNumber} - ${toBlockNumber}`);
     }
 
     const chains: Contract[] = uniqueChainsInstances.map(
-      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchainRepository.get(chainId).getProvider())
+      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchain.getProvider())
     );
 
     return Promise.all([
@@ -198,6 +205,7 @@ class NewBlocksResolver {
     };
   };
 
+  // TODO adjust to new DB
   private saveNewBlocks = async (newBlocks: IEventBlock[]): Promise<IBlock[]> => {
     return Promise.all(
       newBlocks.map(async (newBlock) => {

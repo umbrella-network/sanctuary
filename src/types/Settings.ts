@@ -16,7 +16,7 @@ export type BlockchainSettings = {
   };
 };
 
-export type ForeignChainReplicationSettings = {
+export type SinglentonWorkerSchedulerSettings = {
   interval: number;
   lockTTL: number;
 };
@@ -32,11 +32,11 @@ type Settings = {
       interval: number;
     };
     foreignChainReplication: {
-      ethereum: ForeignChainReplicationSettings;
-      polygon: ForeignChainReplicationSettings;
-      avax: ForeignChainReplicationSettings;
-      arbitrum: ForeignChainReplicationSettings;
-      solana: ForeignChainReplicationSettings;
+      ethereum: SinglentonWorkerSchedulerSettings;
+      polygon: SinglentonWorkerSchedulerSettings;
+      avax: SinglentonWorkerSchedulerSettings;
+      arbitrum: SinglentonWorkerSchedulerSettings;
+      solana: SinglentonWorkerSchedulerSettings;
     };
   };
   redis: {
