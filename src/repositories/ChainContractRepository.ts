@@ -43,7 +43,7 @@ export class ChainContractRepository {
 
   get(id: string): ChainContract | ForeignChainContract {
     if (!this.collection[id]) {
-      throw Error(`[${id}] chain for ${id} does not exists in ChainContractRepository`);
+      throw Error(`[${id}] chain does not exists in ChainContractRepository`);
     }
 
     if (NonEvmChainsIds.includes(<ChainsIds>id)) {

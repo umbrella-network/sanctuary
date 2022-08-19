@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [5.1.0] - 2022-08-23
 ### Added
 - Added github action to schedule daily and on demand rebooots
 - support for timestamp as block ID (backwards compatible)
