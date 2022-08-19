@@ -22,6 +22,16 @@ export interface IBlock extends Document {
   synchronization?: SynchronizationState;
 }
 
+export interface IBlockChainData extends Document {
+  chainId: string;
+  chainAddress: string;
+  anchor: number;
+  minter: string;
+  createdAt: Date;
+  updatedAt: Date;
+  blockId: number;
+}
+
 const BlockSchema: Schema = new Schema({
   _id: { type: String, required: true },
   chainAddress: { type: String, required: true, unique: false },
