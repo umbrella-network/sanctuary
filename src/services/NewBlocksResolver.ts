@@ -9,7 +9,7 @@ import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
 import Settings from '../types/Settings';
 import { LogMint, LogVoter } from '../types/events';
-import Block, { IBlock } from '../models/Block';
+import Block, {IBlock, IBlockChainData} from '../models/Block';
 import BlockSynchronizer from './BlockSynchronizer';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
@@ -206,26 +206,49 @@ class NewBlocksResolver {
   };
 
   // TODO adjust to new DB
+  // not sure which one we should return Block Or BlockchainData
   private saveNewBlocks = async (newBlocks: IEventBlock[]): Promise<IBlock[]> => {
     return Promise.all(
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
-        this.logger.info(`New block detected: ${newBlock.blockId}`);
+
+        const exist = await Block.find({blockId: newBlock.blockId});
+
+        if (exist.length == 0) {
+          this.logger.info(`[${this.chainId}] New block detected: ${newBlock.blockId}`);
+
+          try {
+            return await Block.create({
+              _id: `block::${newBlock.blockId}`,
+              root: newBlock.root,
+              blockId: newBlock.blockId,
+              staked: newBlock.staked,
+              power: newBlock.power,
+              anchor: newBlock.anchor,
+              votes: newBlock.votes,
+              voters: newBlock.voters,
+              dataTimestamp,
+              status: BlockStatus.Completed,
+            });
+          } catch (e) {
+            if (!e.message.includes('E11000')) {
+              this.noticeError(e);
+            }
+          }
+        }
+
+        this.logger.info(`[${this.chainId}] saving dispatched block: ${newBlock.blockId}`);
 
         try {
-          return await Block.create({
-            _id: `block::${newBlock.blockId}`,
+          // TODO
+          return await IBlockChainData.create({
+            _id: `block::${this.chainId}::${newBlock.blockId}`, // TODO ????
+            chainId: this.chainId,
             chainAddress: newBlock.chainAddress,
-            root: newBlock.root,
             blockId: newBlock.blockId,
             minter: newBlock.minter,
-            staked: newBlock.staked,
-            power: newBlock.power,
-            anchor: newBlock.anchor,
-            votes: newBlock.votes,
-            voters: newBlock.voters,
-            dataTimestamp: dataTimestamp,
-            status: BlockStatus.Completed,
+
+            dataTimestamp,
           });
         } catch (e) {
           if (!e.message.includes('E11000')) {
