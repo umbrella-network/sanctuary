@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added github action to schedule daily and on demand rebooots
 - support for timestamp as block ID (backwards compatible)
+- detect new chain architecture and do not replicate
 
 ### Fixed
 - prioritise `START_BLOCK_NUMBER` over last anchor when `calculateBlockNumberRange` for chains discovery

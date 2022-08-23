@@ -23,7 +23,7 @@ describe('SolanaForeignChainContract', () => {
     });
 
     await solanaForeignChainContract.resolveContract();
-    const address = solanaForeignChainContract.address;
+    const address = solanaForeignChainContract.address();
     expect(!!solanaForeignChainContract).to.eql(true);
     expect(solanaForeignChainContract.blockchain.chainId).to.eql(ChainsIds.SOLANA);
     expect(!!address).to.eql(true);
@@ -51,7 +51,7 @@ describe('SolanaForeignChainContract', () => {
 
   describe('#resolveBlockData', () => {
     it('should resolve block data for the given blockId', async () => {
-      const blockData = await solanaForeignChainContract.resolveBlockData(solanaForeignChainContract.address, 376168);
+      const blockData = await solanaForeignChainContract.resolveBlockData(solanaForeignChainContract.address(), 376168);
 
       expect(!!blockData).to.eql(true);
       expect(blockData.root).to.eql('0x57e6c34cb6627f00a9a0b10c489b3cb7cbb87c12214c87eeb7660d4e6251d432');
@@ -61,7 +61,7 @@ describe('SolanaForeignChainContract', () => {
 
   describe('#resolveFCDs', () => {
     it('should resolve FCDs for the given keys', async () => {
-      const fdcsData = await solanaForeignChainContract.resolveFCDs(solanaForeignChainContract.address, []);
+      const fdcsData = await solanaForeignChainContract.resolveFCDs(solanaForeignChainContract.address(), []);
 
       expect(fdcsData.length).to.eql(2);
       expect(fdcsData[0].length).to.eql(0);
@@ -72,7 +72,7 @@ describe('SolanaForeignChainContract', () => {
   describe('#resolveBlocksCountOffset', () => {
     it('should return the blocksCountOffset after resolving the chain contract', async () => {
       const blocksCountOffset = await solanaForeignChainContract.resolveBlocksCountOffset(
-        solanaForeignChainContract.address
+        solanaForeignChainContract.address()
       );
 
       expect(blocksCountOffset).to.eql(0);
@@ -81,7 +81,7 @@ describe('SolanaForeignChainContract', () => {
 
   describe('#getBlockPda', () => {
     it('should return the Program Derived Address (pda) for the given block and chainAddress', async () => {
-      const blockPda = await solanaForeignChainContract.getBlockPda(solanaForeignChainContract.address, 471398);
+      const blockPda = await solanaForeignChainContract.getBlockPda(solanaForeignChainContract.address(), 471398);
 
       expect(!!blockPda).to.eql(true);
       expect(!!blockPda.toBase58()).to.eql(true);
