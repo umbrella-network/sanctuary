@@ -26,12 +26,12 @@ import { derivePDAFromBlockId, getPublicKeyForSeed, derivePDAFromFCDKey, encodeD
 export class SolanaForeignChainContract implements IGenericForeignChainContract {
   readonly settings: Settings;
   readonly blockchain: IGenericBlockchain;
-  address: string;
 
   private chainProgramId!: PublicKey;
   private chainProgram!: Program<Chain>;
   private statusPda!: PublicKey;
   private authorityPda!: PublicKey;
+  private programAddress: string;
 
   protected logger!: Logger;
 
@@ -150,7 +150,7 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
     this.chainProgram = new Program(IDL, this.chainProgramId, (<SolanaProvider>this.blockchain.getProvider()).provider);
     this.statusPda = await getPublicKeyForSeed('status', this.chainProgramId);
     this.authorityPda = await getPublicKeyForSeed('authority', this.chainProgramId);
-    this.address = this.chainProgramId.toBase58();
+    this.programAddress = this.chainProgramId.toBase58();
   }
 
   async resolveStatus(): Promise<ForeignChainStatus> {
@@ -237,5 +237,9 @@ export class SolanaForeignChainContract implements IGenericForeignChainContract 
     const [blockPda] = await derivePDAFromBlockId(blockId, new PublicKey(chainAddress));
 
     return blockPda;
+  }
+
+  address(): string {
+    return this.programAddress;
   }
 }

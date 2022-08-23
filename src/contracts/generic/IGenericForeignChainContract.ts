@@ -18,7 +18,6 @@ export type GenericForeignChainContractProps = {
 export interface IGenericForeignChainContract {
   readonly settings: Settings;
   readonly blockchain: IGenericBlockchain;
-  address: string;
 
   submit(
     dataTimestamp: number,
@@ -34,4 +33,5 @@ export interface IGenericForeignChainContract {
   resolveBlockData(chainAddress: string, blockId: number): Promise<ChainBlockData>;
   resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData>;
   resolveBlocksCountOffset(chainAddress: string): Promise<number>;
+  address(): string;
 }
