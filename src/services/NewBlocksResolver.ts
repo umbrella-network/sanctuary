@@ -84,7 +84,9 @@ class NewBlocksResolver {
       anchors.push(i);
     }
 
-    this.logger.info(`[${chainId}] Scanning for new blocks`, { fromBlock: fromBlockNumber, toBlock: toBlockNumber });
+    this.logger.info(
+      `[${chainId}] Scanning for new blocks: ${JSON.stringify({ fromBlock: fromBlockNumber, toBlock: toBlockNumber })}`
+    );
 
     const chainsInstancesForIds = await this.chainInstanceResolver.byAnchor(anchors);
     const uniqueChainsInstances = this.chainInstanceResolver.uniqueInstances(chainsInstancesForIds);
