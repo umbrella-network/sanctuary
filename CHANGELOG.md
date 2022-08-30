@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.1.2] - 2022-09-30
+### Changed
+- Add logger when with synchronizer blocks length
+
 ## [5.1.1] - 2022-09-30
 ### Changed
 - Revert sync newest blocks first

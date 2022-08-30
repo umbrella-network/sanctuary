@@ -75,7 +75,8 @@ class BlockSynchronizer {
 
     if (blockIds.length > 0) {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
-      await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
+      const updated = await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
+      this.logger.info(`Finalized successfully: ${updated.filter((b) => b.status == BlockStatus.Finalized).length}`);
     }
   }
 
@@ -113,27 +114,28 @@ class BlockSynchronizer {
     leavesSynchronizers: (boolean | null)[],
     blockIds: string[]
   ): Promise<IBlock[]> => {
+    const filtered = leavesSynchronizers.filter((success: boolean) => success !== null);
+    this.logger.info(`[updateSynchronizedBlocks] Updating ${filtered.length}/${leavesSynchronizers.length}`);
+
     return Promise.all(
-      leavesSynchronizers
-        .filter((success: boolean) => success !== null)
-        .map((success: boolean, i: number) => {
-          const status = success ? BlockStatus.Finalized : BlockStatus.Failed;
+      filtered.map((success: boolean, i: number) => {
+        const status = success ? BlockStatus.Finalized : BlockStatus.Failed;
 
-          if (!success) {
-            this.noticeError(`Block ${blockIds[i]}: ${status}`);
+        if (!success) {
+          this.noticeError(`[updateSynchronizedBlocks] Block ${blockIds[i]}: ${status}`);
+        }
+
+        return Block.findOneAndUpdate(
+          { _id: blockIds[i] },
+          {
+            status: status,
+          },
+          {
+            new: false,
+            upsert: true,
           }
-
-          return Block.findOneAndUpdate(
-            { _id: blockIds[i] },
-            {
-              status: status,
-            },
-            {
-              new: false,
-              upsert: true,
-            }
-          );
-        })
+        );
+      })
     );
   };
 
