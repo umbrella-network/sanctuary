@@ -50,7 +50,7 @@ export abstract class BaseChainContract {
     return { chainAddress: chain.contract.address, ...status };
   }
 
-  address = (): string => this.contract.address;
+  address = (): string => (this.contract ? this.contract.address : 'N/A');
 
   async resolveBlockData(chainAddress: string, blockId: number): Promise<ChainBlockData> {
     return this.setContract(chainAddress).contract.blocks(blockId);

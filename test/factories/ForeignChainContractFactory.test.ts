@@ -28,7 +28,9 @@ describe('ForeignChainContractFactory', () => {
           await foreignChainContract.resolveContract();
           expect(!!foreignChainContract).to.eql(true);
           expect(!!(<ForeignChainContract>foreignChainContract).address()).to.eql(true);
-          expect(typeof (<ForeignChainContract>foreignChainContract).address()).to.eql('string');
+
+          const address = foreignChainContract.address();
+          expect(typeof address).to.eql('string');
         });
       });
     });
@@ -46,7 +48,7 @@ describe('ForeignChainContractFactory', () => {
           });
 
           await genericForeignChainContract.resolveContract();
-          const address = (<IGenericForeignChainContract>genericForeignChainContract).address;
+          const address = genericForeignChainContract.address();
           expect(!!genericForeignChainContract).to.eql(true);
           expect((<IGenericForeignChainContract>genericForeignChainContract).blockchain.chainId).to.eql(chainId);
           expect(!!address).to.eql(true);

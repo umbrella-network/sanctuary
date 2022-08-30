@@ -22,6 +22,7 @@ import { BlockchainRepository } from '../../src/repositories/BlockchainRepositor
 import { ethers, Wallet } from 'ethers';
 import { BlockchainSettings } from '../../src/types/Settings';
 import { parseEther } from 'ethers/lib/utils';
+import { ChainContractRepository } from '../../src/repositories/ChainContractRepository';
 
 describe('ForeignChainReplicator', () => {
   let container: Container;
@@ -38,6 +39,7 @@ describe('ForeignChainReplicator', () => {
   let block: StubbedInstance<IBlock>;
   let foreignBlock: StubbedInstance<IForeignBlock>;
   let blockchainRepository: StubbedInstance<BlockchainRepository>;
+  let chainContractRepository: StubbedInstance<ChainContractRepository>;
   let provider: StubbedInstance<ethers.providers.Provider>;
 
   after(() => {
@@ -54,6 +56,7 @@ describe('ForeignChainReplicator', () => {
         polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
         arbitrumBlockReplicator = stubConstructor(ArbitrumBlockReplicator);
         blockchainRepository = createStubInstance(BlockchainRepository);
+        chainContractRepository = createStubInstance(ChainContractRepository);
         provider = createStubInstance(ethers.providers.Provider);
         wallet = Wallet.createRandom();
         sinon.stub(wallet, 'getBalance').resolves(parseEther('1'));
@@ -77,6 +80,9 @@ describe('ForeignChainReplicator', () => {
         container.bind(ArbitrumBlockReplicator).toConstantValue(arbitrumBlockReplicator);
         container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
         container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
+        container
+          .bind(ChainContractRepository)
+          .toConstantValue(<ChainContractRepository>(<unknown>chainContractRepository));
 
         foreignChainStatus = sinon.stub();
         avalancheBlockReplicator.getStatus.resolves(<ForeignChainStatus>(<unknown>foreignChainStatus));

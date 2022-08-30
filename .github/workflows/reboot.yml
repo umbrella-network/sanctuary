@@ -1,0 +1,57 @@
+name: Restart-Sanctuary-prod
+on:
+  workflow_dispatch:
+  schedule:
+   - cron: "30 11 * * *"
+env:
+  KUBECONFIG: '/tmp/config'
+
+jobs: 
+  reboot:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install and configure kubectl
+      run: |
+        # VERSION=$(curl --silent https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+        # https://github.com/aws/aws-cli/issues/6920#issuecomment-1117981158
+        VERSION=${{ secrets.KUBE_VERSION }}
+        curl https://storage.googleapis.com/kubernetes-release/release/$VERSION/bin/linux/amd64/kubectl \
+          --progress-bar \
+          --location \
+          --remote-name
+        curl -LO "https://dl.k8s.io/$VERSION/bin/linux/amd64/kubectl.sha256"
+        echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+        chmod +x kubectl
+        mv kubectl /usr/local/bin
+        kubectl version --client
+        echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $KUBECONFIG
+
+    - name: Restart Sanctuary in prod
+      run: |
+        echo "Restarting 'sanctuary foreign chain worker'"
+        kubectl rollout restart deployment/sanctuary-foreign-chain-worker-bsc01
+        echo "Restarting 'sanctuary resolver worker'"
+        kubectl rollout restart deployment/sanctuary-resolver-worker-bsc01
+        echo "Restarting 'sanctuary scheduler'"
+        kubectl rollout restart deployment/sanctuary-scheduler-bsc01
+        echo "Restarting 'sanctuary sync worker'"
+        kubectl rollout restart deployment/sanctuary-sync-worker-bsc01
+
+  notify:
+    name: Discord Notification
+    runs-on: ubuntu-latest
+    needs:
+      - reboot
+    if: ${{ always() }} # You always want to be notified: success, failure, or cancelled
+
+    steps:
+      - name: Notify
+        uses: nobrayner/discord-webhook@v1
+        with:
+          avatar-url: 'https://github.com/github.png?size=50'
+          username: 'umb-dev'
+          github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          discord-webhook: ${{ secrets.DISCORD_APP_PROD_WEBHOOK }}
+          title: '${{ github.workflow }}: {{STATUS}}'
+          description: '${{ github.event_name }} trigged this {{STATUS}}!'
+          # include-details: 'false'

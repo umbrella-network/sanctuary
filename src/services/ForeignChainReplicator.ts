@@ -1,5 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
+import { ethers } from 'ethers';
+
 import { ForeignBlockFactory } from '../factories/ForeignBlockFactory';
 import {
   ArbitrumBlockReplicator,
@@ -19,6 +21,8 @@ import { TForeignChainsIds, NonEvmChainsIds } from '../types/ChainsIds';
 import { parseEther } from 'ethers/lib/utils';
 import { BigNumber } from 'ethers';
 import { IGenericBlockchain } from '../lib/blockchains/IGenericBlockchain';
+import { ChainContractRepository } from '../repositories/ChainContractRepository';
+import { sleep } from '../utils/sleep';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: TForeignChainsIds;
@@ -32,6 +36,7 @@ export class ForeignChainReplicator {
   @inject(FCDRepository) fcdRepository!: FCDRepository;
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
   @inject('Settings') private readonly settings: Settings;
+  @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
 
   constructor(
     @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
@@ -55,6 +60,12 @@ export class ForeignChainReplicator {
 
     try {
       const { foreignChainId } = props;
+
+      if (await this.isDispatcherArchitecture(foreignChainId)) {
+        this.logger.info(`[${foreignChainId}] new chain architecture detected`);
+        await sleep(60_000); // slow down execution
+        return;
+      }
 
       await this.checkBalanceIsEnough(foreignChainId);
 
@@ -126,21 +137,53 @@ export class ForeignChainReplicator {
     const balance = await blockchain.wallet.getBalance();
     const toCurrency = NonEvmChainsIds.includes(chainId) ? (<IGenericBlockchain>blockchain).toBaseCurrency : parseEther;
 
-    this.testBalanceThreshold(chainId, balance, toCurrency);
+    this.testBalanceThreshold(chainId, balance, toCurrency, blockchain.wallet.address);
+  };
+
+  private isDispatcherArchitecture = async (chainId: TForeignChainsIds): Promise<boolean> => {
+    try {
+      const nonEvm = NonEvmChainsIds.includes(chainId);
+
+      const blockchain = nonEvm
+        ? this.blockchainRepository.getGeneric(chainId)
+        : this.blockchainRepository.get(chainId);
+
+      const contract = nonEvm
+        ? this.chainContractRepository.get(chainId)
+        : this.chainContractRepository.getGeneric(chainId);
+
+      let address = contract.address();
+
+      if (!address) {
+        await contract.resolveContract();
+        address = contract.address();
+      }
+
+      const data = ethers.utils.id('VERSION()').slice(0, 10);
+
+      const provider = await blockchain.getProvider();
+      const version = await provider.call({ to: address, data });
+      const versionWithDispatcher = 2;
+      return parseInt(version.toString(), 16) == versionWithDispatcher;
+    } catch (ignore) {
+      return false;
+    }
   };
 
   private testBalanceThreshold = (
     chainId: TForeignChainsIds,
     balance: BigNumber,
-    toCurrency: (amount: string) => BigNumber
+    toCurrency: (amount: string) => BigNumber,
+    address: string
   ) => {
     const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].transactions.mintBalance;
+
     if (balance.lt(toCurrency(errorLimit))) {
-      throw new Error(`Balance is lower than ${errorLimit}`);
+      throw new Error(`[${chainId}] Balance (${address.slice(0, 10)}) is lower than ${errorLimit}`);
     }
 
     if (balance.lt(toCurrency(warningLimit))) {
-      this.logger.warn(`Balance is lower than ${warningLimit}`);
+      this.logger.warn(`[${chainId}] Balance (${address.slice(0, 10)}) is lower than ${warningLimit}`);
     }
   };
 }

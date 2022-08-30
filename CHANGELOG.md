@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.1.0] - 2022-08-23
+### Added
+- Added github action to schedule daily and on demand rebooots
+- support for timestamp as block ID (backwards compatible)
+- detect new chain architecture and do not replicate
+
+### Fixed
+- prioritise `START_BLOCK_NUMBER` over last anchor when `calculateBlockNumberRange` for chains discovery
+
 ## [5.0.4] - 2022-08-29
 ### Fixed
 - Sync newest blocks first
@@ -16,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [5.0.2] - 2022-06-15
 ### Fixed
+- Return correct solana network name
 - Return status and network when request info for non-evm chain
 
 ## [5.0.1] - 2022-05-30

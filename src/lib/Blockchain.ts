@@ -24,6 +24,10 @@ export class Blockchain {
       return;
     }
 
+    if (!this.settings.contractRegistryAddress) {
+      throw Error(`missing contractRegistryAddress for ${chainId}`);
+    }
+
     this.provider = ethers.providers.getDefaultProvider(this.settings.providerUrl);
 
     if (settings.blockchain.replicatorPrivateKey) {

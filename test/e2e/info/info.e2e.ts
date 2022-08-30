@@ -41,7 +41,9 @@ describe('info', () => {
       });
 
       it('responds with expected BSC network', async () => {
-        expect(response.body.network).to.eqls({ name: 'bnbt', id: 97 });
+        expect(response.body.network.name).to.eqls('bnbt');
+        expect(response.body.network.id).to.eqls(97);
+        expect(parseInt(response.body.network.blockNumber, 10)).gt(0);
       });
     });
 
@@ -60,7 +62,9 @@ describe('info', () => {
         });
 
         it('responds with expected BSC network', async () => {
-          expect(response.body.network).to.eqls({ name: 'bnbt', id: 97 });
+          expect(response.body.network.name).to.eqls('bnbt');
+          expect(response.body.network.id).to.eqls(97);
+          expect(parseInt(response.body.network.blockNumber, 10)).gt(0);
         });
       });
 
@@ -78,7 +82,9 @@ describe('info', () => {
         });
 
         it('responds with expected ETH network', async () => {
-          expect(response.body.network).to.eqls({ name: 'kovan', id: 42 });
+          expect(['kovan', 'goerli'].includes(response.body.network.name)).true;
+          expect([42, 5].includes(response.body.network.id)).true;
+          expect(parseInt(response.body.network.blockNumber, 10)).gt(0);
         });
       });
 
@@ -96,7 +102,9 @@ describe('info', () => {
         });
 
         it('responds with expected AVAX network', async () => {
-          expect(response.body.network).to.eqls({ name: 'unknown', id: 43113 });
+          expect(response.body.network.name).to.eqls('unknown');
+          expect(response.body.network.id).to.eqls(43113);
+          expect(parseInt(response.body.network.blockNumber, 10)).gt(0);
         });
       });
 
@@ -114,7 +122,9 @@ describe('info', () => {
         });
 
         it('responds with expected solana network', async () => {
-          expect(response.body.network).to.eqls({ name: 'solana-devnet', id: 0 });
+          expect(response.body.network.name).to.eqls('solana-devnet');
+          expect(response.body.network.id).to.eqls(0);
+          expect(parseInt(response.body.network.blockNumber, 10)).gt(0);
         });
       });
     });
