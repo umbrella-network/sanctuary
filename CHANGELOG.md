@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.1.1] - 2022-09-30
+### Changed
+- Revert sync newest blocks first
+
 ## [5.1.0] - 2022-08-23
 ### Added
 - Added github action to schedule daily and on demand rebooots
