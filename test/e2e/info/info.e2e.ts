@@ -26,7 +26,7 @@ describe('info', () => {
     await teardownDatabase();
   });
 
-  describe('GET /info', () => {
+  describe.skip('GET /info', () => {
     describe('when none chainId is given', () => {
       before(async () => {
         response = await request(app).get('/info');

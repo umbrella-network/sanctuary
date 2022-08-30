@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.0.5] - 2022-08-30
+### Fixed
+- Skip /info e2e tests
+
 ## [5.0.4] - 2022-08-29
 ### Fixed
 - Sync newest blocks first
