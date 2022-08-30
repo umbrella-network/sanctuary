@@ -151,7 +151,9 @@ class ChainSynchronizer {
       );
 
       if (startBlockNumber < 0 || startBlockNumber > endBlockNumber) {
-        throw Error(`block mishmash: startBlockNumber: ${startBlockNumber}, endBlockNumber: ${endBlockNumber}`);
+        throw Error(
+          `${prefix} block mishmash: startBlockNumber: ${startBlockNumber}, endBlockNumber: ${endBlockNumber}`
+        );
       }
 
       return [startBlockNumber, endBlockNumber];
