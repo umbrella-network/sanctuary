@@ -95,7 +95,7 @@ class BlockSynchronizer {
     const blocksInProgress = await Block.find({
       status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] },
     })
-      .sort({ blockId: -1 }) // must be from latest/asc!
+      .sort({ blockId: 1 }) // must be from latest/asc!
       .limit(this.settings.app.blockSyncBatchSize)
       .exec();
 
