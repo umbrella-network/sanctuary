@@ -76,7 +76,9 @@ class BlockSynchronizer {
     if (blockIds.length > 0) {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
       const updated = await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
-      this.logger.info(`Finalized successfully: ${updated.filter((b) => b.status == BlockStatus.Finalized).length}`);
+      const success = updated.filter((b) => b.status == BlockStatus.Finalized).length;
+      const failed = updated.filter((b) => b.status == BlockStatus.Failed).length;
+      this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total blocks updated: ${updated.length}`);
     }
   }
 
@@ -96,7 +98,7 @@ class BlockSynchronizer {
     const blocksInProgress = await Block.find({
       status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] },
     })
-      .sort({ blockId: 1 }) // must be from latest/asc!
+      .sort({ blockId: -1 })
       .limit(this.settings.app.blockSyncBatchSize)
       .exec();
 
