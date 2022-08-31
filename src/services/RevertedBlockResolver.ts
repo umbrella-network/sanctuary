@@ -10,24 +10,23 @@ class RevertedBlockResolver {
   @inject('Logger') logger!: Logger;
   @inject('Settings') settings!: Settings;
 
-  async apply(lastSubmittedBlockId: number, nextBlockId: number, chainId?: string): Promise<number> {
+  async apply(lastSubmittedBlockId: number, nextBlockId: number, chainId: string): Promise<number> {
     if (lastSubmittedBlockId <= nextBlockId) {
       return -1;
     }
 
-    const chainName = chainId || this.settings.blockchain.homeChain.chainId;
-    this.logger.warn(`[${chainName}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
+    this.logger.warn(`[${chainId}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
 
-    const blockRes = await this.revertBlockChainDatas(nextBlockId, chainName);
+    const blockRes = await this.revertBlockChainDatas(nextBlockId, chainId);
 
-    this.logger.info(`[${chainName}] because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
+    this.logger.info(`[${chainId}] because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
 
     return blockRes.deletedCount;
   }
 
-  private async revertBlocks(nextBlockId: number): Promise<DeleteWriteOpResultObject> {
-    this.logger.warn(`[revertBlocks] deleting many: blockId gte ${nextBlockId}`);
-    return Block.collection.deleteMany({ blockId: { $gte: nextBlockId } });
+  private async revertBlocks(nextBlockId: number): Promise<void> {
+    this.logger.warn(`[revertBlocks] deleting Blocks: blockId gte ${nextBlockId}`);
+    await Block.collection.deleteMany({ blockId: { $gte: nextBlockId } });
   }
 
   private async revertBlockChainDatas(nextBlockId: number, chainId: string): Promise<DeleteWriteOpResultObject> {
@@ -41,7 +40,7 @@ class RevertedBlockResolver {
     const blockChainCount = await BlockChainData.collection.count({ blockId: { $gte: nextBlockId } });
 
     if (blockChainCount === 0) {
-      return this.revertBlocks(nextBlockId);
+      await this.revertBlocks(nextBlockId);
     }
 
     return deleteBlockChainData;
