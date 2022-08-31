@@ -16,11 +16,9 @@ class BlockResolverWorker extends SingletonWorker {
   @inject(ChainSynchronizer) chainSynchronizer!: ChainSynchronizer;
 
   apply = async (job: Bull.Job): Promise<void> => {
-    const interval = parseInt(job.data.interval);
-    const lockTTL = parseInt(job.data.lockTTL);
-    if (this.isStale(job, interval)) return;
+    const { lockTTL, chainId, isStale } = this.parseJobData(job);
+    if (isStale) return;
 
-    const chainId = job.data.chainId;
     await this.synchronizeWork(chainId, lockTTL, async () => this.execute(chainId));
   };
 
