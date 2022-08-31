@@ -9,28 +9,29 @@ import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
 import Settings from '../types/Settings';
 import { LogMint, LogVoter } from '../types/events';
-import Block, {IBlock, IBlockChainData} from '../models/Block';
-import BlockSynchronizer from './BlockSynchronizer';
+import Block, {IBlock} from '../models/Block';
+import BlockChainData, {IBlockChainData} from '../models/BlockChainData';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { ChainsIds } from '../types/ChainsIds';
 import { Blockchain } from '../lib/Blockchain';
+import LatestIdsProvider from './LatestIdsProvider';
 
 @injectable()
 class NewBlocksResolver {
   @inject('Logger') private logger!: Logger;
   @inject('Settings') settings!: Settings;
   @inject(ChainInstanceResolver) private chainInstanceResolver!: ChainInstanceResolver;
-  @inject(BlockSynchronizer) blockSynchronizer!: BlockSynchronizer;
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
   @inject(ChainContractRepository) chainContractRepository!: ChainContractRepository;
+  @inject(LatestIdsProvider) latestIdsProvider!: LatestIdsProvider;
 
   private blockchain!: Blockchain;
   private chainContract!: ChainContract;
   private chainId!: string;
 
-  apply = async (chainId: string): Promise<void> => {
+  apply = async (chainId: ChainsIds): Promise<void> => {
     if (chainId === ChainsIds.SOLANA) {
       return;
     }
@@ -42,7 +43,7 @@ class NewBlocksResolver {
 
     const [chainStatus, [, lastAnchor]] = await Promise.all([
       this.chainContract.resolveStatus<ChainStatus>(),
-      this.blockSynchronizer.getLastSavedBlockIdAndStartAnchor(),
+      this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
     ]);
 
     await this.resolveBlockEvents(chainStatus, lastAnchor);
@@ -205,9 +206,7 @@ class NewBlocksResolver {
     };
   };
 
-  // TODO adjust to new DB
-  // not sure which one we should return Block Or BlockchainData
-  private saveNewBlocks = async (newBlocks: IEventBlock[]): Promise<IBlock[]> => {
+  private saveNewBlocks = async (newBlocks: IEventBlock[]): Promise<IBlockChainData[]> => {
     return Promise.all(
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
@@ -218,13 +217,12 @@ class NewBlocksResolver {
           this.logger.info(`[${this.chainId}] New block detected: ${newBlock.blockId}`);
 
           try {
-            return await Block.create({
+            await Block.create({
               _id: `block::${newBlock.blockId}`,
               root: newBlock.root,
               blockId: newBlock.blockId,
               staked: newBlock.staked,
               power: newBlock.power,
-              anchor: newBlock.anchor,
               votes: newBlock.votes,
               voters: newBlock.voters,
               dataTimestamp,
@@ -241,13 +239,13 @@ class NewBlocksResolver {
 
         try {
           // TODO
-          return await IBlockChainData.create({
-            _id: `block::${this.chainId}::${newBlock.blockId}`, // TODO ????
+          return await BlockChainData.create({
+            _id: `block::${this.chainId}::${newBlock.blockId}`,
+            anchor: newBlock.anchor,
             chainId: this.chainId,
             chainAddress: newBlock.chainAddress,
             blockId: newBlock.blockId,
             minter: newBlock.minter,
-
             dataTimestamp,
           });
         } catch (e) {
