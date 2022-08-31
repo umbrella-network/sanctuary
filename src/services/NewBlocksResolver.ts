@@ -9,8 +9,8 @@ import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
 import Settings from '../types/Settings';
 import { LogMint, LogVoter } from '../types/events';
-import Block, {IBlock} from '../models/Block';
-import BlockChainData, {IBlockChainData} from '../models/BlockChainData';
+import Block, { IBlock } from '../models/Block';
+import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
@@ -211,7 +211,7 @@ class NewBlocksResolver {
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
 
-        const exist = await Block.find({blockId: newBlock.blockId});
+        const exist = await Block.find({ blockId: newBlock.blockId });
 
         if (exist.length == 0) {
           this.logger.info(`[${this.chainId}] New block detected: ${newBlock.blockId}`);
