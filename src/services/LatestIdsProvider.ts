@@ -6,6 +6,11 @@ import BlockChainData from '../models/BlockChainData';
 
 @injectable()
 class LatestIdsProvider {
+  getLatestBlockId = async (): Promise<number> => {
+    const [newestBlock] = await Block.find({}).sort({ blockId: -1 }).limit(1).exec();
+    return newestBlock.blockId;
+  };
+
   getLastSavedBlockIdAndStartAnchor = async (
     chainId: ChainsIds
   ): Promise<[lastSavedBlockId: number, lastAnchor: number]> => {
@@ -19,11 +24,6 @@ class LatestIdsProvider {
   private getLowestChainAnchor = async (chainId: ChainsIds): Promise<number> => {
     const oldestChain = await ChainInstance.find({ chainId: chainId }).sort({ blockId: 1 }).limit(1).exec();
     return oldestChain[0].anchor;
-  };
-
-  private getLatestBlockId = async (): Promise<number> => {
-    const [newestBlock] = await Block.find({}).sort({ blockId: -1 }).limit(1).exec();
-    return newestBlock.blockId;
   };
 }
 
