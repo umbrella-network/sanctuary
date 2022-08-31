@@ -14,6 +14,8 @@ import Settings from '../types/Settings';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { Blockchain } from '../lib/Blockchain';
+import { ChainsIds } from '../types/ChainsIds';
+import LatestIdsProvider from "./LatestIdsProvider";
 
 @injectable()
 class BlockSynchronizer {
@@ -24,40 +26,43 @@ class BlockSynchronizer {
   @inject(RevertedBlockResolver) revertedBlockResolver!: RevertedBlockResolver;
   @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
+  @inject(LatestIdsProvider) latestIdsProvider: LatestIdsProvider;
 
   private chainId!: string;
   private blockchain!: Blockchain;
   private chainContract!: ChainContract;
 
-  @postConstruct()
-  setup(): void {
+  setup(chainId: ChainsIds): void {
     if (this.chainId) {
       return;
     }
 
-    this.chainId = this.settings.blockchain.homeChain.chainId;
-    this.blockchain = this.blockchainRepository.get(this.chainId);
+    this.chainId = chainId;
+    this.blockchain = this.blockchainRepository.get(chainId);
 
     if (!this.blockchain.getContractRegistryAddress()) {
       // scheduler catch
       return;
     }
 
-    this.chainContract = <ChainContract>this.chainContractRepository.get(this.chainId);
-    this.chainInstanceResolver.setup(this.chainId);
+    this.chainContract = <ChainContract>this.chainContractRepository.get(chainId);
+    this.chainInstanceResolver.setup(chainId);
   }
 
-  async apply(): Promise<void> {
-    const [chainStatus, [lastSavedBlockId]] = await Promise.all([
+  async apply(chainId: ChainsIds): Promise<void> {
+    this.setup(chainId);
+
+    const [chainStatus, [lastSavedBlockId], highestBlockId] = await Promise.all([
       this.chainContract.resolveStatus<ChainStatus>(),
-      this.getLastSavedBlockIdAndStartAnchor(),
+      this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
+      this.latestIdsProvider.getLatestBlockId(),
     ]);
 
-    if ((await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId)) > 0) {
+    if ((await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId, chainId)) > 0) {
       return;
     }
 
-    this.logger.info(`Synchronizing blocks at blockId ${chainStatus.nextBlockId}`);
+    this.logger.info(`[${chainId}] Synchronizing blocks at blockId ${highestBlockId}`);
 
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
 
@@ -81,19 +86,6 @@ class BlockSynchronizer {
       this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total blocks updated: ${updated.length}`);
     }
   }
-
-  // TODO adjust this to multichain DB!!
-  getLastSavedBlockIdAndStartAnchor = async (): Promise<[number, number]> => {
-    const lastSavedBlock = await Block.find({}).sort({ blockId: -1 }).limit(1).exec();
-    return lastSavedBlock[0]
-      ? [lastSavedBlock[0].blockId, lastSavedBlock[0].anchor + 1]
-      : [0, await this.getLowestChainAnchor()];
-  };
-
-  private getLowestChainAnchor = async (): Promise<number> => {
-    const oldestChain = await ChainInstance.find({ chainId: this.chainId }).limit(1).sort({ blockId: 1 }).exec();
-    return oldestChain[0].anchor;
-  };
 
   private getMongoBlocksToSynchronize = async (): Promise<IBlock[]> => {
     const blocksInProgress = await Block.find({
