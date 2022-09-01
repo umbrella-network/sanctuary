@@ -3,13 +3,15 @@ import { isUndefined, omitBy } from 'lodash';
 import { Logger } from 'winston';
 
 import Block, { IBlock } from '../models/Block';
-import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
-import { BlockStatus } from '../types/blocks';
+import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
+import { BlockStatus, FullBlockData } from '../types/blocks';
+import Settings from '../types/Settings';
 
 export type FindProps = {
   offset: number;
   limit: number;
   chainId?: string;
+  sort?: Record<string, unknown>;
 };
 
 export type FindOneProps = {
@@ -18,7 +20,7 @@ export type FindOneProps = {
 };
 
 export type LatestProps = {
-  chainId?: string;
+  chainId: string;
   status?: BlockStatus;
 };
 
@@ -30,63 +32,47 @@ export type CountBlocksBetweenProps<T> = {
 @injectable()
 export class BlockRepository {
   @inject('Logger') protected logger!: Logger;
+  @inject('Settings') protected settings!: Settings;
 
-  async find(props: FindProps): Promise<IBlock[]> {
-    const { chainId, offset, limit } = props;
+  async find(props: FindProps): Promise<FullBlockData[]> {
+    const { chainId, offset, limit, sort = { blockId: -1 } } = props;
 
-    if (chainId) {
-      const foreignBlocks: IForeignBlock[] = await ForeignBlock.find({ foreignChainId: chainId })
-        .skip(offset)
-        .limit(limit)
-        .sort({ blockId: -1 })
-        .exec();
+    const blockChainData: IBlockChainData[] = await BlockChainData.find({ chainId })
+      .skip(offset)
+      .limit(limit)
+      .sort(sort)
+      .exec();
 
-      const blocks = await Block.find({ blockId: { $in: foreignBlocks.map((fb) => fb.blockId) } })
-        .sort({ blockId: -1 })
-        .exec();
+    const blocks = await Block.find({ blockId: { $in: blockChainData.map((fb) => fb.blockId) } })
+      .sort(sort)
+      .exec();
 
-      return this.augmentBlockCollectionWithReplicationData(blocks, foreignBlocks);
-    } else {
-      return Block.find({ status: { $in: [BlockStatus.Finalized] } })
-        .skip(offset)
-        .limit(limit)
-        .sort({ blockId: -1 })
-        .exec();
-    }
+    return this.augmentBlockCollectionWithReplicationData(blocks, blockChainData);
   }
 
-  async findOne(props: FindOneProps): Promise<IBlock | undefined> {
+  async findOne(props: FindOneProps): Promise<FullBlockData | undefined> {
     const { blockId, chainId } = props;
 
-    if (chainId) {
-      const foreignBlock = await ForeignBlock.findOne({ blockId, foreignChainId: chainId });
-      const block = await Block.findOne({ blockId });
-      if (!block || !foreignBlock) return;
+    const blockChainData = await BlockChainData.findOne({ blockId, chainId });
+    const block = await Block.findOne({ blockId });
+    if (!block || !blockChainData) return;
 
-      return this.augmentBlockWithReplicationData(block, foreignBlock);
-    } else {
-      return Block.findOne({ blockId });
-    }
+    return this.augmentBlockWithReplicationData(block, blockChainData);
   }
 
-  async findLatest(props: LatestProps): Promise<IBlock | undefined> {
+  async findLatest(props: LatestProps): Promise<FullBlockData | undefined> {
     const { chainId, status } = props;
 
-    if (chainId) {
-      try {
-        const foreignBlock = await ForeignBlock.findOne({ foreignChainId: chainId }).sort({ blockId: -1 });
-        const query = omitBy({ blockId: foreignBlock.blockId, status }, isUndefined);
-        const block = await Block.findOne(query);
-        if (!block || !foreignBlock) return;
+    try {
+      const blockChainData = await BlockChainData.findOne({ chainId }).sort({ blockId: -1 });
+      const query = omitBy({ blockId: blockChainData.blockId, status }, isUndefined);
+      const block = await Block.findOne(query);
+      if (!block || !blockChainData) return;
 
-        return this.augmentBlockWithReplicationData(block, foreignBlock);
-      } catch (e) {
-        this.logger.error(`unable to find latest block for chainId ${chainId} and status ${status}`);
-        throw e;
-      }
-    } else {
-      const query = omitBy({ status }, isUndefined);
-      return Block.findOne(query).sort({ blockId: -1 });
+      return this.augmentBlockWithReplicationData(block, blockChainData);
+    } catch (e) {
+      this.logger.error(`unable to find latest block for chainId ${chainId} and status ${status}`);
+      throw e;
     }
   }
 
@@ -106,17 +92,20 @@ export class BlockRepository {
     }).countDocuments();
   }
 
-  private augmentBlockCollectionWithReplicationData(blocks: IBlock[], foreignBlocks: IForeignBlock[]): IBlock[] {
+  private augmentBlockCollectionWithReplicationData(
+    blocks: IBlock[],
+    blockChainData: IBlockChainData[]
+  ): FullBlockData[] {
     return blocks.map((block) => {
-      const matchingForeignBlock = foreignBlocks.find((fb) => fb.blockId == block.blockId);
-      return this.augmentBlockWithReplicationData(block, matchingForeignBlock);
+      const matchingBlockChainData = blockChainData.find((fb) => fb.blockId == block.blockId);
+      return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
     });
   }
 
-  private augmentBlockWithReplicationData(block: IBlock, foreignBlock: IForeignBlock): IBlock {
-    block.chainAddress = foreignBlock.chainAddress;
-    block.anchor = foreignBlock.anchor;
-    block.minter = foreignBlock.minter;
+  private augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {
+    block.chainAddress = blockChainData.chainAddress;
+    block.anchor = blockChainData.anchor;
+    block.minter = blockChainData.minter;
     return block;
   }
 }

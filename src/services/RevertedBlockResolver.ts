@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import Block from '../models/Block';
 import { Logger } from 'winston';
-import ForeignBlock from '../models/ForeignBlock';
+import BlockChainData from '../models/BlockChainData';
 import { DeleteWriteOpResultObject } from 'mongodb';
 import Settings from '../types/Settings';
 
@@ -16,26 +16,35 @@ class RevertedBlockResolver {
     }
 
     const chainName = chainId || this.settings.blockchain.homeChain.chainId;
-
     this.logger.warn(`[${chainName}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
 
-    const blockRes = chainId
-      ? await this.revertForeignBlocks(nextBlockId, chainId)
-      : await this.revertHomeBlocks(nextBlockId);
+    const blockRes = await this.revertBlockChainDatas(nextBlockId, chainName);
 
     this.logger.info(`[${chainName}] because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
 
     return blockRes.deletedCount;
   }
 
-  private async revertHomeBlocks(nextBlockId: number): Promise<DeleteWriteOpResultObject> {
-    this.logger.warn(`[homeChain] deleting many: blockId gte ${nextBlockId}`);
+  private async revertBlocks(nextBlockId: number): Promise<DeleteWriteOpResultObject> {
+    this.logger.warn(`[revertBlocks] deleting many: blockId gte ${nextBlockId}`);
     return Block.collection.deleteMany({ blockId: { $gte: nextBlockId } });
   }
 
-  private async revertForeignBlocks(nextBlockId: number, chainId: string): Promise<DeleteWriteOpResultObject> {
+  private async revertBlockChainDatas(nextBlockId: number, chainId: string): Promise<DeleteWriteOpResultObject> {
     this.logger.warn(`[${chainId}] deleting many: blockId gte ${nextBlockId}`);
-    return ForeignBlock.collection.deleteMany({ chainId: chainId, blockId: { $gte: nextBlockId } });
+
+    const deleteBlockChainData = await BlockChainData.collection.deleteMany({
+      chainId: chainId,
+      blockId: { $gte: nextBlockId },
+    });
+
+    const blockChainCount = await BlockChainData.collection.count({ blockId: { $gte: nextBlockId } });
+
+    if (blockChainCount === 0) {
+      return this.revertBlocks(nextBlockId);
+    }
+
+    return deleteBlockChainData;
   }
 }
 

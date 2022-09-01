@@ -10,13 +10,13 @@ import {
   PolygonBlockReplicator,
 } from '../../src/services/foreign-chain';
 import { ReplicationStatus } from '../../src/services/foreign-chain/ForeignBlockReplicator';
-import ForeignBlock, { IForeignBlock } from '../../src/models/ForeignBlock';
+import BlockChainData, { IBlockChainData } from '../../src/models/BlockChainData';
 import { StubbedInstance, stubConstructor, stubObject } from 'ts-sinon';
-import { ForeignBlockFactory } from '../../src/factories/ForeignBlockFactory';
+import { BlockChainDataFactory } from '../../src/factories/BlockChainDataFactory';
 import { ForeignChainStatus } from '../../src/types/ForeignChainStatus';
 import Block, { IBlock } from '../../src/models/Block';
 import { expect } from 'chai';
-import { foreignBlockFactory as mockForeignBlockFactory } from '../mocks/factories/foreignBlockFactory';
+import { blockChainDataFactory as mockBlockChainDataFactory } from '../mocks/factories/blockChainDataFactory';
 import { ForeignChainsIds, TForeignChainsIds, NonEvmChainsIds } from '../../src/types/ChainsIds';
 import { BlockchainRepository } from '../../src/repositories/BlockchainRepository';
 import { ethers, Wallet } from 'ethers';
@@ -28,7 +28,7 @@ describe('ForeignChainReplicator', () => {
   let container: Container;
   let instance: ForeignChainReplicator;
   const subject = async (foreignChainId: TForeignChainsIds) => instance.apply({ foreignChainId });
-  let foreignBlockFactory: StubbedInstance<ForeignBlockFactory>;
+  let blockChainDataFactory: StubbedInstance<BlockChainDataFactory>;
   let avalancheBlockReplicator: StubbedInstance<AvalancheBlockReplicator>;
   let ethereumBlockReplicator: StubbedInstance<EthereumBlockReplicator>;
   let polygonBlockReplicator: StubbedInstance<PolygonBlockReplicator>;
@@ -37,7 +37,7 @@ describe('ForeignChainReplicator', () => {
   let wallet: Wallet;
   let replicationStatus: ReplicationStatus;
   let block: StubbedInstance<IBlock>;
-  let foreignBlock: StubbedInstance<IForeignBlock>;
+  let blockChainData: StubbedInstance<IBlockChainData>;
   let blockchainRepository: StubbedInstance<BlockchainRepository>;
   let chainContractRepository: StubbedInstance<ChainContractRepository>;
   let provider: StubbedInstance<ethers.providers.Provider>;
@@ -50,7 +50,7 @@ describe('ForeignChainReplicator', () => {
     describe('when balance is enough', () => {
       before(async () => {
         container = getTestContainer();
-        foreignBlockFactory = stubConstructor(ForeignBlockFactory);
+        blockChainDataFactory = stubConstructor(BlockChainDataFactory);
         avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
         ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
         polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
@@ -78,7 +78,7 @@ describe('ForeignChainReplicator', () => {
         container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
         container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
         container.bind(ArbitrumBlockReplicator).toConstantValue(arbitrumBlockReplicator);
-        container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
+        container.bind(BlockChainDataFactory).toConstantValue(blockChainDataFactory);
         container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
         container
           .bind(ChainContractRepository)
@@ -100,9 +100,9 @@ describe('ForeignChainReplicator', () => {
         polygonBlockReplicator.replicate.resolves(replicationStatus);
         arbitrumBlockReplicator.replicate.resolves(replicationStatus);
 
-        foreignBlock = stubObject<IForeignBlock>(new ForeignBlock(mockForeignBlockFactory.attributes()));
-        foreignBlock.save.resolves();
-        foreignBlockFactory.fromBlock.returns(foreignBlock);
+        blockChainData = stubObject<IBlockChainData>(new BlockChainData(mockBlockChainDataFactory.attributes()));
+        blockChainData.save.resolves();
+        blockChainDataFactory.fromBlock.returns(blockChainData);
 
         instance = container.get(ForeignChainReplicator);
       });
@@ -113,9 +113,9 @@ describe('ForeignChainReplicator', () => {
 
       ForeignChainsIds.filter((x) => !NonEvmChainsIds.includes(x)).forEach((foreignChainId: TForeignChainsIds) => {
         it(`replicates blocks for ${foreignChainId}`, async () => {
-          const result = <IForeignBlock[]>await subject(foreignChainId);
+          const result = <IBlockChainData[]>await subject(foreignChainId);
           expect(result.length).to.eq(1);
-          expect(result[0]).to.eq(foreignBlock);
+          expect(result[0]).to.eq(blockChainData);
         });
       });
     });
@@ -123,7 +123,7 @@ describe('ForeignChainReplicator', () => {
     describe('when balance is not enough', () => {
       before(async () => {
         container = getTestContainer();
-        foreignBlockFactory = stubConstructor(ForeignBlockFactory);
+        blockChainDataFactory = stubConstructor(BlockChainDataFactory);
         avalancheBlockReplicator = stubConstructor(AvalancheBlockReplicator);
         ethereumBlockReplicator = stubConstructor(EthereumBlockReplicator);
         polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
@@ -151,7 +151,7 @@ describe('ForeignChainReplicator', () => {
         container.bind(EthereumBlockReplicator).toConstantValue(ethereumBlockReplicator);
         container.bind(PolygonBlockReplicator).toConstantValue(polygonBlockReplicator);
         container.bind(ArbitrumBlockReplicator).toConstantValue(arbitrumBlockReplicator);
-        container.bind(ForeignBlockFactory).toConstantValue(foreignBlockFactory);
+        container.bind(BlockChainDataFactory).toConstantValue(blockChainDataFactory);
         container.bind(BlockchainRepository).toConstantValue(<BlockchainRepository>(<unknown>blockchainRepository));
 
         foreignChainStatus = sinon.stub();
@@ -170,9 +170,9 @@ describe('ForeignChainReplicator', () => {
         polygonBlockReplicator.replicate.resolves(replicationStatus);
         arbitrumBlockReplicator.replicate.resolves(replicationStatus);
 
-        foreignBlock = stubObject<IForeignBlock>(new ForeignBlock(mockForeignBlockFactory.attributes()));
-        foreignBlock.save.resolves();
-        foreignBlockFactory.fromBlock.returns(foreignBlock);
+        blockChainData = stubObject<IBlockChainData>(new BlockChainData(mockBlockChainDataFactory.attributes()));
+        blockChainData.save.resolves();
+        blockChainDataFactory.fromBlock.returns(blockChainData);
 
         instance = container.get(ForeignChainReplicator);
       });
@@ -183,7 +183,7 @@ describe('ForeignChainReplicator', () => {
 
       ForeignChainsIds.filter((x) => !NonEvmChainsIds.includes(x)).forEach((foreignChainId: TForeignChainsIds) => {
         it(`should not replicates blocks for ${foreignChainId}`, async () => {
-          const result = <IForeignBlock[]>await subject(foreignChainId);
+          const result = <IBlockChainData[]>await subject(foreignChainId);
           expect(result).to.eq(undefined);
         });
       });
