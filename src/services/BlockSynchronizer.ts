@@ -166,7 +166,7 @@ class BlockSynchronizer {
         `Invalid ROOT for blockId ${mongoBlock.blockId}. Expected ${onChainBlocksData.root} but have ${mongoBlock.root}. Reverting.`
       );
 
-      await BlockSynchronizer.revertBlocks(mongoBlock.blockId, blockChainData.chainId);
+      await BlockSynchronizer.revertBlocks(mongoBlock.blockId);
       // blocksWereReverted;
       return true;
     }
@@ -219,11 +219,10 @@ class BlockSynchronizer {
   };
 
   private static revertBlocks = async (
-    blockId: number,
-    chainId: ChainsIds
+    blockId: number
   ): Promise<({ ok?: number; n?: number } & { deletedCount?: number })[]> => {
     const condition = { blockId: { $gte: blockId } };
-    return Promise.all([Block.deleteMany(condition), Leaf.deleteMany(condition)]);
+    return Promise.all([Block.deleteMany(condition), Leaf.deleteMany(condition), BlockChainData.deleteMany(condition)]);
   };
 
   private noticeError = (err: string): void => {
