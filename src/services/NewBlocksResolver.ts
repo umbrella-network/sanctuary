@@ -9,7 +9,7 @@ import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
 import Settings from '../types/Settings';
 import { LogMint, LogVoter } from '../types/events';
-import Block, { IBlock } from '../models/Block';
+import Block  from '../models/Block';
 import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';

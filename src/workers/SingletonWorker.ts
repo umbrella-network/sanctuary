@@ -3,7 +3,7 @@ import Bull from 'bullmq';
 import LockRepository from '../repositories/LockRepository';
 import BasicWorker from './BasicWorker';
 import { Logger } from 'winston';
-import { ChainsIds, TForeignChainsIds } from '../types/ChainsIds';
+import { ChainsIds } from '../types/ChainsIds';
 
 export abstract class SingletonWorker extends BasicWorker {
   @inject('Logger') logger!: Logger;
