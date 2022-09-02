@@ -1,11 +1,10 @@
 import { Logger } from 'winston';
-import { inject, injectable, postConstruct } from 'inversify';
+import { inject, injectable } from 'inversify';
 import newrelic from 'newrelic';
 import { ChainContract } from '../contracts/ChainContract';
 import Block, { IBlock } from '../models/Block';
 import Leaf from '../models/Leaf';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
-import ChainInstance from '../models/ChainInstance';
 import { BlockStatus } from '../types/blocks';
 import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
@@ -15,7 +14,8 @@ import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { Blockchain } from '../lib/Blockchain';
 import { ChainsIds } from '../types/ChainsIds';
-import LatestIdsProvider from "./LatestIdsProvider";
+import LatestIdsProvider from './LatestIdsProvider';
+import BlockChainData from '../models/BlockChainData';
 
 @injectable()
 class BlockSynchronizer {
@@ -28,41 +28,23 @@ class BlockSynchronizer {
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
   @inject(LatestIdsProvider) latestIdsProvider: LatestIdsProvider;
 
-  private chainId!: string;
   private blockchain!: Blockchain;
   private chainContract!: ChainContract;
 
-  setup(chainId: ChainsIds): void {
-    if (this.chainId) {
+  async apply(): Promise<void> {
+    const anyReverts = await Promise.all(Object.values(ChainsIds).map(this.checkForRevertedBlocks));
+
+    if (anyReverts.filter((data) => data.reverted).length) {
       return;
     }
 
-    this.chainId = chainId;
-    this.blockchain = this.blockchainRepository.get(chainId);
+    // we search for masterchain, because we need active list of validators
+    const masterChainStatus = anyReverts.filter((data) => data.chainId == this.settings.blockchain.homeChain.chainId)[0]
+      .status;
+    // masterchain doesn't have to have latest data, so we simply search for highest value
+    masterChainStatus.nextBlockId = anyReverts.reduce((acc, data) => Math.max(acc, data.status.nextBlockId), 0);
 
-    if (!this.blockchain.getContractRegistryAddress()) {
-      // scheduler catch
-      return;
-    }
-
-    this.chainContract = <ChainContract>this.chainContractRepository.get(chainId);
-    this.chainInstanceResolver.setup(chainId);
-  }
-
-  async apply(chainId: ChainsIds): Promise<void> {
-    this.setup(chainId);
-
-    const [chainStatus, [lastSavedBlockId], highestBlockId] = await Promise.all([
-      this.chainContract.resolveStatus<ChainStatus>(),
-      this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
-      this.latestIdsProvider.getLatestBlockId(),
-    ]);
-
-    if ((await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId, chainId)) > 0) {
-      return;
-    }
-
-    this.logger.info(`[${chainId}] Synchronizing blocks at blockId ${highestBlockId}`);
+    this.logger.info('Synchronizing blocks');
 
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
 
@@ -70,13 +52,13 @@ class BlockSynchronizer {
       return;
     }
 
-    this.logger.debug(`got ${mongoBlocks.length} mongoBlocks to synchronize`);
+    this.logger.debug(`Got ${mongoBlocks.length} mongoBlocks to synchronize`);
 
     if (!(await this.verifyBlocks(mongoBlocks))) {
       return;
     }
 
-    const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatus, mongoBlocks);
+    const [leavesSynchronizers, blockIds] = await this.processBlocks(masterChainStatus, mongoBlocks);
 
     if (blockIds.length > 0) {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
@@ -85,6 +67,23 @@ class BlockSynchronizer {
       const failed = updated.filter((b) => b.status == BlockStatus.Failed).length;
       this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total blocks updated: ${updated.length}`);
     }
+  }
+
+  async checkForRevertedBlocks(
+    chainId: ChainsIds
+  ): Promise<{ reverted: boolean; status: ChainStatus; chainId: ChainsIds }> {
+    const chain = <ChainContract>this.chainContractRepository.get(chainId);
+
+    const [chainStatus, [lastSavedBlockId]] = await Promise.all([
+      chain.resolveStatus<ChainStatus>(),
+      this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
+    ]);
+
+    return {
+      reverted: (await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId, chainId)) > 0,
+      status: chainStatus,
+      chainId,
+    };
   }
 
   private getMongoBlocksToSynchronize = async (): Promise<IBlock[]> => {
@@ -156,6 +155,25 @@ class BlockSynchronizer {
     return verified;
   };
 
+  private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
+    const blockChainData = await BlockChainData.findOne({ blockId: mongoBlock.blockId });
+    const chainContract = this.chainContractRepository.get(blockChainData.chainId);
+
+    const onChainBlocksData = await chainContract.resolveBlockData(mongoBlock.chainAddress, mongoBlock.blockId);
+
+    if (mongoBlock.root != onChainBlocksData.root) {
+      this.logger.warn(
+        `Invalid ROOT for blockId ${mongoBlock.blockId}. Expected ${onChainBlocksData.root} but have ${mongoBlock.root}. Reverting.`
+      );
+
+      await BlockSynchronizer.revertBlocks(mongoBlock.blockId, blockChainData.chainId);
+      // blocksWereReverted;
+      return true;
+    }
+
+    return false;
+  };
+
   private processBlocks = async (
     chainStatus: ChainStatus,
     mongoBlocks: IBlock[]
@@ -183,21 +201,7 @@ class BlockSynchronizer {
 
           case BlockStatus.Finalized:
           case BlockStatus.Failed:
-            // eslint-disable-next-line no-case-declarations
-            const onChainBlocksData = await this.chainContract.resolveBlockData(
-              mongoBlock.chainAddress,
-              mongoBlock.blockId
-            );
-
-            if (mongoBlock.root != onChainBlocksData.root) {
-              this.logger.warn(
-                `Invalid ROOT for blockId ${mongoBlock.blockId}. Expected ${onChainBlocksData.root} but have ${mongoBlock.root}. Reverting.`
-              );
-
-              blocksWereReverted = true;
-              return BlockSynchronizer.revertBlocks(mongoBlock.blockId);
-            }
-
+            blocksWereReverted = await this.verifyProcessedBlock(mongoBlock);
             return;
 
           default:
@@ -215,11 +219,10 @@ class BlockSynchronizer {
   };
 
   private static revertBlocks = async (
-    blockId: number
+    blockId: number,
+    chainId: ChainsIds
   ): Promise<({ ok?: number; n?: number } & { deletedCount?: number })[]> => {
     const condition = { blockId: { $gte: blockId } };
-    // TODO for Dariusz - update this on adjusting resolver task
-    // only for chainId, and same rule as in other place, if there will be no BlockChainData after deletion for condition, then we should remove Block as well.
     return Promise.all([Block.deleteMany(condition), Leaf.deleteMany(condition)]);
   };
 
