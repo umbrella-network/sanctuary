@@ -37,7 +37,7 @@ class BlockSynchronizer {
         if (chainId === ChainsIds.SOLANA) {
           return;
         }
-        
+
         return this.checkForRevertedBlocks(chainId);
       })
     );
@@ -169,7 +169,8 @@ class BlockSynchronizer {
   };
 
   private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
-    const blockChainData = await BlockChainData.findOne({ blockId: mongoBlock.blockId });
+    // TODO do we need to handle solana??
+    const blockChainData = await BlockChainData.findOne({ blockId: mongoBlock.blockId, chainId: {$ne: ChainsIds.SOLANA} });
 
     if (!blockChainData) {
       throw new Error(`Block ${mongoBlock.blockId} saved without BlockChainData`);
