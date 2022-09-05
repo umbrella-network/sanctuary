@@ -24,7 +24,7 @@ import { BlockchainSettings } from '../../src/types/Settings';
 import BlockChainData, { IBlockChainData } from '../../src/models/BlockChainData';
 import { blockChainDataFactory } from '../mocks/factories/blockChainDataFactory';
 
-describe.only('BlockSynchronizer', () => {
+describe('BlockSynchronizer', () => {
   before(async () => {
     loadTestEnv();
     await setupDatabase();
