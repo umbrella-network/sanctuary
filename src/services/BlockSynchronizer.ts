@@ -33,7 +33,13 @@ class BlockSynchronizer {
 
   async apply(): Promise<void> {
     const chainsChecksData = await Promise.all(
-      Object.values(ChainsIds).map((chainId) => this.checkForRevertedBlocks(chainId))
+      Object.values(ChainsIds).map((chainId) => {
+        if (chainId === ChainsIds.SOLANA) {
+          return;
+        }
+        
+        return this.checkForRevertedBlocks(chainId);
+      })
     );
 
     if (chainsChecksData.filter((data) => data.reverted).length) {

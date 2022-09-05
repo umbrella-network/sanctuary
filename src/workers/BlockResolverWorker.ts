@@ -20,7 +20,7 @@ class BlockResolverWorker extends SingletonWorker {
     if (isStale) return;
 
     await this.synchronizeWork('BlockResolverWorker', lockTTL, async () =>
-      Promise.all(
+      Promise.allSettled(
         Object.keys(this.settings.blockchain.multiChains).map((chainId) => this.execute(chainId as ChainsIds))
       )
     );
