@@ -50,7 +50,9 @@ describe.only('BlockSynchronizer', () => {
       randomBlocks.map((block) =>
         Promise.all([
           Block.findOneAndUpdate({ _id: block._id }, block, { new: true, upsert: true }),
-          BlockChainData.create(blockChainDataFactory.build({ _id: `block::bsc::${block._id}`, blockId: block.blockId })),
+          BlockChainData.create(
+            blockChainDataFactory.build({ _id: `block::bsc::${block._id}`, blockId: block.blockId })
+          ),
         ])
       )
     );

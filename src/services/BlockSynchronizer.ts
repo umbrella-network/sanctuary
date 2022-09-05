@@ -96,9 +96,10 @@ class BlockSynchronizer {
       .limit(this.settings.app.blockSyncBatchSize)
       .exec();
 
-    const confirmations = Object
-      .values(this.settings.blockchain.multiChains)
-      .reduce((acc, s) => Math.max(acc, s.confirmations), 0);
+    const confirmations = Object.values(this.settings.blockchain.multiChains).reduce(
+      (acc, s) => Math.max(acc, s.confirmations),
+      0
+    );
 
     const blocksToConfirm = await Block.find({
       status: { $in: [BlockStatus.Finalized, BlockStatus.Failed] },
