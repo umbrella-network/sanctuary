@@ -10,7 +10,7 @@ import { ChainStatus } from '../types/ChainStatus';
 import Settings from '../types/Settings';
 import { LogMint, LogVoter } from '../types/events';
 import Block from '../models/Block';
-import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
+import BlockChainData  from '../models/BlockChainData';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
