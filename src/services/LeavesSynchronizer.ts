@@ -1,10 +1,10 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import StakingBankContract from '../contracts/StakingBankContract';
-import Block, { IBlock } from '../models/Block';
+import Block from '../models/Block';
 import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
-import { BlockFromPegasus } from '../types/blocks';
+import { BlockFromPegasus, FullBlockData } from '../types/blocks';
 import { ChainContract } from '../contracts/ChainContract';
 import { IFCD } from '../models/FCD';
 import { LeafValueCoder, loadFeeds, SortedMerkleTree } from '@umb-network/toolbox';
@@ -16,6 +16,9 @@ import Settings from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { FCDRepository } from '../repositories/FCDRepository';
 import { TimeService } from './TimeService';
+import { BlockRepository } from '../repositories/BlockRepository';
+import BlockChainData from '../models/BlockChainData';
+import { FullBlockDataService } from './FullBlockDataService';
 
 @injectable()
 class LeavesSynchronizer {
@@ -23,7 +26,9 @@ class LeavesSynchronizer {
   @inject('Settings') private readonly settings: Settings;
   @inject(StakingBankContract) private stakingBankContract!: StakingBankContract;
   @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
+  @inject(BlockRepository) private blockRepository!: BlockRepository;
   @inject(FCDRepository) private fcdRepository!: FCDRepository;
+  @inject(FullBlockDataService) private fullBlockDataService!: FullBlockDataService;
 
   private homeChainContract!: ChainContract;
 
@@ -38,8 +43,9 @@ class LeavesSynchronizer {
     let success = false;
     const savedBlock = await Block.findOne({ _id: mongoBlockId });
     this.logger.info(`Synchronizing leaves for block: ${savedBlock._id}`);
+    const savedBlockChainData = await BlockChainData.findOne({ blockId: savedBlock.blockId });
     await Leaf.deleteMany({ blockId: savedBlock.blockId });
-    const validators = this.validatorsList(chainStatus, savedBlock.minter);
+    const validators = this.validatorsList(chainStatus, savedBlockChainData.minter);
 
     for (const validator of validators) {
       if (!validator.location) {
@@ -47,7 +53,8 @@ class LeavesSynchronizer {
       }
 
       try {
-        success = await this.syncLeavesFromValidator(validator, savedBlock);
+        const fullBlockData = this.fullBlockDataService.transformOne(savedBlock, savedBlockChainData);
+        success = await this.syncLeavesFromValidator(validator, fullBlockData);
       } catch (e) {
         this.logger.error(e);
       }
@@ -73,7 +80,7 @@ class LeavesSynchronizer {
       .sort((a, b) => (a.id === minter ? -1 : b.id === minter ? 1 : 0));
   }
 
-  private syncLeavesFromValidator = async (validator: Validator, savedBlock: IBlock): Promise<boolean> => {
+  private syncLeavesFromValidator = async (validator: Validator, savedBlock: FullBlockData): Promise<boolean> => {
     const urlForBlockId = url.parse(`${validator.location}/blocks/blockId/${savedBlock.blockId}`).href;
     this.logger.info(`Resolving leaves from: ${urlForBlockId}`);
     const blocksFromValidator = await this.blocksFromValidator(validator, savedBlock.blockId);
@@ -98,7 +105,7 @@ class LeavesSynchronizer {
 
   private processBlockFromValidator = async (
     blockFromValidator: BlockFromPegasus,
-    savedBlock: IBlock
+    savedBlock: FullBlockData
   ): Promise<[boolean, string]> => {
     const resolvedLeaves: Map<string, string> = new Map(<[string, string][]>Object.entries(blockFromValidator.data));
     const tree = this.sortedMerkleTreeFactory.apply(resolvedLeaves);
@@ -146,7 +153,7 @@ class LeavesSynchronizer {
     }
   };
 
-  private updateFCD = async (block: IBlock): Promise<IFCD[]> => {
+  private updateFCD = async (block: FullBlockData): Promise<IFCD[]> => {
     const fcdKeys: string[] = [...Object.keys(await loadFeeds(this.settings.app.feedsOnChain))];
     if (fcdKeys.length === 0) {
       return [];

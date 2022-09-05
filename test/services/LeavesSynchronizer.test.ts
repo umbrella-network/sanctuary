@@ -21,6 +21,8 @@ import { setupDatabase, teardownDatabase } from '../helpers/databaseHelpers';
 import { getTestContainer } from '../helpers/getTestContainer';
 import { loadTestEnv } from '../helpers';
 import { ChainContractRepository } from '../../src/repositories/ChainContractRepository';
+import BlockChainData from '../../src/models/BlockChainData';
+import { blockChainDataFactory } from '../mocks/factories/blockChainDataFactory';
 
 const resolveValidators = (chainStatus: ChainStatus): Validator[] => {
   return chainStatus.validators.map((address, i) => {
@@ -96,6 +98,7 @@ describe('LeavesSynchronizer', () => {
 
     // Clearing DB before each test
     await Block.deleteMany({});
+    await BlockChainData.deleteMany({});
     await Leaf.deleteMany({});
   });
 
@@ -104,6 +107,7 @@ describe('LeavesSynchronizer', () => {
 
     await Block.deleteMany({});
     await Leaf.deleteMany({});
+    await BlockChainData.deleteMany({});
     await FCD.deleteMany({});
 
     await teardownDatabase();
@@ -114,6 +118,10 @@ describe('LeavesSynchronizer', () => {
       ...inputForBlockModel,
       root: ethers.utils.keccak256('0x1234'), // overwrite inputForBlockModel with a wrong root hash
     });
+
+    await BlockChainData.create(
+      blockChainDataFactory.build({ _id: `block::bsc::${block.blockId}`, blockId: block.blockId })
+    );
 
     moxios.install();
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/blockId\/.+/, {
@@ -140,6 +148,11 @@ describe('LeavesSynchronizer', () => {
 
   it('returns "true" if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
+
+    await BlockChainData.create(
+      blockChainDataFactory.build({ _id: `block::bsc::${block.blockId}`, blockId: block.blockId })
+    );
+
     chainContract.resolveValidators.returns(resolveValidators(chainStatus));
     chainContract.resolveFCDs.resolves([[BigNumber.from(1)], [17005632]]);
     moxios.install();
@@ -157,6 +170,10 @@ describe('LeavesSynchronizer', () => {
 
   it('saves leaves correctly if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
+
+    await BlockChainData.create(
+      blockChainDataFactory.build({ _id: `block::bsc::${block.blockId}`, blockId: block.blockId })
+    );
 
     chainContract.resolveValidators.returns(resolveValidators(chainStatus));
     chainContract.resolveFCDs.resolves([[BigNumber.from(999)], [BigNumber.from('17005632')]] as any);

@@ -208,7 +208,7 @@ describe('getProofs', () => {
       });
 
       it('returns the latest finalized block', async () => {
-        const response = await operation('ethereum');
+        const response = await operation('bsc');
         const subject = response.body.data.block;
 
         expect(subject._id).to.eq(block._id);

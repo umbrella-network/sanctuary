@@ -28,30 +28,34 @@ describe('BlockSynchronizer', () => {
   before(async () => {
     loadTestEnv();
     await setupDatabase();
-    await BlockChainData.deleteMany();
 
-    await ChainInstance.findOneAndUpdate(
-      { address: chainAddress },
-      {
-        address: chainAddress,
-        blocksCountOffset: 0,
-        anchor: 9,
-        chainId: 'bsc',
-      },
-      {
-        new: true,
-        upsert: true,
-      }
-    );
+    Promise.all([
+      await Block.deleteMany(),
+      await BlockChainData.deleteMany(),
+
+      await ChainInstance.findOneAndUpdate(
+        { address: chainAddress },
+        {
+          address: chainAddress,
+          blocksCountOffset: 0,
+          anchor: 9,
+          chainId: 'bsc',
+        },
+        {
+          new: true,
+          upsert: true,
+        }
+      ),
+    ]);
   });
 
   beforeEach(async () => {
     await Promise.all(
       randomBlocks.map((block) =>
         Promise.all([
-          Block.findOneAndUpdate({ _id: block._id }, block, { new: true, upsert: true }),
+          Block.create(block),
           BlockChainData.create(
-            blockChainDataFactory.build({ _id: `block::bsc::${block._id}`, blockId: block.blockId })
+            blockChainDataFactory.build({ _id: `block::bsc::${block.blockId}`, blockId: block.blockId })
           ),
         ])
       )
@@ -61,6 +65,7 @@ describe('BlockSynchronizer', () => {
   afterEach(async () => {
     await Block.deleteMany({});
     await BlockChainData.deleteMany({});
+    sinon.restore();
   });
 
   after(async () => {
@@ -97,7 +102,7 @@ describe('BlockSynchronizer', () => {
         },
       ]);
 
-    before(async () => {
+    beforeEach(async () => {
       container = getTestContainer();
       chainInstanceResolver = createStubInstance(ChainInstanceResolver);
       leavesSynchronizer = createStubInstance(LeavesSynchronizer);
@@ -140,10 +145,6 @@ describe('BlockSynchronizer', () => {
         .toConstantValue(<ChainContractRepository>(<unknown>chainContractRepository));
 
       blockSynchronizer = container.get(BlockSynchronizer);
-    });
-
-    after(async () => {
-      sinon.restore();
     });
 
     it('reverts block when detect invalid root', async () => {

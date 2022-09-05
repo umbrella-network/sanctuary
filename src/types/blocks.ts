@@ -10,6 +10,7 @@ export interface BlockFromPegasus {
 }
 
 export interface FullBlockData {
+  _id?: string;
   chainAddress: string;
   blockId: number;
   status: string;

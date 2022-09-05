@@ -41,7 +41,7 @@ describe('getBlockChainDatas', () => {
   describe('GET /blocks:chainId', () => {
     describe('when no API Key is provided', () => {
       it('responds with HTTP 200', async () => {
-        const response = await request(app).get('/blocks?chainId=ethereum');
+        const response = await request(app).get('/blocks?chainId=bsc');
 
         expect(response.status).to.eq(200);
       });
@@ -49,7 +49,7 @@ describe('getBlockChainDatas', () => {
 
     describe('when an invalid API Key is provided', () => {
       it('responds with HTTP 401', async () => {
-        const response = await request(app).get('/blocks?chainId=ethereum').set('Authorization', 'wrongAPIKey');
+        const response = await request(app).get('/blocks?chainId=bsc').set('Authorization', 'wrongAPIKey');
 
         expect(response.status).to.eq(401);
       });
@@ -59,7 +59,7 @@ describe('getBlockChainDatas', () => {
       let subject: IBlockChainData[];
       let apiKey: IApiKey;
 
-      const chainId = 'ethereum';
+      const chainId = 'bsc';
 
       before(async () => {
         apiKey = await setupApiKey();

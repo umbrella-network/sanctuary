@@ -5,7 +5,7 @@ import { ChainContract } from '../contracts/ChainContract';
 import Block, { IBlock } from '../models/Block';
 import Leaf from '../models/Leaf';
 import LeavesSynchronizer from '../services/LeavesSynchronizer';
-import { BlockStatus } from '../types/blocks';
+import { BlockStatus, FullBlockData } from '../types/blocks';
 import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
 import RevertedBlockResolver from './RevertedBlockResolver';
@@ -17,6 +17,7 @@ import { ChainsIds } from '../types/ChainsIds';
 import LatestIdsProvider from './LatestIdsProvider';
 import BlockChainData from '../models/BlockChainData';
 import { ChainStatusExtended } from '../types/custom';
+import { BlockRepository } from '../repositories/BlockRepository';
 
 @injectable()
 class BlockSynchronizer {
@@ -26,6 +27,7 @@ class BlockSynchronizer {
   @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
   @inject(RevertedBlockResolver) revertedBlockResolver!: RevertedBlockResolver;
   @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
+  @inject(BlockRepository) private blockRepository!: BlockRepository;
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
   @inject(LatestIdsProvider) latestIdsProvider: LatestIdsProvider;
 
@@ -94,25 +96,23 @@ class BlockSynchronizer {
     };
   }
 
-  private getMongoBlocksToSynchronize = async (): Promise<IBlock[]> => {
-    const blocksInProgress = await Block.find({
-      status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] },
-    })
-      .sort({ blockId: -1 })
-      .limit(this.settings.app.blockSyncBatchSize)
-      .exec();
+  private getMongoBlocksToSynchronize = async (): Promise<FullBlockData[]> => {
+    const blocksInProgress = await this.blockRepository.find({
+      chainId: this.settings.blockchain.homeChain.chainId,
+      limit: this.settings.app.blockSyncBatchSize,
+      condition: { status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] } },
+    });
 
     const confirmations = Object.values(this.settings.blockchain.multiChains).reduce(
       (acc, s) => Math.max(acc, s.confirmations),
       0
     );
 
-    const blocksToConfirm = await Block.find({
-      status: { $in: [BlockStatus.Finalized, BlockStatus.Failed] },
-    })
-      .sort({ blockId: -1 })
-      .limit(confirmations)
-      .exec();
+    const blocksToConfirm = await this.blockRepository.find({
+      chainId: this.settings.blockchain.homeChain.chainId,
+      limit: confirmations,
+      condition: { status: { $in: [BlockStatus.Finalized, BlockStatus.Failed] } },
+    });
 
     return blocksInProgress.concat(blocksToConfirm);
   };
@@ -146,11 +146,11 @@ class BlockSynchronizer {
     );
   };
 
-  private verifyBlocks = async (mongoBlocks: IBlock[]): Promise<boolean> => {
+  private verifyBlocks = async (mongoBlocks: FullBlockData[]): Promise<boolean> => {
     let verified = true;
 
     await Promise.all(
-      mongoBlocks.map((mongoBlock: IBlock) => {
+      mongoBlocks.map((mongoBlock: FullBlockData) => {
         switch (mongoBlock.status) {
           case BlockStatus.Finalized:
           case BlockStatus.Failed:
@@ -170,7 +170,10 @@ class BlockSynchronizer {
 
   private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
     // TODO do we need to handle solana??
-    const blockChainData = await BlockChainData.findOne({ blockId: mongoBlock.blockId, chainId: {$ne: ChainsIds.SOLANA} });
+    const blockChainData = await BlockChainData.findOne({
+      blockId: mongoBlock.blockId,
+      chainId: { $ne: ChainsIds.SOLANA },
+    });
 
     if (!blockChainData) {
       throw new Error(`Block ${mongoBlock.blockId} saved without BlockChainData`);
@@ -195,14 +198,14 @@ class BlockSynchronizer {
 
   private processBlocks = async (
     chainStatus: ChainStatus,
-    mongoBlocks: IBlock[]
+    mongoBlocks: FullBlockData[]
   ): Promise<[leavesSynchronizersStatus: Promise<boolean | null>[], synchronizedIds: string[]]> => {
     const leavesSynchronizers: Promise<boolean | null>[] = [];
     const blockIds: string[] = [];
     let blocksWereReverted = false;
 
     await Promise.all(
-      <Promise<never>[]>mongoBlocks.map(async (mongoBlock: IBlock) => {
+      <Promise<never>[]>mongoBlocks.map(async (mongoBlock: FullBlockData) => {
         if (blocksWereReverted) {
           return;
         }
@@ -233,7 +236,7 @@ class BlockSynchronizer {
     return [leavesSynchronizers, blockIds];
   };
 
-  private static brokenBlock = (block: IBlock): boolean => {
+  private static brokenBlock = (block: FullBlockData): boolean => {
     return block.blockId === undefined || block.chainAddress === undefined;
   };
 

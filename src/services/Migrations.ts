@@ -191,7 +191,8 @@ class Migrations {
         await Migrations.createIndexes<IBlockChainData>(indexesToCreate, BlockChainData);
         console.log(`[Migrations(${version})] Created Indexes`);
 
-        const blocks = await Block.find();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blocks = (await Block.find()) as any;
         const blockDatas = [];
         const batchSize = 500;
 
