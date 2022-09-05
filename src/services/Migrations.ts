@@ -196,7 +196,7 @@ class Migrations {
         const batchSize = 500;
 
         for (let i = 0; i < blocks.length; i++) {
-          if (!blocks[i].anchor || !blocks[i].chainAddress || blocks[i].blockId || blocks[i].minter) {
+          if (!blocks[i].anchor || !blocks[i].chainAddress || !blocks[i].blockId || !blocks[i].minter) {
             console.warn(`Missing important field for block ${blocks[i]._id}`);
             continue;
           }
