@@ -24,7 +24,7 @@ class LatestIdsProvider {
   private getLowestChainAnchor = async (chainId: ChainsIds): Promise<number> => {
     const oldestChain = await ChainInstance.find({ chainId: chainId }).sort({ blockId: 1 }).limit(1).exec();
 
-    if (!oldestChain) {
+    if (oldestChain.length == 0) {
       throw Error(`there is no chain instance for ${chainId}`);
     }
 
