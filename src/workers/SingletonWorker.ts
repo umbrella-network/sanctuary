@@ -30,10 +30,12 @@ export abstract class SingletonWorker extends BasicWorker {
 
   isStale = (job: Bull.Job, ageLimit: number): boolean => {
     const age = new Date().getTime() - job.timestamp;
+    const chainId = job.data.chainId;
+
     const isStale = age > ageLimit;
     if (!isStale) return false;
 
-    this.logger.info(`Job ${job.id} is stale - discarding...`);
+    this.logger.info(`[${chainId}] Job ${job.id} is stale - discarding...`);
     return true;
   };
 

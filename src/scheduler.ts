@@ -64,6 +64,8 @@ logger.info('Starting Scheduler...');
       settings.jobs.foreignChainReplication
     ))[chainId];
 
+    logger.info(`scheduleWorker blockResolverWorker(${chainId})...`);
+
     setInterval(
       async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
       settings.jobs.blockCreation.interval // TODO individual settings?
