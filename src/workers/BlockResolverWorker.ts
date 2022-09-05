@@ -16,10 +16,12 @@ class BlockResolverWorker extends SingletonWorker {
   @inject(ChainSynchronizer) chainSynchronizer!: ChainSynchronizer;
 
   apply = async (job: Bull.Job): Promise<void> => {
-    const { lockTTL, chainId, isStale } = this.parseJobData(job);
+    const { lockTTL, isStale } = this.parseJobData(job);
     if (isStale) return;
 
-    await this.synchronizeWork(`BlockResolverWorker::${chainId}`, lockTTL, async () => this.execute(chainId));
+    for (const chainId of Object.keys(this.settings.blockchain.multiChains)) {
+      await this.synchronizeWork(`BlockResolverWorker::${chainId}`, lockTTL, async () => this.execute(chainId as ChainsIds));
+    }
   };
 
   private execute = async (chainId: ChainsIds): Promise<void> => {
