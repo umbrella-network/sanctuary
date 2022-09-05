@@ -96,11 +96,15 @@ class BlockSynchronizer {
       .limit(this.settings.app.blockSyncBatchSize)
       .exec();
 
+    const confirmations = Object
+      .values(this.settings.blockchain.multiChains)
+      .reduce((acc, s) => Math.max(acc, s.confirmations), 0);
+
     const blocksToConfirm = await Block.find({
       status: { $in: [BlockStatus.Finalized, BlockStatus.Failed] },
     })
       .sort({ blockId: -1 })
-      .limit(this.blockchain.settings.confirmations)
+      .limit(confirmations)
       .exec();
 
     return blocksInProgress.concat(blocksToConfirm);
@@ -159,6 +163,11 @@ class BlockSynchronizer {
 
   private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
     const blockChainData = await BlockChainData.findOne({ blockId: mongoBlock.blockId });
+
+    if (!blockChainData) {
+      throw new Error(`Block ${mongoBlock.blockId} saved without BlockChainData`);
+    }
+
     const chainContract = this.chainContractRepository.get(blockChainData.chainId);
 
     const onChainBlocksData = await chainContract.resolveBlockData(mongoBlock.chainAddress, mongoBlock.blockId);
