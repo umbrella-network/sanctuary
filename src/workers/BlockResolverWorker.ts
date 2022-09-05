@@ -19,9 +19,11 @@ class BlockResolverWorker extends SingletonWorker {
     const { lockTTL, isStale } = this.parseJobData(job);
     if (isStale) return;
 
-    for (const chainId of Object.keys(this.settings.blockchain.multiChains)) {
-      await this.synchronizeWork(`BlockResolverWorker::${chainId}`, lockTTL, async () => this.execute(chainId as ChainsIds));
-    }
+    await this.synchronizeWork('BlockResolverWorker', lockTTL, async () =>
+      Promise.all(
+        Object.keys(this.settings.blockchain.multiChains).map((chainId) => this.execute(chainId as ChainsIds))
+      )
+    );
   };
 
   private execute = async (chainId: ChainsIds): Promise<void> => {
