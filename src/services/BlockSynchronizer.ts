@@ -16,6 +16,7 @@ import { Blockchain } from '../lib/Blockchain';
 import { ChainsIds } from '../types/ChainsIds';
 import LatestIdsProvider from './LatestIdsProvider';
 import BlockChainData from '../models/BlockChainData';
+import { ChainStatusExtended } from '../types/custom';
 
 @injectable()
 class BlockSynchronizer {
@@ -29,20 +30,23 @@ class BlockSynchronizer {
   @inject(LatestIdsProvider) latestIdsProvider: LatestIdsProvider;
 
   private blockchain!: Blockchain;
-  private chainContract!: ChainContract;
 
   async apply(): Promise<void> {
-    const anyReverts = await Promise.all(Object.values(ChainsIds).map(this.checkForRevertedBlocks));
+    const chainsChecksData = await Promise.all(
+      Object.values(ChainsIds).map((chainId) => this.checkForRevertedBlocks(chainId))
+    );
 
-    if (anyReverts.filter((data) => data.reverted).length) {
+    if (chainsChecksData.filter((data) => data.reverted).length) {
       return;
     }
 
     // we search for masterchain, because we need active list of validators
-    const masterChainStatus = anyReverts.filter((data) => data.chainId == this.settings.blockchain.homeChain.chainId)[0]
-      .status;
+    const masterChainStatus = chainsChecksData.filter(
+      (data) => data.chainId === this.settings.blockchain.homeChain.chainId
+    )[0].status;
+
     // masterchain doesn't have to have latest data, so we simply search for highest value
-    masterChainStatus.nextBlockId = anyReverts.reduce((acc, data) => Math.max(acc, data.status.nextBlockId), 0);
+    masterChainStatus.nextBlockId = chainsChecksData.reduce((acc, data) => Math.max(acc, data.status.nextBlockId), 0);
 
     this.logger.info('Synchronizing blocks');
 
@@ -69,9 +73,7 @@ class BlockSynchronizer {
     }
   }
 
-  async checkForRevertedBlocks(
-    chainId: ChainsIds
-  ): Promise<{ reverted: boolean; status: ChainStatus; chainId: ChainsIds }> {
+  async checkForRevertedBlocks(chainId: ChainsIds): Promise<ChainStatusExtended> {
     const chain = <ChainContract>this.chainContractRepository.get(chainId);
 
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
@@ -222,6 +224,8 @@ class BlockSynchronizer {
     blockId: number
   ): Promise<({ ok?: number; n?: number } & { deletedCount?: number })[]> => {
     const condition = { blockId: { $gte: blockId } };
+    // we can't have different roots for same blockId, so if we detect invalid root, we reverting all blockchains
+    // blocks wll be refetched.
     return Promise.all([Block.deleteMany(condition), Leaf.deleteMany(condition), BlockChainData.deleteMany(condition)]);
   };
 

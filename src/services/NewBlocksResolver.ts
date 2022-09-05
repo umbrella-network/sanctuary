@@ -9,7 +9,7 @@ import { ChainInstanceResolver } from './ChainInstanceResolver';
 import { ChainStatus } from '../types/ChainStatus';
 import Settings from '../types/Settings';
 import { LogMint, LogVoter } from '../types/events';
-import Block  from '../models/Block';
+import Block from '../models/Block';
 import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
@@ -206,8 +206,8 @@ class NewBlocksResolver {
     };
   };
 
-  private saveNewBlocks = async (newBlocks: IEventBlock[]): Promise<IBlockChainData[]> => {
-    return Promise.all(
+  private saveNewBlocks = async (newBlocks: IEventBlock[]): Promise<void> => {
+    await Promise.all(
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
 
@@ -238,7 +238,6 @@ class NewBlocksResolver {
         this.logger.info(`[${this.chainId}] saving dispatched block: ${newBlock.blockId}`);
 
         try {
-          // TODO
           return await BlockChainData.create({
             _id: `block::${this.chainId}::${newBlock.blockId}`,
             anchor: newBlock.anchor,

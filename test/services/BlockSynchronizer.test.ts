@@ -21,10 +21,10 @@ import { loadTestEnv } from '../helpers';
 import { setupDatabase, teardownDatabase } from '../helpers/databaseHelpers';
 import { StubbedInstance } from 'ts-sinon';
 import { BlockchainSettings } from '../../src/types/Settings';
-import BlockChainData from '../../src/models/BlockChainData';
+import BlockChainData, { IBlockChainData } from '../../src/models/BlockChainData';
 import { blockChainDataFactory } from '../mocks/factories/blockChainDataFactory';
 
-describe('BlockSynchronizer', () => {
+describe.only('BlockSynchronizer', () => {
   before(async () => {
     loadTestEnv();
     await setupDatabase();
@@ -151,16 +151,15 @@ describe('BlockSynchronizer', () => {
       await resolveChainStatus(BigNumber.from(11)); // new blocks
 
       const blocksBefore: IBlock[] = await Block.find({});
-      // const blocksChainDataBefore: IBlockChainData[] = await BlockChainData.find({});
+      const blocksChainDataBefore: IBlockChainData[] = await BlockChainData.find({});
       expect(blocksBefore.length).to.be.equal(3);
-      // expect(blocksChainDataBefore.length).to.be.equal(3);
+      expect(blocksChainDataBefore.length).to.be.equal(3);
       await blockSynchronizer.apply();
 
       const blocks: IBlock[] = await Block.find({});
-      // const blocksChainData: IBlockChainData[] = await BlockChainData.find({});
+      const blocksChainData: IBlockChainData[] = await BlockChainData.find({});
       expect(blocks.length).to.be.equal(2);
-      // TODO for Dariusz - This test should pass after change on chainSynchronizer
-      // expect(blocksChainData.length).to.be.equal(2);
+      expect(blocksChainData.length).to.be.equal(2);
     });
 
     it('finalizes completed blocks on successful synchronization', async () => {
