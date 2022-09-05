@@ -115,6 +115,7 @@ describe('BlockSynchronizer', () => {
       });
 
       chainContractRepository.get.returns(<ChainContract>(<unknown>chainContract));
+
       blockchainRepository.get.returns({
         chainId: 'bsc',
         isHomeChain: false,
@@ -127,6 +128,7 @@ describe('BlockSynchronizer', () => {
         settings: {} as BlockchainSettings,
         provider: provider,
       });
+
       chainContractRepository.get.returns(<ChainContract>(<unknown>chainContract));
 
       container.bind(ChainInstanceResolver).toConstantValue(<ChainInstanceResolver>(<unknown>chainInstanceResolver));
