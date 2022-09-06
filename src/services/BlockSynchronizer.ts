@@ -168,7 +168,7 @@ class BlockSynchronizer {
     return verified;
   };
 
-  private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
+  private verifyProcessedBlock = async (mongoBlock: FullBlockData): Promise<boolean> => {
     // TODO do we need to handle solana??
     const blockChainData = await BlockChainData.findOne({
       blockId: mongoBlock.blockId,
