@@ -8,13 +8,10 @@ export type SynchronizationState = {
 };
 
 export interface IBlock extends Document {
-  chainAddress: string;
   blockId: number;
   status: string;
-  anchor: number;
   dataTimestamp: Date;
   root: string;
-  minter: string;
   staked: string;
   power: string;
   voters: Array<string>;
