@@ -96,8 +96,14 @@ export class BlockRepository {
     blocks: IBlock[],
     blockChainData: IBlockChainData[]
   ): FullBlockData[] {
+    const map: Record<number, IBlockChainData> = {};
+    
+    blockChainData.forEach(b => {
+      map[b.blockId] = b;
+    });
+
     return blocks.map((block) => {
-      const matchingBlockChainData = blockChainData.find((fb) => fb.blockId == block.blockId);
+      const matchingBlockChainData = map[block.blockId];
       return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
     });
   }
