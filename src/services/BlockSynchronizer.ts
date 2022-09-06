@@ -98,7 +98,6 @@ class BlockSynchronizer {
 
   private getMongoBlocksToSynchronize = async (): Promise<FullBlockData[]> => {
     const blocksInProgress = await this.blockRepository.find({
-      chainId: this.settings.blockchain.homeChain.chainId,
       limit: this.settings.app.blockSyncBatchSize,
       condition: { status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] } },
     });
@@ -109,7 +108,6 @@ class BlockSynchronizer {
     );
 
     const blocksToConfirm = await this.blockRepository.find({
-      chainId: this.settings.blockchain.homeChain.chainId,
       limit: confirmations,
       condition: { status: { $in: [BlockStatus.Finalized, BlockStatus.Failed] } },
     });

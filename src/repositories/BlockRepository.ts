@@ -9,7 +9,7 @@ import { BlockStatus, FullBlockData } from '../types/blocks';
 import Settings from '../types/Settings';
 
 export type FindProps = {
-  chainId: string;
+  chainId?: string;
   condition?: Record<string, unknown>;
   offset?: number;
   limit?: number;
@@ -19,7 +19,6 @@ export type FindProps = {
 export type FindOneProps = {
   blockId?: number;
   chainId?: string;
-  condition?: Record<string, unknown>;
 };
 
 export type LatestProps = {
@@ -41,7 +40,9 @@ export class BlockRepository {
   async find(props: FindProps): Promise<FullBlockData[]> {
     const { chainId, condition, offset = 0, limit = 1, sort = { blockId: -1 } } = props;
 
-    const blockChainData: IBlockChainData[] = await BlockChainData.find({ chainId, ...condition })
+    const blockChainData: IBlockChainData[] = await BlockChainData.find(
+      chainId ? { chainId, ...condition } : { ...condition }
+    )
       .skip(offset)
       .limit(limit)
       .sort(sort)
