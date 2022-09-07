@@ -105,7 +105,7 @@ describe('getBlockChainDatas', () => {
       blockChainData = new BlockChainData(blockChainDataFactory.build({ status: BlockStatus.Finalized }));
       await blockChainData.save();
 
-      block = new Block(blockFactory.build({ blockId: blockChainData.blockId }));
+      block = new Block(blockFactory.build({ blockId: blockChainData.blockId, status: BlockStatus.Finalized }));
       await block.save();
     });
 
