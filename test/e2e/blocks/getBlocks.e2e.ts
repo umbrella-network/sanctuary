@@ -16,6 +16,7 @@ import { blockAndLeafFactory } from '../../mocks/factories/blockFactory';
 import { IApiKey } from '../../../src/models/ApiKey';
 import BlockChainData from '../../../src/models/BlockChainData';
 import { blockChainDataFactory } from '../../mocks/factories/blockChainDataFactory';
+import {BlockStatus} from '@umb-network/toolbox/dist/types/BlockStatuses';
 
 describe('getBlocks', () => {
   let container: Container;
@@ -62,13 +63,16 @@ describe('getBlocks', () => {
 
       it('returns only finalized blocks', async () => {
         await Block.create([
-          { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new' },
-          { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'completed' },
-          { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed' },
-          { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized' },
+          { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: BlockStatus.New },
+          { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: BlockStatus.Completed },
+          { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: BlockStatus.Failed },
+          { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: BlockStatus.Finalized },
         ]);
 
-        await BlockChainData.create([blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' })]);
+        await BlockChainData.create([
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Completed }),
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
+        ]);
 
         const blocksResponse = await request(app).get('/blocks').set('Authorization', `${apiKey.key}`);
         const blocks = blocksResponse.body;
@@ -76,6 +80,35 @@ describe('getBlocks', () => {
         expect(blocks).to.be.an('array').with.lengthOf(1);
         expect(blocks[0]).to.have.property('status', 'finalized');
         expect(blocks[0]).to.have.property('chainAddress', 'CHAIN_ADDRESS');
+      });
+
+      it.only('/latest returns recent block', async () => {
+        await Block.create([
+          { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: BlockStatus.New },
+          { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: BlockStatus.Finalized },
+          { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: BlockStatus.Finalized },
+          { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: BlockStatus.Failed },
+        ]);
+
+        await BlockChainData.create([
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Failed }),
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+        ]);
+
+
+        console.log(await Block.find({}));
+        console.log(await BlockChainData.find({}));
+
+        const blocksResponse = await request(app).get('/latest').set('Authorization', `${apiKey.key}`);
+        console.log(blocksResponse.body);
+        const {data} = blocksResponse.body;
+
+
+        expect(data).to.be.an('object');
+        expect(data).to.have.property('blockId', 3);
+        expect(data).to.have.property('status', BlockStatus.Finalized);
+        expect(data).to.have.property('chainAddress', 'CHAIN_ADDRESS');
       });
 
       it('returns blocks sorted in descending order by their height', async () => {
@@ -87,10 +120,10 @@ describe('getBlocks', () => {
         ]);
 
         await BlockChainData.create([
-          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' }),
+          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
         ]);
 
         const blocksResponse = await request(app).get('/blocks').set('Authorization', `${apiKey.key}`);
@@ -146,10 +179,10 @@ describe('getBlocks', () => {
         ]);
 
         await BlockChainData.create([
-          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' }),
+          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
         ]);
 
         const blocksResponse = await request(app).get('/blocks?limit=2&offset=1').set('Authorization', `${apiKey.key}`);
@@ -212,10 +245,10 @@ describe('getBlocks', () => {
           ]);
 
           await BlockChainData.create([
-            blockChainDataFactory.build({ blockId: 1, chainId: 'bsc' }),
-            blockChainDataFactory.build({ blockId: 2, chainId: 'bsc' }),
-            blockChainDataFactory.build({ blockId: 3, chainId: 'bsc' }),
-            blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' }),
+            blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
           ]);
 
           const blocksResponse = await request(app).get('/blocks/999').set('Authorization', `${apiKey.key}`);
@@ -238,10 +271,10 @@ describe('getBlocks', () => {
           ]);
 
           await BlockChainData.create([
-            blockChainDataFactory.build({ blockId: 1, chainId: 'bsc' }),
-            blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', _id: 'block::bsc::2' }),
-            blockChainDataFactory.build({ blockId: 3, chainId: 'bsc' }),
-            blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' }),
+            blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized, _id: 'block::bsc::2' }),
+            blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
           ]);
 
           const blocksResponse = await request(app).get('/blocks/2').set('Authorization', `${apiKey.key}`);

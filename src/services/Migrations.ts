@@ -206,6 +206,7 @@ class Migrations {
             _id: `block::bsc::${blocks[i].blockId}`,
             anchor: blocks[i].anchor,
             chainId: 'bsc',
+            status: blocks[i].status,
             chainAddress: blocks[i].chainAddress,
             minter: blocks[i].minter,
             blockId: blocks[i].blockId,

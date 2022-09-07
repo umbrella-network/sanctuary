@@ -258,6 +258,7 @@ class NewBlocksResolver {
             chainAddress: newBlock.chainAddress,
             blockId: newBlock.blockId,
             minter: newBlock.minter,
+            status: BlockStatus.Completed,
             dataTimestamp,
           });
         } catch (e) {

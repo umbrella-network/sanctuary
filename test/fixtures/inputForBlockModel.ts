@@ -16,6 +16,7 @@ export const inputForBlockModel = {
 export const inputForBlockChainDataModel = {
   _id: 'block::bsc::1',
   chainAddress: '0x1',
+  status: BlockStatus.Finalized,
   chainId: 'bsc',
   anchor: 1024,
   blockId: 1,

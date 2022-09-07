@@ -55,10 +55,10 @@ describe('getProofs', () => {
         ]);
 
         await BlockChainData.create([
-          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' }),
+          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: 'new'  }),
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: 'finalized' }),
+          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: 'failed' }),
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: 'finalized' }),
         ]);
 
         const proofsResponse = await request(app).get('/proofs');
@@ -80,13 +80,15 @@ describe('getProofs', () => {
         ]);
 
         await BlockChainData.create([
-          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc' }),
-          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' }),
+          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: 'new' }),
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: 'failed' }),
+          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: 'failed' }),
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: 'failed' }),
         ]);
 
         const proofsResponse = await request(app).get('/proofs');
+
+        console.log(proofsResponse.body);
 
         expect(proofsResponse.body.data).to.be.an('object').that.is.empty;
       });
@@ -184,7 +186,8 @@ describe('getProofs', () => {
       const operation = async (chainId: string) => request(app).get(`/proofs?chainId=${chainId}`);
 
       beforeEach(async () => {
-        blockChainData = new BlockChainData(blockChainDataFactory.build());
+        blockChainData = new BlockChainData(blockChainDataFactory.build({ status: BlockStatus.Finalized }));
+
         block = new Block(
           blockFactory.build({
             status: BlockStatus.Finalized,

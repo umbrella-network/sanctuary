@@ -116,12 +116,12 @@ class BlockSynchronizer {
 
   private updateSynchronizedBlocks = async (
     leavesSynchronizers: (boolean | null)[],
-    blockIds: string[]
+    blockIds: number[]
   ): Promise<IBlock[]> => {
     const filtered = leavesSynchronizers.filter((success: boolean) => success !== null);
     this.logger.info(`[updateSynchronizedBlocks] Updating ${filtered.length}/${leavesSynchronizers.length}`);
 
-    return Promise.all(
+    const updatedBlocks = await Promise.all(
       filtered.map((success: boolean, i: number) => {
         const status = success ? BlockStatus.Finalized : BlockStatus.Failed;
 
@@ -129,18 +129,32 @@ class BlockSynchronizer {
           this.noticeError(`[updateSynchronizedBlocks] Block ${blockIds[i]}: ${status}`);
         }
 
-        return Block.findOneAndUpdate(
-          { _id: blockIds[i] },
-          {
-            status: status,
-          },
-          {
-            new: false,
-            upsert: true,
-          }
-        );
+        return Promise.all([
+          Block.findOneAndUpdate(
+            { blockId: blockIds[i] },
+            {
+              status: status,
+            },
+            {
+              new: false,
+              upsert: true,
+            }
+          ),
+          BlockChainData.updateMany(
+            { blockId: blockIds[i] },
+            {
+              status: status,
+            },
+            {
+              new: false,
+              upsert: true,
+            }
+          ),
+        ]);
       })
     );
+
+    return updatedBlocks.map((blocks) => blocks[0]);
   };
 
   private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
@@ -173,9 +187,9 @@ class BlockSynchronizer {
   private processBlocks = async (
     chainStatus: ChainStatus,
     mongoBlocks: IBlock[]
-  ): Promise<[leavesSynchronizersStatus: Promise<boolean | null>[], synchronizedIds: string[]]> => {
+  ): Promise<[leavesSynchronizersStatus: Promise<boolean | null>[], synchronizedIds: number[]]> => {
     const leavesSynchronizers: Promise<boolean | null>[] = [];
-    const blockIds: string[] = [];
+    const blockIds: number[] = [];
     let blocksWereReverted = false;
 
     await Promise.all(
@@ -191,7 +205,7 @@ class BlockSynchronizer {
         switch (mongoBlock.status) {
           case BlockStatus.Completed:
             this.logger.info(`Start synchronizing leaves for completed block: ${mongoBlock.blockId}`);
-            blockIds.push(mongoBlock._id);
+            blockIds.push(mongoBlock.blockId);
             leavesSynchronizers.push(this.leavesSynchronizer.apply(chainStatus, mongoBlock._id));
             return;
 

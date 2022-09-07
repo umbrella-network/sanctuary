@@ -37,7 +37,7 @@ export class BlockRepository {
   async find(props: FindProps): Promise<FullBlockData[]> {
     const { chainId = this.settings.blockchain.homeChain.chainId, offset, limit, sort = { blockId: -1 } } = props;
 
-    const blockChainData: IBlockChainData[] = await BlockChainData.find({ chainId })
+    const blockChainData: IBlockChainData[] = await BlockChainData.find({ chainId, status: BlockStatus.Finalized })
       .skip(offset)
       .limit(limit)
       .sort(sort)
@@ -60,19 +60,21 @@ export class BlockRepository {
 
     if (!block || !blockChainData) return;
 
-    return BlockRepository.augmentBlockWithReplicationData(block, blockChainData);
+    return this.augmentBlockWithReplicationData(block, blockChainData);
   }
 
   async findLatest(props: LatestProps): Promise<FullBlockData | undefined> {
     const { chainId, status } = props;
 
     try {
-      const blockChainData = await BlockChainData.findOne({ chainId }).sort({ blockId: -1 });
-      const query = omitBy({ blockId: blockChainData.blockId, status }, isUndefined);
-      const block = await Block.findOne(query);
-      if (!block || !blockChainData) return;
+      const queryData = omitBy({ chainId, status }, isUndefined);
+      const blockChainData = await BlockChainData.findOne(queryData).sort({ blockId: -1 });
+      if (!blockChainData) return;
 
-      return BlockRepository.augmentBlockWithReplicationData(block, blockChainData);
+      const block = await Block.findOne({ blockId: blockChainData.blockId });
+      if (!block) return;
+
+      return this.augmentBlockWithReplicationData(block, blockChainData);
     } catch (e) {
       this.logger.error(`unable to find latest block for chainId ${chainId} and status ${status}`);
       throw e;
@@ -107,11 +109,17 @@ export class BlockRepository {
 
     return blocks.map((block) => {
       const matchingBlockChainData = map[block.blockId];
-      return BlockRepository.augmentBlockWithReplicationData(block, matchingBlockChainData);
+      return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
     });
   }
 
-  private static augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {
+  private augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {
+    if (block.blockId != blockChainData.blockId) {
+      const msg = `block data does not match: ${block.blockId} vs ${blockChainData.blockId}`;
+      this.logger.error(msg);
+      throw new Error(msg);
+    }
+
     return {
       _id: blockChainData._id,
       chainAddress: blockChainData.chainAddress,

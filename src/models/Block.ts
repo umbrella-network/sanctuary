@@ -23,7 +23,7 @@ const BlockSchema: Schema = new Schema({
   _id: { type: String, required: true },
   chainAddress: { type: String, required: false, unique: false },
   blockId: { type: Number, required: true, unique: true },
-  status: { type: String, required: false },
+  status: { type: String, required: true },
   anchor: { type: Number, required: false },
   dataTimestamp: { type: Date, required: true },
   root: { type: String, required: true },
