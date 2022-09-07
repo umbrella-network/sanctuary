@@ -12,11 +12,10 @@ import RevertedBlockResolver from './RevertedBlockResolver';
 import Settings from '../types/Settings';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
-import { Blockchain } from '../lib/Blockchain';
 import { ChainsIds } from '../types/ChainsIds';
 import LatestIdsProvider from './LatestIdsProvider';
 import BlockChainData from '../models/BlockChainData';
-import { ChainStatusExtended } from '../types/custom';
+import { ChainStatusExtended, SETTLED_FULFILLED } from '../types/custom';
 
 @injectable()
 class BlockSynchronizer {
@@ -29,10 +28,8 @@ class BlockSynchronizer {
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
   @inject(LatestIdsProvider) latestIdsProvider: LatestIdsProvider;
 
-  private blockchain!: Blockchain;
-
   async apply(): Promise<void> {
-    const chainsChecksData = await Promise.all(
+    const chainsChecksDataSettled = await Promise.allSettled(
       Object.values(ChainsIds).map((chainId) => {
         if (chainId === ChainsIds.SOLANA) {
           return;
@@ -41,6 +38,10 @@ class BlockSynchronizer {
         return this.checkForRevertedBlocks(chainId);
       })
     );
+
+    const chainsChecksData = chainsChecksDataSettled
+      .map((data) => (data.status == SETTLED_FULFILLED ? data.value : undefined))
+      .filter((data) => !!data);
 
     if (chainsChecksData.filter((data) => data.reverted).length) {
       return;
@@ -63,10 +64,6 @@ class BlockSynchronizer {
     }
 
     this.logger.debug(`Got ${mongoBlocks.length} mongoBlocks to synchronize`);
-
-    if (!(await this.verifyBlocks(mongoBlocks))) {
-      return;
-    }
 
     const [leavesSynchronizers, blockIds] = await this.processBlocks(masterChainStatus, mongoBlocks);
 
@@ -146,39 +143,19 @@ class BlockSynchronizer {
     );
   };
 
-  private verifyBlocks = async (mongoBlocks: IBlock[]): Promise<boolean> => {
-    let verified = true;
-
-    await Promise.all(
-      mongoBlocks.map((mongoBlock: IBlock) => {
-        switch (mongoBlock.status) {
-          case BlockStatus.Finalized:
-          case BlockStatus.Failed:
-            if (!BlockSynchronizer.brokenBlock(mongoBlock)) {
-              return;
-            }
-
-            this.noticeError(`Invalid Block found: ${JSON.stringify(mongoBlock)}. Removing.`);
-            verified = false;
-            return Block.deleteOne({ _id: mongoBlock._id });
-        }
-      })
-    );
-
-    return verified;
-  };
-
   private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
     // TODO do we need to handle solana??
-    const blockChainData = await BlockChainData.findOne({ blockId: mongoBlock.blockId, chainId: {$ne: ChainsIds.SOLANA} });
+    const [blockChainData] = await BlockChainData.find({
+      blockId: mongoBlock.blockId,
+      chainId: { $ne: ChainsIds.SOLANA },
+    }).limit(1);
 
     if (!blockChainData) {
       throw new Error(`Block ${mongoBlock.blockId} saved without BlockChainData`);
     }
 
     const chainContract = this.chainContractRepository.get(blockChainData.chainId);
-
-    const onChainBlocksData = await chainContract.resolveBlockData(mongoBlock.chainAddress, mongoBlock.blockId);
+    const onChainBlocksData = await chainContract.resolveBlockData(blockChainData.chainAddress, mongoBlock.blockId);
 
     if (mongoBlock.root != onChainBlocksData.root) {
       this.logger.warn(
@@ -231,10 +208,6 @@ class BlockSynchronizer {
     );
 
     return [leavesSynchronizers, blockIds];
-  };
-
-  private static brokenBlock = (block: IBlock): boolean => {
-    return block.blockId === undefined || block.chainAddress === undefined;
   };
 
   private static revertBlocks = async (

@@ -10,3 +10,8 @@ export type ChainStatusExtended = {
   status: ChainStatus;
   chainId: ChainsIds;
 };
+
+export const SETTLED_FULFILLED = 'fulfilled';
+export const SETTLED_REJECTED = 'rejected';
+
+export type PromiseResultStatus = typeof SETTLED_FULFILLED | typeof SETTLED_REJECTED;

@@ -53,11 +53,14 @@ export class BlockRepository {
   async findOne(props: FindOneProps): Promise<FullBlockData | undefined> {
     const { blockId, chainId } = props;
 
-    const blockChainData = await BlockChainData.findOne({ blockId, chainId });
-    const block = await Block.findOne({ blockId });
+    const [block, blockChainData] = await Promise.all([
+      Block.findOne({ blockId }),
+      BlockChainData.findOne({ blockId, chainId }),
+    ]);
+
     if (!block || !blockChainData) return;
 
-    return this.augmentBlockWithReplicationData(block, blockChainData);
+    return BlockRepository.augmentBlockWithReplicationData(block, blockChainData);
   }
 
   async findLatest(props: LatestProps): Promise<FullBlockData | undefined> {
@@ -69,7 +72,7 @@ export class BlockRepository {
       const block = await Block.findOne(query);
       if (!block || !blockChainData) return;
 
-      return this.augmentBlockWithReplicationData(block, blockChainData);
+      return BlockRepository.augmentBlockWithReplicationData(block, blockChainData);
     } catch (e) {
       this.logger.error(`unable to find latest block for chainId ${chainId} and status ${status}`);
       throw e;
@@ -97,21 +100,21 @@ export class BlockRepository {
     blockChainData: IBlockChainData[]
   ): FullBlockData[] {
     const map: Record<number, IBlockChainData> = {};
-    
-    blockChainData.forEach(b => {
+
+    blockChainData.forEach((b) => {
       map[b.blockId] = b;
     });
 
     return blocks.map((block) => {
       const matchingBlockChainData = map[block.blockId];
-      return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
+      return BlockRepository.augmentBlockWithReplicationData(block, matchingBlockChainData);
     });
   }
 
-  private augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {
-    block.chainAddress = blockChainData.chainAddress;
-    block.anchor = blockChainData.anchor;
-    block.minter = blockChainData.minter;
-    return block;
+  private static augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {
+    return {
+      ...block,
+      ...blockChainData,
+    };
   }
 }

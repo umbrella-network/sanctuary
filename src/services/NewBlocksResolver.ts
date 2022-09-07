@@ -1,7 +1,7 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import newrelic from 'newrelic';
-import { ABI } from '@umb-network/toolbox';
+import { ABI, LeafValueCoder, loadFeeds } from '@umb-network/toolbox';
 import { ChainContract } from '../contracts/ChainContract';
 import { Contract, Event, EventFilter } from 'ethers';
 import { BlockStatus, IEventBlock } from '../types/blocks';
@@ -15,8 +15,8 @@ import { CreateBatchRanges } from './CreateBatchRanges';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { ChainsIds } from '../types/ChainsIds';
-import { Blockchain } from '../lib/Blockchain';
 import LatestIdsProvider from './LatestIdsProvider';
+import { FCDRepository } from '../repositories/FCDRepository';
 
 @injectable()
 class NewBlocksResolver {
@@ -26,59 +26,66 @@ class NewBlocksResolver {
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
   @inject(ChainContractRepository) chainContractRepository!: ChainContractRepository;
   @inject(LatestIdsProvider) latestIdsProvider!: LatestIdsProvider;
-
-  private blockchain!: Blockchain;
-  private chainContract!: ChainContract;
-  private chainId!: string;
+  @inject(FCDRepository) private fcdRepository!: FCDRepository;
 
   apply = async (chainId: ChainsIds): Promise<void> => {
     if (chainId === ChainsIds.SOLANA) {
+      this.logger.warn(`[${chainId}] NewBlocksResolver called for solana`);
       return;
     }
 
-    this.chainId = chainId;
-    this.blockchain = this.blockchainRepository.get(chainId);
+    // this.chainId = chainId;
+    // this.blockchain = this.blockchainRepository.get(chainId);
     this.chainInstanceResolver.setup(chainId);
-    this.chainContract = <ChainContract>this.chainContractRepository.get(chainId);
+    // this.chainContract = <ChainContract>this.chainContractRepository.get(chainId);
 
     const [chainStatus, [, lastAnchor]] = await Promise.all([
-      this.chainContract.resolveStatus<ChainStatus>(),
+      this.chainContractRepository.get(chainId).resolveStatus<ChainStatus>(),
       this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
     ]);
 
-    await this.resolveBlockEvents(chainStatus, lastAnchor);
+    await this.resolveBlockEvents(chainId, chainStatus, lastAnchor);
   };
 
-  private resolveBlockEvents = async (chainStatus: ChainStatus, lastAnchor: number): Promise<void> => {
+  private resolveBlockEvents = async (
+    chainId: ChainsIds,
+    chainStatus: ChainStatus,
+    lastAnchor: number
+  ): Promise<void> => {
     const ranges = CreateBatchRanges.apply(
       lastAnchor,
       chainStatus.blockNumber.toNumber(),
-      this.blockchain.settings.scanBatchSize
+      this.blockchainRepository.get(chainId).settings.scanBatchSize
     );
 
-    this.logger.info(`[${this.chainId}] resolveBlockEvents(lastAnchor: ${lastAnchor}), ranges: ${ranges.length}`);
+    this.logger.info(`[${chainId}] resolveBlockEvents(lastAnchor: ${lastAnchor}), ranges: ${ranges.length}`);
 
     // must be sync execution!
     for (const [batchFrom, batchTo] of ranges) {
-      await this.resolveBatchOfEvents(batchFrom, batchTo);
+      await this.resolveBatchOfEvents(chainId, batchFrom, batchTo);
     }
   };
 
-  private resolveBatchOfEvents = async (fromBlock: number, toBlock: number): Promise<void> => {
-    const [logMintEvents, logVoteEvents] = await this.getChainLogsEvents(fromBlock, toBlock);
+  private resolveBatchOfEvents = async (chainId: ChainsIds, fromBlock: number, toBlock: number): Promise<void> => {
+    const [logMintEvents, logVoteEvents] = await this.getChainLogsEvents(chainId, fromBlock, toBlock);
 
     if (!logMintEvents.length) {
-      this.logger.warn(
-        `[${this.chainId}] No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`
-      );
+      this.logger.warn(`[${chainId}] No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`);
       return;
     }
 
-    this.logger.info(`[${this.chainId}] Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
-    await this.saveNewBlocks((await this.processEvents(logMintEvents, logVoteEvents)).filter((e) => e != undefined));
+    this.logger.info(`[${chainId}] Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
+
+    await this.saveNewBlocks(
+      chainId,
+      (await this.processEvents(chainId, logMintEvents, logVoteEvents)).filter((e) => e != undefined)
+    );
+
+    await this.updateFCD();
   };
 
   private getChainLogsEvents = async (
+    chainId: ChainsIds,
     fromBlockNumber: number,
     toBlockNumber: number
   ): Promise<[logMint: Event[], logVote: Event[]]> => {
@@ -92,7 +99,7 @@ class NewBlocksResolver {
       anchors.push(i);
     }
 
-    this.logger.info(`[${this.chainId}] Scanning for new blocks`, {
+    this.logger.info(`[${chainId}] Scanning for new blocks`, {
       fromBlock: fromBlockNumber,
       toBlock: toBlockNumber,
     });
@@ -101,11 +108,11 @@ class NewBlocksResolver {
     const uniqueChainsInstances = this.chainInstanceResolver.uniqueInstances(chainsInstancesForIds);
 
     if (!uniqueChainsInstances.length) {
-      this.noticeError(`[${this.chainId}] There is no Chain for anchors: ${fromBlockNumber} - ${toBlockNumber}`);
+      this.noticeError(`[${chainId}] There is no Chain for anchors: ${fromBlockNumber} - ${toBlockNumber}`);
     }
 
     const chains: Contract[] = uniqueChainsInstances.map(
-      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchain.getProvider())
+      (instance) => new Contract(instance.address, ABI.chainAbi, this.blockchainRepository.get(chainId).getProvider())
     );
 
     return Promise.all([
@@ -138,7 +145,11 @@ class NewBlocksResolver {
     return events.flatMap((e: Event[]) => e);
   };
 
-  private processEvents = async (logMintEvents: Event[], logVoterEvents: Event[]): Promise<IEventBlock[]> => {
+  private processEvents = async (
+    chainId: ChainsIds,
+    logMintEvents: Event[],
+    logVoterEvents: Event[]
+  ): Promise<IEventBlock[]> => {
     const logVotersByBlockId: Map<number, LogVoter[]> = new Map<number, LogVoter[]>();
 
     logVoterEvents.forEach((event) => {
@@ -147,6 +158,8 @@ class NewBlocksResolver {
       logs.push(NewBlocksResolver.toLogVoter(event));
       logVotersByBlockId.set(logVoter.blockId, logs);
     });
+
+    const chain = this.chainContractRepository.get(chainId);
 
     return Promise.all(
       logMintEvents
@@ -162,7 +175,7 @@ class NewBlocksResolver {
             }
 
             const votes: Map<string, string> = new Map<string, string>();
-            const blockData = await this.chainContract.resolveBlockData(logMint.chain, logMint.blockId);
+            const blockData = await chain.resolveBlockData(logMint.chain, logMint.blockId);
 
             logVoters.forEach((logVoter) => {
               votes.set(logVoter.voter, logVoter.vote.toString());
@@ -206,7 +219,7 @@ class NewBlocksResolver {
     };
   };
 
-  private saveNewBlocks = async (newBlocks: IEventBlock[]): Promise<void> => {
+  private saveNewBlocks = async (chainId: ChainsIds, newBlocks: IEventBlock[]): Promise<void> => {
     await Promise.all(
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
@@ -214,7 +227,7 @@ class NewBlocksResolver {
         const exist = await Block.find({ blockId: newBlock.blockId });
 
         if (exist.length == 0) {
-          this.logger.info(`[${this.chainId}] New block detected: ${newBlock.blockId}`);
+          this.logger.info(`[${chainId}] New block detected: ${newBlock.blockId}`);
 
           try {
             await Block.create({
@@ -235,13 +248,13 @@ class NewBlocksResolver {
           }
         }
 
-        this.logger.info(`[${this.chainId}] saving dispatched block: ${newBlock.blockId}`);
+        this.logger.info(`[${chainId}] saving dispatched block: ${newBlock.blockId}`);
 
         try {
           return await BlockChainData.create({
-            _id: `block::${this.chainId}::${newBlock.blockId}`,
+            _id: `block::${chainId}::${newBlock.blockId}`,
             anchor: newBlock.anchor,
-            chainId: this.chainId,
+            chainId,
             chainAddress: newBlock.chainAddress,
             blockId: newBlock.blockId,
             minter: newBlock.minter,
@@ -252,6 +265,38 @@ class NewBlocksResolver {
             this.noticeError(e);
           }
         }
+      })
+    );
+  };
+
+  private updateFCD = async (): Promise<void> => {
+    const [data] = await BlockChainData.find({}, { chainId: 1 }).sort({ blockId: -1 }).limit(1).exec();
+
+    if (!data) {
+      return;
+    }
+
+    const fcdKeys: string[] = [...Object.keys(await loadFeeds(this.settings.app.feedsOnChain))];
+
+    if (fcdKeys.length === 0) {
+      return;
+    }
+
+    const chain = <ChainContract>this.chainContractRepository.get(data.chainId);
+    const [values, timestamps] = await chain.resolveFCDs(chain.address(), fcdKeys);
+
+    await Promise.all(
+      values.map((value, i) => {
+        if (timestamps[i] == 0) {
+          return;
+        }
+
+        return this.fcdRepository.saveOrUpdate({
+          key: fcdKeys[i],
+          dataTimestamp: new Date(timestamps[i] * 1000),
+          value: LeafValueCoder.decode(value.toHexString(), fcdKeys[i]),
+          chainId: data.chainId,
+        });
       })
     );
   };
