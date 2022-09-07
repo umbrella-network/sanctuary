@@ -55,7 +55,7 @@ describe('getProofs', () => {
         ]);
 
         await BlockChainData.create([
-          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: 'new'  }),
+          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: 'new' }),
           blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: 'finalized' }),
           blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: 'failed' }),
           blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: 'finalized' }),

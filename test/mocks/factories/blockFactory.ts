@@ -6,7 +6,7 @@ import BlockChainData from '../../../src/models/BlockChainData';
 import Leaf from '../../../src/models/Leaf';
 import { inputForBlockModel } from '../../fixtures/inputForBlockModel';
 import { blockChainDataFactory } from './blockChainDataFactory';
-import {BlockStatus} from "../../../src/types/blocks";
+import { BlockStatus } from '../../../src/types/blocks';
 
 export const blockFactory = Factory.define('Block')
   .attr('_id', () => v4())
