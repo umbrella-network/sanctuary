@@ -75,6 +75,7 @@ describe('getBlocks', () => {
 
         expect(blocks).to.be.an('array').with.lengthOf(1);
         expect(blocks[0]).to.have.property('status', 'finalized');
+        expect(blocks[0]).to.have.property('chainAddress', 'CHAIN_ADDRESS');
       });
 
       it('returns blocks sorted in descending order by their height', async () => {
@@ -238,15 +239,16 @@ describe('getBlocks', () => {
 
           await BlockChainData.create([
             blockChainDataFactory.build({ blockId: 1, chainId: 'bsc' }),
-            blockChainDataFactory.build({ blockId: 2, chainId: 'bsc' }),
+            blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', _id: 'block::bsc::2' }),
             blockChainDataFactory.build({ blockId: 3, chainId: 'bsc' }),
             blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' }),
           ]);
 
-          const blocksResponse = await request(app).get('/blocks/1').set('Authorization', `${apiKey.key}`);
+          const blocksResponse = await request(app).get('/blocks/2').set('Authorization', `${apiKey.key}`);
           const blocks: Record<string, unknown> = blocksResponse.body;
 
-          expect(blocks.data).to.have.property('_id', 'block::1');
+          expect(blocks.data).to.have.property('blockId', 2);
+          expect(blocks.data).to.have.property('_id', 'block::bsc::2');
         });
       });
     });

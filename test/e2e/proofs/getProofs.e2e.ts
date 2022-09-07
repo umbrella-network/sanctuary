@@ -211,7 +211,7 @@ describe('getProofs', () => {
         const response = await operation('ethereum');
         const subject = response.body.data.block;
 
-        expect(subject._id).to.eq(block._id);
+        expect(subject._id).to.eq(blockChainData._id);
         expect(subject.blockId).to.eq(block.blockId);
       });
     });

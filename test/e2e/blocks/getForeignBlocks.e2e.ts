@@ -172,7 +172,7 @@ describe('getBlockChainDatas', () => {
         });
 
         it('returns the correct block _id', async () => {
-          expect(subject._id).to.eq(block._id);
+          expect(subject._id).to.eq(blockChainData._id);
         });
 
         it('returns the correct block blockId', async () => {

@@ -35,7 +35,7 @@ export class BlockRepository {
   @inject('Settings') protected settings!: Settings;
 
   async find(props: FindProps): Promise<FullBlockData[]> {
-    const { chainId, offset, limit, sort = { blockId: -1 } } = props;
+    const { chainId = this.settings.blockchain.homeChain.chainId, offset, limit, sort = { blockId: -1 } } = props;
 
     const blockChainData: IBlockChainData[] = await BlockChainData.find({ chainId })
       .skip(offset)
@@ -51,7 +51,7 @@ export class BlockRepository {
   }
 
   async findOne(props: FindOneProps): Promise<FullBlockData | undefined> {
-    const { blockId, chainId } = props;
+    const { blockId, chainId = this.settings.blockchain.homeChain.chainId } = props;
 
     const [block, blockChainData] = await Promise.all([
       Block.findOne({ blockId }),
@@ -113,8 +113,18 @@ export class BlockRepository {
 
   private static augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {
     return {
-      ...block,
-      ...blockChainData,
+      _id: blockChainData._id,
+      chainAddress: blockChainData.chainAddress,
+      blockId: block.blockId,
+      status: block.status,
+      anchor: blockChainData.anchor,
+      dataTimestamp: block.dataTimestamp,
+      root: block.root,
+      minter: blockChainData.minter,
+      staked: block.staked,
+      power: block.power,
+      voters: block.voters,
+      votes: block.votes,
     };
   }
 }
