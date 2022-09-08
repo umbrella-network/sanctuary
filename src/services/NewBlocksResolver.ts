@@ -262,16 +262,16 @@ class NewBlocksResolver {
             const errors = results.map((r) => (r.status == SETTLED_REJECTED ? r.reason : null)).filter((r) => r);
 
             if (errors) {
-              await Promise.allSettled([
-                Block.deleteOne({ _id: mongoBlockId }),
-                BlockChainData.deleteOne({ _id: mongoBlockDataId }),
-              ]);
-
               throw new Error(errors.join(','));
             }
           } catch (e) {
             if (!e.message.includes('E11000')) {
               this.noticeError(e);
+
+              await Promise.allSettled([
+                Block.deleteOne({ _id: mongoBlockId }),
+                BlockChainData.deleteOne({ _id: mongoBlockDataId }),
+              ]);
             }
           }
         }
