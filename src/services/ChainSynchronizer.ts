@@ -34,7 +34,7 @@ class ChainSynchronizer {
     }
 
     const blockchain = this.blockchainRepository.get(chainId);
-    
+
     if (await this.chainUpToDate(chainId)) {
       this.logger.info(`[${chainId}] chain up to date.`);
       return;
@@ -97,13 +97,18 @@ class ChainSynchronizer {
     await queue.drained();
   };
 
-  private synchronizeChainsForBatch = async (chainId: ChainsIds, fromBlock: number, toBlock: number): Promise<IChainInstance[]> => {
+  private synchronizeChainsForBatch = async (
+    chainId: ChainsIds,
+    fromBlock: number,
+    toBlock: number
+  ): Promise<IChainInstance[]> => {
     const events = await this.scanForEvents(chainId, fromBlock, toBlock);
-    const offsets = await this.resolveOffsets(chainId, events.map((event) => event.destination));
-
-    this.logger.debug(
-      `[${chainId}] got ${events.length} events for new Chain at ${fromBlock}-${toBlock}`
+    const offsets = await this.resolveOffsets(
+      chainId,
+      events.map((event) => event.destination)
     );
+
+    this.logger.debug(`[${chainId}] got ${events.length} events for new Chain at ${fromBlock}-${toBlock}`);
 
     return Promise.all(
       events.map((logRegistered, i) => {

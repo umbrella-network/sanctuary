@@ -66,9 +66,9 @@ class BlockSynchronizer {
     if (blockIds.length > 0) {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
       const updated = await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
-      const success = updated.filter((b) => b.status == BlockStatus.Finalized).length;
-      const failed = updated.filter((b) => b.status == BlockStatus.Failed).length;
-      this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total blocks updated: ${updated.length}`);
+      const success = updated.updatedFinalizedBlocks;
+      const failed = updated.updatedFailedBlocks;
+      this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total: ${success + failed}`);
     }
   }
 
@@ -113,44 +113,52 @@ class BlockSynchronizer {
   private updateSynchronizedBlocks = async (
     leavesSynchronizers: (boolean | null)[],
     blockIds: number[]
-  ): Promise<IBlock[]> => {
-    const filtered = leavesSynchronizers.filter((success: boolean) => success !== null);
-    this.logger.info(`[updateSynchronizedBlocks] Updating ${filtered.length}/${leavesSynchronizers.length}`);
+  ): Promise<{ updatedFinalizedBlocks: number; updatedFailedBlocks: number }> => {
+    const data = leavesSynchronizers.map((success: boolean | null, i: number) => {
+      return {
+        status: success ? BlockStatus.Finalized : BlockStatus.Failed,
+        blockId: blockIds[i],
+      };
+    });
 
-    const updatedBlocks = await Promise.all(
-      filtered.map((success: boolean, i: number) => {
-        const status = success ? BlockStatus.Finalized : BlockStatus.Failed;
+    const finalized = data.filter((d) => d.status == BlockStatus.Finalized);
+    const failed = data.filter((d) => d.status == BlockStatus.Failed);
 
-        if (!success) {
-          this.noticeError(`[updateSynchronizedBlocks] Block ${blockIds[i]}: ${status}`);
-        }
-
-        return Promise.all([
-          Block.findOneAndUpdate(
-            { blockId: blockIds[i] },
-            {
-              status: status,
-            },
-            {
-              new: false,
-              upsert: true,
-            }
-          ),
-          BlockChainData.updateMany(
-            { blockId: blockIds[i] },
-            {
-              status: status,
-            },
-            {
-              new: false,
-              upsert: true,
-            }
-          ),
-        ]);
-      })
+    this.logger.info(
+      `[updateSynchronizedBlocks] ${finalized.length}/${failed.length} of ${leavesSynchronizers.length}`
     );
 
-    return updatedBlocks.map((blocks) => blocks[0]);
+    if (failed.length > 0) {
+      this.noticeError(`[updateSynchronizedBlocks] Blocks: ${failed.map((f) => f.blockId).join(',')}: failed`);
+    }
+
+    const [updatedFinalizedBlocks, updatedFailedBlocks] = await Promise.all([
+      Block.updateMany(
+        { blockId: { $in: finalized.map((f) => f.blockId) } },
+        { status: BlockStatus.Finalized },
+        { new: false, upsert: true }
+      ),
+      Block.updateMany(
+        { blockId: { $in: failed.map((f) => f.blockId) } },
+        { status: BlockStatus.Failed },
+        { new: false, upsert: true }
+      ),
+      BlockChainData.updateMany(
+        { blockId: { $in: finalized.map((f) => f.blockId) } },
+        { status: BlockStatus.Finalized },
+        { new: false, upsert: true }
+      ),
+      BlockChainData.updateMany(
+        { blockId: { $in: failed.map((f) => f.blockId) } },
+        { status: BlockStatus.Failed },
+        { new: false, upsert: true }
+      ),
+    ]);
+
+    return {
+      updatedFinalizedBlocks: updatedFinalizedBlocks.upserted.length,
+      updatedFailedBlocks: updatedFailedBlocks.upserted.length,
+    };
   };
 
   private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
