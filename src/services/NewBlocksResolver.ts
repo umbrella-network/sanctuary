@@ -235,7 +235,7 @@ class NewBlocksResolver {
           const mongoBlockDataId = `block::${chainId}::${newBlock.blockId}`;
 
           try {
-            const results = await Promise.allSettled([
+            await Promise.all([
               Block.create({
                 _id: mongoBlockId,
                 root: newBlock.root,
@@ -258,20 +258,14 @@ class NewBlocksResolver {
                 dataTimestamp,
               }),
             ]);
-
-            const errors = results.map((r) => (r.status == SETTLED_REJECTED ? r.reason : null)).filter((r) => r);
-
-            if (errors) {
-              throw new Error(errors.join(','));
-            }
           } catch (e) {
             if (!e.message.includes('E11000')) {
-              this.noticeError(e);
-
               await Promise.allSettled([
                 Block.deleteOne({ _id: mongoBlockId }),
                 BlockChainData.deleteOne({ _id: mongoBlockDataId }),
               ]);
+
+              this.noticeError(e);
             }
           }
         }
