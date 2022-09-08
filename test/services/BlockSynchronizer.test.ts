@@ -54,7 +54,7 @@ describe('BlockSynchronizer', () => {
             blockChainDataFactory.build({
               _id: `block::bsc::${block._id}`,
               blockId: block.blockId,
-              status: BlockStatus.Finalized,
+              status: block.status,
             })
           ),
         ])

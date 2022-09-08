@@ -115,49 +115,57 @@ class BlockSynchronizer {
     blockIds: number[]
   ): Promise<{ updatedFinalizedBlocks: number; updatedFailedBlocks: number }> => {
     const data = leavesSynchronizers.map((success: boolean | null, i: number) => {
+      if (success == null) {
+        return { status: undefined, blockId: 0 };
+      }
+
       return {
         status: success ? BlockStatus.Finalized : BlockStatus.Failed,
         blockId: blockIds[i],
       };
     });
 
-    const finalized = data.filter((d) => d.status == BlockStatus.Finalized);
-    const failed = data.filter((d) => d.status == BlockStatus.Failed);
+    const finalized = data.filter((d) => d.status == BlockStatus.Finalized).map((d) => d.blockId);
+    const failed = data.filter((d) => d.status == BlockStatus.Failed).map((d) => d.blockId);
 
     this.logger.info(
       `[updateSynchronizedBlocks] ${finalized.length}/${failed.length} of ${leavesSynchronizers.length}`
     );
 
     if (failed.length > 0) {
-      this.noticeError(`[updateSynchronizedBlocks] Blocks: ${failed.map((f) => f.blockId).join(',')}: failed`);
+      this.noticeError(`[updateSynchronizedBlocks] Blocks: ${failed.join(',')}: failed`);
     }
 
     const [updatedFinalizedBlocks, updatedFailedBlocks] = await Promise.all([
-      Block.updateMany(
-        { blockId: { $in: finalized.map((f) => f.blockId) } },
-        { status: BlockStatus.Finalized },
-        { new: false, upsert: true }
-      ),
-      Block.updateMany(
-        { blockId: { $in: failed.map((f) => f.blockId) } },
-        { status: BlockStatus.Failed },
-        { new: false, upsert: true }
-      ),
-      BlockChainData.updateMany(
-        { blockId: { $in: finalized.map((f) => f.blockId) } },
-        { status: BlockStatus.Finalized },
-        { new: false, upsert: true }
-      ),
-      BlockChainData.updateMany(
-        { blockId: { $in: failed.map((f) => f.blockId) } },
-        { status: BlockStatus.Failed },
-        { new: false, upsert: true }
-      ),
+      finalized.length == 0
+        ? undefined
+        : Block.updateMany(
+          { blockId: { $in: finalized } },
+          { status: BlockStatus.Finalized },
+          { new: false, upsert: true }
+        ),
+      failed.length == 0
+        ? undefined
+        : Block.updateMany({ blockId: { $in: failed } }, { status: BlockStatus.Failed }, { new: false, upsert: true }),
+      finalized.length == 0
+        ? undefined
+        : BlockChainData.updateMany(
+          { blockId: { $in: finalized } },
+          { status: BlockStatus.Finalized },
+          { new: false, upsert: true }
+        ),
+      failed.length == 0
+        ? undefined
+        : BlockChainData.updateMany(
+          { blockId: { $in: failed } },
+          { status: BlockStatus.Failed },
+          { new: false, upsert: true }
+        ),
     ]);
 
     return {
-      updatedFinalizedBlocks: updatedFinalizedBlocks.upserted.length,
-      updatedFailedBlocks: updatedFailedBlocks.upserted.length,
+      updatedFinalizedBlocks: updatedFinalizedBlocks ? updatedFinalizedBlocks.nModified : 0,
+      updatedFailedBlocks: updatedFailedBlocks ? updatedFailedBlocks.nModified : 0,
     };
   };
 
