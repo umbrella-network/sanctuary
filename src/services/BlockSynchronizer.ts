@@ -228,8 +228,8 @@ class BlockSynchronizer {
     blockId: number
   ): Promise<({ ok?: number; n?: number } & { deletedCount?: number })[]> => {
     const condition = { blockId: { $gte: blockId } };
-    // we can't have different roots for same blockId, so if we detect invalid root, we reverting all blockchains
-    // blocks wll be refetched.
+    // we can't have different roots for same blockId, so if we detect invalid root, we're reverting all blockchains
+    // blocks will be re-fetched.
     return Promise.all([Block.deleteMany(condition), Leaf.deleteMany(condition), BlockChainData.deleteMany(condition)]);
   };
 
