@@ -30,7 +30,6 @@ const BlockChainDataSchema = new Schema(
 BlockChainDataSchema.index({ blockId: 1, chainId: 1 }, { unique: true });
 BlockChainDataSchema.index({ anchor: -1 });
 BlockChainDataSchema.index({ blockId: -1 });
-BlockChainDataSchema.index({ chainId: 'text' });
 BlockChainDataSchema.index({ status: 1 });
 
 export default mongoose.model<IBlockChainData>('BlockChainData', BlockChainDataSchema);
