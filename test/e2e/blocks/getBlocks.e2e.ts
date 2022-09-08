@@ -96,16 +96,12 @@ describe('getBlocks', () => {
           blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
         ]);
 
-        console.log(await Block.find({}));
-        console.log(await BlockChainData.find({}));
-
-        const blocksResponse = await request(app).get('/latest').set('Authorization', `${apiKey.key}`);
-        console.log(blocksResponse.body);
+        const blocksResponse = await request(app).get('/blocks/latest').set('Authorization', `${apiKey.key}`);
         const { data } = blocksResponse.body;
 
         expect(data).to.be.an('object');
-        expect(data).to.have.property('blockId', 3);
-        expect(data).to.have.property('status', BlockStatus.Finalized);
+        expect(data).to.have.property('blockId', 4);
+        expect(data).to.have.property('status', BlockStatus.Failed);
         expect(data).to.have.property('chainAddress', 'CHAIN_ADDRESS');
       });
 
