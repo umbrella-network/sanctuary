@@ -39,14 +39,19 @@ class LeavesSynchronizer {
   async apply(chainStatus: ChainStatus, mongoBlockId: string): Promise<boolean | null> {
     let success = false;
     const savedBlock = await Block.findOne({ _id: mongoBlockId });
+
     const savedBlockData = await BlockChainData.findOne({
       blockId: savedBlock.blockId,
       chainId: { $ne: ChainsIds.SOLANA },
     });
 
+    if (!savedBlockData) {
+      this.logger.debug(`block: ${savedBlock._id} present only on solana`);
+    }
+
     this.logger.info(`Synchronizing leaves for block: ${savedBlock._id}`);
     await Leaf.deleteMany({ blockId: savedBlock.blockId });
-    const validators = this.validatorsList(chainStatus, savedBlockData.minter);
+    const validators = this.validatorsList(chainStatus, savedBlockData ? savedBlockData.minter : '');
 
     for (const validator of validators) {
       if (!validator.location) {
