@@ -253,11 +253,7 @@ class Migrations {
         );
 
         await session.withTransaction(async () => {
-          await Promise.all(
-            blockChainDatas2.map((blockChainData) => {
-              return BlockChainData.updateMany({ blockId: blockChainData.blockId }, { status: BlockStatus.New });
-            })
-          );
+          await BlockChainData.updateMany({ status: undefined }, { status: BlockStatus.New });
         });
 
         await session.endSession();
