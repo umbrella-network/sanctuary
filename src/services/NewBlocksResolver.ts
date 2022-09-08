@@ -17,7 +17,6 @@ import { ChainContractRepository } from '../repositories/ChainContractRepository
 import { ChainsIds } from '../types/ChainsIds';
 import LatestIdsProvider from './LatestIdsProvider';
 import { FCDRepository } from '../repositories/FCDRepository';
-import { SETTLED_REJECTED } from '../types/custom';
 
 @injectable()
 class NewBlocksResolver {
