@@ -8,6 +8,7 @@ import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
 import mongoose, { Model } from 'mongoose';
 import { sleep } from '../utils/sleep';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
+import { BlockStatus } from '../types/blocks';
 
 class Migrations {
   static async apply(): Promise<void> {
@@ -162,13 +163,16 @@ class Migrations {
    * 2. Rename foreignblocks collection to blockchaindatas
    * 3. Insert all blocks from blocks collection
    *   into blockchaindatas collection setting foreignchainId='bsc'
+   * 4. Get blockchaindatas with missing status
+   * 5. Copy status from blocks
+   * 6. Update missing status with New
    */
   private static migrateTo600 = async () => {
     await sleep(15000); // this is necessary to blockchaindatas collection be created
     const version = '6.0.0';
     const startTime = new Date().getTime();
     const indexesToRemove = ['blockId_1_foreignChainId_1', 'chainAddress_1', 'minter_1'];
-    const indexesToCreate = [{ blockId: -1 }, { anchor: -1 }];
+    const indexesToCreate = [{ blockId: -1 }, { anchor: -1 }, { status: 1 }];
 
     await Migrations.wrapMigration(version, async () => {
       const session = await mongoose.startSession();
@@ -220,6 +224,38 @@ class Migrations {
           await Promise.all(
             blockDataBatches.map((blockData) => {
               return BlockChainData.insertMany(blockData);
+            })
+          );
+        });
+
+        console.log(`[Migrations(${version})] Start copying missing status`);
+        const blockChainDatas = await BlockChainData.find({ status: undefined });
+        console.log(`[Migrations(${version})] number of blockChainDatas with missing status ${blockChainDatas.length}`);
+
+        const blocksWithStatus = await Block.find({
+          blockId: { $in: blockChainDatas.map((blockchainData) => blockchainData.blockId) },
+        }).exec();
+
+        console.log(`[Migrations(${version})] number of blocks found ${blocksWithStatus.length}`);
+
+        await session.withTransaction(async () => {
+          await Promise.all(
+            blocksWithStatus.map((block) => {
+              return BlockChainData.updateMany({ blockId: block.blockId }, { status: block.status as BlockStatus });
+            })
+          );
+        });
+
+        const blockChainDatas2 = await BlockChainData.find({ status: undefined });
+
+        console.log(
+          `[Migrations(${version})] number of blockChainDatas with missing status(2) ${blockChainDatas2.length}`
+        );
+
+        await session.withTransaction(async () => {
+          await Promise.all(
+            blockChainDatas2.map((blockChainData) => {
+              return BlockChainData.updateMany({ blockId: blockChainData.blockId }, { status: BlockStatus.New });
             })
           );
         });
