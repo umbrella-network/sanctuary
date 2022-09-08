@@ -82,7 +82,7 @@ describe('getBlocks', () => {
         expect(blocks[0]).to.have.property('chainAddress', 'CHAIN_ADDRESS');
       });
 
-      it('/latest returns recent block', async () => {
+      it('/blocks/latest returns recent block', async () => {
         await Block.create([
           { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: BlockStatus.New },
           { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: BlockStatus.Finalized },
