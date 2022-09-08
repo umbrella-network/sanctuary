@@ -17,6 +17,7 @@ import { ChainContractRepository } from '../repositories/ChainContractRepository
 import { ChainsIds } from '../types/ChainsIds';
 import LatestIdsProvider from './LatestIdsProvider';
 import { FCDRepository } from '../repositories/FCDRepository';
+import { SETTLED_REJECTED } from '../types/custom';
 
 @injectable()
 class NewBlocksResolver {
@@ -36,7 +37,7 @@ class NewBlocksResolver {
 
     // this.chainId = chainId;
     // this.blockchain = this.blockchainRepository.get(chainId);
-    this.chainInstanceResolver.setup(chainId);
+    // this.chainInstanceResolver.setup(chainId);
     // this.chainContract = <ChainContract>this.chainContractRepository.get(chainId);
 
     const [chainStatus, [, lastAnchor]] = await Promise.all([
@@ -76,12 +77,13 @@ class NewBlocksResolver {
 
     this.logger.info(`[${chainId}] Resolved ${logMintEvents.length} submits for blocks ${fromBlock} - ${toBlock}`);
 
-    await this.saveNewBlocks(
-      chainId,
-      (await this.processEvents(chainId, logMintEvents, logVoteEvents)).filter((e) => e != undefined)
-    );
-
-    await this.updateFCD();
+    await Promise.allSettled([
+      this.saveNewBlocks(
+        chainId,
+        (await this.processEvents(chainId, logMintEvents, logVoteEvents)).filter((e) => e != undefined)
+      ),
+      this.updateFCD(chainId),
+    ]);
   };
 
   private getChainLogsEvents = async (
@@ -104,7 +106,7 @@ class NewBlocksResolver {
       toBlock: toBlockNumber,
     });
 
-    const chainsInstancesForIds = await this.chainInstanceResolver.byAnchor(anchors);
+    const chainsInstancesForIds = await this.chainInstanceResolver.byAnchor(chainId, anchors);
     const uniqueChainsInstances = this.chainInstanceResolver.uniqueInstances(chainsInstancesForIds);
 
     if (!uniqueChainsInstances.length) {
@@ -229,18 +231,44 @@ class NewBlocksResolver {
         if (exist.length == 0) {
           this.logger.info(`[${chainId}] New block detected: ${newBlock.blockId}`);
 
+          const mongoBlockId = `block::${newBlock.blockId}`;
+          const mongoBlockDataId = `block::${chainId}::${newBlock.blockId}`;
+
           try {
-            await Block.create({
-              _id: `block::${newBlock.blockId}`,
-              root: newBlock.root,
-              blockId: newBlock.blockId,
-              staked: newBlock.staked,
-              power: newBlock.power,
-              votes: newBlock.votes,
-              voters: newBlock.voters,
-              dataTimestamp,
-              status: BlockStatus.Completed,
-            });
+            const results = await Promise.allSettled([
+              Block.create({
+                _id: mongoBlockId,
+                root: newBlock.root,
+                blockId: newBlock.blockId,
+                staked: newBlock.staked,
+                power: newBlock.power,
+                votes: newBlock.votes,
+                voters: newBlock.voters,
+                dataTimestamp,
+                status: BlockStatus.Completed,
+              }),
+              BlockChainData.create({
+                _id: mongoBlockDataId,
+                anchor: newBlock.anchor,
+                chainId,
+                chainAddress: newBlock.chainAddress,
+                blockId: newBlock.blockId,
+                minter: newBlock.minter,
+                status: BlockStatus.Completed,
+                dataTimestamp,
+              }),
+            ]);
+
+            const errors = results.map((r) => (r.status == SETTLED_REJECTED ? r.reason : null)).filter((r) => r);
+
+            if (errors) {
+              await Promise.allSettled([
+                Block.deleteOne({ _id: mongoBlockId }),
+                BlockChainData.deleteOne({ _id: mongoBlockDataId }),
+              ]);
+
+              throw new Error(errors.join(','));
+            }
           } catch (e) {
             if (!e.message.includes('E11000')) {
               this.noticeError(e);
@@ -249,41 +277,18 @@ class NewBlocksResolver {
         }
 
         this.logger.info(`[${chainId}] saving dispatched block: ${newBlock.blockId}`);
-
-        try {
-          return await BlockChainData.create({
-            _id: `block::${chainId}::${newBlock.blockId}`,
-            anchor: newBlock.anchor,
-            chainId,
-            chainAddress: newBlock.chainAddress,
-            blockId: newBlock.blockId,
-            minter: newBlock.minter,
-            status: BlockStatus.Completed,
-            dataTimestamp,
-          });
-        } catch (e) {
-          if (!e.message.includes('E11000')) {
-            this.noticeError(e);
-          }
-        }
       })
     );
   };
 
-  private updateFCD = async (): Promise<void> => {
-    const [data] = await BlockChainData.find({}, { chainId: 1 }).sort({ blockId: -1 }).limit(1).exec();
-
-    if (!data) {
-      return;
-    }
-
+  private updateFCD = async (chainId: ChainsIds): Promise<void> => {
     const fcdKeys: string[] = [...Object.keys(await loadFeeds(this.settings.app.feedsOnChain))];
 
     if (fcdKeys.length === 0) {
       return;
     }
 
-    const chain = <ChainContract>this.chainContractRepository.get(data.chainId);
+    const chain = <ChainContract>this.chainContractRepository.get(chainId);
     const [values, timestamps] = await chain.resolveFCDs(chain.address(), fcdKeys);
 
     await Promise.all(
@@ -296,7 +301,7 @@ class NewBlocksResolver {
           key: fcdKeys[i],
           dataTimestamp: new Date(timestamps[i] * 1000),
           value: LeafValueCoder.decode(value.toHexString(), fcdKeys[i]),
-          chainId: data.chainId,
+          chainId,
         });
       })
     );
