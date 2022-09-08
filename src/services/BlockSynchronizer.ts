@@ -30,13 +30,9 @@ class BlockSynchronizer {
 
   async apply(): Promise<void> {
     const chainsChecksDataSettled = await Promise.allSettled(
-      Object.values(ChainsIds).map((chainId) => {
-        if (chainId === ChainsIds.SOLANA) {
-          return;
-        }
-
-        return this.checkForRevertedBlocks(chainId);
-      })
+      Object.values(ChainsIds)
+        .filter(chainId => chainId != ChainsIds.SOLANA)
+        .map((chainId) => this.checkForRevertedBlocks(chainId))
     );
 
     const chainsChecksData = chainsChecksDataSettled
