@@ -59,23 +59,23 @@ logger.info('Starting Scheduler...');
     );
   }
 
-  // for (const chainId of Object.keys(settings.blockchain.multiChains)) {
-  //   const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
-  //     settings.jobs.foreignChainReplication
-  //   ))[chainId];
-  //
-  //   logger.info(`scheduleWorker blockResolverWorker(${chainId})...`);
-  //
-  //   setInterval(
-  //     async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
-  //     settings.jobs.blockCreation.interval // TODO individual settings?
-  //   );
-  // }
+  for (const chainId of Object.keys(settings.blockchain.multiChains)) {
+    const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
+      settings.jobs.foreignChainReplication
+    ))[chainId];
 
-  setInterval(
-    async () => scheduleWorker(blockResolverWorker, settings.jobs.blockCreation, ''),
-    settings.jobs.blockCreation.interval // TODO individual settings?
-  );
+    logger.info(`scheduleWorker blockResolverWorker(${chainId})...`);
+
+    setInterval(
+      async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
+      settings.jobs.blockCreation.interval // TODO individual settings?
+    );
+  }
+
+  // setInterval(
+  //   async () => scheduleWorker(blockResolverWorker, settings.jobs.blockCreation, ''),
+  //   settings.jobs.blockCreation.interval // TODO individual settings?
+  // );
 
   setInterval(async () => {
     await metricsWorker.enqueue(

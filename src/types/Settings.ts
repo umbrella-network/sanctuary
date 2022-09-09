@@ -32,6 +32,7 @@ type Settings = {
       interval: number;
     };
     foreignChainReplication: {
+      bsc: SinglentonWorkerSchedulerSettings;
       ethereum: SinglentonWorkerSchedulerSettings;
       polygon: SinglentonWorkerSchedulerSettings;
       avax: SinglentonWorkerSchedulerSettings;

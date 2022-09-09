@@ -5,7 +5,7 @@ import NewBlocksResolver from '../services/NewBlocksResolver';
 import Settings from '../types/Settings';
 import ChainSynchronizer from '../services/ChainSynchronizer';
 import newrelic from 'newrelic';
-import { ChainsIds, ForeignChainsIds, TForeignChainsIds } from '../types/ChainsIds';
+import { ChainsIds } from '../types/ChainsIds';
 import { SingletonWorker } from './SingletonWorker';
 
 @injectable()
@@ -16,25 +16,10 @@ class BlockResolverWorker extends SingletonWorker {
   @inject(ChainSynchronizer) chainSynchronizer!: ChainSynchronizer;
 
   apply = async (job: Bull.Job): Promise<void> => {
-    const { lockTTL, isStale } = this.parseJobData(job);
+    const { lockTTL, chainId, isStale } = this.parseJobData(job);
     if (isStale) return;
 
-    await this.synchronizeWork('BlockResolverWorker', lockTTL, async () =>
-      Promise.allSettled(
-        Object.keys(this.settings.blockchain.multiChains)
-          // when we replicating, then we will not detect new blocks here, so we will skip it,
-          // if it is still configured as foreignchain
-          .filter((chainId) => {
-            if (ForeignChainsIds.includes(chainId as TForeignChainsIds)) {
-              this.logger.info(`[${chainId}] skipping as it is still registered for replication`);
-              return false;
-            }
-
-            return true;
-          })
-          .map((chainId) => this.execute(chainId as ChainsIds))
-      )
-    );
+    await this.synchronizeWork(chainId, lockTTL, async () => this.execute(chainId));
   };
 
   private execute = async (chainId: ChainsIds): Promise<void> => {
