@@ -24,7 +24,7 @@ abstract class BasicWorker {
   }
 
   get worker(): Bull.Worker {
-    return (this.#worker ||= new Worker(this.queueName, this.apply, { connection: this.connection }));
+    return (this.#worker ||= new Worker(this.queueName, this.apply, { connection: this.connection, concurrency: 20 }));
   }
 
   enqueue = async <T>(params: T, opts?: Bull.JobsOptions): Promise<Bull.Job<T>> => {
