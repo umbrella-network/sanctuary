@@ -32,12 +32,14 @@ type Settings = {
       interval: number;
     };
     foreignChainReplication: {
-      bsc: SinglentonWorkerSchedulerSettings;
       ethereum: SinglentonWorkerSchedulerSettings;
       polygon: SinglentonWorkerSchedulerSettings;
       avax: SinglentonWorkerSchedulerSettings;
       arbitrum: SinglentonWorkerSchedulerSettings;
       solana: SinglentonWorkerSchedulerSettings;
+    };
+    chainResolver: {
+      bsc: SinglentonWorkerSchedulerSettings;
     };
   };
   redis: {

@@ -59,9 +59,9 @@ logger.info('Starting Scheduler...');
     );
   }
 
-  for (const chainId of Object.keys(settings.blockchain.multiChains)) {
+  for (const chainId of Object.keys(settings.jobs.chainResolver)) {
     const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
-      settings.jobs.foreignChainReplication
+      settings.jobs.chainResolver
     ))[chainId];
 
     logger.info(`scheduleWorker blockResolverWorker(${chainId})...`);

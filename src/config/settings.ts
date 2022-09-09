@@ -14,10 +14,6 @@ const settings: Settings = {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
     },
     foreignChainReplication: {
-      bsc: {
-        interval: parseInt(process.env.BSC_REPLICATION_INTERVAL || '60000'),
-        lockTTL: parseInt(process.env.BSC_REPLICATION_LOCK_TTL || '30000'),
-      },
       ethereum: {
         interval: parseInt(process.env.ETH_REPLICATION_INTERVAL || '60000'),
         lockTTL: parseInt(process.env.ETH_REPLICATION_LOCK_TTL || '30000'),
@@ -37,6 +33,12 @@ const settings: Settings = {
       solana: {
         interval: parseInt(process.env.SOLANA_REPLICATION_INTERVAL || '10000'),
         lockTTL: parseInt(process.env.SOLANA_REPLICATION_LOCK_TTL || '5000'),
+      },
+    },
+    chainResolver: {
+      bsc: {
+        interval: parseInt(process.env.ETH_RESOLVER_INTERVAL || '60000'),
+        lockTTL: parseInt(process.env.ETH_RESOLVER_LOCK_TTL || '30000'),
       },
     },
   },

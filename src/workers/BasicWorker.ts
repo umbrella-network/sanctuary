@@ -1,9 +1,11 @@
 import Bull, { Queue, Worker } from 'bullmq';
 import { inject, injectable } from 'inversify';
 import IORedis from 'ioredis';
+import Settings from '../types/Settings';
 
 @injectable()
 abstract class BasicWorker {
+  @inject('Settings') settings!: Settings;
   connection: IORedis.Redis;
   #queueName!: string;
   #queue!: Bull.Queue;
@@ -23,8 +25,19 @@ abstract class BasicWorker {
     return (this.#queue ||= new Queue(this.queueName, { connection: this.connection }));
   }
 
+  get concurrency(): number {
+    let workersCount = 0;
+    workersCount += Object.keys(this.settings.jobs.foreignChainReplication).length;
+    workersCount += Object.keys(this.settings.jobs.chainResolver).length;
+    workersCount += 2; // MetricsWorker + SynchWorker
+    return workersCount;
+  }
+
   get worker(): Bull.Worker {
-    return (this.#worker ||= new Worker(this.queueName, this.apply, { connection: this.connection, concurrency: 20 }));
+    return (this.#worker ||= new Worker(this.queueName, this.apply, {
+      connection: this.connection,
+      concurrency: this.concurrency,
+    }));
   }
 
   enqueue = async <T>(params: T, opts?: Bull.JobsOptions): Promise<Bull.Job<T>> => {
