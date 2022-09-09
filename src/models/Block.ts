@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { BlockStatus } from '../types/blocks';
 
 export type SynchronizationState = {
   synchronizedAt: Date;
@@ -9,7 +10,7 @@ export type SynchronizationState = {
 
 export interface IBlock extends Document {
   blockId: number;
-  status: string;
+  status: BlockStatus;
   dataTimestamp: Date;
   root: string;
   staked: string;

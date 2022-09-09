@@ -29,6 +29,7 @@ describe('BlockSynchronizer', () => {
     loadTestEnv();
     await setupDatabase();
     await BlockChainData.deleteMany();
+    await Block.deleteMany();
 
     await ChainInstance.findOneAndUpdate(
       { address: chainAddress },

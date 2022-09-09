@@ -23,6 +23,7 @@ export class BlockChainDataFactory {
     blockChainData.blockId = props.block.blockId;
     blockChainData.anchor = props.anchor;
     blockChainData.chainAddress = props.chainAddress;
+    blockChainData.status = props.block.status;
 
     if (NonEvmChainsIds.includes(<ChainsIds>props.chainId)) {
       blockChainData.minter = this.blockchainRepository.getGeneric(props.chainId).wallet.address;
