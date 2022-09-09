@@ -5,7 +5,7 @@ import NewBlocksResolver from '../services/NewBlocksResolver';
 import Settings from '../types/Settings';
 import ChainSynchronizer from '../services/ChainSynchronizer';
 import newrelic from 'newrelic';
-import { ChainsIds } from '../types/ChainsIds';
+import {ChainsIds, ForeignChainsIds, TForeignChainsIds} from '../types/ChainsIds';
 import { SingletonWorker } from './SingletonWorker';
 
 @injectable()
@@ -21,7 +21,11 @@ class BlockResolverWorker extends SingletonWorker {
 
     await this.synchronizeWork('BlockResolverWorker', lockTTL, async () =>
       Promise.allSettled(
-        Object.keys(this.settings.blockchain.multiChains).map((chainId) => this.execute(chainId as ChainsIds))
+        Object.keys(this.settings.blockchain.multiChains)
+          // when we replicating, then we will not detect new blocks here, so we will skip it,
+          // if it is still configured as foreignchain
+          .filter(chainId => !ForeignChainsIds.includes(chainId as TForeignChainsIds))
+          .map((chainId) => this.execute(chainId as ChainsIds))
       )
     );
   };
