@@ -1,4 +1,3 @@
-import { uuid } from 'uuidv4';
 import { inject, injectable } from 'inversify';
 import { IBlock } from '../models/Block';
 import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
@@ -18,7 +17,7 @@ export class BlockChainDataFactory {
 
   fromBlock(props: FromBlockProps): IBlockChainData {
     const blockChainData = new BlockChainData();
-    blockChainData._id = uuid();
+    blockChainData._id = `block::${props.chainId}::${props.block.blockId}`;
     blockChainData.chainId = props.chainId;
     blockChainData.blockId = props.block.blockId;
     blockChainData.anchor = props.anchor;

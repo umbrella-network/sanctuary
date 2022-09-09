@@ -43,6 +43,10 @@ export class BlockRepository {
       .sort(sort)
       .exec();
 
+    if (blockChainData.length == 0) {
+      return [];
+    }
+
     const blocks = await Block.find({ blockId: { $in: blockChainData.map((fb) => fb.blockId) } })
       .sort(sort)
       .exec();
@@ -109,8 +113,14 @@ export class BlockRepository {
 
     return blocks.map((block) => {
       const matchingBlockChainData = map[block.blockId];
+
+      if (!matchingBlockChainData) {
+        this.logger.error(`No matching Block for blockId: ${block.blockId}`);
+        return undefined;
+      }
+
       return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
-    });
+    }).filter(b => b);
   }
 
   private augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {
