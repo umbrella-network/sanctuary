@@ -111,16 +111,18 @@ export class BlockRepository {
       map[b.blockId] = b;
     });
 
-    return blocks.map((block) => {
-      const matchingBlockChainData = map[block.blockId];
+    return blocks
+      .map((block) => {
+        const matchingBlockChainData = map[block.blockId];
 
-      if (!matchingBlockChainData) {
-        this.logger.error(`No matching Block for blockId: ${block.blockId}`);
-        return undefined;
-      }
+        if (!matchingBlockChainData) {
+          this.logger.error(`No matching Block for blockId: ${block.blockId}`);
+          return undefined;
+        }
 
-      return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
-    }).filter(b => b);
+        return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
+      })
+      .filter((b) => b);
   }
 
   private augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {

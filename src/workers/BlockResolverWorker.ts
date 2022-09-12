@@ -5,7 +5,7 @@ import NewBlocksResolver from '../services/NewBlocksResolver';
 import Settings from '../types/Settings';
 import ChainSynchronizer from '../services/ChainSynchronizer';
 import newrelic from 'newrelic';
-import {ChainsIds, ForeignChainsIds, TForeignChainsIds} from '../types/ChainsIds';
+import { ChainsIds, ForeignChainsIds, TForeignChainsIds } from '../types/ChainsIds';
 import { SingletonWorker } from './SingletonWorker';
 
 @injectable()
@@ -24,7 +24,14 @@ class BlockResolverWorker extends SingletonWorker {
         Object.keys(this.settings.blockchain.multiChains)
           // when we replicating, then we will not detect new blocks here, so we will skip it,
           // if it is still configured as foreignchain
-          .filter(chainId => !ForeignChainsIds.includes(chainId as TForeignChainsIds))
+          .filter((chainId) => {
+            if (ForeignChainsIds.includes(chainId as TForeignChainsIds)) {
+              this.logger.info(`[${chainId}] skipping as it is still registered for replication`);
+              return false;
+            }
+
+            return true;
+          })
           .map((chainId) => this.execute(chainId as ChainsIds))
       )
     );

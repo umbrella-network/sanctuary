@@ -140,27 +140,27 @@ class BlockSynchronizer {
       finalized.length == 0
         ? undefined
         : Block.updateMany(
-            { blockId: { $in: finalized } },
-            { status: BlockStatus.Finalized },
-            { new: false, upsert: true }
-          ),
+          { blockId: { $in: finalized } },
+          { status: BlockStatus.Finalized },
+          { new: false, upsert: true }
+        ),
       failed.length == 0
         ? undefined
         : Block.updateMany({ blockId: { $in: failed } }, { status: BlockStatus.Failed }, { new: false, upsert: true }),
       finalized.length == 0
         ? undefined
         : BlockChainData.updateMany(
-            { blockId: { $in: finalized } },
-            { status: BlockStatus.Finalized },
-            { new: false, upsert: true }
-          ),
+          { blockId: { $in: finalized } },
+          { status: BlockStatus.Finalized },
+          { new: false, upsert: true }
+        ),
       failed.length == 0
         ? undefined
         : BlockChainData.updateMany(
-            { blockId: { $in: failed } },
-            { status: BlockStatus.Failed },
-            { new: false, upsert: true }
-          ),
+          { blockId: { $in: failed } },
+          { status: BlockStatus.Failed },
+          { new: false, upsert: true }
+        ),
     ]);
 
     return {
