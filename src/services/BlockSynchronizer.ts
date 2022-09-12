@@ -73,6 +73,8 @@ class BlockSynchronizer {
   }
 
   async checkForRevertedBlocks(chainId: ChainsIds): Promise<ChainStatusExtended> {
+    this.logger.info(`DEBUG: checkForRevertedBlocks: ${chainId}`);
+
     const chain = <ChainContract>this.chainContractRepository.get(chainId);
 
     const [chainStatus, [lastSavedBlockId]] = await Promise.all([
