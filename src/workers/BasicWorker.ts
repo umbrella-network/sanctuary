@@ -1,6 +1,7 @@
 import Bull, { Queue, Worker } from 'bullmq';
 import { inject, injectable } from 'inversify';
 import IORedis from 'ioredis';
+import { ForeignChainsIds, TForeignChainsIds } from '../types/ChainsIds';
 import Settings from '../types/Settings';
 
 @injectable()
@@ -27,8 +28,11 @@ abstract class BasicWorker {
 
   get concurrency(): number {
     let workersCount = Object.keys(this.settings.jobs.chainsWorkerSchedulerSettings).length;
-    workersCount += Object.keys(this.settings.jobs.chainResolver).length;
+    workersCount += Object.keys(this.settings.blockchain.multiChains).filter(
+      (chainId) => !ForeignChainsIds.includes(chainId as TForeignChainsIds)
+    ).length;
     workersCount += 2; // MetricsWorker + SynchWorker
+    console.log('workersCount: ', workersCount);
     return workersCount;
   }
 

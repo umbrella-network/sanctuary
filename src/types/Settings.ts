@@ -32,14 +32,12 @@ type Settings = {
       interval: number;
     };
     chainsWorkerSchedulerSettings: {
+      bsc: SinglentonWorkerSchedulerSettings;
       ethereum: SinglentonWorkerSchedulerSettings;
       polygon: SinglentonWorkerSchedulerSettings;
       avax: SinglentonWorkerSchedulerSettings;
       arbitrum: SinglentonWorkerSchedulerSettings;
       solana: SinglentonWorkerSchedulerSettings;
-    };
-    chainResolver: {
-      bsc: SinglentonWorkerSchedulerSettings;
     };
   };
   redis: {
