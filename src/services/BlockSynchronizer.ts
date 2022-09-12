@@ -183,7 +183,7 @@ class BlockSynchronizer {
     const chainContract = this.chainContractRepository.get(blockChainData.chainId);
     const onChainBlocksData = await chainContract.resolveBlockData(blockChainData.chainAddress, mongoBlock.blockId);
 
-    if (mongoBlock.root != onChainBlocksData.root) {
+    if (!this.equalRoots(mongoBlock.root, onChainBlocksData.root)) {
       this.logger.warn(
         `Invalid ROOT for blockId ${mongoBlock.blockId}. Expected ${onChainBlocksData.root} but have ${mongoBlock.root}. Reverting.`
       );
@@ -194,6 +194,11 @@ class BlockSynchronizer {
     }
 
     return false;
+  };
+
+  private equalRoots = (a: string, b: string): boolean => {
+    // backwards compatible check for squashed root
+    return a == b || a.slice(0, 58) == b.slice(0, 58);
   };
 
   private processBlocks = async (
