@@ -31,7 +31,7 @@ type Settings = {
     metricsReporting: {
       interval: number;
     };
-    foreignChainReplication: {
+    chainsWorkerSchedulerSettings: {
       ethereum: SinglentonWorkerSchedulerSettings;
       polygon: SinglentonWorkerSchedulerSettings;
       avax: SinglentonWorkerSchedulerSettings;

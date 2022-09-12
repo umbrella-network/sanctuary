@@ -13,7 +13,7 @@ const settings: Settings = {
     metricsReporting: {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
     },
-    foreignChainReplication: {
+    chainsWorkerSchedulerSettings: {
       ethereum: {
         interval: parseInt(process.env.ETH_REPLICATION_INTERVAL || '60000'),
         lockTTL: parseInt(process.env.ETH_REPLICATION_LOCK_TTL || '30000'),

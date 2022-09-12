@@ -26,8 +26,7 @@ abstract class BasicWorker {
   }
 
   get concurrency(): number {
-    let workersCount = 0;
-    workersCount += Object.keys(this.settings.jobs.foreignChainReplication).length;
+    let workersCount = Object.keys(this.settings.jobs.chainsWorkerSchedulerSettings).length;
     workersCount += Object.keys(this.settings.jobs.chainResolver).length;
     workersCount += 2; // MetricsWorker + SynchWorker
     return workersCount;
