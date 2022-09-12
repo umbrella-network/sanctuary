@@ -140,31 +140,35 @@ class BlockSynchronizer {
       this.noticeError(`[updateSynchronizedBlocks] Blocks: ${failed.join(',')}: failed`);
     }
 
+    const updateFinalizeBlocks = Block.updateMany(
+      { blockId: { $in: finalized } },
+      { status: BlockStatus.Finalized },
+      { new: false, upsert: true }
+    );
+
+    const updateFailedBlocks = Block.updateMany(
+      { blockId: { $in: failed } },
+      { status: BlockStatus.Failed },
+      { new: false, upsert: true }
+    );
+
+    const updateFinalizedBlockData = BlockChainData.updateMany(
+      { blockId: { $in: finalized } },
+      { status: BlockStatus.Finalized },
+      { new: false, upsert: true }
+    );
+
+    const updateFailedBlockData = BlockChainData.updateMany(
+      { blockId: { $in: failed } },
+      { status: BlockStatus.Failed },
+      { new: false, upsert: true }
+    );
+
     const [updatedFinalizedBlocks, updatedFailedBlocks] = await Promise.all([
-      finalized.length == 0
-        ? undefined
-        : Block.updateMany(
-            { blockId: { $in: finalized } },
-            { status: BlockStatus.Finalized },
-            { new: false, upsert: true }
-          ),
-      failed.length == 0
-        ? undefined
-        : Block.updateMany({ blockId: { $in: failed } }, { status: BlockStatus.Failed }, { new: false, upsert: true }),
-      finalized.length == 0
-        ? undefined
-        : BlockChainData.updateMany(
-            { blockId: { $in: finalized } },
-            { status: BlockStatus.Finalized },
-            { new: false, upsert: true }
-          ),
-      failed.length == 0
-        ? undefined
-        : BlockChainData.updateMany(
-            { blockId: { $in: failed } },
-            { status: BlockStatus.Failed },
-            { new: false, upsert: true }
-          ),
+      finalized.length == 0 ? undefined : updateFinalizeBlocks,
+      failed.length == 0 ? undefined : updateFailedBlocks,
+      finalized.length == 0 ? undefined : updateFinalizedBlockData,
+      failed.length == 0 ? undefined : updateFailedBlockData,
     ]);
 
     return {
