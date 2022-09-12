@@ -152,9 +152,11 @@ describe('BlockSynchronizer', () => {
     });
 
     it('reverts block when detect invalid root', async () => {
+      const validRoot = randomBlocks[0].root;
+
       chainContract.resolveBlockData.resolves({
         ...arbitraryBlockFromChain,
-        root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6',
+        root: validRoot,
       });
 
       await resolveChainStatus(BigNumber.from(11)); // new blocks

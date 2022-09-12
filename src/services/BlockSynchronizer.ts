@@ -39,7 +39,7 @@ class BlockSynchronizer {
       .map((data) => (data.status == SETTLED_FULFILLED ? data.value : undefined))
       .filter((data) => !!data);
 
-    if (chainsChecksData.filter((data) => data.reverted).length) {
+    if (chainsChecksData.filter((data) => data.reverted).length > 0) {
       return;
     }
 
@@ -82,8 +82,10 @@ class BlockSynchronizer {
       this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
     ]);
 
+    const reverted = await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId, chainId);
+
     return {
-      reverted: (await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId, chainId)) > 0,
+      reverted: reverted > 0,
       status: chainStatus,
       chainId,
     };
