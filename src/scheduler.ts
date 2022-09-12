@@ -10,7 +10,7 @@ import { ForeignChainReplicationWorker } from './workers';
 import Settings, { SinglentonWorkerSchedulerSettings } from './types/Settings';
 import logger from './lib/logger';
 import Migrations from './services/Migrations';
-import { ForeignChainsIds } from './types/ChainsIds';
+import { ForeignChainsIds, TForeignChainsIds } from './types/ChainsIds';
 import { SingletonWorker } from './workers/SingletonWorker';
 
 logger.info('Starting Scheduler...');
@@ -51,7 +51,7 @@ logger.info('Starting Scheduler...');
   for (const foreignChainId of ForeignChainsIds) {
     const foreignChainReplicationSettings: SinglentonWorkerSchedulerSettings = (<
       Record<string, SinglentonWorkerSchedulerSettings>
-    >settings.jobs.foreignChainReplication)[foreignChainId];
+    >settings.jobs.chainsWorkerSchedulerSettings)[foreignChainId];
 
     setInterval(
       async () => scheduleWorker(foreignChainReplicationWorker, foreignChainReplicationSettings, foreignChainId),
@@ -59,23 +59,27 @@ logger.info('Starting Scheduler...');
     );
   }
 
-  // for (const chainId of Object.keys(settings.blockchain.multiChains)) {
-  //   const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
-  //     settings.jobs.foreignChainReplication
-  //   ))[chainId];
-  //
-  //   logger.info(`scheduleWorker blockResolverWorker(${chainId})...`);
-  //
-  //   setInterval(
-  //     async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
-  //     settings.jobs.blockCreation.interval // TODO individual settings?
-  //   );
-  // }
+  const blockChainResolvers = Object.keys(settings.blockchain.multiChains).filter((chainId) => {
+    if (ForeignChainsIds.includes(chainId as TForeignChainsIds)) {
+      logger.info(`[${chainId}] skipping as it is still registered for replication`);
+      return false;
+    }
 
-  setInterval(
-    async () => scheduleWorker(blockResolverWorker, settings.jobs.blockCreation, ''),
-    settings.jobs.blockCreation.interval // TODO individual settings?
-  );
+    return true;
+  });
+
+  for (const chainId of blockChainResolvers) {
+    const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
+      settings.jobs.chainsWorkerSchedulerSettings
+    ))[chainId];
+
+    logger.info(`scheduleWorker blockResolverWorker(${chainId})...`);
+
+    setInterval(
+      async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
+      settings.jobs.blockCreation.interval // TODO individual settings?
+    );
+  }
 
   setInterval(async () => {
     await metricsWorker.enqueue(
