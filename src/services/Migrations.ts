@@ -181,9 +181,6 @@ class Migrations {
         const db = mongoose.connection.db;
         const blockChainDataCount = await BlockChainData.countDocuments({});
         console.log(`[Migrations(${version})] blockChainDataCount ${blockChainDataCount}`);
-        if (blockChainDataCount > 0) {
-          throw new Error(`[Migrations(${version})] BlockChainData already have data`);
-        }
         await db.dropCollection('blockchaindatas');
         console.log(`[Migrations(${version})] Dropped collection`);
         await Migrations.removeIndexes<IForeignBlock>(indexesToRemove, ForeignBlock);
