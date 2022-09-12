@@ -36,18 +36,24 @@ class BlockSynchronizer {
     );
 
     const chainsChecksData = chainsChecksDataSettled
-      // for some reason data might be undefined, so we need `data?.status`
-      .map((data) => (data?.status == SETTLED_FULFILLED ? data.value : undefined))
+      .map((data) => (data.status == SETTLED_FULFILLED ? data.value : undefined))
       .filter((data) => !!data);
 
     if (chainsChecksData.filter((data) => data.reverted).length > 0) {
       return;
     }
 
+    const masterChainId = this.settings.blockchain.homeChain.chainId;
+
     // we search for masterchain, because we need active list of validators
-    const masterChainStatus = chainsChecksData.filter(
-      (data) => data.chainId === this.settings.blockchain.homeChain.chainId
-    )[0].status;
+    const masterChainStatus: ChainStatus | undefined = chainsChecksData.filter(
+      (data) => data.chainId === masterChainId
+    )[0]?.status;
+
+    if (!masterChainStatus) {
+      this.logger.error(`masterChainStatus (${masterChainId}) failed to fetch`);
+      return;
+    }
 
     // masterchain doesn't have to have latest data, so we simply search for highest value
     masterChainStatus.nextBlockId = chainsChecksData.reduce((acc, data) => Math.max(acc, data.status.nextBlockId), 0);
