@@ -51,7 +51,7 @@ class BlockSynchronizer {
     )[0]?.status;
 
     if (!masterChainStatus) {
-      this.logger.error(`masterChainStatus (${masterChainId}) failed to fetch`);
+      this.noticeError(`masterChainStatus (${masterChainId}) failed to fetch`);
       return;
     }
 
