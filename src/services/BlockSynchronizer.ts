@@ -36,7 +36,8 @@ class BlockSynchronizer {
     );
 
     const chainsChecksData = chainsChecksDataSettled
-      .map((data) => (data.status == SETTLED_FULFILLED ? data.value : undefined))
+      // for some reason data might be undefined, so we need `data?.status`
+      .map((data) => (data?.status == SETTLED_FULFILLED ? data.value : undefined))
       .filter((data) => !!data);
 
     if (chainsChecksData.filter((data) => data.reverted).length > 0) {
