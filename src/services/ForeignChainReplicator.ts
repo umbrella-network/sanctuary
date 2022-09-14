@@ -144,13 +144,17 @@ export class ForeignChainReplicator {
     try {
       const nonEvm = NonEvmChainsIds.includes(chainId);
 
+      if (nonEvm) {
+        return false;
+      }
+
       const blockchain = nonEvm
         ? this.blockchainRepository.getGeneric(chainId)
         : this.blockchainRepository.get(chainId);
 
       const contract = nonEvm
-        ? this.chainContractRepository.get(chainId)
-        : this.chainContractRepository.getGeneric(chainId);
+        ? this.chainContractRepository.getGeneric(chainId)
+        : this.chainContractRepository.get(chainId);
 
       let address = contract.address();
 
