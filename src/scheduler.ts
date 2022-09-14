@@ -49,13 +49,13 @@ logger.info('Starting Scheduler...');
   };
 
   for (const foreignChainId of ForeignChainsIds) {
-    const foreignChainReplicationSettings: SinglentonWorkerSchedulerSettings = (<
+    const schedulerSettings: SinglentonWorkerSchedulerSettings = (<
       Record<string, SinglentonWorkerSchedulerSettings>
     >settings.jobs.chainsWorkerSchedulerSettings)[foreignChainId];
 
     setInterval(
-      async () => scheduleWorker(foreignChainReplicationWorker, foreignChainReplicationSettings, foreignChainId),
-      foreignChainReplicationSettings.interval
+      async () => scheduleWorker(foreignChainReplicationWorker, schedulerSettings, foreignChainId),
+      schedulerSettings.interval
     );
   }
 
@@ -77,7 +77,7 @@ logger.info('Starting Scheduler...');
 
     setInterval(
       async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
-      settings.jobs.blockCreation.interval // TODO individual settings?
+      schedulerSettings.interval
     );
   }
 
