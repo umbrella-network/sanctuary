@@ -273,7 +273,7 @@ class BlockSynchronizer {
             this.logger.info(`Start synchronizing leaves for completed block: ${mongoBlock.blockId}`);
             blockIds.push(mongoBlock.blockId);
             leavesSynchronizers.push(this.leavesSynchronizer.apply(chainStatus, mongoBlock._id));
-            break;
+            return;
 
           case BlockStatus.Finalized:
           case BlockStatus.Failed:
