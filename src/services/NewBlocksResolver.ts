@@ -238,9 +238,9 @@ class NewBlocksResolver {
           try {
             this.logger.info(`[${chainId}] saving dispatched BlockChainData: ${newBlock.blockId}`);
             const exist = await Block.findOne({ blockId: newBlock.blockId }).exec();
-            this.logger.info(`[${chainId}] new block exist? `, !!exist);
+            this.logger.info(`[${chainId}] new block exist? ${!!exist}`);
 
-            if (exist) {
+            if (!exist) {
               await Block.create({
                 _id: mongoBlockId,
                 root: newBlock.root,
