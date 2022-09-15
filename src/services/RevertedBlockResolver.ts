@@ -30,14 +30,14 @@ class RevertedBlockResolver {
   }
 
   private async revertBlockChainDatas(nextBlockId: number, chainId: string): Promise<DeleteWriteOpResultObject> {
-    this.logger.warn(`[${chainId}] deleting many: blockId gte ${nextBlockId}`);
+    this.logger.warn(`[${chainId}] deleting many BlockChainData: blockId gte ${nextBlockId}`);
 
     const deleteBlockChainData = await BlockChainData.collection.deleteMany({
       chainId: chainId,
       blockId: { $gte: nextBlockId },
     });
 
-    const blockChainCount = await BlockChainData.collection.count({ blockId: { $gte: nextBlockId } });
+    const blockChainCount = await BlockChainData.collection.countDocuments({ blockId: { $gte: nextBlockId } });
 
     if (blockChainCount === 0) {
       await this.revertBlocks(nextBlockId);
