@@ -151,6 +151,8 @@ class NewBlocksResolver {
     logMintEvents: Event[],
     logVoterEvents: Event[]
   ): Promise<IEventBlock[]> => {
+    this.logger.error(`[${chainId}] processEvents ${logMintEvents.length}`);
+
     const logVotersByBlockId: Map<number, LogVoter[]> = new Map<number, LogVoter[]>();
 
     logVoterEvents.forEach((event) => {
@@ -221,6 +223,8 @@ class NewBlocksResolver {
   };
 
   private saveNewBlocks = async (chainId: ChainsIds, newBlocks: IEventBlock[]): Promise<void> => {
+    this.logger.info(`[${chainId}] saveNewBlocks: ${newBlocks.length}`);
+
     await Promise.all(
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
