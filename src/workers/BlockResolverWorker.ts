@@ -23,7 +23,7 @@ class BlockResolverWorker extends SingletonWorker {
     if (isStale) return;
 
     if (!await this.dispatcherDetector.apply(chainId)) {
-      this.logger.info(`[${chainId}] new chain architecture detected`);
+      this.logger.info(`[${chainId}] OLD chain architecture detected`);
       await sleep(60_000); // slow down execution
       return;
     }

@@ -234,29 +234,33 @@ class NewBlocksResolver {
           const mongoBlockDataId = `block::${chainId}::${newBlock.blockId}`;
 
           try {
-            await Promise.all([
-              Block.create({
-                _id: mongoBlockId,
-                root: newBlock.root,
-                blockId: newBlock.blockId,
-                staked: newBlock.staked,
-                power: newBlock.power,
-                votes: newBlock.votes,
-                voters: newBlock.voters,
-                dataTimestamp,
-                status: BlockStatus.Completed,
-              }),
-              BlockChainData.create({
-                _id: mongoBlockDataId,
-                anchor: newBlock.anchor,
-                chainId,
-                chainAddress: newBlock.chainAddress,
-                blockId: newBlock.blockId,
-                minter: newBlock.minter,
-                status: BlockStatus.Completed,
-                dataTimestamp,
-              }),
-            ]);
+            // BlockChainData must be first, because `Block` can revert because of duplication, what is ok.
+            await BlockChainData.create({
+              _id: mongoBlockDataId,
+              anchor: newBlock.anchor,
+              chainId,
+              chainAddress: newBlock.chainAddress,
+              blockId: newBlock.blockId,
+              minter: newBlock.minter,
+              status: BlockStatus.Completed,
+              dataTimestamp,
+            });
+
+            this.logger.info(`[${chainId}] saving dispatched BlockChainData: ${newBlock.blockId}`);
+
+            await Block.create({
+              _id: mongoBlockId,
+              root: newBlock.root,
+              blockId: newBlock.blockId,
+              staked: newBlock.staked,
+              power: newBlock.power,
+              votes: newBlock.votes,
+              voters: newBlock.voters,
+              dataTimestamp,
+              status: BlockStatus.Completed,
+            });
+
+            this.logger.info(`[${chainId}] saving dispatched block: ${newBlock.blockId}`);
           } catch (e) {
             if (!e.message.includes('E11000')) {
               await Promise.allSettled([
@@ -268,8 +272,6 @@ class NewBlocksResolver {
             }
           }
         }
-
-        this.logger.info(`[${chainId}] saving dispatched block: ${newBlock.blockId}`);
       })
     );
   };
