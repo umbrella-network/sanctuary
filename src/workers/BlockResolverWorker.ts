@@ -7,6 +7,8 @@ import ChainSynchronizer from '../services/ChainSynchronizer';
 import newrelic from 'newrelic';
 import { ChainsIds } from '../types/ChainsIds';
 import { SingletonWorker } from './SingletonWorker';
+import { sleep } from '../utils/sleep';
+import { DispatcherDetector } from '../services/DispatcherDetector';
 
 @injectable()
 class BlockResolverWorker extends SingletonWorker {
@@ -14,10 +16,17 @@ class BlockResolverWorker extends SingletonWorker {
   @inject('Settings') settings!: Settings;
   @inject(NewBlocksResolver) newBlocksResolver!: NewBlocksResolver;
   @inject(ChainSynchronizer) chainSynchronizer!: ChainSynchronizer;
+  @inject(DispatcherDetector) dispatcherDetector: DispatcherDetector;
 
   apply = async (job: Bull.Job): Promise<void> => {
     const { lockTTL, chainId, isStale } = this.parseJobData(job);
     if (isStale) return;
+
+    if (await this.dispatcherDetector.apply(chainId)) {
+      this.logger.info(`[${chainId}] new chain architecture detected`);
+      await sleep(60_000); // slow down execution
+      return;
+    }
 
     await this.synchronizeWork(chainId, lockTTL, async () => this.execute(chainId));
   };

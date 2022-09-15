@@ -10,7 +10,7 @@ import { ForeignChainReplicationWorker } from './workers';
 import Settings, { SinglentonWorkerSchedulerSettings } from './types/Settings';
 import logger from './lib/logger';
 import Migrations from './services/Migrations';
-import { ForeignChainsIds, TForeignChainsIds } from './types/ChainsIds';
+import { ForeignChainsIds } from './types/ChainsIds';
 import { SingletonWorker } from './workers/SingletonWorker';
 
 logger.info('Starting Scheduler...');
@@ -49,9 +49,9 @@ logger.info('Starting Scheduler...');
   };
 
   for (const foreignChainId of ForeignChainsIds) {
-    const schedulerSettings: SinglentonWorkerSchedulerSettings = (<
-      Record<string, SinglentonWorkerSchedulerSettings>
-    >settings.jobs.chainsWorkerSchedulerSettings)[foreignChainId];
+    const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
+      settings.jobs.chainsWorkerSchedulerSettings
+    ))[foreignChainId];
 
     setInterval(
       async () => scheduleWorker(foreignChainReplicationWorker, schedulerSettings, foreignChainId),
@@ -59,16 +59,7 @@ logger.info('Starting Scheduler...');
     );
   }
 
-  const blockChainResolvers = Object.keys(settings.blockchain.multiChains).filter((chainId) => {
-    if (ForeignChainsIds.includes(chainId as TForeignChainsIds)) {
-      logger.info(`[${chainId}] skipping as it is still registered for replication`);
-      return false;
-    }
-
-    return true;
-  });
-
-  for (const chainId of blockChainResolvers) {
+  for (const chainId of Object.keys(settings.blockchain.multiChains)) {
     const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
       settings.jobs.chainsWorkerSchedulerSettings
     ))[chainId];

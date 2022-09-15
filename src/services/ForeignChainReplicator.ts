@@ -1,6 +1,5 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
-import { ethers } from 'ethers';
 
 import { BlockChainDataFactory } from '../factories/BlockChainDataFactory';
 import {
@@ -23,6 +22,7 @@ import { BigNumber } from 'ethers';
 import { IGenericBlockchain } from '../lib/blockchains/IGenericBlockchain';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { sleep } from '../utils/sleep';
+import { DispatcherDetector } from './DispatcherDetector';
 
 export type ForeignChainReplicatorProps = {
   foreignChainId: TForeignChainsIds;
@@ -37,6 +37,7 @@ export class ForeignChainReplicator {
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
   @inject('Settings') private readonly settings: Settings;
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
+  @inject(DispatcherDetector) dispatcherDetector: DispatcherDetector;
 
   constructor(
     @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
@@ -61,7 +62,7 @@ export class ForeignChainReplicator {
     try {
       const { foreignChainId } = props;
 
-      if (await this.isDispatcherArchitecture(foreignChainId)) {
+      if (await this.dispatcherDetector.apply(foreignChainId)) {
         this.logger.info(`[${foreignChainId}] new chain architecture detected`);
         await sleep(60_000); // slow down execution
         return;
@@ -138,40 +139,6 @@ export class ForeignChainReplicator {
     const toCurrency = NonEvmChainsIds.includes(chainId) ? (<IGenericBlockchain>blockchain).toBaseCurrency : parseEther;
 
     this.testBalanceThreshold(chainId, balance, toCurrency, blockchain.wallet.address);
-  };
-
-  private isDispatcherArchitecture = async (chainId: TForeignChainsIds): Promise<boolean> => {
-    try {
-      const nonEvm = NonEvmChainsIds.includes(chainId);
-
-      if (nonEvm) {
-        return false;
-      }
-
-      const blockchain = nonEvm
-        ? this.blockchainRepository.getGeneric(chainId)
-        : this.blockchainRepository.get(chainId);
-
-      const contract = nonEvm
-        ? this.chainContractRepository.getGeneric(chainId)
-        : this.chainContractRepository.get(chainId);
-
-      let address = contract.address();
-
-      if (!address) {
-        await contract.resolveContract();
-        address = contract.address();
-      }
-
-      const data = ethers.utils.id('VERSION()').slice(0, 10);
-
-      const provider = await blockchain.getProvider();
-      const version = await provider.call({ to: address, data });
-      const versionWithDispatcher = 2;
-      return parseInt(version.toString(), 16) == versionWithDispatcher;
-    } catch (ignore) {
-      return false;
-    }
   };
 
   private testBalanceThreshold = (

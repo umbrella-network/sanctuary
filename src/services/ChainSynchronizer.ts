@@ -2,14 +2,14 @@ import { Logger } from 'winston';
 import { ABI, ContractRegistry } from '@umb-network/toolbox';
 import { inject, injectable } from 'inversify';
 import ChainInstance, { IChainInstance } from '../models/ChainInstance';
-import { Contract, Event } from 'ethers';
+import { Contract, ethers, Event } from 'ethers';
 import { LogRegistered } from '../types/events';
 import { CHAIN_CONTRACT_NAME, CHAIN_CONTRACT_NAME_BYTES32 } from '@umb-network/toolbox/dist/constants';
 import { CreateBatchRanges } from './CreateBatchRanges';
 import Settings from '../types/Settings';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
-import { ChainsIds } from '../types/ChainsIds';
+import { ChainsIds, NonEvmChainsIds } from '../types/ChainsIds';
 import * as fastq from 'fastq';
 import type { queueAsPromised } from 'fastq';
 import { BlockRepository } from '../repositories/BlockRepository';
@@ -103,6 +103,7 @@ class ChainSynchronizer {
     toBlock: number
   ): Promise<IChainInstance[]> => {
     const events = await this.scanForEvents(chainId, fromBlock, toBlock);
+
     const offsets = await this.resolveOffsets(
       chainId,
       events.map((event) => event.destination)
@@ -110,10 +111,17 @@ class ChainSynchronizer {
 
     this.logger.debug(`[${chainId}] got ${events.length} events for new Chain at ${fromBlock}-${toBlock}`);
 
+    const versions = await Promise.all(
+      events.map((logRegistered) => {
+        return this.resolveVersion(chainId, logRegistered.destination);
+      })
+    );
+
     return Promise.all(
       events.map((logRegistered, i) => {
         const { destination, anchor } = logRegistered;
-        this.logger.info(`[${chainId}] Detected new Chain contract: ${destination} at ${anchor}`);
+
+        this.logger.info(`[${chainId}] Detected new Chain: ${destination} v${versions[i]} at ${anchor}`);
 
         return ChainInstance.findOneAndUpdate(
           {
@@ -124,6 +132,7 @@ class ChainSynchronizer {
             address: destination,
             blocksCountOffset: offsets[i],
             chainId: chainId,
+            version: versions[i],
           },
           {
             new: true,
@@ -220,6 +229,24 @@ class ChainSynchronizer {
       anchor: event.blockNumber,
     };
   }
+
+  private resolveVersion = async (chainId: ChainsIds, chainAddress: string): Promise<number> => {
+    try {
+      const nonEvm = NonEvmChainsIds.includes(chainId);
+
+      const blockchain = nonEvm
+        ? this.blockchainRepository.getGeneric(chainId)
+        : this.blockchainRepository.get(chainId);
+
+      const data = ethers.utils.id('VERSION()').slice(0, 10);
+
+      const provider = await blockchain.getProvider();
+      const version = await provider.call({ to: chainAddress, data });
+      return parseInt(version.toString(), 16);
+    } catch (ignore) {
+      return 1;
+    }
+  };
 }
 
 export default ChainSynchronizer;
