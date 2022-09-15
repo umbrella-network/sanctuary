@@ -40,6 +40,7 @@ class BlockSynchronizer {
       .filter((data) => !!data);
 
     if (chainsChecksData.filter((data) => data.reverted).length > 0) {
+      this.logger.info('DEBUG: return, blocks were reverted');
       return;
     }
 
@@ -58,7 +59,7 @@ class BlockSynchronizer {
     // masterchain doesn't have to have latest data, so we simply search for highest value
     masterChainStatus.nextBlockId = chainsChecksData.reduce((acc, data) => Math.max(acc, data.status.nextBlockId), 0);
 
-    this.logger.info('Synchronizing blocks');
+    this.logger.info(`Synchronizing blocks with nextBlockId ${masterChainStatus.nextBlockId}`);
 
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
 
