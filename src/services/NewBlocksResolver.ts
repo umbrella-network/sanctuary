@@ -228,15 +228,13 @@ class NewBlocksResolver {
     await Promise.all(
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
+        this.logger.info(`[${chainId}] New block detected: ${newBlock.blockId}`);
+        const mongoBlockId = `block::${newBlock.blockId}`;
+        const mongoBlockDataId = `block::${chainId}::${newBlock.blockId}`;
+        const existBlockChainData = await BlockChainData.find({ blockId: newBlock.blockId, chainId });
+        this.logger.info(`[${chainId}] BlockChainData exist? `, existBlockChainData);
 
-        const exist = await Block.find({ blockId: newBlock.blockId });
-
-        if (exist.length == 0) {
-          this.logger.info(`[${chainId}] New block detected: ${newBlock.blockId}`);
-
-          const mongoBlockId = `block::${newBlock.blockId}`;
-          const mongoBlockDataId = `block::${chainId}::${newBlock.blockId}`;
-
+        if (existBlockChainData.length == 0) {
           try {
             // BlockChainData must be first, because `Block` can revert because of duplication, what is ok.
             await BlockChainData.create({
@@ -251,18 +249,22 @@ class NewBlocksResolver {
             });
 
             this.logger.info(`[${chainId}] saving dispatched BlockChainData: ${newBlock.blockId}`);
+            const exist = await Block.find({ blockId: newBlock.blockId });
+            this.logger.info(`[${chainId}] new block exist? `, exist);
 
-            await Block.create({
-              _id: mongoBlockId,
-              root: newBlock.root,
-              blockId: newBlock.blockId,
-              staked: newBlock.staked,
-              power: newBlock.power,
-              votes: newBlock.votes,
-              voters: newBlock.voters,
-              dataTimestamp,
-              status: BlockStatus.Completed,
-            });
+            if (exist.length == 0) {
+              await Block.create({
+                _id: mongoBlockId,
+                root: newBlock.root,
+                blockId: newBlock.blockId,
+                staked: newBlock.staked,
+                power: newBlock.power,
+                votes: newBlock.votes,
+                voters: newBlock.voters,
+                dataTimestamp,
+                status: BlockStatus.Completed,
+              });
+            }
 
             this.logger.info(`[${chainId}] saving dispatched block: ${newBlock.blockId}`);
           } catch (e) {
