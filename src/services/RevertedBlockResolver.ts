@@ -15,6 +15,12 @@ class RevertedBlockResolver {
       return -1;
     }
 
+    if (nextBlockId < 500_000) {
+      // in case of bugs, we don't want to delete all the blocks, so this is sanity check
+      this.logger.warn(`[${chainId}] RevertedBlockResolver: invalid nextBlockId ${nextBlockId}`);
+      return -1;
+    }
+
     this.logger.warn(`[${chainId}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
 
     const blockRes = await this.revertBlockChainDatas(nextBlockId, chainId);
