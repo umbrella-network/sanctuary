@@ -236,23 +236,11 @@ class NewBlocksResolver {
 
         if (existBlockChainData.length == 0) {
           try {
-            // BlockChainData must be first, because `Block` can revert because of duplication, what is ok.
-            await BlockChainData.create({
-              _id: mongoBlockDataId,
-              anchor: newBlock.anchor,
-              chainId,
-              chainAddress: newBlock.chainAddress,
-              blockId: newBlock.blockId,
-              minter: newBlock.minter,
-              status: BlockStatus.Completed,
-              dataTimestamp,
-            });
-
             this.logger.info(`[${chainId}] saving dispatched BlockChainData: ${newBlock.blockId}`);
-            const exist = await Block.find({ blockId: newBlock.blockId });
-            this.logger.info(`[${chainId}] new block exist? `, exist);
+            const exist = await Block.findOne({ blockId: newBlock.blockId }).exec();
+            this.logger.info(`[${chainId}] new block exist? `, !!exist);
 
-            if (exist.length == 0) {
+            if (exist) {
               await Block.create({
                 _id: mongoBlockId,
                 root: newBlock.root,
@@ -265,6 +253,17 @@ class NewBlocksResolver {
                 status: BlockStatus.Completed,
               });
             }
+
+            await BlockChainData.create({
+              _id: mongoBlockDataId,
+              anchor: newBlock.anchor,
+              chainId,
+              chainAddress: newBlock.chainAddress,
+              blockId: newBlock.blockId,
+              minter: newBlock.minter,
+              status: exist ? exist.status : BlockStatus.Completed,
+              dataTimestamp,
+            });
 
             this.logger.info(`[${chainId}] saving dispatched block: ${newBlock.blockId}`);
           } catch (e) {
