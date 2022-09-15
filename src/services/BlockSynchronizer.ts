@@ -64,18 +64,26 @@ class BlockSynchronizer {
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
 
     if (!mongoBlocks.length) {
+      this.logger.info('[BlockSynchronizer] No mongoBlocks');
       return;
     }
 
-    this.logger.debug(`Got ${mongoBlocks.length} mongoBlocks to synchronize`);
+    this.logger.info(`Got ${mongoBlocks.length} mongoBlocks to synchronize`);
 
     const [leavesSynchronizers, blockIds] = await this.processBlocks(masterChainStatus, mongoBlocks);
+
+    this.logger.info(`[BlockSynchronizer] blockIds: ${blockIds}`);
+    this.logger.info(`[BlockSynchronizer] leavesSynchronizers: ${leavesSynchronizers}`);
+    this.logger.info(`[BlockSynchronizer] blockIds.length > 0: ${blockIds.length > 0}`);
 
     if (blockIds.length > 0) {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
       const updated = await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
+      this.logger.info(`Synchronized updated: ${updated}`);
       const success = updated.updatedFinalizedBlocks;
+      this.logger.info(`Synchronized success: ${success}`);
       const failed = updated.updatedFailedBlocks;
+      this.logger.info(`Synchronized failed: ${failed}`);
       this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total: ${success + failed}`);
     }
   }
@@ -102,12 +110,32 @@ class BlockSynchronizer {
   }
 
   private getMongoBlocksToSynchronize = async (): Promise<IBlock[]> => {
-    const blocksInProgress = await Block.find({
+    const blockChainDatasInProgress = await BlockChainData.find({
       status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] },
     })
       .sort({ blockId: -1 })
       .limit(this.settings.app.blockSyncBatchSize)
       .exec();
+
+    const blockChainDataBlockIds = blockChainDatasInProgress.map((blockChainData) => blockChainData.blockId);
+
+    this.logger.info(`[BlockSynchronizer]: ${blockChainDataBlockIds}`);
+    this.logger.info(`[BlockSynchronizer] length: ${blockChainDataBlockIds.length}`);
+
+    const blocksInProgress = await Block.find({
+      $or: [
+        { status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] } },
+        { blockId: { $in: blockChainDataBlockIds } },
+      ],
+    })
+      .sort({ blockId: -1 })
+      .limit(this.settings.app.blockSyncBatchSize)
+      .exec();
+
+    const blocksInProgressBlockIds = blocksInProgress.map((block) => block.blockId);
+
+    this.logger.info(`[BlockSynchronizer] blockId: ${blocksInProgressBlockIds}`);
+    this.logger.info(`[BlockSynchronizer] length: ${blocksInProgressBlockIds.length}`);
 
     const confirmations = Object.values(this.settings.blockchain.multiChains).reduce(
       (acc, s) => Math.max(acc, s.confirmations),
@@ -181,6 +209,8 @@ class BlockSynchronizer {
       failed.length == 0 ? undefined : updateFailedBlockData,
     ]);
 
+    this.logger.info(`[BlockSynchronizer] ${updatedFinalizedBlocks}, ${updatedFailedBlocks}`);
+
     return {
       updatedFinalizedBlocks: updatedFinalizedBlocks ? updatedFinalizedBlocks.nModified : 0,
       updatedFailedBlocks: updatedFailedBlocks ? updatedFailedBlocks.nModified : 0,
@@ -242,7 +272,7 @@ class BlockSynchronizer {
             this.logger.info(`Start synchronizing leaves for completed block: ${mongoBlock.blockId}`);
             blockIds.push(mongoBlock.blockId);
             leavesSynchronizers.push(this.leavesSynchronizer.apply(chainStatus, mongoBlock._id));
-            return;
+            break;
 
           case BlockStatus.Finalized:
           case BlockStatus.Failed:
