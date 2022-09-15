@@ -12,6 +12,7 @@ class RevertedBlockResolver {
 
   async apply(lastSubmittedBlockId: number, nextBlockId: number, chainId: string): Promise<number> {
     if (lastSubmittedBlockId <= nextBlockId) {
+      this.logger.info(`DEBUG: [${chainId}] no reverts`);
       return -1;
     }
 
