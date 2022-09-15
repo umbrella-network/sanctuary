@@ -225,7 +225,8 @@ class BlockSynchronizer {
     }).limit(1);
 
     if (!blockChainData) {
-      throw new Error(`Block ${mongoBlock.blockId} saved without BlockChainData`);
+      this.noticeError(`Block ${mongoBlock.blockId} saved without BlockChainData`);
+      return false;
     }
 
     const chainContract = this.chainContractRepository.get(blockChainData.chainId);
