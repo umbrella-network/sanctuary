@@ -89,6 +89,8 @@ class BlockSynchronizer {
       this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
     ]);
 
+    this.logger.info(`DEBUG: checkForRevertedBlocks: ${JSON.stringify(chainStatus)}`);
+
     const reverted = await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId, chainId);
 
     return {
