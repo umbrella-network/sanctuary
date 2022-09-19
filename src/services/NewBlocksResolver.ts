@@ -227,7 +227,7 @@ class NewBlocksResolver {
         const mongoBlockId = `block::${newBlock.blockId}`;
         const mongoBlockDataId = `block::${chainId}::${newBlock.blockId}`;
         const existBlockChainData = await BlockChainData.find({ blockId: newBlock.blockId, chainId });
-        this.logger.info(`[${chainId}] BlockChainData exist? `, existBlockChainData);
+        this.logger.info(`[${chainId}] BlockChainData exist? ${existBlockChainData.length == 0}`);
 
         if (existBlockChainData.length == 0) {
           try {
@@ -260,7 +260,7 @@ class NewBlocksResolver {
               dataTimestamp,
             });
 
-            this.logger.info(`[${chainId}] saving dispatched block: ${newBlock.blockId}`);
+            this.logger.info(`[${chainId}] saved dispatched block: ${newBlock.blockId}, block exist? ${!!exist}`);
           } catch (e) {
             if (!e.message.includes('E11000')) {
               await Promise.allSettled([
