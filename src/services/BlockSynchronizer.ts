@@ -52,6 +52,7 @@ class BlockSynchronizer {
     }
 
     const masterChainId = this.settings.blockchain.homeChain.chainId;
+    this.logger.info(`DEBUG: ${JSON.stringify(chainsChecksData)}`);
 
     // we search for MasterChain, because we need active list of validators
     const masterChainStatus: ChainStatus | undefined = chainsChecksData.filter(
