@@ -64,7 +64,7 @@ logger.info('Starting Scheduler...');
       settings.jobs.chainsWorkerSchedulerSettings
     ))[chainId];
 
-    logger.info(`scheduleWorker blockResolverWorker(${chainId})...`);
+    logger.info(`scheduleWorker blockResolverWorker(${chainId}), interval ${schedulerSettings.interval}ms`);
 
     setInterval(
       async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
