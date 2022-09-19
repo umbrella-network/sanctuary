@@ -11,7 +11,7 @@ import Settings, { SinglentonWorkerSchedulerSettings } from './types/Settings';
 import logger from './lib/logger';
 import Migrations from './services/Migrations';
 import { ForeignChainsIds } from './types/ChainsIds';
-import { SingletonWorker } from './workers/SingletonWorker';
+import BasicWorker from './workers/BasicWorker';
 
 logger.info('Starting Scheduler...');
 
@@ -22,24 +22,20 @@ logger.info('Starting Scheduler...');
   const blockResolverWorker = Application.get(BlockResolverWorker);
   const metricsWorker = Application.get(MetricsWorker);
   const foreignChainReplicationWorker = Application.get(ForeignChainReplicationWorker);
+  const jobCode = String(Math.floor(Math.random() * 1000));
 
   await Migrations.apply();
 
-  const scheduleWorker = async (
-    worker: SingletonWorker,
-    workerSettings: SinglentonWorkerSchedulerSettings,
-    chainId: string
-  ): Promise<void> => {
+  const scheduleWorker = async (worker: BasicWorker, chainId: string): Promise<void> => {
     try {
       await worker.enqueue(
         {
           chainId,
-          lockTTL: workerSettings.lockTTL,
-          interval: workerSettings.interval,
         },
         {
           removeOnComplete: true,
           removeOnFail: true,
+          jobId: `${worker.queueName}-${chainId}-${jobCode}`,
         }
       );
     } catch (e) {
@@ -53,10 +49,7 @@ logger.info('Starting Scheduler...');
       settings.jobs.chainsWorkerSchedulerSettings
     ))[foreignChainId];
 
-    setInterval(
-      async () => scheduleWorker(foreignChainReplicationWorker, schedulerSettings, foreignChainId),
-      schedulerSettings.interval
-    );
+    setInterval(async () => scheduleWorker(foreignChainReplicationWorker, foreignChainId), schedulerSettings.interval);
   }
 
   for (const chainId of Object.keys(settings.blockchain.multiChains)) {
@@ -66,10 +59,7 @@ logger.info('Starting Scheduler...');
 
     logger.info(`scheduleWorker blockResolverWorker(${chainId}), interval ${schedulerSettings.interval}ms`);
 
-    setInterval(
-      async () => scheduleWorker(blockResolverWorker, schedulerSettings, chainId),
-      schedulerSettings.interval
-    );
+    setInterval(async () => scheduleWorker(blockResolverWorker, chainId), schedulerSettings.interval);
   }
 
   setInterval(async () => {

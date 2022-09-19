@@ -1,26 +1,21 @@
 import Bull from 'bullmq';
-import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 import NewBlocksResolver from '../services/NewBlocksResolver';
-import Settings from '../types/Settings';
 import ChainSynchronizer from '../services/ChainSynchronizer';
 import newrelic from 'newrelic';
 import { ChainsIds } from '../types/ChainsIds';
-import { SingletonWorker } from './SingletonWorker';
 import { sleep } from '../utils/sleep';
 import { DispatcherDetector } from '../services/DispatcherDetector';
+import BasicWorker from './BasicWorker';
 
 @injectable()
-class BlockResolverWorker extends SingletonWorker {
-  @inject('Logger') logger!: Logger;
-  @inject('Settings') settings!: Settings;
+class BlockResolverWorker extends BasicWorker {
   @inject(NewBlocksResolver) newBlocksResolver!: NewBlocksResolver;
   @inject(ChainSynchronizer) chainSynchronizer!: ChainSynchronizer;
   @inject(DispatcherDetector) dispatcherDetector: DispatcherDetector;
 
   apply = async (job: Bull.Job): Promise<void> => {
-    const { lockTTL, chainId, isStale } = this.parseJobData(job);
-    if (isStale) return;
+    const chainId = job.data.chainId;
 
     if (!(await this.dispatcherDetector.apply(chainId))) {
       this.logger.info(`[${chainId}] OLD chain architecture detected`);
@@ -28,7 +23,7 @@ class BlockResolverWorker extends SingletonWorker {
       return;
     }
 
-    await this.synchronizeWork(chainId, lockTTL, async () => this.execute(chainId));
+    await this.execute(chainId);
   };
 
   private execute = async (chainId: ChainsIds): Promise<void> => {
