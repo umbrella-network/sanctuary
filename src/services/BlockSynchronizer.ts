@@ -36,9 +36,7 @@ class BlockSynchronizer {
       Object.values(ChainsIds)
         // Solana is replicating, so we don't want to sync block for it
         .filter((chainId) => chainId != ChainsIds.SOLANA)
-        .map((chainId) =>
-          promiseWithTimeout(this.checkForRevertedBlocks(chainId), 20_000)
-        )
+        .map((chainId) => promiseWithTimeout(this.checkForRevertedBlocks(chainId), 20_000))
     );
 
     const chainsChecksData = chainsChecksDataSettled
