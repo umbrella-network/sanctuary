@@ -71,7 +71,6 @@ class ChainSynchronizer {
   };
 
   private synchronizeChains = async (chainId: ChainsIds, currentBlockNumber: number): Promise<void> => {
-    this.logger.info(`[${chainId}] calculating block number range.`);
     const blockchain = this.blockchainRepository.get(chainId);
 
     const [fromBlock, toBlock] = await this.calculateBlockNumberRange(

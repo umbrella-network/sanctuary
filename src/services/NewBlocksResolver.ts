@@ -65,7 +65,7 @@ class NewBlocksResolver {
     const [logMintEvents, logVoteEvents] = await this.getChainLogsEvents(chainId, fromBlock, toBlock);
 
     if (!logMintEvents.length) {
-      this.logger.warn(`[${chainId}] No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`);
+      this.logger.info(`[${chainId}] No logMintEvents for blocks ${fromBlock} - ${toBlock} (${logVoteEvents.length})`);
       return;
     }
 
@@ -168,7 +168,7 @@ class NewBlocksResolver {
             const logVoters = logVotersByBlockId.get(logMint.blockId);
 
             if (!logVoters) {
-              this.logger.error(`LogVoters does not exist for blockId ${logMint.blockId}`);
+              this.noticeError(`LogVoters does not exist for blockId ${logMint.blockId}`);
               return undefined;
             }
 
@@ -223,17 +223,16 @@ class NewBlocksResolver {
     await Promise.all(
       newBlocks.map(async (newBlock) => {
         const dataTimestamp = new Date(newBlock.dataTimestamp * 1000);
-        this.logger.info(`[${chainId}] New block detected: ${newBlock.blockId}`);
         const mongoBlockId = `block::${newBlock.blockId}`;
         const mongoBlockDataId = `block::${chainId}::${newBlock.blockId}`;
         const existBlockChainData = await BlockChainData.find({ blockId: newBlock.blockId, chainId });
-        this.logger.info(`[${chainId}] BlockChainData exist? ${existBlockChainData.length == 0}`);
 
         if (existBlockChainData.length == 0) {
+          this.logger.info(`[${chainId}] New block detected: ${newBlock.blockId}`);
+
           try {
             this.logger.info(`[${chainId}] saving dispatched BlockChainData: ${newBlock.blockId}`);
             const exist = await Block.findOne({ blockId: newBlock.blockId }).exec();
-            this.logger.info(`[${chainId}] new block exist? ${!!exist}`);
 
             if (!exist) {
               await Block.create({

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Rename ForeignBlock model to BlockChainData
 - Execute migrations once before scheduling workers
 - Remove anchor, minter and chainAddress from Block collection
+- Adjust the way how blocks are resolved and synchronized to support multichain
 
 ## [5.1.3] - 2022-09-30
 ### Changed

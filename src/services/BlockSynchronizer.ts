@@ -30,7 +30,7 @@ class BlockSynchronizer {
   @inject(LatestIdsProvider) latestIdsProvider: LatestIdsProvider;
 
   async apply(): Promise<void> {
-    this.logger.info(`DEBUG: BlockSynchronizer timeout: ${this.settings.jobs.blockCreation.interval}`);
+    this.logger.debug(`BlockSynchronizer timeout: ${this.settings.jobs.blockCreation.interval}`);
 
     const chainsChecksDataSettled = await Promise.allSettled(
       Object.values(ChainsIds)
@@ -44,13 +44,11 @@ class BlockSynchronizer {
       .filter((data) => !!data);
 
     if (chainsChecksData.filter((data) => data.reverted).length > 0) {
-      // TODO: remove 'DEBUG' logs or make them `.debug`
-      this.logger.info('DEBUG: return, blocks were reverted');
+      this.logger.info('[BlockSynchronizer] return, blocks were reverted');
       return;
     }
 
     const masterChainId = this.settings.blockchain.homeChain.chainId;
-    this.logger.info(`DEBUG: ${JSON.stringify(chainsChecksData)}`);
 
     // we search for MasterChain, because we need active list of validators
     const masterChainStatus: ChainStatus | undefined = chainsChecksData.filter(
@@ -70,7 +68,7 @@ class BlockSynchronizer {
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
 
     if (!mongoBlocks.length) {
-      this.logger.info('[BlockSynchronizer] No mongoBlocks');
+      this.logger.info('[BlockSynchronizer] No mongoBlocks to synchronize');
       return;
     }
 
@@ -78,24 +76,17 @@ class BlockSynchronizer {
 
     const [leavesSynchronizers, blockIds] = await this.processBlocks(masterChainStatus, mongoBlocks);
 
-    this.logger.info(`[BlockSynchronizer] blockIds: ${blockIds}`);
-    this.logger.info(`[BlockSynchronizer] leavesSynchronizers: ${leavesSynchronizers}`);
-    this.logger.info(`[BlockSynchronizer] blockIds.length > 0: ${blockIds.length > 0}`);
-
     if (blockIds.length > 0) {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
       const updated = await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
-      this.logger.info(`Synchronized updated: ${updated}`);
       const success = updated.updatedFinalizedBlocks;
-      this.logger.info(`Synchronized success: ${success}`);
       const failed = updated.updatedFailedBlocks;
-      this.logger.info(`Synchronized failed: ${failed}`);
       this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total: ${success + failed}`);
     }
   }
 
   async checkForRevertedBlocks(chainId: ChainsIds): Promise<ChainStatusExtended> {
-    this.logger.info(`DEBUG: checkForRevertedBlocks: ${chainId}`);
+    this.logger.debug(`checkForRevertedBlocks: ${chainId}`);
 
     const chain = <ChainContract>this.chainContractRepository.get(chainId);
 
@@ -104,7 +95,7 @@ class BlockSynchronizer {
       this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
     ]);
 
-    this.logger.info(`DEBUG: checkForRevertedBlocks: ${JSON.stringify(chainStatus)}`);
+    this.logger.debug(`checkForRevertedBlocks: ${JSON.stringify(chainStatus)}`);
 
     const reverted = await this.revertedBlockResolver.apply(lastSavedBlockId, chainStatus.nextBlockId, chainId);
 
@@ -125,9 +116,6 @@ class BlockSynchronizer {
 
     const blockChainDataBlockIds = blockChainDatasInProgress.map((blockChainData) => blockChainData.blockId);
 
-    this.logger.info(`[BlockSynchronizer]: ${blockChainDataBlockIds}`);
-    this.logger.info(`[BlockSynchronizer] length: ${blockChainDataBlockIds.length}`);
-
     const blocksInProgress = await Block.find({
       $or: [
         { status: { $nin: [BlockStatus.Finalized, BlockStatus.Failed] } },
@@ -137,11 +125,6 @@ class BlockSynchronizer {
       .sort({ blockId: -1 })
       .limit(this.settings.app.blockSyncBatchSize)
       .exec();
-
-    const blocksInProgressBlockIds = blocksInProgress.map((block) => block.blockId);
-
-    this.logger.info(`[BlockSynchronizer] blockId: ${blocksInProgressBlockIds}`);
-    this.logger.info(`[BlockSynchronizer] length: ${blocksInProgressBlockIds.length}`);
 
     const confirmations = Object.values(this.settings.blockchain.multiChains).reduce(
       (acc, s) => Math.max(acc, s.confirmations),
@@ -175,10 +158,6 @@ class BlockSynchronizer {
 
     const finalized = data.filter((d) => d.status == BlockStatus.Finalized).map((d) => d.blockId);
     const failed = data.filter((d) => d.status == BlockStatus.Failed).map((d) => d.blockId);
-
-    this.logger.info(
-      `[updateSynchronizedBlocks] ${finalized.length}/${failed.length} of ${leavesSynchronizers.length}`
-    );
 
     if (failed.length > 0) {
       this.noticeError(`[updateSynchronizedBlocks] Blocks: ${failed.join(',')}: failed`);
@@ -215,8 +194,6 @@ class BlockSynchronizer {
       failed.length == 0 ? undefined : updateFailedBlockData,
     ]);
 
-    this.logger.info(`[BlockSynchronizer] ${updatedFinalizedBlocks}, ${updatedFailedBlocks}`);
-
     return {
       updatedFinalizedBlocks: updatedFinalizedBlocks ? updatedFinalizedBlocks.nModified : 0,
       updatedFailedBlocks: updatedFailedBlocks ? updatedFailedBlocks.nModified : 0,
@@ -224,10 +201,9 @@ class BlockSynchronizer {
   };
 
   private verifyProcessedBlock = async (mongoBlock: IBlock): Promise<boolean> => {
-    // TODO do we need to handle solana??
     const [blockChainData] = await BlockChainData.find({
       blockId: mongoBlock.blockId,
-      chainId: { $ne: ChainsIds.SOLANA },
+      chainId: { $ne: ChainsIds.SOLANA }, // solana is replicating, so we don't need to verify
     }).limit(1);
 
     if (!blockChainData) {
@@ -244,7 +220,6 @@ class BlockSynchronizer {
       );
 
       await BlockSynchronizer.revertBlocks(mongoBlock.blockId);
-      // blocksWereReverted;
       return true;
     }
 

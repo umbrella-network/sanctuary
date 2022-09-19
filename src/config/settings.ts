@@ -7,7 +7,7 @@ const settings: Settings = {
   port: parseInt(process.env.PORT || '3000'),
   jobs: {
     blockCreation: {
-      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '1000', 10),
+      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '5000', 10),
       lockTTL: parseInt(process.env.BLOCK_CREATION_LOCK_TTL || '20000'),
     },
     metricsReporting: {
@@ -15,7 +15,7 @@ const settings: Settings = {
     },
     chainsWorkerSchedulerSettings: {
       bsc: {
-        interval: parseInt(process.env.BSC_WORKER_SCHEDULER_INTERVAL || '60000'),
+        interval: parseInt(process.env.BSC_WORKER_SCHEDULER_INTERVAL || '10000'),
         lockTTL: parseInt(process.env.BSC_WORKER_SCHEDULER_LOCK_TTL || '30000'),
       },
       ethereum: {
