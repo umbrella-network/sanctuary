@@ -30,12 +30,14 @@ class BlockSynchronizer {
   @inject(LatestIdsProvider) latestIdsProvider: LatestIdsProvider;
 
   async apply(): Promise<void> {
+    this.logger.info(`DEBUG: BlockSynchronizer timeout: ${this.settings.jobs.blockCreation.interval}`);
+
     const chainsChecksDataSettled = await Promise.allSettled(
       Object.values(ChainsIds)
         // Solana is replicating, so we don't want to sync block for it
         .filter((chainId) => chainId != ChainsIds.SOLANA)
         .map((chainId) =>
-          promiseWithTimeout(this.checkForRevertedBlocks(chainId), this.settings.jobs.blockCreation.interval)
+          promiseWithTimeout(this.checkForRevertedBlocks(chainId), 20_000)
         )
     );
 
