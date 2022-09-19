@@ -1,4 +1,4 @@
-import {inject, injectable} from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { NonEvmChainsIds, ChainsIds } from '../types/ChainsIds';
 import ChainInstance from '../models/ChainInstance';
