@@ -16,6 +16,7 @@ import { ChainsIds } from '../types/ChainsIds';
 import LatestIdsProvider from './LatestIdsProvider';
 import BlockChainData from '../models/BlockChainData';
 import { ChainStatusExtended, SETTLED_FULFILLED } from '../types/custom';
+import { promiseWithTimeout } from '../utils/promiseWithTimeout';
 
 @injectable()
 class BlockSynchronizer {
@@ -31,8 +32,11 @@ class BlockSynchronizer {
   async apply(): Promise<void> {
     const chainsChecksDataSettled = await Promise.allSettled(
       Object.values(ChainsIds)
+        // Solana is replicating, so we don't want to sync block for it
         .filter((chainId) => chainId != ChainsIds.SOLANA)
-        .map((chainId) => this.checkForRevertedBlocks(chainId))
+        .map((chainId) =>
+          promiseWithTimeout(this.checkForRevertedBlocks(chainId), this.settings.jobs.blockCreation.interval)
+        )
     );
 
     const chainsChecksData = chainsChecksDataSettled
@@ -40,13 +44,14 @@ class BlockSynchronizer {
       .filter((data) => !!data);
 
     if (chainsChecksData.filter((data) => data.reverted).length > 0) {
+      // TODO: remove 'DEBUG' logs or make them `.debug`
       this.logger.info('DEBUG: return, blocks were reverted');
       return;
     }
 
     const masterChainId = this.settings.blockchain.homeChain.chainId;
 
-    // we search for masterchain, because we need active list of validators
+    // we search for MasterChain, because we need active list of validators
     const masterChainStatus: ChainStatus | undefined = chainsChecksData.filter(
       (data) => data.chainId === masterChainId
     )[0]?.status;

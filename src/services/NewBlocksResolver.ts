@@ -34,11 +34,6 @@ class NewBlocksResolver {
       return;
     }
 
-    // this.chainId = chainId;
-    // this.blockchain = this.blockchainRepository.get(chainId);
-    // this.chainInstanceResolver.setup(chainId);
-    // this.chainContract = <ChainContract>this.chainContractRepository.get(chainId);
-
     const [chainStatus, [, lastAnchor]] = await Promise.all([
       this.chainContractRepository.get(chainId).resolveStatus<ChainStatus>(),
       this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
