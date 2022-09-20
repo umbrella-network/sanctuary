@@ -2,8 +2,7 @@ import { injectable } from 'inversify';
 import { ChainCurrencyEnum } from '../types/ChainCurrency';
 import { ChainsIds as ChainId, ForeignChainsIds, NonEvmChainsIds } from '../types/ChainsIds';
 import BalanceReporter, { BlockReport } from './BalanceReporter';
-
-type PromiseResultStatus = 'fulfilled' | 'rejected';
+import { PromiseResultStatus, SETTLED_FULFILLED, SETTLED_REJECTED } from '../types/custom';
 
 interface PromiseResult {
   status: PromiseResultStatus;
@@ -42,9 +41,9 @@ class ForeignChainBalanceReporter extends BalanceReporter {
   };
 
   private filterResults(results: PromiseResult[]) {
-    const successful = results.filter(({ status }) => status === 'fulfilled').map(({ value }) => value);
+    const successful = results.filter(({ status }) => status === SETTLED_FULFILLED).map(({ value }) => value);
     const rejected = results
-      .filter(({ status }) => status === 'rejected')
+      .filter(({ status }) => status === SETTLED_REJECTED)
       .map(({ reason }) => reason)
       .join(',');
     return {

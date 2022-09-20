@@ -14,6 +14,7 @@ import { getContainer } from '../../../src/lib/getContainer';
 import { loadTestEnv } from '../../helpers';
 import { setupApiKey, teardownTestUser } from '../../helpers/authHelpers';
 import { IApiKey } from '../../../src/models/ApiKey';
+import { BlockStatus } from '@umb-network/toolbox/dist/types/BlockStatuses';
 
 const createBlocks = async (numberOfBlocks = 3): Promise<void> => {
   for (let i = 0; i < numberOfBlocks; i++) {
@@ -101,10 +102,10 @@ describe('getBlockChainDatas', () => {
     let subject: IBlockChainData;
 
     before(async () => {
-      blockChainData = new BlockChainData(blockChainDataFactory.build());
+      blockChainData = new BlockChainData(blockChainDataFactory.build({ status: BlockStatus.Finalized }));
       await blockChainData.save();
 
-      block = new Block(blockFactory.build({ blockId: blockChainData.blockId }));
+      block = new Block(blockFactory.build({ blockId: blockChainData.blockId, status: BlockStatus.Finalized }));
       await block.save();
     });
 
@@ -172,7 +173,7 @@ describe('getBlockChainDatas', () => {
         });
 
         it('returns the correct block _id', async () => {
-          expect(subject._id).to.eq(block._id);
+          expect(subject._id).to.eq(blockChainData._id);
         });
 
         it('returns the correct block blockId', async () => {

@@ -200,13 +200,29 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       `[${this.chainId}] looking for home blocks at ${dataTimestamp.toISOString()} and anchor: ${safeAnchor}`
     );
 
-    return Block.find({
+    const candidates = await Block.find({
       status: BlockStatus.Finalized,
       dataTimestamp: { $gt: dataTimestamp },
+    })
+      .sort({ blockId: -1 })
+      .exec();
+
+    if (candidates.length == 0) {
+      return [];
+    }
+
+    const datas = await BlockChainData.find({
+      blockId: { $in: candidates.map((c) => c.blockId) },
       anchor: { $lte: safeAnchor },
     })
       .sort({ blockId: -1 })
       .limit(1);
+
+    if (datas.length == 0) {
+      return [];
+    }
+
+    return candidates.filter((block) => block.blockId == datas[0].blockId);
   };
 
   protected verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {

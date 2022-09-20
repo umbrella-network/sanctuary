@@ -35,13 +35,17 @@ export class BlockRepository {
   @inject('Settings') protected settings!: Settings;
 
   async find(props: FindProps): Promise<FullBlockData[]> {
-    const { chainId, offset, limit, sort = { blockId: -1 } } = props;
+    const { chainId = this.settings.blockchain.homeChain.chainId, offset, limit, sort = { blockId: -1 } } = props;
 
-    const blockChainData: IBlockChainData[] = await BlockChainData.find({ chainId })
+    const blockChainData: IBlockChainData[] = await BlockChainData.find({ chainId, status: BlockStatus.Finalized })
       .skip(offset)
       .limit(limit)
       .sort(sort)
       .exec();
+
+    if (blockChainData.length == 0) {
+      return [];
+    }
 
     const blocks = await Block.find({ blockId: { $in: blockChainData.map((fb) => fb.blockId) } })
       .sort(sort)
@@ -51,10 +55,13 @@ export class BlockRepository {
   }
 
   async findOne(props: FindOneProps): Promise<FullBlockData | undefined> {
-    const { blockId, chainId } = props;
+    const { blockId, chainId = this.settings.blockchain.homeChain.chainId } = props;
 
-    const blockChainData = await BlockChainData.findOne({ blockId, chainId });
-    const block = await Block.findOne({ blockId });
+    const [block, blockChainData] = await Promise.all([
+      Block.findOne({ blockId }),
+      BlockChainData.findOne({ blockId, chainId }),
+    ]);
+
     if (!block || !blockChainData) return;
 
     return this.augmentBlockWithReplicationData(block, blockChainData);
@@ -64,10 +71,12 @@ export class BlockRepository {
     const { chainId, status } = props;
 
     try {
-      const blockChainData = await BlockChainData.findOne({ chainId }).sort({ blockId: -1 });
-      const query = omitBy({ blockId: blockChainData.blockId, status }, isUndefined);
-      const block = await Block.findOne(query);
-      if (!block || !blockChainData) return;
+      const queryData = omitBy({ chainId, status }, isUndefined);
+      const blockChainData = await BlockChainData.findOne(queryData).sort({ blockId: -1 });
+      if (!blockChainData) return;
+
+      const block = await Block.findOne({ blockId: blockChainData.blockId });
+      if (!block) return;
 
       return this.augmentBlockWithReplicationData(block, blockChainData);
     } catch (e) {
@@ -96,16 +105,46 @@ export class BlockRepository {
     blocks: IBlock[],
     blockChainData: IBlockChainData[]
   ): FullBlockData[] {
-    return blocks.map((block) => {
-      const matchingBlockChainData = blockChainData.find((fb) => fb.blockId == block.blockId);
-      return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
+    const map: Record<number, IBlockChainData> = {};
+
+    blockChainData.forEach((b) => {
+      map[b.blockId] = b;
     });
+
+    return blocks
+      .map((block) => {
+        const matchingBlockChainData = map[block.blockId];
+
+        if (!matchingBlockChainData) {
+          this.logger.error(`No matching Block for blockId: ${block.blockId}`);
+          return undefined;
+        }
+
+        return this.augmentBlockWithReplicationData(block, matchingBlockChainData);
+      })
+      .filter((block) => !!block);
   }
 
   private augmentBlockWithReplicationData(block: IBlock, blockChainData: IBlockChainData): FullBlockData {
-    block.chainAddress = blockChainData.chainAddress;
-    block.anchor = blockChainData.anchor;
-    block.minter = blockChainData.minter;
-    return block;
+    if (block.blockId != blockChainData.blockId) {
+      const msg = `block data does not match: ${block.blockId} vs ${blockChainData.blockId}`;
+      this.logger.error(msg);
+      throw new Error(msg);
+    }
+
+    return {
+      _id: blockChainData._id,
+      chainAddress: blockChainData.chainAddress,
+      blockId: block.blockId,
+      status: block.status,
+      anchor: blockChainData.anchor,
+      dataTimestamp: block.dataTimestamp,
+      root: block.root,
+      minter: blockChainData.minter,
+      staked: block.staked,
+      power: block.power,
+      voters: block.voters,
+      votes: block.votes,
+    };
   }
 }

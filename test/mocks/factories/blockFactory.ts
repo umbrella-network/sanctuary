@@ -6,6 +6,7 @@ import BlockChainData from '../../../src/models/BlockChainData';
 import Leaf from '../../../src/models/Leaf';
 import { inputForBlockModel } from '../../fixtures/inputForBlockModel';
 import { blockChainDataFactory } from './blockChainDataFactory';
+import { BlockStatus } from '../../../src/types/blocks';
 
 export const blockFactory = Factory.define('Block')
   .attr('_id', () => v4())
@@ -29,10 +30,10 @@ export const blockAndLeafFactory = async (): Promise<void> => {
   ]);
 
   await BlockChainData.create([
-    blockChainDataFactory.build({ blockId: 1, chainId: 'bsc' }),
-    blockChainDataFactory.build({ blockId: 2, chainId: 'bsc' }),
-    blockChainDataFactory.build({ blockId: 3, chainId: 'bsc' }),
-    blockChainDataFactory.build({ blockId: 4, chainId: 'bsc' }),
+    blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+    blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+    blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+    blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
   ]);
 
   await Leaf.create([

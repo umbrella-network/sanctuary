@@ -10,38 +10,44 @@ class RevertedBlockResolver {
   @inject('Logger') logger!: Logger;
   @inject('Settings') settings!: Settings;
 
-  async apply(lastSubmittedBlockId: number, nextBlockId: number, chainId?: string): Promise<number> {
+  async apply(lastSubmittedBlockId: number, nextBlockId: number, chainId: string): Promise<number> {
     if (lastSubmittedBlockId <= nextBlockId) {
+      this.logger.debug(`[${chainId}] no reverts`);
       return -1;
     }
 
-    const chainName = chainId || this.settings.blockchain.homeChain.chainId;
-    this.logger.warn(`[${chainName}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
+    if (nextBlockId < 500_000) {
+      // in case of bugs, we don't want to delete all the blocks, so this is sanity check
+      this.logger.warn(`[${chainId}] RevertedBlockResolver: invalid nextBlockId ${nextBlockId}`);
+      return -1;
+    }
 
-    const blockRes = await this.revertBlockChainDatas(nextBlockId, chainName);
+    this.logger.warn(`[${chainId}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
 
-    this.logger.info(`[${chainName}] because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
+    const blockRes = await this.revertBlockChainDatas(nextBlockId, chainId);
+
+    this.logger.info(`[${chainId}] because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
 
     return blockRes.deletedCount;
   }
 
-  private async revertBlocks(nextBlockId: number): Promise<DeleteWriteOpResultObject> {
-    this.logger.warn(`[revertBlocks] deleting many: blockId gte ${nextBlockId}`);
-    return Block.collection.deleteMany({ blockId: { $gte: nextBlockId } });
+  private async revertBlocks(nextBlockId: number): Promise<void> {
+    this.logger.warn(`[revertBlocks] deleting Blocks: blockId gte ${nextBlockId}`);
+    await Block.collection.deleteMany({ blockId: { $gte: nextBlockId } });
   }
 
   private async revertBlockChainDatas(nextBlockId: number, chainId: string): Promise<DeleteWriteOpResultObject> {
-    this.logger.warn(`[${chainId}] deleting many: blockId gte ${nextBlockId}`);
+    this.logger.warn(`[${chainId}] deleting many BlockChainData: blockId gte ${nextBlockId}`);
 
     const deleteBlockChainData = await BlockChainData.collection.deleteMany({
       chainId: chainId,
       blockId: { $gte: nextBlockId },
     });
 
-    const blockChainCount = await BlockChainData.collection.count({ blockId: { $gte: nextBlockId } });
+    const remainingBlockChainDatas = await BlockChainData.collection.countDocuments({ blockId: { $gte: nextBlockId } });
 
-    if (blockChainCount === 0) {
-      return this.revertBlocks(nextBlockId);
+    if (remainingBlockChainDatas === 0) {
+      await this.revertBlocks(nextBlockId);
     }
 
     return deleteBlockChainData;
