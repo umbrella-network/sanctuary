@@ -21,7 +21,7 @@ import { loadTestEnv } from '../helpers';
 import { setupDatabase, teardownDatabase } from '../helpers/databaseHelpers';
 import { StubbedInstance } from 'ts-sinon';
 import { BlockchainSettings } from '../../src/types/Settings';
-import BlockChainData from '../../src/models/BlockChainData';
+import BlockChainData, { IBlockChainData } from '../../src/models/BlockChainData';
 import { blockChainDataFactory } from '../mocks/factories/blockChainDataFactory';
 
 describe('BlockSynchronizer', () => {
@@ -29,6 +29,7 @@ describe('BlockSynchronizer', () => {
     loadTestEnv();
     await setupDatabase();
     await BlockChainData.deleteMany();
+    await Block.deleteMany();
 
     await ChainInstance.findOneAndUpdate(
       { address: chainAddress },
@@ -50,7 +51,13 @@ describe('BlockSynchronizer', () => {
       randomBlocks.map((block) =>
         Promise.all([
           Block.findOneAndUpdate({ _id: block._id }, block, { new: true, upsert: true }),
-          BlockChainData.create(blockChainDataFactory.build({ _id: `block::bsc::${block._id}` })),
+          BlockChainData.create(
+            blockChainDataFactory.build({
+              _id: `block::bsc::${block._id}`,
+              blockId: block.blockId,
+              status: block.status,
+            })
+          ),
         ])
       )
     );
@@ -113,6 +120,7 @@ describe('BlockSynchronizer', () => {
       });
 
       chainContractRepository.get.returns(<ChainContract>(<unknown>chainContract));
+
       blockchainRepository.get.returns({
         chainId: 'bsc',
         isHomeChain: false,
@@ -125,6 +133,7 @@ describe('BlockSynchronizer', () => {
         settings: {} as BlockchainSettings,
         provider: provider,
       });
+
       chainContractRepository.get.returns(<ChainContract>(<unknown>chainContract));
 
       container.bind(ChainInstanceResolver).toConstantValue(<ChainInstanceResolver>(<unknown>chainInstanceResolver));
@@ -143,24 +152,25 @@ describe('BlockSynchronizer', () => {
     });
 
     it('reverts block when detect invalid root', async () => {
+      const validRoot = randomBlocks[0].root;
+
       chainContract.resolveBlockData.resolves({
         ...arbitraryBlockFromChain,
-        root: '0xd4dd03cde5bf7478f1cce81433ef917cdbd235811769bc3495ab6ab49aada5a6',
+        root: validRoot,
       });
 
       await resolveChainStatus(BigNumber.from(11)); // new blocks
 
       const blocksBefore: IBlock[] = await Block.find({});
-      // const blocksChainDataBefore: IBlockChainData[] = await BlockChainData.find({});
+      const blocksChainDataBefore: IBlockChainData[] = await BlockChainData.find({});
       expect(blocksBefore.length).to.be.equal(3);
-      // expect(blocksChainDataBefore.length).to.be.equal(3);
+      expect(blocksChainDataBefore.length).to.be.equal(3);
       await blockSynchronizer.apply();
 
       const blocks: IBlock[] = await Block.find({});
-      // const blocksChainData: IBlockChainData[] = await BlockChainData.find({});
+      const blocksChainData: IBlockChainData[] = await BlockChainData.find({});
       expect(blocks.length).to.be.equal(2);
-      // TODO for Dariusz - This test should pass after change on chainSynchronizer
-      // expect(blocksChainData.length).to.be.equal(2);
+      expect(blocksChainData.length).to.be.equal(2);
     });
 
     it('finalizes completed blocks on successful synchronization', async () => {

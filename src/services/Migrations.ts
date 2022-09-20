@@ -8,6 +8,7 @@ import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
 import mongoose, { Model } from 'mongoose';
 import { sleep } from '../utils/sleep';
 import ForeignBlock, { IForeignBlock } from '../models/ForeignBlock';
+import { BlockStatus } from '../types/blocks';
 
 class Migrations {
   static async apply(): Promise<void> {
@@ -162,13 +163,16 @@ class Migrations {
    * 2. Rename foreignblocks collection to blockchaindatas
    * 3. Insert all blocks from blocks collection
    *   into blockchaindatas collection setting foreignchainId='bsc'
+   * 4. Get blockchaindatas with missing status
+   * 5. Copy status from blocks
+   * 6. Update missing status with New
    */
   private static migrateTo600 = async () => {
     await sleep(15000); // this is necessary to blockchaindatas collection be created
     const version = '6.0.0';
     const startTime = new Date().getTime();
     const indexesToRemove = ['blockId_1_foreignChainId_1', 'chainAddress_1', 'minter_1'];
-    const indexesToCreate = [{ blockId: -1 }, { anchor: -1 }];
+    const indexesToCreate = [{ blockId: -1 }, { anchor: -1 }, { status: 1 }];
 
     await Migrations.wrapMigration(version, async () => {
       const session = await mongoose.startSession();
@@ -177,9 +181,6 @@ class Migrations {
         const db = mongoose.connection.db;
         const blockChainDataCount = await BlockChainData.countDocuments({});
         console.log(`[Migrations(${version})] blockChainDataCount ${blockChainDataCount}`);
-        if (blockChainDataCount > 0) {
-          throw new Error(`[Migrations(${version})] BlockChainData already have data`);
-        }
         await db.dropCollection('blockchaindatas');
         console.log(`[Migrations(${version})] Dropped collection`);
         await Migrations.removeIndexes<IForeignBlock>(indexesToRemove, ForeignBlock);
@@ -191,12 +192,13 @@ class Migrations {
         await Migrations.createIndexes<IBlockChainData>(indexesToCreate, BlockChainData);
         console.log(`[Migrations(${version})] Created Indexes`);
 
-        const blocks = await Block.find();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blocks = (await Block.find().exec()) as any[];
         const blockDatas = [];
         const batchSize = 500;
 
         for (let i = 0; i < blocks.length; i++) {
-          if (!blocks[i].anchor || !blocks[i].chainAddress || blocks[i].blockId || blocks[i].minter) {
+          if (!blocks[i].anchor || !blocks[i].chainAddress || !blocks[i].blockId || !blocks[i].minter) {
             console.warn(`Missing important field for block ${blocks[i]._id}`);
             continue;
           }
@@ -205,6 +207,7 @@ class Migrations {
             _id: `block::bsc::${blocks[i].blockId}`,
             anchor: blocks[i].anchor,
             chainId: 'bsc',
+            status: blocks[i].status,
             chainAddress: blocks[i].chainAddress,
             minter: blocks[i].minter,
             blockId: blocks[i].blockId,
@@ -222,9 +225,40 @@ class Migrations {
           );
         });
 
+        console.log(`[Migrations(${version})] Start copying missing status`);
+        const blockChainDatas = await BlockChainData.find({ status: undefined });
+        console.log(`[Migrations(${version})] number of blockChainDatas with missing status ${blockChainDatas.length}`);
+
+        const blocksWithStatus = await Block.find({
+          blockId: { $in: blockChainDatas.map((blockchainData) => blockchainData.blockId) },
+        }).exec();
+
+        console.log(`[Migrations(${version})] number of blocks found ${blocksWithStatus.length}`);
+
+        await session.withTransaction(async () => {
+          await Promise.all(
+            blocksWithStatus.map((block) => {
+              return BlockChainData.updateMany({ blockId: block.blockId }, { status: block.status as BlockStatus });
+            })
+          );
+        });
+
+        const blockChainDatas2 = await BlockChainData.find({ status: undefined });
+
+        console.log(
+          `[Migrations(${version})] number of blockChainDatas with missing status(2) ${blockChainDatas2.length}`
+        );
+
+        await session.withTransaction(async () => {
+          await BlockChainData.updateMany({ status: undefined }, { status: BlockStatus.New });
+        });
+
         await session.endSession();
       } catch (e) {
-        await session.abortTransaction();
+        if (await session.inTransaction()) {
+          await session.abortTransaction();
+        }
+
         throw new Error(`[Migrations(${version})] Aborting transaction ${e}`);
       } finally {
         const endTime = new Date().getTime();

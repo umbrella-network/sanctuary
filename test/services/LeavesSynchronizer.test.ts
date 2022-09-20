@@ -10,7 +10,7 @@ import Leaf from '../../src/models/Leaf';
 import moxios from 'moxios';
 import { LeafValueCoder } from '@umb-network/toolbox';
 import { expect } from 'chai';
-import { inputForBlockModel } from '../fixtures/inputForBlockModel';
+import { inputForBlockChainDataModel, inputForBlockModel } from '../fixtures/inputForBlockModel';
 import { ChainContract } from '../../src/contracts/ChainContract';
 import FCD from '../../src/models/FCD';
 import { ChainStatus } from '../../src/types/ChainStatus';
@@ -21,6 +21,7 @@ import { setupDatabase, teardownDatabase } from '../helpers/databaseHelpers';
 import { getTestContainer } from '../helpers/getTestContainer';
 import { loadTestEnv } from '../helpers';
 import { ChainContractRepository } from '../../src/repositories/ChainContractRepository';
+import BlockChainData from '../../src/models/BlockChainData';
 
 const resolveValidators = (chainStatus: ChainStatus): Validator[] => {
   return chainStatus.validators.map((address, i) => {
@@ -96,6 +97,7 @@ describe('LeavesSynchronizer', () => {
 
     // Clearing DB before each test
     await Block.deleteMany({});
+    await BlockChainData.deleteMany({});
     await Leaf.deleteMany({});
   });
 
@@ -103,6 +105,7 @@ describe('LeavesSynchronizer', () => {
     moxios.uninstall();
 
     await Block.deleteMany({});
+    await BlockChainData.deleteMany({});
     await Leaf.deleteMany({});
     await FCD.deleteMany({});
 
@@ -114,6 +117,8 @@ describe('LeavesSynchronizer', () => {
       ...inputForBlockModel,
       root: ethers.utils.keccak256('0x1234'), // overwrite inputForBlockModel with a wrong root hash
     });
+
+    await BlockChainData.create(inputForBlockChainDataModel);
 
     moxios.install();
     moxios.stubRequest(/http:\/\/validator-address\/blocks\/blockId\/.+/, {
@@ -140,6 +145,7 @@ describe('LeavesSynchronizer', () => {
 
   it('returns "true" if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
+    await BlockChainData.create(inputForBlockChainDataModel);
     chainContract.resolveValidators.returns(resolveValidators(chainStatus));
     chainContract.resolveFCDs.resolves([[BigNumber.from(1)], [17005632]]);
     moxios.install();
@@ -157,9 +163,9 @@ describe('LeavesSynchronizer', () => {
 
   it('saves leaves correctly if root hashes match', async () => {
     const block = await Block.create(inputForBlockModel);
+    await BlockChainData.create(inputForBlockChainDataModel);
 
     chainContract.resolveValidators.returns(resolveValidators(chainStatus));
-    chainContract.resolveFCDs.resolves([[BigNumber.from(999)], [BigNumber.from('17005632')]] as any);
 
     const treeData = {
       'ETH-USD': '0x' + LeafValueCoder.encode(100, 'ETH-USD').toString('hex'),
@@ -176,10 +182,8 @@ describe('LeavesSynchronizer', () => {
     await leavesSynchronizer.apply(chainStatus, block._id);
 
     const leaves = await Leaf.find({});
-    const fcds = await FCD.find({});
 
     expect(leaves.length).to.be.equal(1, 'number of created leaves is not correct');
-    expect(fcds.length).to.be.equal(1, 'number of created FCDs is not correct');
 
     const [leaf] = leaves;
 
@@ -187,7 +191,5 @@ describe('LeavesSynchronizer', () => {
     expect(leaf).to.have.property('blockId', 1);
     expect(leaf).to.have.property('key', 'ETH-USD');
     expect(leaf).to.have.property('value', treeData['ETH-USD']);
-
-    expect(fcds[0]).to.have.property('value', '9.99e-16');
   });
 });

@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { BlockStatus } from '../types/blocks';
 
 export type SynchronizationState = {
   synchronizedAt: Date;
@@ -8,13 +9,10 @@ export type SynchronizationState = {
 };
 
 export interface IBlock extends Document {
-  chainAddress: string;
   blockId: number;
-  status: string;
-  anchor: number;
+  status: BlockStatus;
   dataTimestamp: Date;
   root: string;
-  minter: string;
   staked: string;
   power: string;
   voters: Array<string>;
@@ -24,13 +22,13 @@ export interface IBlock extends Document {
 
 const BlockSchema: Schema = new Schema({
   _id: { type: String, required: true },
-  chainAddress: { type: String, required: true, unique: false },
+  chainAddress: { type: String, required: false, unique: false },
   blockId: { type: Number, required: true, unique: true },
-  status: { type: String, required: false },
-  anchor: { type: Number, required: true },
+  status: { type: String, required: true },
+  anchor: { type: Number, required: false },
   dataTimestamp: { type: Date, required: true },
   root: { type: String, required: true },
-  minter: { type: String, required: true },
+  minter: { type: String, required: false },
   staked: { type: String, required: true },
   power: { type: String, required: true },
   voters: { type: [String], required: false, default: [] },
