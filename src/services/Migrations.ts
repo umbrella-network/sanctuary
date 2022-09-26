@@ -1,9 +1,6 @@
 import newrelic from 'newrelic';
 import Block from '../models/Block';
 import Migration from '../models/Migration';
-import ChainInstance from '../models/ChainInstance';
-import Leaf from '../models/Leaf';
-import FCD from '../models/FCD';
 import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
 import mongoose, { Model } from 'mongoose';
 import { sleep } from '../utils/sleep';
@@ -12,13 +9,7 @@ import { BlockStatus } from '../types/blocks';
 
 class Migrations {
   static async apply(): Promise<void> {
-    // await this.migrateTo100();
-    // await this.migrateTo110();
-    // await Migrations.migrateTo121();
-    // await Migrations.migrateTo400();
-    // await Migrations.migrateTo400_3();
-    // await Migrations.migrateTo401();
-    await Migrations.migrateTo600();
+    await Migrations.migrateTo520();
   }
 
   private static hasMigration = async (v: string): Promise<boolean> => {
@@ -51,113 +42,6 @@ class Migrations {
     }
   };
 
-  private static migrateTo100 = async () => {
-    await Migrations.wrapMigration('1.0.0', async () => {
-      const deletedChains = await ChainInstance.collection.deleteMany({ dataTimestamp: { $exists: true } });
-      console.log(`Deleted ${deletedChains.deletedCount} old chains instances`);
-
-      const deletedBlocks = await Block.collection.deleteMany({ blockId: { $exists: false } });
-      console.log(`Deleted ${deletedBlocks.deletedCount} deprecated Blocks`);
-
-      const deletedLeaves = await Leaf.collection.deleteMany({ blockId: { $exists: false } });
-      console.log(`Deleted ${deletedLeaves.deletedCount} deprecated Leaves`);
-
-      const heightIndexes = ['height_-1', 'height_1'];
-
-      heightIndexes.forEach(
-        async (heightIndex): Promise<void> => {
-          if (await Block.collection.indexExists(heightIndex)) {
-            await Block.collection.dropIndex(heightIndex);
-            console.log(`${heightIndex} removed`);
-          }
-        }
-      );
-    });
-  };
-
-  private static migrateTo110 = async () => {
-    await Migrations.wrapMigration('1.1.0', async () => {
-      const deletedChains = await ChainInstance.collection.deleteMany({ anchor: { $exists: false } });
-      console.log(`Deleted ${deletedChains.deletedCount} old chains instances`);
-
-      await Block.collection.drop();
-      console.log('Blocks dropped');
-
-      await Leaf.collection.drop();
-      console.log('Leaves dropped');
-    });
-  };
-
-  private static migrateTo121 = async () => {
-    await Migrations.wrapMigration('1.2.1', async () => {
-      const deleted = await FCD.collection.deleteMany({ dataTimestamp: { $eq: new Date(0) } });
-      console.log(`Deleted ${deleted.deletedCount} old chains instances`);
-    });
-  };
-
-  private static migrateTo400 = async () => {
-    await Migrations.wrapMigration('4.0.0', async () => {
-      const address_1 = 'address_1';
-
-      if (await ChainInstance.collection.indexExists(address_1)) {
-        await ChainInstance.collection.dropIndex(address_1);
-        console.log(`${address_1} removed`);
-      }
-
-      const chains = await ChainInstance.find({ chainId: { $exists: false } });
-
-      await Promise.all(
-        chains.map((chain) => {
-          chain.chainId = 'bsc';
-          return chain.save();
-        })
-      );
-    });
-  };
-
-  private static migrateTo400_3 = async () => {
-    await Migrations.wrapMigration('4.0.0_3', async () => {
-      const indexesToRemove = ['dataTimestamp_-1', 'chainAddress_1'];
-
-      for (const indexToRemove of indexesToRemove) {
-        if (await FCD.collection.indexExists(indexToRemove)) {
-          await FCD.collection.dropIndex(indexToRemove);
-          console.log(`index ${indexToRemove} removed`);
-        }
-      }
-
-      const fcds = await FCD.find({ chainId: { $exists: false } });
-
-      await Promise.all(
-        fcds.map((fcd) => {
-          const newFcd = new FCD();
-          newFcd.chainId = 'bsc';
-          newFcd.key = fcd._id;
-          newFcd.value = fcd.value;
-          newFcd.dataTimestamp = fcd.dataTimestamp;
-          newFcd._id = `bsc::${newFcd.key}`;
-          return newFcd.save();
-        })
-      );
-
-      await FCD.deleteMany({ chainId: { $exists: false } });
-      await FCD.deleteMany({ id: { $exists: false } });
-    });
-  };
-
-  private static migrateTo401 = async () => {
-    await Migrations.wrapMigration('4.0.1', async () => {
-      const foreignBlocks = await BlockChainData.find({ minter: { $exists: false } });
-
-      await Promise.all(
-        foreignBlocks.map((foreignBlock) => {
-          foreignBlock.minter = '0x57a2022Fa04F38207Ab3CD280557CAD6d0b77BE1';
-          return foreignBlock.save();
-        })
-      );
-    });
-  };
-
   /**
    * 1. Delete blockchaindatas since it is created automatically
    * 2. Rename foreignblocks collection to blockchaindatas
@@ -167,9 +51,9 @@ class Migrations {
    * 5. Copy status from blocks
    * 6. Update missing status with New
    */
-  private static migrateTo600 = async () => {
+  private static migrateTo520 = async () => {
     await sleep(15000); // this is necessary to blockchaindatas collection be created
-    const version = '6.0.0';
+    const version = '5.2.0';
     const startTime = new Date().getTime();
     const indexesToRemove = ['blockId_1_foreignChainId_1', 'chainAddress_1', 'minter_1'];
     const indexesToCreate = [{ blockId: -1 }, { anchor: -1 }, { status: 1 }];
