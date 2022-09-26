@@ -75,41 +75,52 @@ class Migrations {
         console.log(`[Migrations(${version})] ForeignBlocks collection renamed to blockchaindatas`);
         await Migrations.createIndexes<IBlockChainData>(indexesToCreate, BlockChainData);
         console.log(`[Migrations(${version})] Created Indexes`);
+        const limit = 5000;
+        const blocksCount = await Block.countDocuments().exec();
+        let offset = 0;
+        console.log(`[Migrations(${version})] found ${blocksCount} blocks`);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const blocks = (await Block.find().exec()) as any[];
-        const blockDatas = [];
-        const batchSize = 500;
+        while (blocksCount >= offset) {
+          console.log(`[Migrations(${version})] Start batch process from ${offset} of ${blocksCount} blocks`);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const blocks = (await Block.find().sort({ blockId: 1 }).skip(offset).limit(limit).exec()) as any[];
+          const blockDatas = [];
+          const batchSize = 500;
 
-        for (let i = 0; i < blocks.length; i++) {
-          if (!blocks[i].anchor || !blocks[i].chainAddress || !blocks[i].blockId || !blocks[i].minter) {
-            console.warn(`Missing important field for block ${blocks[i]._id}`);
-            continue;
+          for (let i = 0; i < blocks.length; i++) {
+            if (!blocks[i].anchor || !blocks[i].chainAddress || !blocks[i].blockId || !blocks[i].minter) {
+              console.warn(`Missing important field for block ${blocks[i]._id}`);
+              continue;
+            }
+
+            blockDatas.push({
+              _id: `block::bsc::${blocks[i].blockId}`,
+              anchor: blocks[i].anchor,
+              chainId: 'bsc',
+              status: blocks[i].status,
+              chainAddress: blocks[i].chainAddress,
+              minter: blocks[i].minter,
+              blockId: blocks[i].blockId,
+            });
           }
 
-          blockDatas.push({
-            _id: `block::bsc::${blocks[i].blockId}`,
-            anchor: blocks[i].anchor,
-            chainId: 'bsc',
-            status: blocks[i].status,
-            chainAddress: blocks[i].chainAddress,
-            minter: blocks[i].minter,
-            blockId: blocks[i].blockId,
+          console.log(`[Migrations(${version})] blockData size: ${blockDatas.length}`);
+          const blockDataBatches = Migrations.splitIntoBatches(blockDatas, batchSize);
+
+          await session.withTransaction(async () => {
+            await Promise.all(
+              blockDataBatches.map((blockData) => {
+                return BlockChainData.insertMany(blockData);
+              })
+            );
           });
+
+          offset += limit;
+          console.log(`[Migrations(${version})] finish batch process`);
         }
 
-        console.log(`[Migrations(${version})] blockData size: ${blockDatas.length}`);
-        const blockDataBatches = Migrations.splitIntoBatches(blockDatas, batchSize);
-
-        await session.withTransaction(async () => {
-          await Promise.all(
-            blockDataBatches.map((blockData) => {
-              return BlockChainData.insertMany(blockData);
-            })
-          );
-        });
-
-        console.log(`[Migrations(${version})] Start copying missing status`);
+        console.log(`[Migrations(${version})] finish ALL batches process`);
+        console.log(`[Migrations(${version})] start copying missing status`);
         const blockChainDatas = await BlockChainData.find({ status: undefined });
         console.log(`[Migrations(${version})] number of blockChainDatas with missing status ${blockChainDatas.length}`);
 
