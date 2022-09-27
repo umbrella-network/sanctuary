@@ -240,8 +240,20 @@ class ChainSynchronizer {
       const data = ethers.utils.id('VERSION()').slice(0, 10);
       const provider = await blockchain.getProvider();
       const version = await provider.call({ to: chainAddress, data });
-      return parseInt(version.toString(), 16);
-    } catch (ignore) {
+
+      if (!version || version === '0x') {
+        throw new Error('version is empty');
+      }
+
+      const versionNumber = parseInt(version.toString(), 16);
+
+      if (version === 'NaN') {
+        throw new Error(`version (${version}) is NaN`);
+      }
+
+      return versionNumber;
+    } catch (e: unknown) {
+      this.logger.debug(`[${chainId}] resolveVersion: ${(<Error>e).message}`);
       return 1;
     }
   };
