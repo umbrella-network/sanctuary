@@ -123,20 +123,34 @@ class Migrations {
         console.log(`[Migrations(${version})] start copying missing status`);
         const blockChainDatas = await BlockChainData.find({ status: undefined });
         console.log(`[Migrations(${version})] number of blockChainDatas with missing status ${blockChainDatas.length}`);
+        const arraySize = 5000;
+        let startPosition = 0;
 
-        const blocksWithStatus = await Block.find({
-          blockId: { $in: blockChainDatas.map((blockchainData) => blockchainData.blockId) },
-        }).exec();
+        while (blockChainDatas.length >= startPosition) {
+          const endPosition = startPosition + arraySize;
+          const blockChainDatasPart = blockChainDatas.slice(startPosition, endPosition);
+          console.log(`[Migrations(${version})] status migration start from ${startPosition} to ${endPosition}`);
 
-        console.log(`[Migrations(${version})] number of blocks found ${blocksWithStatus.length}`);
+          const blocksWithStatus = await Block.find({
+            blockId: { $in: blockChainDatasPart.map((blockchainData) => blockchainData.blockId) },
+          }).exec();
 
-        await session.withTransaction(async () => {
-          await Promise.all(
-            blocksWithStatus.map((block) => {
-              return BlockChainData.updateMany({ blockId: block.blockId }, { status: block.status as BlockStatus });
-            })
-          );
-        });
+          console.log(`[Migrations(${version})] number of blocks with status found ${blocksWithStatus.length}`);
+
+          await session.withTransaction(async () => {
+            await Promise.all(
+              blocksWithStatus.map((block) => {
+                return BlockChainData.updateMany({ blockId: block.blockId }, { status: block.status as BlockStatus });
+              })
+            );
+          });
+
+          console.log(`[Migrations(${version})] updated missing status part`);
+
+          startPosition += arraySize;
+        }
+
+        console.log(`[Migrations(${version})] updated missing status with block status`);
 
         const blockChainDatas2 = await BlockChainData.find({ status: undefined });
 
