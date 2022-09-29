@@ -247,7 +247,7 @@ class ChainSynchronizer {
 
       const versionNumber = parseInt(version.toString(), 16);
 
-      if (version === 'NaN') {
+      if (isNaN(versionNumber)) {
         throw new Error(`version (${version}) is NaN`);
       }
 
