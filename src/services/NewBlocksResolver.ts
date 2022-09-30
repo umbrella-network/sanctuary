@@ -318,7 +318,8 @@ class NewBlocksResolver {
 
   private noticeError = (err: string, meta?: Record<string, unknown>): void => {
     newrelic.noticeError(Error(err));
-    this.logger.error(err, meta);
+    const msg = err + (meta ? `${err}\n${JSON.stringify(meta)}` : '');
+    this.logger.error(msg);
   };
 }
 
