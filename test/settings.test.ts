@@ -5,8 +5,8 @@ import settings from '../src/config/settings';
 describe('Settings', () => {
   ForeignChainsIds.forEach((foreignChainId) => {
     it(`has correct jobs settings for ${foreignChainId}`, () => {
-      const { foreignChainReplication } = settings.jobs;
-      expect(Object.keys(foreignChainReplication)).to.include(foreignChainId);
+      const { chainsWorkerSchedulerSettings } = settings.jobs;
+      expect(Object.keys(chainsWorkerSchedulerSettings)).to.include(foreignChainId);
     });
 
     it(`has correct blockchain settings for ${foreignChainId}`, () => {

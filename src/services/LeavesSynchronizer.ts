@@ -1,21 +1,24 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
+import newrelic from 'newrelic';
+import * as url from 'url';
+import { SortedMerkleTree } from '@umb-network/toolbox';
+
 import StakingBankContract from '../contracts/StakingBankContract';
 import Block, { IBlock } from '../models/Block';
 import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import { BlockFromPegasus } from '../types/blocks';
 import { ChainContract } from '../contracts/ChainContract';
-import { IFCD } from '../models/FCD';
-import { LeafValueCoder, loadFeeds, SortedMerkleTree } from '@umb-network/toolbox';
 import { ChainStatus } from '../types/ChainStatus';
 import { Validator } from '../types/Validator';
-import * as url from 'url';
 import { callRetry } from '../utils/callRetry';
 import Settings from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
 import { FCDRepository } from '../repositories/FCDRepository';
 import { TimeService } from './TimeService';
+import { ChainsIds } from '../types/ChainsIds';
+import BlockChainData from '../models/BlockChainData';
 
 @injectable()
 class LeavesSynchronizer {
@@ -24,6 +27,7 @@ class LeavesSynchronizer {
   @inject(StakingBankContract) private stakingBankContract!: StakingBankContract;
   @inject(SortedMerkleTreeFactory) private sortedMerkleTreeFactory!: SortedMerkleTreeFactory;
   @inject(FCDRepository) private fcdRepository!: FCDRepository;
+  @inject(ChainContractRepository) private chainContractRepository!: ChainContractRepository;
 
   private homeChainContract!: ChainContract;
 
@@ -37,9 +41,19 @@ class LeavesSynchronizer {
   async apply(chainStatus: ChainStatus, mongoBlockId: string): Promise<boolean | null> {
     let success = false;
     const savedBlock = await Block.findOne({ _id: mongoBlockId });
+
+    const savedBlockData = await BlockChainData.findOne({
+      blockId: savedBlock.blockId,
+      chainId: { $ne: ChainsIds.SOLANA },
+    });
+
+    if (!savedBlockData) {
+      this.logger.warn(`block: ${savedBlock._id} present only on solana`);
+    }
+
     this.logger.info(`Synchronizing leaves for block: ${savedBlock._id}`);
     await Leaf.deleteMany({ blockId: savedBlock.blockId });
-    const validators = this.validatorsList(chainStatus, savedBlock.minter);
+    const validators = this.validatorsList(chainStatus, savedBlockData ? savedBlockData.minter : '');
 
     for (const validator of validators) {
       if (!validator.location) {
@@ -49,7 +63,7 @@ class LeavesSynchronizer {
       try {
         success = await this.syncLeavesFromValidator(validator, savedBlock);
       } catch (e) {
-        this.logger.error(e);
+        this.noticeError(e);
       }
 
       if (success) {
@@ -110,14 +124,12 @@ class LeavesSynchronizer {
       if (squashedRoot != savedBlock.root) return [false, squashedRoot];
     }
 
-    const [, updatedLeaves] = await Promise.all([
-      this.updateFCD(savedBlock),
-      this.updateLeaves(resolvedLeaves, tree, savedBlock.blockId),
-    ]);
+    const updatedLeaves = await this.updateLeaves(resolvedLeaves, tree, savedBlock.blockId);
 
     this.logger.info(
       `Resolving finished for ${savedBlock.blockId} with ${updatedLeaves.length} leaves and votes: ${savedBlock.votes.size}`
     );
+
     return [true, root];
   };
 
@@ -144,30 +156,6 @@ class LeavesSynchronizer {
     } catch (e) {
       this.logger.warn(`Error for block request ${urlForBlockId}: ${e.message}`);
     }
-  };
-
-  private updateFCD = async (block: IBlock): Promise<IFCD[]> => {
-    const fcdKeys: string[] = [...Object.keys(await loadFeeds(this.settings.app.feedsOnChain))];
-    if (fcdKeys.length === 0) {
-      return [];
-    }
-
-    const [values, timestamps] = await this.homeChainContract.resolveFCDs(block.chainAddress, fcdKeys);
-
-    return Promise.all(
-      values.map((value, i) => {
-        if (timestamps[i] == 0) {
-          return;
-        }
-
-        return this.fcdRepository.saveOrUpdate({
-          key: fcdKeys[i],
-          dataTimestamp: new Date(timestamps[i] * 1000),
-          value: LeafValueCoder.decode(value.toHexString(), fcdKeys[i]),
-          chainId: this.settings.blockchain.homeChain.chainId,
-        });
-      })
-    );
   };
 
   private updateLeaves = async (
@@ -200,6 +188,11 @@ class LeavesSynchronizer {
         upsert: true,
       }
     );
+  };
+
+  private noticeError = (err: string): void => {
+    newrelic.noticeError(Error(err));
+    this.logger.error(err);
   };
 }
 

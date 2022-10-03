@@ -14,6 +14,9 @@ import { getContainer } from '../../../src/lib/getContainer';
 import Server from '../../../src/lib/Server';
 import { blockAndLeafFactory } from '../../mocks/factories/blockFactory';
 import { IApiKey } from '../../../src/models/ApiKey';
+import BlockChainData from '../../../src/models/BlockChainData';
+import { blockChainDataFactory } from '../../mocks/factories/blockChainDataFactory';
+import { BlockStatus } from '@umb-network/toolbox/dist/types/BlockStatuses';
 
 describe('getBlocks', () => {
   let container: Container;
@@ -22,6 +25,7 @@ describe('getBlocks', () => {
   before(async () => {
     loadTestEnv();
     await setupDatabase();
+    await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany()]);
     container = getContainer();
     app = container.get(Server).app;
   });
@@ -54,15 +58,20 @@ describe('getBlocks', () => {
       });
 
       afterEach(async () => {
-        await Promise.all([Block.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
+        await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
       });
 
       it('returns only finalized blocks', async () => {
         await Block.create([
-          { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: 'new' },
-          { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: 'completed' },
-          { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: 'failed' },
-          { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: 'finalized' },
+          { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: BlockStatus.New },
+          { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: BlockStatus.Completed },
+          { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: BlockStatus.Failed },
+          { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: BlockStatus.Finalized },
+        ]);
+
+        await BlockChainData.create([
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Completed }),
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
         ]);
 
         const blocksResponse = await request(app).get('/blocks').set('Authorization', `${apiKey.key}`);
@@ -70,6 +79,30 @@ describe('getBlocks', () => {
 
         expect(blocks).to.be.an('array').with.lengthOf(1);
         expect(blocks[0]).to.have.property('status', 'finalized');
+        expect(blocks[0]).to.have.property('chainAddress', 'CHAIN_ADDRESS');
+      });
+
+      it('/blocks/latest returns recent block', async () => {
+        await Block.create([
+          { ...inputForBlockModel, _id: 'block::1', blockId: 1, status: BlockStatus.New },
+          { ...inputForBlockModel, _id: 'block::2', blockId: 2, status: BlockStatus.Finalized },
+          { ...inputForBlockModel, _id: 'block::3', blockId: 3, status: BlockStatus.Finalized },
+          { ...inputForBlockModel, _id: 'block::4', blockId: 4, status: BlockStatus.Failed },
+        ]);
+
+        await BlockChainData.create([
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Failed }),
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+        ]);
+
+        const blocksResponse = await request(app).get('/blocks/latest').set('Authorization', `${apiKey.key}`);
+        const { data } = blocksResponse.body;
+
+        expect(data).to.be.an('object');
+        expect(data).to.have.property('blockId', 4);
+        expect(data).to.have.property('status', BlockStatus.Failed);
+        expect(data).to.have.property('chainAddress', 'CHAIN_ADDRESS');
       });
 
       it('returns blocks sorted in descending order by their height', async () => {
@@ -79,6 +112,14 @@ describe('getBlocks', () => {
           { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
           { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
         ]);
+
+        await BlockChainData.create([
+          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
+        ]);
+
         const blocksResponse = await request(app).get('/blocks').set('Authorization', `${apiKey.key}`);
         const blocks: IBlock[] = blocksResponse.body;
 
@@ -120,7 +161,7 @@ describe('getBlocks', () => {
       });
 
       afterEach(async () => {
-        await Promise.all([Block.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
+        await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
       });
 
       it('returns blocks respecting limit and offset parameters', async () => {
@@ -129,6 +170,13 @@ describe('getBlocks', () => {
           { ...inputForBlockModel, _id: 'block::2', blockId: 2 },
           { ...inputForBlockModel, _id: 'block::3', blockId: 3 },
           { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
+        ]);
+
+        await BlockChainData.create([
+          blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+          blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
         ]);
 
         const blocksResponse = await request(app).get('/blocks?limit=2&offset=1').set('Authorization', `${apiKey.key}`);
@@ -148,7 +196,7 @@ describe('getBlocks', () => {
       });
 
       afterEach(async () => {
-        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+        await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany()]);
       });
 
       it('responds with HTTP 200', async () => {
@@ -174,12 +222,12 @@ describe('getBlocks', () => {
       });
 
       afterEach(async () => {
-        await Promise.all([Block.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
+        await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
       });
 
       describe('when an invalid block id is provided', () => {
         afterEach(async () => {
-          await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+          await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany()]);
         });
 
         it('returns with HTTP 404', async () => {
@@ -190,6 +238,13 @@ describe('getBlocks', () => {
             { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
           ]);
 
+          await BlockChainData.create([
+            blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 2, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
+          ]);
+
           const blocksResponse = await request(app).get('/blocks/999').set('Authorization', `${apiKey.key}`);
 
           expect(blocksResponse.status).to.eq(404);
@@ -198,7 +253,7 @@ describe('getBlocks', () => {
 
       describe('when a valid block id is provided', () => {
         afterEach(async () => {
-          await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+          await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany()]);
         });
 
         it('returns block by its id', async () => {
@@ -209,10 +264,23 @@ describe('getBlocks', () => {
             { ...inputForBlockModel, _id: 'block::4', blockId: 4 },
           ]);
 
-          const blocksResponse = await request(app).get('/blocks/1').set('Authorization', `${apiKey.key}`);
+          await BlockChainData.create([
+            blockChainDataFactory.build({ blockId: 1, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({
+              blockId: 2,
+              chainId: 'bsc',
+              status: BlockStatus.Finalized,
+              _id: 'block::bsc::2',
+            }),
+            blockChainDataFactory.build({ blockId: 3, chainId: 'bsc', status: BlockStatus.Finalized }),
+            blockChainDataFactory.build({ blockId: 4, chainId: 'bsc', status: BlockStatus.Finalized }),
+          ]);
+
+          const blocksResponse = await request(app).get('/blocks/2').set('Authorization', `${apiKey.key}`);
           const blocks: Record<string, unknown> = blocksResponse.body;
 
-          expect(blocks.data).to.have.property('_id', 'block::1');
+          expect(blocks.data).to.have.property('blockId', 2);
+          expect(blocks.data).to.have.property('_id', 'block::bsc::2');
         });
       });
     });
@@ -225,7 +293,7 @@ describe('getBlocks', () => {
       });
 
       afterEach(async () => {
-        await Promise.all([Block.deleteMany({}), Leaf.deleteMany({})]);
+        await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany()]);
       });
 
       it('responds with HTTP 200 with empty proof', async () => {
@@ -252,7 +320,7 @@ describe('getBlocks', () => {
       });
 
       afterEach(async () => {
-        await Promise.all([Block.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
+        await Promise.all([Block.deleteMany(), BlockChainData.deleteMany(), Leaf.deleteMany(), teardownTestUser()]);
       });
 
       it('returns leaves for a block', async () => {

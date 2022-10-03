@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import Block from '../models/Block';
 import { Logger } from 'winston';
-import ForeignBlock from '../models/ForeignBlock';
+import BlockChainData from '../models/BlockChainData';
 import { DeleteWriteOpResultObject } from 'mongodb';
 import Settings from '../types/Settings';
 
@@ -10,32 +10,47 @@ class RevertedBlockResolver {
   @inject('Logger') logger!: Logger;
   @inject('Settings') settings!: Settings;
 
-  async apply(lastSubmittedBlockId: number, nextBlockId: number, chainId?: string): Promise<number> {
+  async apply(lastSubmittedBlockId: number, nextBlockId: number, chainId: string): Promise<number> {
     if (lastSubmittedBlockId <= nextBlockId) {
+      this.logger.debug(`[${chainId}] no reverts`);
       return -1;
     }
 
-    const chainName = chainId || this.settings.blockchain.homeChain.chainId;
+    if (nextBlockId < 500_000) {
+      // in case of bugs, we don't want to delete all the blocks, so this is sanity check
+      this.logger.warn(`[${chainId}] RevertedBlockResolver: invalid nextBlockId ${nextBlockId}`);
+      return -1;
+    }
 
-    this.logger.warn(`[${chainName}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
+    this.logger.warn(`[${chainId}] Block reverted: from ${lastSubmittedBlockId} --> ${nextBlockId}`);
 
-    const blockRes = chainId
-      ? await this.revertForeignBlocks(nextBlockId, chainId)
-      : await this.revertHomeBlocks(nextBlockId);
+    const blockRes = await this.revertBlockChainDatas(nextBlockId, chainId);
 
-    this.logger.info(`[${chainName}] because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
+    this.logger.info(`[${chainId}] because of reverts we deleted ${blockRes.deletedCount} blocks >= ${nextBlockId}`);
 
     return blockRes.deletedCount;
   }
 
-  private async revertHomeBlocks(nextBlockId: number): Promise<DeleteWriteOpResultObject> {
-    this.logger.warn(`[homeChain] deleting many: blockId gte ${nextBlockId}`);
-    return Block.collection.deleteMany({ blockId: { $gte: nextBlockId } });
+  private async revertBlocks(nextBlockId: number): Promise<void> {
+    this.logger.warn(`[revertBlocks] deleting Blocks: blockId gte ${nextBlockId}`);
+    await Block.collection.deleteMany({ blockId: { $gte: nextBlockId } });
   }
 
-  private async revertForeignBlocks(nextBlockId: number, chainId: string): Promise<DeleteWriteOpResultObject> {
-    this.logger.warn(`[${chainId}] deleting many: blockId gte ${nextBlockId}`);
-    return ForeignBlock.collection.deleteMany({ chainId: chainId, blockId: { $gte: nextBlockId } });
+  private async revertBlockChainDatas(nextBlockId: number, chainId: string): Promise<DeleteWriteOpResultObject> {
+    this.logger.warn(`[${chainId}] deleting many BlockChainData: blockId gte ${nextBlockId}`);
+
+    const deleteBlockChainData = await BlockChainData.collection.deleteMany({
+      chainId: chainId,
+      blockId: { $gte: nextBlockId },
+    });
+
+    const remainingBlockChainDatas = await BlockChainData.collection.countDocuments({ blockId: { $gte: nextBlockId } });
+
+    if (remainingBlockChainDatas === 0) {
+      await this.revertBlocks(nextBlockId);
+    }
+
+    return deleteBlockChainData;
   }
 }
 

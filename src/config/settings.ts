@@ -7,32 +7,30 @@ const settings: Settings = {
   port: parseInt(process.env.PORT || '3000'),
   jobs: {
     blockCreation: {
-      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '1000', 10),
+      interval: parseInt(process.env.BLOCK_CREATION_JOB_INTERVAL || '5000', 10),
       lockTTL: parseInt(process.env.BLOCK_CREATION_LOCK_TTL || '20000'),
     },
     metricsReporting: {
       interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
     },
-    foreignChainReplication: {
+    chainsWorkerSchedulerSettings: {
+      bsc: {
+        interval: parseInt(process.env.BSC_WORKER_SCHEDULER_INTERVAL || '10000'),
+      },
       ethereum: {
         interval: parseInt(process.env.ETH_REPLICATION_INTERVAL || '60000'),
-        lockTTL: parseInt(process.env.ETH_REPLICATION_LOCK_TTL || '30000'),
       },
       polygon: {
         interval: parseInt(process.env.POLYGON_REPLICATION_INTERVAL || '10000'),
-        lockTTL: parseInt(process.env.POLYGON_REPLICATION_LOCK_TTL || '5000'),
       },
       avax: {
         interval: parseInt(process.env.AVALANCHE_REPLICATION_INTERVAL || '10000'),
-        lockTTL: parseInt(process.env.AVALANCHE_REPLICATION_LOCK_TTL || '5000'),
       },
       arbitrum: {
         interval: parseInt(process.env.ARBITRUM_REPLICATION_INTERVAL || '10000'),
-        lockTTL: parseInt(process.env.ARBITRUM_REPLICATION_LOCK_TTL || '5000'),
       },
       solana: {
         interval: parseInt(process.env.SOLANA_REPLICATION_INTERVAL || '10000'),
-        lockTTL: parseInt(process.env.SOLANA_REPLICATION_LOCK_TTL || '5000'),
       },
     },
   },
@@ -44,11 +42,8 @@ const settings: Settings = {
   },
   app: {
     blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '5', 10),
-    feedsFile:
-      process.env.FEEDS_FILE || 'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feeds.yaml',
-    feedsOnChain:
-      process.env.FEEDS_ON_CHAIN_FILE ||
-      'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feedsOnChain.yaml',
+    feedsFile: process.env.FEEDS_FILE || '',
+    feedsOnChain: process.env.FEEDS_ON_CHAIN_FILE || '',
   },
   blockchain: {
     contracts: {

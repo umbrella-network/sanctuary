@@ -17,6 +17,8 @@ export type Info = {
   version: string;
   environment: string;
   network: NetworkStatus;
+  feeds: string;
+  feedsOnChain: string;
   contractRegistryAddress?: string;
   stakingBankAddress?: string;
   chainContractAddress?: string;
@@ -42,7 +44,17 @@ export class InfoRepository {
     const status = await this.getStatus(chainContract);
     const contractRegistryAddress = this.getContractRegistryAddress(chainId);
     const chainContractAddress = this.getChainContractAddress(status);
-    const info: Info = { status, network, contractRegistryAddress, chainContractAddress, version, environment };
+
+    const info: Info = {
+      status,
+      network,
+      contractRegistryAddress,
+      chainContractAddress,
+      version,
+      environment,
+      feeds: this.settings.app.feedsFile,
+      feedsOnChain: this.settings.app.feedsOnChain,
+    };
 
     if (!chainId) {
       info.stakingBankAddress = await this.getStakingBankAddress();

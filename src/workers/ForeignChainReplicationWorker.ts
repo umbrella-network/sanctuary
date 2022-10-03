@@ -1,22 +1,18 @@
 import { inject, injectable } from 'inversify';
 import Bull from 'bullmq';
 import { ForeignChainReplicator } from '../services/ForeignChainReplicator';
-import { SingletonWorker } from './SingletonWorker';
 import ChainSynchronizer from '../services/ChainSynchronizer';
 import { TForeignChainsIds } from '../types/ChainsIds';
+import BasicWorker from './BasicWorker';
 
 @injectable()
-export class ForeignChainReplicationWorker extends SingletonWorker {
+export class ForeignChainReplicationWorker extends BasicWorker {
   @inject(ForeignChainReplicator) replicator: ForeignChainReplicator;
   @inject(ChainSynchronizer) chainSynchronizer!: ChainSynchronizer;
 
   apply = async (job: Bull.Job): Promise<void> => {
-    const interval = parseInt(job.data.interval);
-    const lockTTL = parseInt(job.data.lockTTL);
-    const foreignChainId = job.data.foreignChainId as TForeignChainsIds;
-    if (this.isStale(job, interval)) return;
-
-    await this.synchronizeWork(foreignChainId, lockTTL, async () => this.execute(foreignChainId));
+    const chainId = job.data.chainId;
+    await this.execute(chainId);
   };
 
   private execute = async (foreignChainId: TForeignChainsIds): Promise<void> => {
@@ -26,7 +22,8 @@ export class ForeignChainReplicationWorker extends SingletonWorker {
       await this.chainSynchronizer.apply(foreignChainId);
       await this.replicator.apply({ foreignChainId });
       this.logger.info(`[${foreignChainId}] Foreign Chain Block Replication Complete`);
-    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       e.message = `[${foreignChainId}] ${e.message}`;
       this.logger.error(e);
       throw e;

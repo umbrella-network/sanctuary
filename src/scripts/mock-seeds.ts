@@ -3,6 +3,7 @@ import Block from '../models/Block';
 import Leaf from '../models/Leaf';
 import { ethers } from 'ethers';
 import { LeafValueCoder } from '@umb-network/toolbox';
+import settings from '../config/settings';
 
 const exampleKeys = ['ABS-XYZ', 'XYZ-ABS', 'QWERTY-ABS', 'ABS-QWERTY', 'QWERTY-XYZ', 'XYZ-QWERTY'];
 
@@ -13,6 +14,7 @@ async function main() {
     const block = new Block({
       _id: `block::${i}`,
       blockId: i,
+      chainId: settings.blockchain.homeChain.chainId,
       status: 'finalized',
       anchor: (1024 + i * 8).toString(),
       dataTimestamp: new Date(),

@@ -8,7 +8,7 @@ import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts';
 import { TransactionReceipt } from '@ethersproject/providers';
 
 import Block, { IBlock } from '../../models/Block';
-import ForeignBlock, { IForeignBlock } from '../../models/ForeignBlock';
+import BlockChainData, { IBlockChainData } from '../../models/BlockChainData';
 
 import { ForeignChainStatus } from '../../types/ForeignChainStatus';
 import { BlockStatus } from '../../types/blocks';
@@ -98,7 +98,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     if (!lastForeignBlock || lastForeignBlock.blockId !== status.lastId) {
       // in theory this can happen if we submit block but mongo will not be able to save it
-      this.logger.error(
+      this.noticeError(
         `[${this.chainId}] Detected missing block ${status.lastId}, not present in DB, last blockId in DB: ${lastForeignBlock?.blockId}`
       );
     }
@@ -151,7 +151,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
   protected async checkForRevertedBlocks(
     status: ForeignChainStatus,
-    lastForeignBlock: IForeignBlock
+    lastForeignBlock: IBlockChainData
   ): Promise<boolean> {
     if (!lastForeignBlock) {
       return false;
@@ -186,8 +186,8 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     return [true, undefined];
   };
 
-  protected latestForeignBlock = async (): Promise<IForeignBlock> =>
-    ForeignBlock.findOne({ foreignChainId: this.chainId }).sort({ blockId: -1 });
+  protected latestForeignBlock = async (): Promise<IBlockChainData> =>
+    BlockChainData.findOne({ chainId: this.chainId }).sort({ blockId: -1 });
 
   protected blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
     // we need to wait for confirmations before we replicate block
@@ -200,13 +200,29 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       `[${this.chainId}] looking for home blocks at ${dataTimestamp.toISOString()} and anchor: ${safeAnchor}`
     );
 
-    return Block.find({
+    const candidates = await Block.find({
       status: BlockStatus.Finalized,
       dataTimestamp: { $gt: dataTimestamp },
+    })
+      .sort({ blockId: -1 })
+      .exec();
+
+    if (candidates.length == 0) {
+      return [];
+    }
+
+    const datas = await BlockChainData.find({
+      blockId: { $in: candidates.map((c) => c.blockId) },
       anchor: { $lte: safeAnchor },
     })
       .sort({ blockId: -1 })
       .limit(1);
+
+    if (datas.length == 0) {
+      return [];
+    }
+
+    return candidates.filter((block) => block.blockId == datas[0].blockId);
   };
 
   protected verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {
@@ -218,7 +234,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const [block] = blocks;
 
     if (block.blockId <= chainStatus.lastId) {
-      this.logger.error(`[${this.chainId}] block ${block.blockId} already replicated`);
+      this.logger.warn(`[${this.chainId}] block ${block.blockId} already replicated`);
       return false;
     }
 
@@ -261,7 +277,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         return await transaction(transactionRequest);
       } catch (e) {
         if (!ForeignBlockReplicator.isNonceError(e)) {
-          this.logger.error(`[${this.chainId}] tx error ${JSON.stringify(transactionRequest)}`);
+          this.noticeError(`[${this.chainId}] tx error ${JSON.stringify(transactionRequest)}`);
           throw e;
         }
 
@@ -270,7 +286,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         return await transaction({ ...transactionRequest, nonce: lastNonce + 1 });
       }
     } catch (e) {
-      this.logger.error(e);
+      this.noticeError(e);
     }
 
     return null;
@@ -279,4 +295,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   protected static isNonceError(e: Error): boolean {
     return e.message.includes('nonce has already been used');
   }
+
+  private noticeError = (err: string): void => {
+    newrelic.noticeError(Error(err));
+    this.logger.error(err);
+  };
 }

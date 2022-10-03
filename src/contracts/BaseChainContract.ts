@@ -57,11 +57,6 @@ export abstract class BaseChainContract {
   }
 
   async resolveFCDs(chainAddress: string, keys: string[]): Promise<ChainFCDsData> {
-    //we resolving from homechain always
-    if (!this.blockchain.isHomeChain) {
-      throw Error('I think we using this only to resolve FCD from home chain');
-    }
-
     return this.setContract(chainAddress).contract.getCurrentValues(keys.map((k) => LeafKeyCoder.encode(k)));
   }
 
