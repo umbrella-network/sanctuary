@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.2.1] - 2022-10-03
+### Removed
+- remove deprecated action: `Sync OpenAPI Documentation to ReadMe`.
+
 ## [5.2.0] - 2022-09-20
 ### Added
 - Full support for multichain architecture
