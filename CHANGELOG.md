@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.2.3] - 2022-10-03
+### Fixed
+- use correct `nextBlockId` for sanity check in `RevertedBlockResolver`
+
 ## [5.2.2] - 2022-10-03
 ### Added
 - Added new pub key on action: `CI`.
