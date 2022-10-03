@@ -277,7 +277,21 @@ class NewBlocksResolver {
   };
 
   private updateFCD = async (chainId: ChainsIds): Promise<void> => {
-    const fcdKeys: string[] = [...Object.keys(await loadFeeds(this.settings.app.feedsOnChain))];
+    if (!this.settings.app.feedsOnChain) {
+      this.noticeError(`[${chainId}] feedsOnChain is empty`);
+      return;
+    }
+
+    let fcdKeys: string[] = [];
+
+    try {
+      fcdKeys = [...Object.keys(await loadFeeds(this.settings.app.feedsOnChain))];
+    } catch (e) {
+      this.noticeError(`[${chainId}] feedsOnChain error ${this.settings.app.feedsOnChain}: ${JSON.stringify(e)}`);
+      return;
+    }
+
+    this.logger.info(`[${chainId}] DEBUG updateFCD: ${fcdKeys.join(',')}`);
 
     if (fcdKeys.length === 0) {
       return;
@@ -304,7 +318,8 @@ class NewBlocksResolver {
 
   private noticeError = (err: string, meta?: Record<string, unknown>): void => {
     newrelic.noticeError(Error(err));
-    this.logger.error(err, meta);
+    const msg = err + (meta ? `${err}\n${JSON.stringify(meta)}` : '');
+    this.logger.error(msg);
   };
 }
 

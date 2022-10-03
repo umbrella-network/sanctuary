@@ -98,7 +98,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
 
     if (!lastForeignBlock || lastForeignBlock.blockId !== status.lastId) {
       // in theory this can happen if we submit block but mongo will not be able to save it
-      this.logger.error(
+      this.noticeError(
         `[${this.chainId}] Detected missing block ${status.lastId}, not present in DB, last blockId in DB: ${lastForeignBlock?.blockId}`
       );
     }
@@ -234,7 +234,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     const [block] = blocks;
 
     if (block.blockId <= chainStatus.lastId) {
-      this.logger.error(`[${this.chainId}] block ${block.blockId} already replicated`);
+      this.logger.warn(`[${this.chainId}] block ${block.blockId} already replicated`);
       return false;
     }
 
@@ -277,7 +277,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         return await transaction(transactionRequest);
       } catch (e) {
         if (!ForeignBlockReplicator.isNonceError(e)) {
-          this.logger.error(`[${this.chainId}] tx error ${JSON.stringify(transactionRequest)}`);
+          this.noticeError(`[${this.chainId}] tx error ${JSON.stringify(transactionRequest)}`);
           throw e;
         }
 
@@ -286,7 +286,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
         return await transaction({ ...transactionRequest, nonce: lastNonce + 1 });
       }
     } catch (e) {
-      this.logger.error(e);
+      this.noticeError(e);
     }
 
     return null;
@@ -295,4 +295,9 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   protected static isNonceError(e: Error): boolean {
     return e.message.includes('nonce has already been used');
   }
+
+  private noticeError = (err: string): void => {
+    newrelic.noticeError(Error(err));
+    this.logger.error(err);
+  };
 }

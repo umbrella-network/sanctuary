@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
+import newrelic from 'newrelic';
 
 import { BlockChainDataFactory } from '../factories/BlockChainDataFactory';
 import {
@@ -10,6 +11,7 @@ import {
   PolygonBlockReplicator,
   SolanaBlockReplicator,
 } from './foreign-chain';
+
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IBlockChainData } from '../models/BlockChainData';
 import { IFCD } from '../models/FCD';
@@ -77,7 +79,7 @@ export class ForeignChainReplicator {
       return await this.commit(replicationStatus, foreignChainId, foreignChainStatus.chainAddress);
     } catch (e) {
       e.message = `[${foreignChainId}] ${e.message}`;
-      this.logger.error(e);
+      this.noticeError(e);
       return;
     }
   }
@@ -90,12 +92,12 @@ export class ForeignChainReplicator {
     if (!replicationStatus.blocks || replicationStatus.blocks.length == 0) return;
 
     if (replicationStatus.errors) {
-      this.logger.error(`Block Replication Error - Errors: ${JSON.stringify(replicationStatus)}`);
+      this.noticeError(`Block Replication Error - Errors: ${JSON.stringify(replicationStatus)}`);
       return;
     }
 
     if (replicationStatus.blocks.length > 1) {
-      this.logger.error('multiple block replication not supported');
+      this.noticeError('multiple block replication not supported');
       return;
     }
 
@@ -123,7 +125,7 @@ export class ForeignChainReplicator {
         await Promise.all(saveData);
         foreignBlocks.push(foreignBlock);
       } catch (e) {
-        this.logger.error(e);
+        this.noticeError(e);
       }
     }
 
@@ -156,5 +158,10 @@ export class ForeignChainReplicator {
     if (balance.lt(toCurrency(warningLimit))) {
       this.logger.warn(`[${chainId}] Balance (${address.slice(0, 10)}) is lower than ${warningLimit}`);
     }
+  };
+
+  private noticeError = (err: string): void => {
+    newrelic.noticeError(Error(err));
+    this.logger.error(err);
   };
 }

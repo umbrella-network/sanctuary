@@ -1,15 +1,17 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
+import newrelic from 'newrelic';
+import * as url from 'url';
+import { SortedMerkleTree } from '@umb-network/toolbox';
+
 import StakingBankContract from '../contracts/StakingBankContract';
 import Block, { IBlock } from '../models/Block';
 import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import { BlockFromPegasus } from '../types/blocks';
 import { ChainContract } from '../contracts/ChainContract';
-import { SortedMerkleTree } from '@umb-network/toolbox';
 import { ChainStatus } from '../types/ChainStatus';
 import { Validator } from '../types/Validator';
-import * as url from 'url';
 import { callRetry } from '../utils/callRetry';
 import Settings from '../types/Settings';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
@@ -61,7 +63,7 @@ class LeavesSynchronizer {
       try {
         success = await this.syncLeavesFromValidator(validator, savedBlock);
       } catch (e) {
-        this.logger.error(e);
+        this.noticeError(e);
       }
 
       if (success) {
@@ -186,6 +188,11 @@ class LeavesSynchronizer {
         upsert: true,
       }
     );
+  };
+
+  private noticeError = (err: string): void => {
+    newrelic.noticeError(Error(err));
+    this.logger.error(err);
   };
 }
 

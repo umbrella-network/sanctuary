@@ -42,11 +42,8 @@ const settings: Settings = {
   },
   app: {
     blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '5', 10),
-    feedsFile:
-      process.env.FEEDS_FILE || 'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feeds.yaml',
-    feedsOnChain:
-      process.env.FEEDS_ON_CHAIN_FILE ||
-      'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/feedsOnChain.yaml',
+    feedsFile: process.env.FEEDS_FILE || '',
+    feedsOnChain: process.env.FEEDS_ON_CHAIN_FILE || '',
   },
   blockchain: {
     contracts: {
