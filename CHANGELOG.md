@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.2.2] - 2022-10-03
+### Added
+- Added new pub key on action: `CI`.
+
 ## [5.2.1] - 2022-10-03
 ### Removed
 - remove deprecated action: `Sync OpenAPI Documentation to ReadMe`.
