@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [5.2.4] - 2022-10-12
 ### Fixed
+- change CI ethereum RPC
+
+## [5.2.4] - 2022-10-12
+### Fixed
 - set jobId when scheduling workers 
 
 ## [5.2.3] - 2022-10-03
