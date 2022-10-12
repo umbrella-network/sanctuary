@@ -68,6 +68,7 @@ logger.info('Starting Scheduler...');
       {
         removeOnComplete: true,
         removeOnFail: true,
+        jobId: `${metricsWorker.queueName}-${jobCode}`,
       }
     );
   }, settings.jobs.metricsReporting.interval);
@@ -82,6 +83,7 @@ logger.info('Starting Scheduler...');
         {
           removeOnComplete: true,
           removeOnFail: true,
+          jobId: `${blockSynchronizerWorker.queueName}-${jobCode}`,
         }
       );
     } catch (e) {
