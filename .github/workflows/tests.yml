@@ -52,7 +52,7 @@ jobs:
         env:
           BLOCKCHAIN_PROVIDER_URL: 'https://data-seed-prebsc-1-s1.binance.org:8545'
           REGISTRY_CONTRACT_ADDRESS: '0x8f98d3B5C911206C1Ac08B9938875620A03BCd59'
-          ETH_BLOCKCHAIN_PROVIDER_URL: 'https://goerli.infura.io/v3/9582e710bf7d4d73b55dc1f1da7ecb27'
+          ETH_BLOCKCHAIN_PROVIDER_URL: 'https://goerli.infura.io/v3/eb747af5515a4af7bd9003d821d04f5d'
           ETH_REGISTRY_CONTRACT_ADDRESS: '0x3F2254bc49d2d6e8422D71cB5384fB76005558A9'
           POLYGON_BLOCKCHAIN_PROVIDER_URL: 'https://polygon-mumbai.infura.io/v3/41367ca5932343298b672cd60fddc01d'
           POLYGON_REGISTRY_CONTRACT_ADDRESS: '0xaB61f05a9dabCEd63c9100b623A4c29FfD9bf077'
@@ -69,7 +69,7 @@ jobs:
         env:
           BLOCKCHAIN_PROVIDER_URL: 'https://data-seed-prebsc-1-s1.binance.org:8545'
           REGISTRY_CONTRACT_ADDRESS: '0x8f98d3B5C911206C1Ac08B9938875620A03BCd59'
-          ETH_BLOCKCHAIN_PROVIDER_URL: 'https://goerli.infura.io/v3/9582e710bf7d4d73b55dc1f1da7ecb27'
+          ETH_BLOCKCHAIN_PROVIDER_URL: 'https://goerli.infura.io/v3/eb747af5515a4af7bd9003d821d04f5d'
           ETH_REGISTRY_CONTRACT_ADDRESS: '0x3F2254bc49d2d6e8422D71cB5384fB76005558A9'
           POLYGON_BLOCKCHAIN_PROVIDER_URL: 'https://polygon-mumbai.infura.io/v3/41367ca5932343298b672cd60fddc01d'
           POLYGON_REGISTRY_CONTRACT_ADDRESS: '0xaB61f05a9dabCEd63c9100b623A4c29FfD9bf077'
