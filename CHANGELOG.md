@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-## [5.2.4] - 2022-10-12
+## [5.2.6] - 2022-10-18
+### Fixed
+- limit number of candidates for replication to 1K blocks
+
+## [5.2.5] - 2022-10-12
 ### Fixed
 - change CI ethereum RPC
 

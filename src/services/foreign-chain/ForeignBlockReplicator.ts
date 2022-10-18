@@ -205,6 +205,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       dataTimestamp: { $gt: dataTimestamp },
     })
       .sort({ blockId: -1 })
+      .limit(1000) // arbitrary value, we should not be that many blocks behind unless this is new blockchain
       .exec();
 
     if (candidates.length == 0) {
