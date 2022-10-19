@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.2.7] - 2022-10-19
+### Fixed
+- Upgrade BullMQ to ~2.3.2
+
 ## [5.2.6] - 2022-10-18
 ### Fixed
 - limit number of candidates for replication to 1K blocks
