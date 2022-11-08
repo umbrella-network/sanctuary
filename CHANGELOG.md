@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.3.0] - 2022-11-08
+### Changed
+- Return active flag on GET /fcds
+
 ## [5.2.7] - 2022-10-19
 ### Fixed
 - Upgrade BullMQ to ~2.3.2
