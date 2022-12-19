@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- Update blocks on mongodb as soon as they are synchronized.
 
 ## [5.4.2] - 2023-02-01
 - Polygon (pr for triggering prod deployment)

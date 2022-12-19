@@ -74,15 +74,42 @@ class BlockSynchronizer {
 
     const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatusNextBlockId, validators, mongoBlocks);
 
-    if (blockIds.length > 0) {
-      this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
-      const updated = await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
-      const success = updated.updatedFinalizedBlocks;
-      const failed = updated.updatedFailedBlocks;
-      this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total: ${success + failed}`);
-    } else {
-      this.logger.info('nothings was synchronised');
+    if (!blockIds.length) {
+      return;
     }
+
+    this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
+
+    const results = await Promise.all(
+      leavesSynchronizers.map(async (leavesSynchronizer, i) => {
+        try {
+          const status = await leavesSynchronizer;
+
+          const updated = await this.updateSynchronizedBlocks([status], [blockIds[i]]);
+
+          const success = updated.updatedFinalizedBlocks;
+          const failed = updated.updatedFailedBlocks;
+
+          return [success, failed];
+        } catch (err) {
+          this.logger.error(err);
+
+          return [0, 0];
+        }
+      })
+    );
+
+    let totalSuccess = 0;
+    let totalFailed = 0;
+
+    for (const [success, failed] of results) {
+      totalSuccess += success;
+      totalFailed += failed;
+    }
+
+    this.logger.info(
+      `Finalized successfully/failed: ${totalSuccess}/${totalFailed}. Total: ${totalSuccess + totalFailed}`
+    );
   }
 
   async checkForRevertedBlocks(chainId: ChainsIds): Promise<ChainStatusExtended> {
