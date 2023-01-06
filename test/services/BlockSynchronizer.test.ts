@@ -85,22 +85,20 @@ describe('BlockSynchronizer', () => {
 
   describe('#apply', async () => {
     const resolveChainStatus = async (blockNumber: BigNumber, lastBlockId = 10, nextBlockId = 10) =>
-      chainContract.resolveStatus.resolves([
+      chainContract.resolveStatus.resolves({
         chainAddress,
-        {
-          blockNumber,
-          timePadding: 100,
-          lastBlockId,
-          nextBlockId,
-          nextLeader: '0x111',
-          validators: ['0x111'],
-          locations: ['abc'],
-          lastDataTimestamp: 162345,
-          powers: [BigNumber.from(333)],
-          staked: BigNumber.from(222),
-          minSignatures: 1,
-        },
-      ]);
+        blockNumber,
+        timePadding: 100,
+        lastBlockId,
+        nextBlockId,
+        nextLeader: '0x111',
+        validators: ['0x111'],
+        locations: ['abc'],
+        lastDataTimestamp: 162345,
+        powers: [BigNumber.from(333)],
+        staked: BigNumber.from(222),
+        minSignatures: 1,
+      });
 
     before(async () => {
       container = getTestContainer();

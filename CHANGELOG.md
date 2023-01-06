@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - fix `scanBatchSize` for polygon
 - ensure to use valid chain ABI
+- cache validators, so we can have backup in case masterchain RPC fails
 
 ## [5.3.0] - 2022-11-08
 ### Changed

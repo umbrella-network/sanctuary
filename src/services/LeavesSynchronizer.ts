@@ -10,7 +10,6 @@ import Leaf, { ILeaf } from '../models/Leaf';
 import SortedMerkleTreeFactory from './SortedMerkleTreeFactory';
 import { BlockFromPegasus } from '../types/blocks';
 import { ChainContract } from '../contracts/ChainContract';
-import { ChainStatus } from '../types/ChainStatus';
 import { Validator } from '../types/Validator';
 import { callRetry } from '../utils/callRetry';
 import Settings from '../types/Settings';
@@ -38,7 +37,11 @@ class LeavesSynchronizer {
     this.homeChainContract = <ChainContract>chainContractRepository.get(settings.blockchain.homeChain.chainId);
   }
 
-  async apply(chainStatus: ChainStatus, mongoBlockId: string): Promise<boolean | null> {
+  async apply(
+    chainStatusNextBlockId: number,
+    rawValidatorList: Validator[],
+    mongoBlockId: string
+  ): Promise<boolean | null> {
     let success = false;
     const savedBlock = await Block.findOne({ _id: mongoBlockId });
 
@@ -53,10 +56,11 @@ class LeavesSynchronizer {
 
     this.logger.info(`Synchronizing leaves for block: ${savedBlock._id}`);
     await Leaf.deleteMany({ blockId: savedBlock.blockId });
-    const validators = this.validatorsList(chainStatus, savedBlockData ? savedBlockData.minter : '');
+    const validators = this.sortedValidatorsList(rawValidatorList, savedBlockData ? savedBlockData.minter : '');
 
     for (const validator of validators) {
       if (!validator.location) {
+        this.noticeError(`validator: ${validator.id} do not have location`);
         continue;
       }
 
@@ -71,8 +75,8 @@ class LeavesSynchronizer {
       }
     }
 
-    if (!success && chainStatus.nextBlockId === savedBlock.blockId) {
-      this.logger.debug(`Syncing failed, but this is latest block ${chainStatus.nextBlockId}, so lets retry`);
+    if (!success && chainStatusNextBlockId === savedBlock.blockId) {
+      this.logger.debug(`Syncing failed, but this is latest block ${chainStatusNextBlockId}, so lets retry`);
       success = null;
     }
 
@@ -80,11 +84,8 @@ class LeavesSynchronizer {
     return success;
   }
 
-  private validatorsList(chainStatus: ChainStatus, minter: string): Validator[] {
-    // lets do a call to minter first
-    return this.homeChainContract
-      .resolveValidators(chainStatus)
-      .sort((a, b) => (a.id === minter ? -1 : b.id === minter ? 1 : 0));
+  private sortedValidatorsList(rawValidatorList: Validator[], minter: string): Validator[] {
+    return rawValidatorList.sort((a, b) => (a.id === minter ? -1 : b.id === minter ? 1 : 0));
   }
 
   private syncLeavesFromValidator = async (validator: Validator, savedBlock: IBlock): Promise<boolean> => {
@@ -93,6 +94,7 @@ class LeavesSynchronizer {
     const blocksFromValidator = await this.blocksFromValidator(validator, savedBlock.blockId);
 
     if (!blocksFromValidator || !blocksFromValidator.length) {
+      this.logger.info(`validator ${validator.id} returned empty blocks for ${savedBlock.blockId}`);
       return false;
     }
 
