@@ -8,6 +8,8 @@ import { Blockchain } from '../lib/Blockchain';
 import { ChainBlockData, ChainFCDsData } from '../models/ChainBlockData';
 // TODO this abi should came from SDK
 import abi from './ForeignChainAbi.json';
+import newAbi from './ChainAbi.json';
+import { ChainsIds } from '../types/ChainsIds';
 
 export type BaseChainContractProps = {
   blockchain: Blockchain;
@@ -64,15 +66,17 @@ export abstract class BaseChainContract {
     return this.setContract(chainAddress).contract.blocksCountOffset();
   }
 
-  protected _assertContract = async (): Promise<void> => {
-    if (!this.contract) {
-      await this.resolveContract();
-    }
+  protected setContract = (chainAddress: string): BaseChainContract => {
+    this.contract = new Contract(chainAddress, this.chainAbi(), this.blockchain.getProvider());
+    return this;
   };
 
-  protected setContract = (chainAddress: string): BaseChainContract => {
-    const chainAbi = this.blockchain.isHomeChain ? ABI.chainAbi : abi;
-    this.contract = new Contract(chainAddress, chainAbi, this.blockchain.getProvider());
-    return this;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected chainAbi = (): any => {
+    if ([ChainsIds.AVALANCHE, ChainsIds.POLYGON, ChainsIds.BSC].includes(this.blockchain.chainId as ChainsIds)) {
+      return newAbi;
+    }
+
+    return abi;
   };
 }
