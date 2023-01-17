@@ -18,6 +18,8 @@ import { LatestIdsProvider } from './LatestIdsProvider';
 import BlockChainData from '../models/BlockChainData';
 import { ChainStatusExtended, SETTLED_FULFILLED } from '../types/custom';
 import { promiseWithTimeout } from '../utils/promiseWithTimeout';
+import { ValidatorRepository } from '../repositories/ValidatorRepository';
+import { Validator } from '../types/Validator';
 
 @injectable()
 class BlockSynchronizer {
@@ -27,6 +29,7 @@ class BlockSynchronizer {
   @inject(LeavesSynchronizer) private leavesSynchronizer!: LeavesSynchronizer;
   @inject(RevertedBlockResolver) revertedBlockResolver!: RevertedBlockResolver;
   @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
+  @inject(ValidatorRepository) private validatorRepository!: ValidatorRepository;
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
   @inject(LatestIdsProvider) latestIdsProvider: LatestIdsProvider;
 
@@ -49,22 +52,16 @@ class BlockSynchronizer {
       return;
     }
 
-    const masterChainId = this.settings.blockchain.homeChain.chainId;
+    const validators = await this.validatorsList(chainsChecksData);
 
-    // we search for MasterChain, because we need active list of validators
-    const masterChainStatus: ChainStatus | undefined = chainsChecksData.filter(
-      (data) => data.chainId === masterChainId
-    )[0]?.status;
-
-    if (!masterChainStatus) {
-      this.noticeError(`masterChainStatus (${masterChainId}) failed to fetch`);
+    if (validators.length === 0) {
+      this.noticeError('masterChainStatus failed to fetch validators');
       return;
     }
 
-    // masterchain doesn't have to have latest data, so we simply search for highest value
-    masterChainStatus.nextBlockId = chainsChecksData.reduce((acc, data) => Math.max(acc, data.status.nextBlockId), 0);
+    const chainStatusNextBlockId = chainsChecksData.reduce((acc, data) => Math.max(acc, data.status.nextBlockId), 0);
 
-    this.logger.info(`Synchronizing blocks with nextBlockId ${masterChainStatus.nextBlockId}`);
+    this.logger.info(`Synchronizing blocks with nextBlockId ${chainStatusNextBlockId}`);
 
     const mongoBlocks = await this.getMongoBlocksToSynchronize();
 
@@ -75,7 +72,7 @@ class BlockSynchronizer {
 
     this.logger.info(`Got ${mongoBlocks.length} mongoBlocks to synchronize`);
 
-    const [leavesSynchronizers, blockIds] = await this.processBlocks(masterChainStatus, mongoBlocks);
+    const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatusNextBlockId, validators, mongoBlocks);
 
     if (blockIds.length > 0) {
       this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
@@ -83,6 +80,8 @@ class BlockSynchronizer {
       const success = updated.updatedFinalizedBlocks;
       const failed = updated.updatedFailedBlocks;
       this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total: ${success + failed}`);
+    } else {
+      this.logger.info('nothings was synchronised');
     }
   }
 
@@ -106,6 +105,29 @@ class BlockSynchronizer {
       chainId,
     };
   }
+
+  private validatorsList = async (chainsChecksData: ChainStatusExtended[]): Promise<Validator[]> => {
+    const masterChainId = this.settings.blockchain.homeChain.chainId;
+
+    // we search for MasterChain, because we need active list of validators
+    const masterChainStatus: ChainStatus | undefined = chainsChecksData.filter(
+      (data) => data.chainId === masterChainId
+    )[0]?.status;
+
+    if (masterChainStatus) {
+      const validators: Validator[] = masterChainStatus.validators.map(
+        (address, i): Validator => {
+          return { id: address, location: masterChainStatus.locations[i], power: masterChainStatus.powers[i] };
+        }
+      );
+
+      await this.validatorRepository.cache(validators);
+      return validators;
+    } else {
+      this.logger.info(`[${masterChainId}] masterChainStatus failed, using validators cache`);
+      return this.validatorRepository.list();
+    }
+  };
 
   private getMongoBlocksToSynchronize = async (): Promise<IBlock[]> => {
     const blockChainDatasInProgress = await BlockChainData.find({
@@ -233,7 +255,8 @@ class BlockSynchronizer {
   };
 
   private processBlocks = async (
-    chainStatus: ChainStatus,
+    chainStatusNextBlockId: number,
+    rawValidatorList: Validator[],
     mongoBlocks: IBlock[]
   ): Promise<[leavesSynchronizersStatus: Promise<boolean | null>[], synchronizedIds: number[]]> => {
     const leavesSynchronizers: Promise<boolean | null>[] = [];
@@ -243,6 +266,7 @@ class BlockSynchronizer {
     await Promise.all(
       <Promise<never>[]>mongoBlocks.map(async (mongoBlock: IBlock) => {
         if (blocksWereReverted) {
+          this.logger.info('blocksWereReverted');
           return;
         }
 
@@ -254,7 +278,9 @@ class BlockSynchronizer {
           case BlockStatus.Completed:
             this.logger.info(`Start synchronizing leaves for completed block: ${mongoBlock.blockId}`);
             blockIds.push(mongoBlock.blockId);
-            leavesSynchronizers.push(this.leavesSynchronizer.apply(chainStatus, mongoBlock._id));
+            leavesSynchronizers.push(
+              this.leavesSynchronizer.apply(chainStatusNextBlockId, rawValidatorList, mongoBlock._id)
+            );
             return;
 
           case BlockStatus.Finalized:
@@ -282,8 +308,8 @@ class BlockSynchronizer {
   };
 
   private noticeError = (err: string): void => {
-    newrelic.noticeError(Error(err));
     this.logger.error(err);
+    newrelic.noticeError(Error(err));
   };
 }
 

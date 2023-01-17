@@ -87,7 +87,7 @@ const settings: Settings = {
       },
       polygon: {
         startBlockNumber: parseInt(process.env.POLYGON_START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: Math.max(3500, parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '3500', 10)),
+        scanBatchSize: Math.min(1000, parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '1000', 10)),
         maxRequestConcurrency: parseInt(process.env.POLYGON_MAX_REQUEST_CONCURRENCY || '10', 10),
         confirmations: parseInt(process.env.POLYGON_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.POLYGON_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
@@ -104,7 +104,7 @@ const settings: Settings = {
       },
       avax: {
         startBlockNumber: parseInt(process.env.AVALANCHE_START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: Math.max(2000, parseInt(process.env.AVALANCHE_BLOCK_SCAN_BATCH_SIZE || '2000', 10)),
+        scanBatchSize: Math.min(2000, parseInt(process.env.AVALANCHE_BLOCK_SCAN_BATCH_SIZE || '2000', 10)),
         maxRequestConcurrency: parseInt(process.env.AVALANCHE_MAX_REQUEST_CONCURRENCY || '10', 10),
         confirmations: parseInt(process.env.AVALANCHE_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.AVALANCHE_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up

@@ -13,7 +13,7 @@ import {
 export class ForeignChainContractFactory {
   static create(
     props: GenericForeignChainContractProps | BaseChainContractProps
-  ): IGenericForeignChainContract | ForeignChainContract {
+  ): IGenericForeignChainContract | ForeignChainContract | undefined | null {
     if (!props.blockchain) {
       return undefined;
     }
@@ -22,9 +22,13 @@ export class ForeignChainContractFactory {
       case ChainsIds.SOLANA:
         return new SolanaForeignChainContract(<GenericForeignChainContractProps>props);
       default:
-        return props.blockchain.provider && props.blockchain.getContractRegistryAddress()
-          ? new ForeignChainContract(<BaseChainContractProps>props)
-          : undefined;
+        if (props.blockchain.provider && props.blockchain.getContractRegistryAddress()) {
+          return new ForeignChainContract(<BaseChainContractProps>props);
+        }
+
+        console.log(`[${props.blockchain.chainId}] provider: ${!!props.blockchain.provider}`);
+        console.log(`[${props.blockchain.chainId}] registry: ${props.blockchain.getContractRegistryAddress()}`);
+        return null;
     }
   }
 }

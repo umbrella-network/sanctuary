@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.3.1] - 2023-01-04
+### Fixed
+- fix `scanBatchSize` for polygon
+- ensure to use valid chain ABI
+- cache validators, so we can have backup in case masterchain RPC fails
+
 ## [5.3.0] - 2022-11-08
 ### Changed
 - Return active flag on GET /fcds

@@ -139,8 +139,16 @@ describe('LeavesSynchronizer', () => {
       nextBlockId: chainStatus.nextBlockId - 1,
     };
 
-    expect(await leavesSynchronizer.apply(chainStatus, block._id)).to.equal(null, 'null for current block');
-    expect(await leavesSynchronizer.apply(oldStatus, block._id)).to.equal(false, 'false for old blocks');
+    const validators = resolveValidators(chainStatus);
+
+    expect(await leavesSynchronizer.apply(chainStatus.nextBlockId, validators, block._id)).to.equal(
+      null,
+      'null for current block'
+    );
+    expect(await leavesSynchronizer.apply(oldStatus.nextBlockId, validators, block._id)).to.equal(
+      false,
+      'false for old blocks'
+    );
   });
 
   it('returns "true" if root hashes match', async () => {
@@ -157,7 +165,7 @@ describe('LeavesSynchronizer', () => {
       },
     });
 
-    const result = await leavesSynchronizer.apply(chainStatus, block._id);
+    const result = await leavesSynchronizer.apply(chainStatus.nextBlockId, resolveValidators(chainStatus), block._id);
     expect(result).to.be.true;
   });
 
@@ -179,7 +187,7 @@ describe('LeavesSynchronizer', () => {
       },
     });
 
-    await leavesSynchronizer.apply(chainStatus, block._id);
+    await leavesSynchronizer.apply(chainStatus.nextBlockId, resolveValidators(chainStatus), block._id);
 
     const leaves = await Leaf.find({});
 
