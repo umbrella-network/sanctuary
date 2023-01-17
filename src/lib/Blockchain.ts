@@ -20,6 +20,8 @@ export class Blockchain {
     this.isHomeChain = chainId === settings.blockchain.homeChain.chainId;
     this.settings = (<Record<string, BlockchainSettings>>settings.blockchain.multiChains)[chainId];
 
+    console.log(`[${chainId}] providerUrl: ${this.settings.providerUrl}`);
+
     if (!this.settings.providerUrl) {
       return;
     }
