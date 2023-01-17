@@ -6,6 +6,7 @@ import { ProjectAuthenticationMiddleware } from '../middleware/ProjectAuthentica
 import { BlockRepository } from '../repositories/BlockRepository';
 import Leaf from '../models/Leaf';
 import Settings from '../types/Settings';
+import { extractChainId, replyWithLeaves } from './helpers';
 
 @injectable()
 export class BlocksController {
@@ -37,7 +38,7 @@ export class BlocksController {
     await this.statsdClient?.increment('sanctuary.blocks-controller.index', 1, {
       projectId: request.params.currentProjectId,
     });
-    const chainId = this.extractChainId(request);
+    const chainId = extractChainId(request);
     const offset = parseInt(<string>request.query.offset || '0');
     const limit = Math.min(parseInt(<string>request.query.limit || '100'), 100);
     const blocks = await this.blockRepository.find({ chainId, offset, limit });
@@ -45,7 +46,7 @@ export class BlocksController {
   };
 
   latest = async (request: Request, response: Response): Promise<void> => {
-    const chainId = this.extractChainId(request);
+    const chainId = extractChainId(request);
     const latestBlock = await this.blockRepository.findLatest({ chainId });
 
     response.send({ data: latestBlock });
@@ -56,7 +57,7 @@ export class BlocksController {
       projectId: request.params.currentProjectId,
     });
 
-    const chainId = this.extractChainId(request);
+    const chainId = extractChainId(request);
     const blockId = parseInt(<string>request.params.blockId);
     const block = await this.blockRepository.findOne({ blockId, chainId });
 
@@ -72,30 +73,15 @@ export class BlocksController {
       projectId: request.params.currentProjectId,
     });
 
-    const chainId = this.extractChainId(request);
+    const chainId = extractChainId(request);
     const blockId = parseInt(<string>request.params.blockId);
     const block = await this.blockRepository.findOne({ blockId, chainId });
 
     if (block) {
-      const leaves = await Leaf.find({ blockId: parseInt(request.params.blockId, 10) });
-
-      if (response.locals.isAuthorized) {
-        response.send(leaves);
-        return;
-      }
-
-      response.send(
-        leaves.map((leaf) => {
-          leaf.proof = [];
-          return leaf;
-        })
-      );
+      const leaves = await Leaf.find({ blockId: block.blockId }, { _id: 0 });
+      replyWithLeaves(response, leaves);
     } else {
       response.status(404).end();
     }
   };
-
-  private extractChainId(request: Request): string | undefined {
-    return <string>request.query.chainId || this.settings.blockchain.homeChain.chainId;
-  }
 }

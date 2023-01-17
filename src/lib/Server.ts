@@ -9,6 +9,7 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import HealthController from '../controllers/HealthController';
 import { BlocksController } from '../controllers/BlocksController';
+import { L2DController } from '../controllers/L2DController';
 import ProofsController from '../controllers/ProofsController';
 import UsageMetricsController from '../controllers/UsageMetricsController';
 import MetricsController from '../controllers/MetricsController';
@@ -37,6 +38,7 @@ class Server {
     @inject('Logger') logger: Logger,
     @inject(HealthController) healthController: HealthController,
     @inject(BlocksController) blocksController: BlocksController,
+    @inject(L2DController) l2DController: L2DController,
     @inject(FcdsController) fcdsController: FcdsController,
     @inject(KeysController) keysController: KeysController,
     @inject(ProofsController) proofsController: ProofsController,
@@ -61,6 +63,7 @@ class Server {
       .use('/docs', swaggerUi.serveFiles(swaggerDocument), swaggerUi.setup(swaggerDocument))
       .use('/docs-internal', swaggerUi.serveFiles(internalSwaggerDocument), swaggerUi.setup(internalSwaggerDocument))
       .use('/blocks', blocksController.router)
+      .use('/l2d', l2DController.router)
       .use('/fcds', fcdsController.router)
       .use('/keys', keysController.router)
       .use('/proofs', proofsController.router)
