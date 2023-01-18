@@ -132,7 +132,7 @@ jobs:
           sudo apt-add-repository https://cli.github.com/packages
           sudo apt update && sudo apt install -y gh
       - name: Check out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ secrets.GITOPS_REPOSITORY_NAME }}
           token: ${{ secrets.BOT_GITHUB_TOKEN }}

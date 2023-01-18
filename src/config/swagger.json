@@ -38,10 +38,11 @@
           {
             "name": "chainId",
             "in": "query",
-            "description": "The ID of the chain. \"bsc\", \"eth\", \"polygon\" or \"avax\".",
+            "description": "The ID of the chain.",
             "required": false,
-            "type": "string",
-            "example": "bsc"
+            "schema": {
+              "$ref": "#/components/schemas/ChainId"
+            }
           }
         ],
         "responses": {
@@ -77,6 +78,17 @@
       "get": {
         "summary": "Returns the latest block",
         "tags": ["blocks"],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "query",
+            "description": "The ID of the chain.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ChainId"
+            }
+          }
+        ],
         "security": [
           {
             "ProjectAPIKey": []
@@ -162,6 +174,15 @@
         ],
         "parameters": [
           {
+            "name": "chainId",
+            "in": "query",
+            "description": "The ID of the chain.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ChainId"
+            }
+          },
+          {
             "name": "blockId",
             "in": "path",
             "description": "The ID of the block",
@@ -195,6 +216,260 @@
         }
       }
     },
+    "/l2d": {
+      "get": {
+        "summary": "Returns selected leaves of a latest block (blockchain agnostic)",
+        "tags": ["layer 2 data"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "keys",
+            "in": "query",
+            "description": "List of the keys separated by a comma",
+            "required": true,
+            "type": "string[]",
+            "example": "UMB-USD,BTC-USD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing the leaves of a block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Leaf"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Keys are missing in query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/l2d/{blockId}": {
+      "get": {
+        "summary": "Returns selected leaves for a selected block (blockchain agnostic)",
+        "tags": ["layer 2 data"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "The ID of the block",
+            "required": true,
+            "type": "string",
+            "example": "1670409164"
+          },
+          {
+            "name": "keys",
+            "in": "query",
+            "description": "List of the keys separated by a comma",
+            "required": true,
+            "type": "string",
+            "example": "UMB-USD,BTC-USD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing the leaves of a block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Leaf"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Keys are missing in query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/l2d/{chainId}/latest": {
+      "get": {
+        "summary": "Returns selected leaves of a latest block for selected chain",
+        "tags": ["layer 2 data"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "The ID of the chain.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ChainId"
+            }
+          },
+          {
+            "name": "keys",
+            "in": "query",
+            "description": "List of the keys separated by a comma",
+            "required": true,
+            "type": "string[]",
+            "example": "UMB-USD,BTC-USD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing the leaves of a block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Leaf"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Keys are missing in query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/l2d/{chainId}/{blockId}": {
+      "get": {
+        "summary": "Returns selected leaves for a selected block for chain",
+        "tags": ["layer 2 data"],
+        "security": [
+          {
+            "ProjectAPIKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "The ID of the chain.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ChainId"
+            }
+          },
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "The ID of the block",
+            "required": true,
+            "type": "string",
+            "example": "1670409164"
+          },
+          {
+            "name": "keys",
+            "in": "query",
+            "description": "List of the keys separated by a comma",
+            "required": true,
+            "type": "string",
+            "example": "UMB-USD,BTC-USD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing the leaves of a block",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Leaf"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Keys are missing in query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization information is missing or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/fcds": {
       "get": {
         "summary": "Returns FCDs from every chain",
@@ -203,10 +478,11 @@
           {
             "name": "chainId",
             "in": "query",
-            "description": "The ID of the chain. \"bsc\", \"eth\", \"polygon\" or \"avax\".",
+            "description": "The ID of the chain.",
             "required": false,
-            "type": "string",
-            "example": "bsc"
+            "schema": {
+              "$ref": "#/components/schemas/ChainId"
+            }
           }
         ],
         "responses": {
@@ -235,10 +511,11 @@
           {
             "name": "chainId",
             "in": "path",
-            "description": "The ID of the Chain. \"bsc\", \"eth\", \"polygon\" or \"avax\".",
+            "description": "The ID of the chain.",
             "required": true,
-            "type": "string",
-            "example": "bsc"
+            "schema": {
+              "$ref": "#/components/schemas/ChainId"
+            }
           }
         ],
         "responses": {
@@ -464,10 +741,11 @@
           {
             "name": "chainId",
             "in": "query",
-            "description": "The ID of the chain. \"bsc\", \"eth\", \"polygon\" or \"avax\".",
+            "description": "The ID of the chain.",
             "required": false,
-            "type": "string",
-            "example": "bsc"
+            "schema": {
+              "$ref": "#/components/schemas/ChainId"
+            }
           }
         ],
         "responses": {
@@ -534,6 +812,12 @@
       }
     },
     "schemas": {
+      "ChainId": {
+        "type": "string",
+        "nullable": true,
+        "enum": ["bsc", "ethereum", "avax", "arbitrum", "polygon", "solana"],
+        "example": "bsc"
+      },
       "Block": {
         "type": "object",
         "properties": {
@@ -616,7 +900,8 @@
           },
           "_id": {
             "type": "string",
-            "example": "block::169269::leaf::SUSHI-USDT"
+            "example": "block::169269::leaf::SUSHI-USDT",
+            "required": false
           },
           "blockId": {
             "type": "number",
@@ -625,9 +910,6 @@
           "key": {
             "type": "string",
             "example": "SUSHI-USDT"
-          },
-          "__v": {
-            "type": "number"
           },
           "value": {
             "type": "string",

@@ -34,10 +34,16 @@ export class BlockRepository {
   @inject('Logger') protected logger!: Logger;
   @inject('Settings') protected settings!: Settings;
 
+  private blockIgnoredFields = { __v: 0, synchronization: 0 };
+  private blockchainDataIgnoredFields = { __v: 0, synchronization: 0 };
+
   async find(props: FindProps): Promise<FullBlockData[]> {
     const { chainId = this.settings.blockchain.homeChain.chainId, offset, limit, sort = { blockId: -1 } } = props;
 
-    const blockChainData: IBlockChainData[] = await BlockChainData.find({ chainId, status: BlockStatus.Finalized })
+    const blockChainData: IBlockChainData[] = await BlockChainData.find(
+      { chainId, status: BlockStatus.Finalized },
+      this.blockchainDataIgnoredFields
+    )
       .skip(offset)
       .limit(limit)
       .sort(sort)
@@ -55,11 +61,13 @@ export class BlockRepository {
   }
 
   async findOne(props: FindOneProps): Promise<FullBlockData | undefined> {
-    const { blockId, chainId = this.settings.blockchain.homeChain.chainId } = props;
+    const { blockId, chainId } = props;
+
+    const queryData = omitBy({ chainId, blockId }, isUndefined);
 
     const [block, blockChainData] = await Promise.all([
-      Block.findOne({ blockId }),
-      BlockChainData.findOne({ blockId, chainId }),
+      Block.findOne({ blockId }, this.blockIgnoredFields),
+      BlockChainData.findOne(queryData, this.blockchainDataIgnoredFields),
     ]);
 
     if (!block || !blockChainData) return;
@@ -72,7 +80,9 @@ export class BlockRepository {
 
     try {
       const queryData = omitBy({ chainId, status }, isUndefined);
-      const blockChainData = await BlockChainData.findOne(queryData).sort({ blockId: -1 });
+      const blockChainData = await BlockChainData.findOne(queryData, this.blockchainDataIgnoredFields).sort({
+        blockId: -1,
+      });
       if (!blockChainData) return;
 
       const block = await Block.findOne({ blockId: blockChainData.blockId });
