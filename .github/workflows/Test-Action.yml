@@ -1,0 +1,47 @@
+name: carlos
+on:
+  workflow_dispatch:
+jobs:
+  gitops:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install YQ
+        run: sudo snap install yq
+
+      - name: Install Github CLI
+        run: |
+          sudo apt-get update
+          sudo apt install curl -y
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+          && sudo apt update \
+          && sudo apt install gh -y
+
+      - name: Check out repository
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ secrets.GITOPS_REPOSITORY_NAME }}
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+
+      - name: Update GitOps Sandbox repository
+        env:
+          VERSION: ${{ steps.atifact-reader.outputs.version }}_sbx
+          BUILDING_ENVIRONMENT: "non-prod/sbx"
+        run: |
+          yq eval ".images[0].newTag = \"$VERSION\"" -i $BUILDING_ENVIRONMENT/backends/pegasus/deployments/bsc-01/kustomization.yaml
+      
+      - name: Commit, Push and create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+          IMAGE: ${{ steps.atifact-reader.outputs.image-name }}
+          BUILD_ID: ${{ steps.atifact-reader.outputs.build-id}}
+        run: |
+          BRANCH="feature/pegasus-$BUILD_ID"
+          git config user.email "dev+gitbot@umb.network"
+          git config user.name "umb-dev"
+          git checkout -b $BRANCH
+          git commit -a -m "chore(build): $IMAGE"
+          git push origin -f $BRANCH 
+          gh pr create --base master --title "Pegasus Release" --body "Pegasus" || exit 0
+          
