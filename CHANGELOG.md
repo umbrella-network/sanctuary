@@ -5,10 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [5.4.2] - 2023-02-01
+- Polygon (pr for triggering prod deployment)
+
 ## [5.4.1] - 2023-01-17
 - Fixed GitHub Action "CI"
+
 ### Added
 - New API endpoint for L2D for pulling individual keys
+
 ## [5.4.0] - 2023-01-17
 ### Added
 - New API endpoint for L2D for pulling individual keys
