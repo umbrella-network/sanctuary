@@ -72,18 +72,23 @@ class BlockSynchronizer {
 
     this.logger.info(`Got ${mongoBlocks.length} mongoBlocks to synchronize`);
 
-    const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatusNextBlockId, validators, mongoBlocks);
+    const [leavesSynchronizationStatuses, blockIds] = await this.processBlocks(
+      chainStatusNextBlockId,
+      validators,
+      mongoBlocks
+    );
 
     if (!blockIds.length) {
+      this.logger.info('[BlockSynchronizer] finished.');
       return;
     }
 
     this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
 
     const results = await Promise.all(
-      leavesSynchronizers.map(async (leavesSynchronizer, i) => {
+      leavesSynchronizationStatuses.map(async (leavesSynchronizationStatus, i) => {
         try {
-          const status = await leavesSynchronizer;
+          const status = await leavesSynchronizationStatus;
 
           const updated = await this.updateSynchronizedBlocks([status], [blockIds[i]]);
 
@@ -285,8 +290,8 @@ class BlockSynchronizer {
     chainStatusNextBlockId: number,
     rawValidatorList: Validator[],
     mongoBlocks: IBlock[]
-  ): Promise<[leavesSynchronizersStatus: Promise<boolean | null>[], synchronizedIds: number[]]> => {
-    const leavesSynchronizers: Promise<boolean | null>[] = [];
+  ): Promise<[leavesSynchronizationStatuses: Promise<boolean | null>[], synchronizedIds: number[]]> => {
+    const leavesSynchronizationStatuses: Promise<boolean | null>[] = [];
     const blockIds: number[] = [];
     let blocksWereReverted = false;
 
@@ -305,7 +310,7 @@ class BlockSynchronizer {
           case BlockStatus.Completed:
             this.logger.info(`Start synchronizing leaves for completed block: ${mongoBlock.blockId}`);
             blockIds.push(mongoBlock.blockId);
-            leavesSynchronizers.push(
+            leavesSynchronizationStatuses.push(
               this.leavesSynchronizer.apply(chainStatusNextBlockId, rawValidatorList, mongoBlock._id)
             );
             return;
@@ -322,7 +327,7 @@ class BlockSynchronizer {
       })
     );
 
-    return [leavesSynchronizers, blockIds];
+    return [leavesSynchronizationStatuses, blockIds];
   };
 
   private static revertBlocks = async (
