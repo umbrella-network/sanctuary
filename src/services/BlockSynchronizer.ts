@@ -72,17 +72,49 @@ class BlockSynchronizer {
 
     this.logger.info(`Got ${mongoBlocks.length} mongoBlocks to synchronize`);
 
-    const [leavesSynchronizers, blockIds] = await this.processBlocks(chainStatusNextBlockId, validators, mongoBlocks);
+    const [leavesSynchronizationStatuses, blockIds] = await this.processBlocks(
+      chainStatusNextBlockId,
+      validators,
+      mongoBlocks
+    );
 
-    if (blockIds.length > 0) {
-      this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
-      const updated = await this.updateSynchronizedBlocks(await Promise.all(leavesSynchronizers), blockIds);
-      const success = updated.updatedFinalizedBlocks;
-      const failed = updated.updatedFailedBlocks;
-      this.logger.info(`Finalized successfully/failed: ${success}/${failed}. Total: ${success + failed}`);
-    } else {
-      this.logger.info('nothings was synchronised');
+    if (!blockIds.length) {
+      this.logger.info('[BlockSynchronizer] finished.');
+      return;
     }
+
+    this.logger.info(`Synchronized leaves for blocks: ${blockIds.join(',')}`);
+
+    const results = await Promise.all(
+      leavesSynchronizationStatuses.map(async (leavesSynchronizationStatus, i) => {
+        try {
+          const status = await leavesSynchronizationStatus;
+
+          const updated = await this.updateSynchronizedBlocks([status], [blockIds[i]]);
+
+          const success = updated.updatedFinalizedBlocks;
+          const failed = updated.updatedFailedBlocks;
+
+          return [success, failed];
+        } catch (err) {
+          this.logger.error(err);
+
+          return [0, 0];
+        }
+      })
+    );
+
+    let totalSuccess = 0;
+    let totalFailed = 0;
+
+    for (const [success, failed] of results) {
+      totalSuccess += success;
+      totalFailed += failed;
+    }
+
+    this.logger.info(
+      `Finalized successfully/failed: ${totalSuccess}/${totalFailed}. Total: ${totalSuccess + totalFailed}`
+    );
   }
 
   async checkForRevertedBlocks(chainId: ChainsIds): Promise<ChainStatusExtended> {
@@ -258,8 +290,8 @@ class BlockSynchronizer {
     chainStatusNextBlockId: number,
     rawValidatorList: Validator[],
     mongoBlocks: IBlock[]
-  ): Promise<[leavesSynchronizersStatus: Promise<boolean | null>[], synchronizedIds: number[]]> => {
-    const leavesSynchronizers: Promise<boolean | null>[] = [];
+  ): Promise<[leavesSynchronizationStatuses: Promise<boolean | null>[], synchronizedIds: number[]]> => {
+    const leavesSynchronizationStatuses: Promise<boolean | null>[] = [];
     const blockIds: number[] = [];
     let blocksWereReverted = false;
 
@@ -278,7 +310,7 @@ class BlockSynchronizer {
           case BlockStatus.Completed:
             this.logger.info(`Start synchronizing leaves for completed block: ${mongoBlock.blockId}`);
             blockIds.push(mongoBlock.blockId);
-            leavesSynchronizers.push(
+            leavesSynchronizationStatuses.push(
               this.leavesSynchronizer.apply(chainStatusNextBlockId, rawValidatorList, mongoBlock._id)
             );
             return;
@@ -295,7 +327,7 @@ class BlockSynchronizer {
       })
     );
 
-    return [leavesSynchronizers, blockIds];
+    return [leavesSynchronizationStatuses, blockIds];
   };
 
   private static revertBlocks = async (

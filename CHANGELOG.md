@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.5.0] - 2023-02-07
+### Changed
+- Update blocks on mongodb as soon as they are synchronized.
+
 ## [5.4.2] - 2023-02-01
 - Polygon (pr for triggering prod deployment)
 
