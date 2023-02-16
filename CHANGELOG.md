@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.6.0] - 2023-02-16
+### Changed
+- replicate most recent block
+
 ## [5.5.0] - 2023-02-07
 ### Changed
 - Update blocks on mongodb as soon as they are synchronized.

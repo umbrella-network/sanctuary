@@ -17,7 +17,7 @@ import { ForeignChainContract } from '../../contracts/ForeignChainContract';
 import { ChainContract } from '../../contracts/ChainContract';
 
 import { IForeignBlockReplicator } from './IForeignBlockReplicator';
-import Settings from '../../types/Settings';
+import Settings, { BlockchainSettings } from '../../types/Settings';
 import { Blockchain } from '../../lib/Blockchain';
 import { FailedTransactionEvent } from '../../constants/ReportedMetricsEvents';
 import RevertedBlockResolver from '../RevertedBlockResolver';
@@ -25,6 +25,7 @@ import { BlockchainRepository } from '../../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../../repositories/ChainContractRepository';
 import { FCDRepository, FetchedFCDs } from '../../repositories/FCDRepository';
 import { TimeService } from '../TimeService';
+import { ChainsIds } from '../../types/ChainsIds';
 
 export type ReplicationStatus = {
   blocks?: IBlock[];
@@ -190,40 +191,49 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     BlockChainData.findOne({ chainId: this.chainId }).sort({ blockId: -1 });
 
   protected blocksForReplication = async (chainStatus: ForeignChainStatus): Promise<IBlock[]> => {
-    // we need to wait for confirmations before we replicate block
-    const homeChainConfirmations = this.settings.blockchain.homeChain.replicationConfirmations;
-    const homeBlockNumber = await this.homeBlockchain.getBlockNumber();
-    const safeAnchor = homeBlockNumber - homeChainConfirmations;
     const dataTimestamp = this.timestampToDate(chainStatus.lastDataTimestamp + chainStatus.timePadding);
-
-    this.logger.info(
-      `[${this.chainId}] looking for home blocks at ${dataTimestamp.toISOString()} and anchor: ${safeAnchor}`
-    );
 
     const candidates = await Block.find({
       status: BlockStatus.Finalized,
       dataTimestamp: { $gt: dataTimestamp },
     })
       .sort({ blockId: -1 })
-      .limit(1000) // arbitrary value, we should not be that many blocks behind unless this is new blockchain
+      .limit(10) // arbitrary value
       .exec();
 
     if (candidates.length == 0) {
       return [];
     }
 
-    const datas = await BlockChainData.find({
-      blockId: { $in: candidates.map((c) => c.blockId) },
-      anchor: { $lte: safeAnchor },
-    })
-      .sort({ blockId: -1 })
-      .limit(1);
+    this.logger.info(`[${this.chainId}] ${candidates.length} candidates for ${dataTimestamp.toISOString()}`);
 
-    if (datas.length == 0) {
-      return [];
+    const datas = await BlockChainData.find({ blockId: { $in: candidates.map((c) => c.blockId) } })
+      .sort({ blockId: -1 })
+      .exec();
+
+    let foundBlockId: number;
+    const cacheBlockNumber: Record<string, number> = {};
+
+    for (const blockChainData of datas) {
+      const { chainId, blockId } = blockChainData;
+      // we need to wait for confirmations before we replicate block
+      const { confirmations } = this.settings.blockchain.multiChains[chainId as ChainsIds];
+
+      if (!cacheBlockNumber[chainId]) {
+        cacheBlockNumber[chainId] = await this.blockchainRepository.get(chainId).getBlockNumber();
+      }
+
+      const blockNumber = cacheBlockNumber[chainId];
+      const safeAnchor = blockNumber - confirmations;
+
+      if (blockChainData.anchor <= safeAnchor) {
+        this.logger.info(`[${this.chainId}] found block ${blockId} from ${chainId} with safe anchor ${safeAnchor}`);
+        foundBlockId = blockId;
+        break;
+      }
     }
 
-    return candidates.filter((block) => block.blockId == datas[0].blockId);
+    return candidates.filter((block) => block.blockId == foundBlockId);
   };
 
   protected verifyBlocksForReplication = (blocks: IBlock[], chainStatus: ForeignChainStatus): boolean => {
