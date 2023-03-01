@@ -6,14 +6,14 @@ import { ChainsIds } from '../types/ChainsIds';
 
 @injectable()
 export class LatestIdsProvider {
-  getLastSavedBlockIdAndStartAnchor = async (
-    chainId: ChainsIds
-  ): Promise<[lastSavedBlockId: number, lastAnchor: number]> => {
+  getLastSavedBlockId = async (chainId: ChainsIds): Promise<number> => {
     const lastSavedBlock = await BlockChainData.find({ chainId: chainId }).sort({ blockId: -1 }).limit(1).exec();
+    return lastSavedBlock[0] ? lastSavedBlock[0].blockId : 0;
+  };
 
-    return lastSavedBlock[0]
-      ? [lastSavedBlock[0].blockId, lastSavedBlock[0].anchor + 1]
-      : [0, await this.getLowestChainAnchor(chainId)];
+  getLastAnchor = async (chainId: ChainsIds): Promise<number> => {
+    const lastSavedBlock = await BlockChainData.find({ chainId: chainId }).sort({ blockId: -1 }).limit(1).exec();
+    return lastSavedBlock[0] ? lastSavedBlock[0].anchor + 1 : await this.getLowestChainAnchor(chainId);
   };
 
   private getLowestChainAnchor = async (chainId: ChainsIds): Promise<number> => {

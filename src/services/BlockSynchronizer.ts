@@ -122,9 +122,9 @@ class BlockSynchronizer {
 
     const chain = <ChainContract>this.chainContractRepository.get(chainId);
 
-    const [chainStatus, [lastSavedBlockId]] = await Promise.all([
+    const [chainStatus, lastSavedBlockId] = await Promise.all([
       chain.resolveStatus<ChainStatus>(),
-      this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
+      this.latestIdsProvider.getLastSavedBlockId(chainId),
     ]);
 
     this.logger.debug(`[${chainId}] checkForRevertedBlocks: ${JSON.stringify(chainStatus)}`);

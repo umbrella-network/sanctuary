@@ -69,6 +69,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     this.homeChainContract = <ChainContract>(
       this.chainContractRepository.get(this.settings.blockchain.homeChain.chainId)
     );
+
     this.foreignChainContract = <ForeignChainContract>this.chainContractRepository.get(this.chainId);
   }
 

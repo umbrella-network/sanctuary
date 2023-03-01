@@ -1,5 +1,5 @@
 import { inject } from 'inversify';
-import { Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 import { ABI, LeafKeyCoder } from '@umb-network/toolbox';
 import { Logger } from 'winston';
 
@@ -48,6 +48,11 @@ export abstract class BaseChainContract {
         status[key] = chainContractStatus[key];
       }
     });
+
+    if (this.blockchain.chainId === ChainsIds.ARBITRUM) {
+      // block.number on arbitrum is ethereum block number, so we need to override
+      status.blockNumber = BigNumber.from(await this.blockchain.getBlockNumber());
+    }
 
     return { chainAddress: chain.contract.address, ...status };
   }

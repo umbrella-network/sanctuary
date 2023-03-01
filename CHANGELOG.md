@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.7.0] - 2023-02-28
+### Changed
+- RPC calls optimisation: save last scanned block
+
+### Fixed
+- override value of `block.number` for Arbitrum, to be Arbitrum blockchain number
+
 ## [5.6.0] - 2023-02-16
 ### Changed
 - replicate most recent block

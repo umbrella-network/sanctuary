@@ -10,7 +10,7 @@ export class Blockchain {
   readonly chainId!: string;
   readonly isHomeChain!: boolean;
   readonly settings!: BlockchainSettings;
-  readonly provider: ethers.providers.Provider;
+  readonly provider: ethers.providers.StaticJsonRpcProvider;
   readonly wallet: Wallet;
 
   constructor(props: BlockchainProps) {
@@ -30,7 +30,7 @@ export class Blockchain {
       throw Error(`missing contractRegistryAddress for ${chainId}`);
     }
 
-    this.provider = ethers.providers.getDefaultProvider(this.settings.providerUrl);
+    this.provider = new ethers.providers.StaticJsonRpcProvider(this.settings.providerUrl);
 
     if (settings.blockchain.replicatorPrivateKey) {
       this.wallet = new Wallet(settings.blockchain.replicatorPrivateKey, this.provider);

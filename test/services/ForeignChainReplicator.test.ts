@@ -40,7 +40,7 @@ describe('ForeignChainReplicator', () => {
   let blockChainData: StubbedInstance<IBlockChainData>;
   let blockchainRepository: StubbedInstance<BlockchainRepository>;
   let chainContractRepository: StubbedInstance<ChainContractRepository>;
-  let provider: StubbedInstance<ethers.providers.Provider>;
+  let provider: StubbedInstance<ethers.providers.StaticJsonRpcProvider>;
 
   after(() => {
     sinon.restore();
@@ -57,7 +57,7 @@ describe('ForeignChainReplicator', () => {
         arbitrumBlockReplicator = stubConstructor(ArbitrumBlockReplicator);
         blockchainRepository = createStubInstance(BlockchainRepository);
         chainContractRepository = createStubInstance(ChainContractRepository);
-        provider = createStubInstance(ethers.providers.Provider);
+        provider = createStubInstance(ethers.providers.StaticJsonRpcProvider);
         wallet = Wallet.createRandom();
         sinon.stub(wallet, 'getBalance').resolves(parseEther('1'));
 
@@ -129,7 +129,7 @@ describe('ForeignChainReplicator', () => {
         polygonBlockReplicator = stubConstructor(PolygonBlockReplicator);
         arbitrumBlockReplicator = stubConstructor(ArbitrumBlockReplicator);
         blockchainRepository = createStubInstance(BlockchainRepository);
-        provider = createStubInstance(ethers.providers.Provider);
+        provider = createStubInstance(ethers.providers.StaticJsonRpcProvider);
 
         wallet = Wallet.createRandom();
         sinon.stub(wallet, 'getBalance').resolves(parseEther('0.001'));
