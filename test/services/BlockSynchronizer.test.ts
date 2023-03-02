@@ -81,7 +81,7 @@ describe('BlockSynchronizer', () => {
   let blockchainRepository: SinonStubbedInstance<BlockchainRepository>;
   let chainContract: SinonStubbedInstance<ChainContract>;
   let chainContractRepository: SinonStubbedInstance<ChainContractRepository>;
-  let provider: StubbedInstance<ethers.providers.Provider>;
+  let provider: StubbedInstance<ethers.providers.StaticJsonRpcProvider>;
 
   describe('#apply', async () => {
     const resolveChainStatus = async (blockNumber: BigNumber, lastBlockId = 10, nextBlockId = 10) =>
@@ -108,7 +108,7 @@ describe('BlockSynchronizer', () => {
       blockchainRepository = createStubInstance(BlockchainRepository);
       chainContract = createStubInstance(ChainContract);
       chainContractRepository = createStubInstance(ChainContractRepository);
-      provider = createStubInstance(ethers.providers.Provider);
+      provider = createStubInstance(ethers.providers.StaticJsonRpcProvider);
       wallet = Wallet.createRandom();
 
       revertedBlockResolver.apply.resolves(0);
