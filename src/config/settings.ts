@@ -70,7 +70,7 @@ const settings: Settings = {
       },
       ethereum: {
         startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: parseInt(process.env.ETH_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        scanBatchSize: parseInt(process.env.ETH_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         maxRequestConcurrency: parseInt(process.env.ETH_MAX_REQUEST_CONCURRENCY || '10', 10),
         confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ETH_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
@@ -121,7 +121,7 @@ const settings: Settings = {
       },
       arbitrum: {
         startBlockNumber: parseInt(process.env.ARBITRUM_START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         maxRequestConcurrency: parseInt(process.env.ARBITRUM_MAX_REQUEST_CONCURRENCY || '10', 10),
         confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ARBITRUM_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
@@ -138,7 +138,7 @@ const settings: Settings = {
       },
       solana: {
         startBlockNumber: parseInt(process.env.SOLANA_START_BLOCK_NUMBER || '-100000', 10),
-        scanBatchSize: parseInt(process.env.SOLANA_BLOCK_SCAN_BATCH_SIZE || '10000', 10),
+        scanBatchSize: parseInt(process.env.SOLANA_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         maxRequestConcurrency: parseInt(process.env.SOLANA_MAX_REQUEST_CONCURRENCY || '10', 10),
         confirmations: parseInt(process.env.SOLANA_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.SOLANA_BLOCKCHAIN_PROVIDER_URL,

@@ -45,17 +45,31 @@ class NewBlocksResolver {
     ]);
 
     const lastScannedBlock = lastCachedBlock ? Math.max(lastAnchor, parseInt(lastCachedBlock, 10)) : lastAnchor;
+
+    await this.resolveBlockEvents(chainId, chainStatus, lastScannedBlock - this.rescanBlocks(chainId));
+  };
+
+  private rescanBlocks(chainId: ChainsIds): number {
     const { confirmations } = this.blockchainRepository.get(chainId).settings;
 
-    await this.resolveBlockEvents(chainId, chainStatus, lastScannedBlock - confirmations);
-  };
+    switch (chainId) {
+      case ChainsIds.ETH:
+        return Math.max(confirmations, 5);
+      case ChainsIds.POLYGON:
+        // polygon has a lot of reverted blocks
+        return Math.max(confirmations, 300);
+      default:
+        return Math.max(confirmations, 100);
+    }
+  }
 
   private resolveBlockEvents = async (
     chainId: ChainsIds,
     chainStatus: ChainStatus,
     lastAnchor: number
   ): Promise<void> => {
-    const chainBlockNumber = chainStatus.blockNumber.toNumber();
+    // -1 because sometimes we geting error "requested to block N after last accepted block N-1"
+    const chainBlockNumber = chainStatus.blockNumber.toNumber() - 1;
 
     const ranges = CreateBatchRanges.apply(
       lastAnchor,

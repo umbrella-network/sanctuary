@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.7.1] - 2023-03-02
+### Fixed
+- handle error: `requested to block N after last accepted block N-1`
+- fix default `scanBatchSize`
+- rescan last blocks in case RPC is missing some fresh logs
+- revert cached block when blockchain blocks reverts
+
 ## [5.7.0] - 2023-02-28
 ### Changed
 - RPC calls optimisation: save last scanned block

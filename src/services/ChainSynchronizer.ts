@@ -168,6 +168,7 @@ class ChainSynchronizer {
     let lastAnchor = lastCheckBlockCached
       ? Math.max(lastSavedAnchor, parseInt(lastCheckBlockCached, 10))
       : lastSavedAnchor;
+
     lastAnchor -= confirmations;
 
     if (lastAnchor > endBlockNumber) {
