@@ -18,6 +18,8 @@ import { ChainContractRepository } from '../repositories/ChainContractRepository
 import { ChainsIds } from '../types/ChainsIds';
 import { LatestIdsProvider } from './LatestIdsProvider';
 import { FCDRepository } from '../repositories/FCDRepository';
+import { MappingRepository } from '../repositories/MappingRepository';
+import { LAST_BLOCK_CHECKED_FOR_MINT_EVENT } from '../constants/mappings';
 
 @injectable()
 class NewBlocksResolver {
@@ -27,6 +29,7 @@ class NewBlocksResolver {
   @inject(BlockchainRepository) blockchainRepository!: BlockchainRepository;
   @inject(ChainContractRepository) chainContractRepository!: ChainContractRepository;
   @inject(LatestIdsProvider) latestIdsProvider!: LatestIdsProvider;
+  @inject(MappingRepository) mappingRepository!: MappingRepository;
   @inject(FCDRepository) private fcdRepository!: FCDRepository;
 
   apply = async (chainId: ChainsIds): Promise<void> => {
@@ -35,12 +38,16 @@ class NewBlocksResolver {
       return;
     }
 
-    const [chainStatus, [, lastAnchor]] = await Promise.all([
+    const [chainStatus, lastAnchor, lastCachedBlock] = await Promise.all([
       this.chainContractRepository.get(chainId).resolveStatus<ChainStatus>(),
-      this.latestIdsProvider.getLastSavedBlockIdAndStartAnchor(chainId),
+      this.latestIdsProvider.getLastAnchor(chainId),
+      this.mappingRepository.get(LAST_BLOCK_CHECKED_FOR_MINT_EVENT(chainId)),
     ]);
 
-    await this.resolveBlockEvents(chainId, chainStatus, lastAnchor);
+    const lastScannedBlock = lastCachedBlock ? Math.max(lastAnchor, parseInt(lastCachedBlock, 10)) : lastAnchor;
+    const { confirmations } = this.blockchainRepository.get(chainId).settings;
+
+    await this.resolveBlockEvents(chainId, chainStatus, lastScannedBlock - confirmations);
   };
 
   private resolveBlockEvents = async (
@@ -48,17 +55,22 @@ class NewBlocksResolver {
     chainStatus: ChainStatus,
     lastAnchor: number
   ): Promise<void> => {
+    const chainBlockNumber = chainStatus.blockNumber.toNumber();
+
     const ranges = CreateBatchRanges.apply(
       lastAnchor,
-      chainStatus.blockNumber.toNumber(),
+      chainBlockNumber,
       this.blockchainRepository.get(chainId).settings.scanBatchSize
     );
 
-    this.logger.info(`[${chainId}] resolveBlockEvents(lastAnchor: ${lastAnchor}), ranges: ${ranges.length}`);
+    this.logger.info(
+      `[${chainId}] resolveBlockEvents(lastAnchor: ${lastAnchor}-${chainBlockNumber}), ranges: ${ranges.length}`
+    );
 
     // must be sync execution!
     for (const [batchFrom, batchTo] of ranges) {
       await this.resolveBatchOfEvents(chainId, batchFrom, batchTo);
+      await this.mappingRepository.set(LAST_BLOCK_CHECKED_FOR_MINT_EVENT(chainId), batchTo.toString(10));
     }
   };
 

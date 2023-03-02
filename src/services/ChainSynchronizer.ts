@@ -14,6 +14,8 @@ import * as fastq from 'fastq';
 import type { queueAsPromised } from 'fastq';
 import { BlockRepository } from '../repositories/BlockRepository';
 import { FullBlockData } from '../types/blocks';
+import { MappingRepository } from '../repositories/MappingRepository';
+import { LAST_BLOCK_CHECKED_FOR_NEW_CHAIN } from '../constants/mappings';
 
 type SyncChainTask = {
   batchFrom: number;
@@ -26,6 +28,7 @@ class ChainSynchronizer {
   @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
   @inject(BlockRepository) private blockRepository!: BlockRepository;
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
+  @inject(MappingRepository) mappingRepository: MappingRepository;
   @inject('Settings') settings: Settings;
 
   apply = async (chainId: ChainsIds): Promise<void> => {
@@ -34,14 +37,15 @@ class ChainSynchronizer {
     }
 
     const blockchain = this.blockchainRepository.get(chainId);
+    const blockNumber = await blockchain.getBlockNumber();
 
     if (await this.chainUpToDate(chainId)) {
+      await this.mappingRepository.set(LAST_BLOCK_CHECKED_FOR_NEW_CHAIN(chainId), blockNumber.toString(10));
       this.logger.info(`[${chainId}] chain up to date.`);
       return;
     }
 
     this.logger.info(`[${chainId}] chain not up to date.`);
-    const blockNumber = await blockchain.getBlockNumber();
     await this.synchronizeChains(chainId, blockNumber);
   };
 
@@ -76,7 +80,8 @@ class ChainSynchronizer {
     const [fromBlock, toBlock] = await this.calculateBlockNumberRange(
       chainId,
       blockchain.settings.startBlockNumber,
-      currentBlockNumber
+      currentBlockNumber,
+      blockchain.settings.confirmations
     );
 
     this.logger.info(`[${chainId}] Synchronizing Chains for blocks ${fromBlock} - ${toBlock}`);
@@ -150,10 +155,20 @@ class ChainSynchronizer {
   private calculateBlockNumberRange = async (
     chainId: ChainsIds,
     startBlockNumber: number,
-    endBlockNumber: number
+    endBlockNumber: number,
+    confirmations: number
   ): Promise<[number, number]> => {
     const prefix = `[${chainId}] `;
-    const lastAnchor = await this.getLastSavedAnchor(chainId);
+
+    const [lastCheckBlockCached, lastSavedAnchor] = await Promise.all([
+      this.mappingRepository.get(LAST_BLOCK_CHECKED_FOR_NEW_CHAIN(chainId)),
+      this.getLastSavedAnchor(chainId),
+    ]);
+
+    let lastAnchor = lastCheckBlockCached
+      ? Math.max(lastSavedAnchor, parseInt(lastCheckBlockCached, 10))
+      : lastSavedAnchor;
+    lastAnchor -= confirmations;
 
     if (lastAnchor > endBlockNumber) {
       this.logger.warn(
