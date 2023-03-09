@@ -78,7 +78,11 @@ export abstract class BaseChainContract {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected chainAbi = (): any => {
-    if ([ChainsIds.AVALANCHE, ChainsIds.POLYGON, ChainsIds.BSC].includes(this.blockchain.chainId as ChainsIds)) {
+    if (
+      [ChainsIds.AVALANCHE, ChainsIds.POLYGON, ChainsIds.BSC, ChainsIds.ARBITRUM].includes(
+        this.blockchain.chainId as ChainsIds
+      )
+    ) {
       return newAbi;
     }
 

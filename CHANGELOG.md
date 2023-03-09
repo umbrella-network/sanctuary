@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.7.2] - 2023-03-02
+### Changed
+- use newest ABI for arbitrum
+
 ## [5.7.1] - 2023-03-02
 ### Fixed
 - handle error: `requested to block N after last accepted block N-1`
