@@ -3,6 +3,7 @@ dist
 node_modules
 newrelic_agent.log
 dev-ops/
+logs/
 .idea
 *.env*
 !example.env

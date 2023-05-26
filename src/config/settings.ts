@@ -75,15 +75,6 @@ const settings: Settings = {
         confirmations: parseInt(process.env.ETH_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ETH_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
-        transactions: {
-          waitForBlockTime: parseInt(process.env.ETH_WAIT_FOR_BLOCK_TIME || '1000'),
-          minGasPrice: parseInt(process.env.ETH_MIN_GAS_PRICE || '2000000000', 10),
-          maxGasPrice: parseInt(process.env.ETH_MAX_GAS_PRICE || '500000000000', 10),
-          mintBalance: {
-            warningLimit: process.env.ETH_BALANCE_WARN || '0.6',
-            errorLimit: process.env.ETH_BALANCE_ERROR || '0.06',
-          },
-        },
       },
       polygon: {
         startBlockNumber: parseInt(process.env.POLYGON_START_BLOCK_NUMBER || '-100000', 10),
@@ -92,15 +83,6 @@ const settings: Settings = {
         confirmations: parseInt(process.env.POLYGON_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.POLYGON_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
-        transactions: {
-          waitForBlockTime: parseInt(process.env.POLYGON_WAIT_FOR_BLOCK_TIME || '1000'),
-          minGasPrice: parseInt(process.env.POLYGON_MIN_GAS_PRICE || '1000000000', 10),
-          maxGasPrice: parseInt(process.env.POLYGON_MAX_GAS_PRICE || '500000000000', 10),
-          mintBalance: {
-            warningLimit: process.env.POLYGON_BALANCE_WARN || '0.5',
-            errorLimit: process.env.POLYGON_BALANCE_ERROR || '0.02',
-          },
-        },
       },
       avax: {
         startBlockNumber: parseInt(process.env.AVALANCHE_START_BLOCK_NUMBER || '-100000', 10),
@@ -109,15 +91,6 @@ const settings: Settings = {
         confirmations: parseInt(process.env.AVALANCHE_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.AVALANCHE_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.AVALANCHE_REGISTRY_CONTRACT_ADDRESS,
-        transactions: {
-          waitForBlockTime: parseInt(process.env.AVALANCHE_WAIT_FOR_BLOCK_TIME || '1000'),
-          minGasPrice: parseInt(process.env.AVALANCHE_MIN_GAS_PRICE || '25000000000', 10),
-          maxGasPrice: parseInt(process.env.AVALANCHE_MAX_GAS_PRICE || '250000000000', 10),
-          mintBalance: {
-            warningLimit: process.env.AVALANCHE_BALANCE_WARN || '0.15',
-            errorLimit: process.env.AVALANCHE_BALANCE_ERROR || '0.015',
-          },
-        },
       },
       arbitrum: {
         startBlockNumber: parseInt(process.env.ARBITRUM_START_BLOCK_NUMBER || '-100000', 10),
@@ -126,15 +99,6 @@ const settings: Settings = {
         confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ARBITRUM_BLOCKCHAIN_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.ARBITRUM_REGISTRY_CONTRACT_ADDRESS,
-        transactions: {
-          waitForBlockTime: parseInt(process.env.ARBITRUM_WAIT_FOR_BLOCK_TIME || '1000'),
-          minGasPrice: parseInt(process.env.ARBITRUM_MIN_GAS_PRICE || '500000000', 10),
-          maxGasPrice: parseInt(process.env.ARBITRUM_MAX_GAS_PRICE || '250000000000', 10),
-          mintBalance: {
-            warningLimit: process.env.ARBITRUM_BALANCE_WARN || '0.05',
-            errorLimit: process.env.ARBITRUM_BALANCE_ERROR || '0.01',
-          },
-        },
       },
       solana: {
         startBlockNumber: parseInt(process.env.SOLANA_START_BLOCK_NUMBER || '-100000', 10),
