@@ -10,7 +10,7 @@ import { ForeignChainReplicationWorker } from './workers';
 import Settings, { SinglentonWorkerSchedulerSettings } from './types/Settings';
 import logger from './lib/logger';
 import Migrations from './services/Migrations';
-import { ForeignChainsIds } from './types/ChainsIds';
+import { ChainsIds, ForeignChainsIds } from './types/ChainsIds';
 import BasicWorker from './workers/BasicWorker';
 
 logger.info('Starting Scheduler...');
@@ -45,6 +45,11 @@ logger.info('Starting Scheduler...');
   };
 
   for (const foreignChainId of ForeignChainsIds) {
+    if (foreignChainId !== ChainsIds.SOLANA) {
+      logger.info(`foreignChainReplicationWorker for ${foreignChainId} skipped`);
+      continue;
+    }
+
     const schedulerSettings: SinglentonWorkerSchedulerSettings = (<Record<string, SinglentonWorkerSchedulerSettings>>(
       settings.jobs.chainsWorkerSchedulerSettings
     ))[foreignChainId];
