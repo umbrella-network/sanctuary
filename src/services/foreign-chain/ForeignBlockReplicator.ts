@@ -17,7 +17,7 @@ import { ForeignChainContract } from '../../contracts/ForeignChainContract';
 import { ChainContract } from '../../contracts/ChainContract';
 
 import { IForeignBlockReplicator } from './IForeignBlockReplicator';
-import Settings, { BlockchainSettings } from '../../types/Settings';
+import Settings from '../../types/Settings';
 import { Blockchain } from '../../lib/Blockchain';
 import { FailedTransactionEvent } from '../../constants/ReportedMetricsEvents';
 import RevertedBlockResolver from '../RevertedBlockResolver';

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.8.0] - 2023-05-29
+### Removed
+- replicatin for: Eth, Avax, Polygon, Arbitrum
+
 ## [5.7.2] - 2023-03-02
 ### Changed
 - use newest ABI for arbitrum

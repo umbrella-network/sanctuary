@@ -3,14 +3,7 @@ import { Logger } from 'winston';
 import newrelic from 'newrelic';
 
 import { BlockChainDataFactory } from '../factories/BlockChainDataFactory';
-import {
-  ArbitrumBlockReplicator,
-  AvalancheBlockReplicator,
-  EthereumBlockReplicator,
-  IForeignBlockReplicator,
-  PolygonBlockReplicator,
-  SolanaBlockReplicator,
-} from './foreign-chain';
+import { IForeignBlockReplicator, SolanaBlockReplicator } from './foreign-chain';
 
 import { ReplicationStatus } from './foreign-chain/ForeignBlockReplicator';
 import { IBlockChainData } from '../models/BlockChainData';
@@ -41,18 +34,8 @@ export class ForeignChainReplicator {
   @inject(ChainContractRepository) chainContractRepository: ChainContractRepository;
   @inject(DispatcherDetector) dispatcherDetector: DispatcherDetector;
 
-  constructor(
-    @inject(EthereumBlockReplicator) ethereumBlockReplicator: EthereumBlockReplicator,
-    @inject(PolygonBlockReplicator) polygonBlockReplicator: PolygonBlockReplicator,
-    @inject(AvalancheBlockReplicator) avalancheBlockReplicator: AvalancheBlockReplicator,
-    @inject(ArbitrumBlockReplicator) arbitrumBlockReplicator: ArbitrumBlockReplicator,
-    @inject(SolanaBlockReplicator) solanaBlockReplicator: SolanaBlockReplicator
-  ) {
+  constructor(@inject(SolanaBlockReplicator) solanaBlockReplicator: SolanaBlockReplicator) {
     this.replicators = {
-      ethereum: ethereumBlockReplicator,
-      polygon: polygonBlockReplicator,
-      avax: avalancheBlockReplicator,
-      arbitrum: arbitrumBlockReplicator,
       solana: solanaBlockReplicator,
     };
   }
