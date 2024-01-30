@@ -134,7 +134,7 @@ export class ForeignChainReplicator {
   ) => {
     const { errorLimit, warningLimit } = this.settings.blockchain.multiChains[chainId].transactions.mintBalance;
 
-    if (balance.lt(toCurrency(errorLimit))) {
+    if (!balance || balance.lt(toCurrency(errorLimit))) {
       throw new Error(`[${chainId}] Balance (${address.slice(0, 10)}) is lower than ${errorLimit}`);
     }
 
