@@ -1,6 +1,5 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
-import newrelic from 'newrelic';
 
 import { ChainContract } from '../contracts/ChainContract';
 import Block, { IBlock } from '../models/Block';
@@ -341,7 +340,6 @@ class BlockSynchronizer {
 
   private noticeError = (err: string): void => {
     this.logger.error(err);
-    newrelic.noticeError(Error(err));
   };
 }
 

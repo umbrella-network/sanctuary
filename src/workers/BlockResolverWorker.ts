@@ -2,7 +2,6 @@ import Bull from 'bullmq';
 import { inject, injectable } from 'inversify';
 import NewBlocksResolver from '../services/NewBlocksResolver';
 import ChainSynchronizer from '../services/ChainSynchronizer';
-import newrelic from 'newrelic';
 import { ChainsIds } from '../types/ChainsIds';
 import { sleep } from '../utils/sleep';
 import { DispatcherDetector } from '../services/DispatcherDetector';
@@ -34,7 +33,6 @@ class BlockResolverWorker extends BasicWorker {
       await this.chainSynchronizer.apply(chainId);
       await this.newBlocksResolver.apply(chainId);
     } catch (e) {
-      newrelic.noticeError(e);
       this.logger.error(e);
     }
 

@@ -5,7 +5,6 @@ import BlockResolverWorker from './workers/BlockResolverWorker';
 import Settings from './types/Settings';
 import Server from './lib/Server';
 import { Logger } from 'winston';
-import newrelic from 'newrelic';
 
 (async (): Promise<void> => {
   const settings: Settings = Application.get('Settings');
@@ -17,7 +16,6 @@ import newrelic from 'newrelic';
     try {
       await blockSynchronizerWorker.enqueue({});
     } catch (e) {
-      newrelic.noticeError(e);
       logger.error(e);
     }
   }, settings.jobs.blockCreation.interval);
@@ -26,7 +24,6 @@ import newrelic from 'newrelic';
     try {
       await blockResolverWorker.enqueue({});
     } catch (e) {
-      newrelic.noticeError(e);
       logger.error(e);
     }
   }, settings.jobs.blockCreation.interval);

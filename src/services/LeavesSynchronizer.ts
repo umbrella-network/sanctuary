@@ -1,6 +1,5 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
-import newrelic from 'newrelic';
 import * as url from 'url';
 import { SortedMerkleTree } from '@umb-network/toolbox';
 
@@ -193,7 +192,6 @@ class LeavesSynchronizer {
   };
 
   private noticeError = (err: string): void => {
-    newrelic.noticeError(Error(err));
     this.logger.error(err);
   };
 }

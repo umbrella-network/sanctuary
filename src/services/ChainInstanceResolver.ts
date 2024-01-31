@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import ChainInstance, { IChainInstance } from '../models/ChainInstance';
-import newrelic from 'newrelic';
 import { ChainsIds } from '../types/ChainsIds';
 
 @injectable()
@@ -48,7 +47,6 @@ export class ChainInstanceResolver {
     a.anchor === b.anchor ? b.blocksCountOffset - a.blocksCountOffset : b.anchor - a.anchor;
 
   private noticeError = (err: string): void => {
-    newrelic.noticeError(Error(err));
     this.logger.error(err);
   };
 }

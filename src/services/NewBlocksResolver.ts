@@ -1,6 +1,5 @@
 import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
-import newrelic from 'newrelic';
 import { ABI, LeafValueCoder, loadFeeds } from '@umb-network/toolbox';
 
 import { ChainContract } from '../contracts/ChainContract';
@@ -343,7 +342,6 @@ class NewBlocksResolver {
   };
 
   private noticeError = (err: string, meta?: Record<string, unknown>): void => {
-    newrelic.noticeError(Error(err));
     const msg = err + (meta ? `${err}\n${JSON.stringify(meta)}` : '');
     this.logger.error(msg);
   };

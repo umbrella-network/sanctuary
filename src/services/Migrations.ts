@@ -1,4 +1,3 @@
-import newrelic from 'newrelic';
 import Block from '../models/Block';
 import Migration from '../models/Migration';
 import BlockChainData, { IBlockChainData } from '../models/BlockChainData';
@@ -33,7 +32,6 @@ class Migrations {
         await Migrations.saveMigration(migrationId);
       }
     } catch (e) {
-      newrelic.noticeError(e);
       console.error(e);
 
       if (callbackError) {

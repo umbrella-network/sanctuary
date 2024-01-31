@@ -1,6 +1,5 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
-import newrelic from 'newrelic';
 
 import { BlockChainDataFactory } from '../factories/BlockChainDataFactory';
 import { IForeignBlockReplicator, SolanaBlockReplicator } from './foreign-chain';
@@ -144,7 +143,6 @@ export class ForeignChainReplicator {
   };
 
   private noticeError = (err: string): void => {
-    newrelic.noticeError(Error(err));
     this.logger.error(err);
   };
 }
