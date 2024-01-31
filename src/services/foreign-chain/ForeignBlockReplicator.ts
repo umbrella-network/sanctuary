@@ -1,6 +1,5 @@
 import { inject, injectable, postConstruct } from 'inversify';
 import { Logger } from 'winston';
-import newrelic from 'newrelic';
 
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import { LeafKeyCoder, LeafValueCoder, TxSender } from '@umb-network/toolbox';
@@ -147,7 +146,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       };
     }
 
-    newrelic.recordCustomEvent(FailedTransactionEvent, { transactionHash: receipt.transactionHash });
     return { errors: [`[${this.chainId}] Tx for blockId ${block.blockId} failed`] };
   };
 
@@ -309,7 +307,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   }
 
   private noticeError = (err: string): void => {
-    newrelic.noticeError(Error(err));
     this.logger.error(err);
   };
 }

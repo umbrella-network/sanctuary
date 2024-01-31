@@ -162,7 +162,7 @@ const settings: Settings = {
     maxSearchRange: parseInt(process.env.MAX_SIGNATURE_SEARCH_RANGE || '8', 10),
     maxSearchRangeInSeconds: parseInt(process.env.MAX_SIGNATURE_SEARCH_RANGE || '8', 10) * 24 * 60 * 60,
   },
-  name: process.env.NEW_RELIC_APP_NAME || process.env.NAME || 'default',
+  name: process.env.NAME || 'default',
 };
 
 export default settings;
