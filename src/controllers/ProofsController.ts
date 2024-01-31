@@ -2,16 +2,12 @@ import { inject, injectable, postConstruct } from 'inversify';
 import express, { Request, Response, Router } from 'express';
 import Leaf from '../models/Leaf';
 import { BlockStatus } from '../types/blocks';
-import StatsdClient from 'statsd-client';
 import Settings from '../types/Settings';
 import { BlockRepository } from '../repositories/BlockRepository';
 import { ProjectAuthenticationMiddleware } from '../middleware/ProjectAuthenticationMiddleware';
 
 @injectable()
 class ProofsController {
-  @inject('StatsdClient')
-  private statsdClient?: StatsdClient;
-
   @inject(ProjectAuthenticationMiddleware)
   private projectAuthenticationMiddleware: ProjectAuthenticationMiddleware;
 
@@ -29,10 +25,6 @@ class ProofsController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    this.statsdClient?.increment('sanctuary.proofs-controller.index', undefined, {
-      projectId: request.params.currentProjectId,
-    });
-
     const chainId = this.extractChainId(request);
     const block = await this.blockRepository.findLatest({ chainId, status: BlockStatus.Finalized });
 

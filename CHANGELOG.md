@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - in `testBalanceThreshold` support case where `balance` is null/undefined (solana case) 
 
+### Removed
+- remove `newrelic` and `statsd`
+
 ## [5.8.0] - 2023-05-29
 ### Removed
 - replicatin for: Eth, Avax, Polygon, Arbitrum

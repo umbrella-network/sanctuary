@@ -1,5 +1,4 @@
 import { inject, injectable, postConstruct } from 'inversify';
-import StatsdClient from 'statsd-client';
 import { Request, Response, Router } from 'express';
 
 import { ProjectAuthenticationMiddleware } from '../middleware/ProjectAuthenticationMiddleware';
@@ -10,9 +9,6 @@ import { extractChainId, replyWithLeaves } from './helpers';
 
 @injectable()
 export class L2DController {
-  @inject('StatsdClient')
-  private statsdClient?: StatsdClient;
-
   @inject(ProjectAuthenticationMiddleware)
   private projectAuthenticationMiddleware: ProjectAuthenticationMiddleware;
 
@@ -37,10 +33,6 @@ export class L2DController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    this.statsdClient?.increment('sanctuary.l2d-controller.index', undefined, {
-      projectId: request.params.currentProjectId,
-    });
-
     const chainId = extractChainId(request);
     const blockId = await this.extractBlockIdOrGetLatestId(request, chainId);
 
