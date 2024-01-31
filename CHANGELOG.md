@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - in `testBalanceThreshold` support case where `balance` is null/undefined (solana case) 
 
+### Updated
+- docker node to v18
+
 ### Removed
 - remove `newrelic` and `statsd`
 

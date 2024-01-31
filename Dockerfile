@@ -1,5 +1,5 @@
-FROM node:15-alpine
-RUN apk add --no-cache bash python make g++ git 
+FROM node:18-alpine
+RUN apk add --no-cache bash git make g++ python3
 RUN adduser -D runner
 RUN mkdir -p /home/runner/app
 WORKDIR /home/runner/app
