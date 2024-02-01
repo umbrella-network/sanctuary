@@ -1,5 +1,6 @@
 export type BlockchainSettings = {
   startBlockNumber: number;
+  registryScannerStartingBlock?: number;
   scanBatchSize: number;
   maxRequestConcurrency: number;
   confirmations: number;
