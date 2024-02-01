@@ -59,6 +59,16 @@ const settings: Settings = {
       chainId: 'bsc',
       replicationConfirmations: parseInt(process.env.HOME_REPLICATION_CONFIRMATIONS || '20', 10),
     },
+    blockchainScanner: {
+      arbitrum: {
+        startBlockNumber: parseInt(process.env.ARBITRUM_SCANNER_START_BLOCK_NUMBER || '0', 10),
+        scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        maxRequestConcurrency: parseInt(process.env.ARBITRUM_MAX_REQUEST_CONCURRENCY || '10', 10),
+        confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.ARBITRUM_SCANNER_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.ARBITRUM_REGISTRY_CONTRACT_ADDRESS,
+      },
+    },
     multiChains: {
       bsc: {
         startBlockNumber: parseInt(process.env.START_BLOCK_NUMBER || '-100000', 10),
@@ -69,7 +79,6 @@ const settings: Settings = {
         contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
       ethereum: {
-        registryScannerStartingBlock: parseInt(process.env.ETH_REGISTRY_SCAN_START_BLOCK_NUMBER || '0', 10),
         startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.ETH_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         maxRequestConcurrency: parseInt(process.env.ETH_MAX_REQUEST_CONCURRENCY || '10', 10),
@@ -78,7 +87,6 @@ const settings: Settings = {
         contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
       },
       polygon: {
-        registryScannerStartingBlock: parseInt(process.env.POLYGON_REGISTRY_SCAN_START_BLOCK_NUMBER || '0', 10),
         startBlockNumber: parseInt(process.env.POLYGON_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: Math.min(1000, parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '1000', 10)),
         maxRequestConcurrency: parseInt(process.env.POLYGON_MAX_REQUEST_CONCURRENCY || '10', 10),
@@ -87,7 +95,6 @@ const settings: Settings = {
         contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
       },
       avax: {
-        registryScannerStartingBlock: parseInt(process.env.AVALANCHE_REGISTRY_SCAN_START_BLOCK_NUMBER || '0', 10),
         startBlockNumber: parseInt(process.env.AVALANCHE_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: Math.min(2000, parseInt(process.env.AVALANCHE_BLOCK_SCAN_BATCH_SIZE || '2000', 10)),
         maxRequestConcurrency: parseInt(process.env.AVALANCHE_MAX_REQUEST_CONCURRENCY || '10', 10),
@@ -96,7 +103,6 @@ const settings: Settings = {
         contractRegistryAddress: process.env.AVALANCHE_REGISTRY_CONTRACT_ADDRESS,
       },
       arbitrum: {
-        registryScannerStartingBlock: parseInt(process.env.ARBITRUM_REGISTRY_SCAN_START_BLOCK_NUMBER || '0', 10),
         startBlockNumber: parseInt(process.env.ARBITRUM_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         maxRequestConcurrency: parseInt(process.env.ARBITRUM_MAX_REQUEST_CONCURRENCY || '10', 10),

@@ -1,5 +1,4 @@
 import Bull from 'bullmq';
-import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 
 import BasicWorker from './BasicWorker';
@@ -9,15 +8,14 @@ import { STAKING_BANK_NAME, UMBRELLA_FEEDS_NAME } from '../constants/variables';
 
 @injectable()
 class MetricsWorker extends BasicWorker {
-  @inject('Logger') logger!: Logger;
   @inject(ContractSynchronizer) private contractSynchronizer!: ContractSynchronizer;
 
   apply = async (job: Bull.Job): Promise<void> => {
     this.logger.info(`[MetricsWorker] apply for ${job.id}`);
-    const chains = Object.values(ChainsIds);
+    const chains = Object.keys(this.settings.blockchain.blockchainScanner) as ChainsIds[];
 
     try {
-      await Promise.all(
+      await Promise.allSettled(
         chains.map((chainId) => this.contractSynchronizer.apply(chainId, [UMBRELLA_FEEDS_NAME, STAKING_BANK_NAME]))
       );
     } catch (e) {

@@ -1,11 +1,13 @@
-export type BlockchainSettings = {
+export interface BlockchainBasic {
   startBlockNumber: number;
-  registryScannerStartingBlock?: number;
   scanBatchSize: number;
   maxRequestConcurrency: number;
   confirmations: number;
   providerUrl: string;
   contractRegistryAddress: string;
+}
+
+export interface BlockchainSettings extends BlockchainBasic {
   transactions?: {
     waitForBlockTime: number;
     minGasPrice: number;
@@ -15,7 +17,7 @@ export type BlockchainSettings = {
       errorLimit: string;
     };
   };
-};
+}
 
 export type SinglentonWorkerSchedulerSettings = {
   interval: number;
@@ -64,6 +66,9 @@ type Settings = {
     homeChain: {
       chainId: string;
       replicationConfirmations: number;
+    };
+    blockchainScanner: {
+      arbitrum: BlockchainBasic;
     };
     multiChains: {
       bsc: BlockchainSettings;

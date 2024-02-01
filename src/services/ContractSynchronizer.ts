@@ -7,12 +7,11 @@ import type { queueAsPromised } from 'fastq';
 
 import { LogRegistered } from '../types/events';
 import { CreateBatchRanges } from './CreateBatchRanges';
-import Settings from '../types/Settings';
-import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainsIds } from '../types/ChainsIds';
 import { MappingRepository } from '../repositories/MappingRepository';
 import { LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT } from '../constants/mappings';
 import RegisteredContracts, { IRegisteredContracts } from '../models/RegisteredContracts';
+import { BlockchainScannerRepository } from '../repositories/BlockchainScannerRepository';
 
 type SyncChainTask = {
   batchFrom: number;
@@ -28,8 +27,7 @@ type FreshContracts = {
 @injectable()
 export class ContractSynchronizer {
   @inject('Logger') private logger!: Logger;
-  @inject('Settings') private settings: Settings;
-  @inject(BlockchainRepository) private blockchainRepository!: BlockchainRepository;
+  @inject(BlockchainScannerRepository) private blockchainScannerRepository!: BlockchainScannerRepository;
   @inject(MappingRepository) private mappingRepository: MappingRepository;
 
   apply = async (chainId: ChainsIds, contracts: string[]): Promise<void> => {
@@ -37,15 +35,15 @@ export class ContractSynchronizer {
       return;
     }
 
-    const blockchain = this.blockchainRepository.get(chainId);
+    const blockchainScanner = this.blockchainScannerRepository.get(chainId);
 
-    if (!blockchain.settings.registryScannerStartingBlock) {
+    if (!blockchainScanner.settings.startBlockNumber) {
       return;
     }
 
-    const blockNumber = await blockchain.getBlockNumber();
+    const blockNumber = await blockchainScanner.getBlockNumber();
 
-    if (!(await this.readyForFullBatch(chainId, blockNumber, blockchain.settings.scanBatchSize))) {
+    if (!(await this.readyForFullBatch(chainId, blockNumber, blockchainScanner.settings.scanBatchSize))) {
       this.logger.debug(`[${chainId}] not ready for full batch`);
       return;
     }
@@ -63,7 +61,7 @@ export class ContractSynchronizer {
 
     if ((await this.getLastSavedAnchor()) < 0) {
       this.logger.info(`[${chainId}] scanning finished but nothing found.`);
-      await this.saveInitialContracts(chainId, upToDate.list, blockchain.settings.registryScannerStartingBlock);
+      await this.saveInitialContracts(chainId, upToDate.list, blockchainScanner.settings.startBlockNumber);
     }
   };
 
@@ -81,7 +79,7 @@ export class ContractSynchronizer {
 
   private contractUpToDate = async (chainId: string, contractName: string): Promise<FreshContracts> => {
     this.logger.debug(`[${chainId}] checking if ${contractName} up to date.`);
-    const blockchain = this.blockchainRepository.get(chainId);
+    const blockchain = this.blockchainScannerRepository.get(chainId);
     const registry = new ContractRegistry(blockchain.getProvider(), blockchain.getContractRegistryAddress());
 
     let currentAddress;
@@ -108,24 +106,27 @@ export class ContractSynchronizer {
     currentBlockNumber: number,
     contracts: string[]
   ): Promise<void> => {
-    const blockchain = this.blockchainRepository.get(chainId);
+    const blockchainScanner = this.blockchainScannerRepository.get(chainId);
 
     const [fromBlock, toBlock] = await this.calculateBlockNumberRange(
       chainId,
-      blockchain.settings.registryScannerStartingBlock,
+      blockchainScanner.settings.startBlockNumber,
       currentBlockNumber,
-      blockchain.settings.confirmations
+      blockchainScanner.settings.confirmations
     );
 
     this.logger.info(`[${chainId}] Synchronizing contracts @${currentBlockNumber}: ${fromBlock} - ${toBlock}`);
 
-    const ranges = CreateBatchRanges.apply(fromBlock, toBlock, blockchain.settings.scanBatchSize);
+    const ranges = CreateBatchRanges.apply(fromBlock, toBlock, blockchainScanner.settings.scanBatchSize);
 
     const worker = async (task: SyncChainTask) => {
       await this.synchronizeContractsForBatch(chainId, task.batchFrom, task.batchTo, contracts);
     };
 
-    const queue: queueAsPromised<SyncChainTask> = fastq.promise(worker, blockchain.settings.maxRequestConcurrency);
+    const queue: queueAsPromised<SyncChainTask> = fastq.promise(
+      worker,
+      blockchainScanner.settings.maxRequestConcurrency
+    );
 
     ranges.map(([batchFrom, batchTo]) => {
       queue.push({ batchFrom, batchTo });
@@ -228,7 +229,7 @@ export class ContractSynchronizer {
     toBlock: number,
     contracts: string[]
   ): Promise<LogRegistered[]> => {
-    const blockchain = this.blockchainRepository.get(chainId);
+    const blockchain = this.blockchainScannerRepository.get(chainId);
 
     this.logger.info(`[${chainId}] Checking for new contracts ${fromBlock} - ${toBlock}`);
     // event LogRegistered(address indexed destination, bytes32 name);
