@@ -11,7 +11,7 @@ const settings: Settings = {
       lockTTL: parseInt(process.env.BLOCK_CREATION_LOCK_TTL || '20000'),
     },
     metricsReporting: {
-      interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '60000', 10),
+      interval: parseInt(process.env.METRICS_REPORTING_JOB_INTERVAL || '300000', 10),
     },
     chainsWorkerSchedulerSettings: {
       bsc: {
@@ -69,6 +69,7 @@ const settings: Settings = {
         contractRegistryAddress: process.env.REGISTRY_CONTRACT_ADDRESS,
       },
       ethereum: {
+        registryScannerStartingBlock: parseInt(process.env.ETH_REGISTRY_SCAN_START_BLOCK_NUMBER || '0', 10),
         startBlockNumber: parseInt(process.env.ETH_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.ETH_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         maxRequestConcurrency: parseInt(process.env.ETH_MAX_REQUEST_CONCURRENCY || '10', 10),
@@ -77,6 +78,7 @@ const settings: Settings = {
         contractRegistryAddress: process.env.ETH_REGISTRY_CONTRACT_ADDRESS,
       },
       polygon: {
+        registryScannerStartingBlock: parseInt(process.env.POLYGON_REGISTRY_SCAN_START_BLOCK_NUMBER || '0', 10),
         startBlockNumber: parseInt(process.env.POLYGON_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: Math.min(1000, parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '1000', 10)),
         maxRequestConcurrency: parseInt(process.env.POLYGON_MAX_REQUEST_CONCURRENCY || '10', 10),
@@ -85,6 +87,7 @@ const settings: Settings = {
         contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
       },
       avax: {
+        registryScannerStartingBlock: parseInt(process.env.AVALANCHE_REGISTRY_SCAN_START_BLOCK_NUMBER || '0', 10),
         startBlockNumber: parseInt(process.env.AVALANCHE_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: Math.min(2000, parseInt(process.env.AVALANCHE_BLOCK_SCAN_BATCH_SIZE || '2000', 10)),
         maxRequestConcurrency: parseInt(process.env.AVALANCHE_MAX_REQUEST_CONCURRENCY || '10', 10),
@@ -93,6 +96,7 @@ const settings: Settings = {
         contractRegistryAddress: process.env.AVALANCHE_REGISTRY_CONTRACT_ADDRESS,
       },
       arbitrum: {
+        registryScannerStartingBlock: parseInt(process.env.ARBITRUM_REGISTRY_SCAN_START_BLOCK_NUMBER || '0', 10),
         startBlockNumber: parseInt(process.env.ARBITRUM_START_BLOCK_NUMBER || '-100000', 10),
         scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         maxRequestConcurrency: parseInt(process.env.ARBITRUM_MAX_REQUEST_CONCURRENCY || '10', 10),

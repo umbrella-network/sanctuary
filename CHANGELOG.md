@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- contract scanner service
+
 ### Fixed
 - in `testBalanceThreshold` support case where `balance` is null/undefined (solana case) 
 
