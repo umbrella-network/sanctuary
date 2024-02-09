@@ -88,9 +88,7 @@ export class ContractSynchronizer {
   private contractUpToDate = async (chainId: string, contractName: string): Promise<FreshContracts> => {
     this.logger.debug(`[${chainId}] checking if ${contractName} up to date.`);
     const blockchain = this.blockchainScannerRepository.get(chainId);
-    // const registry = new ContractRegistry(blockchain.getProvider(), blockchain.getContractRegistryAddress());
-    // TODO temporary prod
-    const registry = new ContractRegistry(blockchain.getProvider(), '0x4A28406ECE8fFd7A91789738a5ac15DAc44bFa1b');
+    const registry = new ContractRegistry(blockchain.getProvider(), blockchain.getContractRegistryAddress());
 
     let currentAddress;
 
