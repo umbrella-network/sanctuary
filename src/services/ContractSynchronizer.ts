@@ -64,7 +64,7 @@ export class ContractSynchronizer {
 
     await this.mappingRepository.set(LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT(chainId), lastSyncedBlock.toString(10));
 
-    if (!(await this.contractRepository.getLastSavedAnchor())) {
+    if (!(await this.contractRepository.getLastSavedAnchor(chainId))) {
       await this.saveInitialContracts(chainId, upToDate.list, blockchainScanner.settings.startBlockNumber);
     }
 
@@ -180,7 +180,7 @@ export class ContractSynchronizer {
 
     const [lastCheckBlockCached, lastSavedAnchor] = await Promise.all([
       this.mappingRepository.get(LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT(chainId)),
-      this.contractRepository.getLastSavedAnchor(),
+      this.contractRepository.getLastSavedAnchor(chainId),
     ]);
 
     let lastAnchor = lastCheckBlockCached

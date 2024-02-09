@@ -1,9 +1,10 @@
 import { injectable } from 'inversify';
+import { ethers } from 'ethers';
+import { FilterQuery } from 'mongoose';
 
 import { ChainsIds } from '../types/ChainsIds';
 import { FeedsPriceData } from '../types/UpdateInput';
 import PriceData, { IPriceData } from '../models/PriceData';
-import { FilterQuery } from 'mongoose';
 
 @injectable()
 export class PriceDataRepository {
@@ -21,7 +22,7 @@ export class PriceDataRepository {
   async save(chainId: ChainsIds, txHash: string, key: string, data: FeedsPriceData): Promise<boolean> {
     await PriceData.findOneAndUpdate(
       {
-        _id: `${chainId}::${key}::${data.timestamp}`,
+        _id: ethers.utils.id(`${chainId}::${txHash}::${key}`),
       },
       {
         tx: txHash,

@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.3] - 2024-02-10
+### Fixed
+- fix ID for `PriceData`
+- fix query for last saved anchor 
+
 ## [5.9.2] - 2024-02-10
 ### Fixed
 - limit scanner by time
