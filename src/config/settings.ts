@@ -44,7 +44,7 @@ const settings: Settings = {
     blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '5', 10),
     feedsFile: process.env.FEEDS_FILE || '',
     feedsOnChain: process.env.FEEDS_ON_CHAIN_FILE || '',
-    layer1FeedFile: process.env.LAYER_FEEDS_FILE || '',
+    layer1FeedFile: process.env.LAYER1_FEEDS_FILE || '',
   },
   blockchain: {
     contracts: {
