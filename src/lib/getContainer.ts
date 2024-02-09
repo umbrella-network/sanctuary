@@ -16,6 +16,14 @@ import { BlockchainScanner } from './BlockchainScanner';
 import { BlockchainScannerRepository } from '../repositories/BlockchainScannerRepository';
 import { ContractSynchronizer } from '../services/ContractSynchronizer';
 import ChainSynchronizer from '../services/ChainSynchronizer';
+import { RegisteredContractRepository } from '../repositories/RegisteredContractRepository';
+import { BaseTxReceiptFetcher } from '../services/on-chain-stats/BaseTxReceiptFetcher';
+import { TxReceiptFetcher } from '../services/on-chain-stats/TxReceiptFetcher';
+import { UpdateTxRepository } from '../repositories/UpdateTxRepository';
+import { GasCalculatorEvm } from '../services/on-chain-stats/GasCalculatorEvm';
+import { GasCalculator } from '../services/on-chain-stats/GasCalculator';
+import { KeysUpdateService } from '../services/on-chain-stats/KeysUpdateService';
+import { FeedKeyRepository } from '../repositories/FeedKeyRepository';
 
 export function getContainer(): Container {
   const container = new Container({ autoBindInjectable: true });
@@ -49,5 +57,13 @@ export function getContainer(): Container {
   container.bind(ContractSynchronizer).toSelf().inSingletonScope();
   container.bind(ChainSynchronizer).toSelf().inSingletonScope();
   container.bind(ChainContractRepository).toSelf().inSingletonScope();
+  container.bind(RegisteredContractRepository).toSelf().inSingletonScope();
+  container.bind(BaseTxReceiptFetcher).toSelf().inSingletonScope();
+  container.bind(TxReceiptFetcher).toSelf().inSingletonScope();
+  container.bind(UpdateTxRepository).toSelf().inSingletonScope();
+  container.bind(GasCalculatorEvm).toSelf().inSingletonScope();
+  container.bind(GasCalculator).toSelf().inSingletonScope();
+  container.bind(KeysUpdateService).toSelf().inSingletonScope();
+  container.bind(FeedKeyRepository).toSelf().inSingletonScope();
   return container;
 }

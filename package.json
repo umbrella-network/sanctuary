@@ -1,9 +1,12 @@
 {
   "name": "sanctuary",
-  "version": "5.8.0",
+  "version": "5.9.0-beta.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "license": "MIT",
   "scripts": {
@@ -81,6 +84,7 @@
     "@project-serum/anchor": "~0.23.0",
     "@solana/web3.js": "~1.36.0",
     "@umb-network/toolbox": "~5.10.0",
+    "@eth-optimism/sdk": "~3.1.8",
     "auth0": "^2.37.0",
     "axios": "~0.21.1",
     "bcrypt": "~5.0.0",
@@ -92,6 +96,7 @@
     "date-fns": "^2.22.1",
     "dotenv": "~8.2.0",
     "ethers": "~5.5.1",
+    "ethereum-input-data-decoder": "~0.4.2",
     "express": "~4.17.1",
     "express-async-errors": "^3.1.1",
     "express-jwt": "^6.1.0",

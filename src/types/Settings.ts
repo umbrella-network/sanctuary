@@ -7,6 +7,10 @@ export interface BlockchainBasic {
   contractRegistryAddress: string;
 }
 
+export interface OnChainScannerSettings extends BlockchainBasic {
+  fetchBlocksBatchSize: number;
+}
+
 export interface BlockchainSettings extends BlockchainBasic {
   transactions?: {
     waitForBlockTime: number;
@@ -52,6 +56,7 @@ type Settings = {
     blockSyncBatchSize: number;
     feedsFile: string;
     feedsOnChain: string;
+    layer1FeedFile: string;
   };
   blockchain: {
     contracts: {
@@ -68,7 +73,7 @@ type Settings = {
       replicationConfirmations: number;
     };
     blockchainScanner: {
-      arbitrum: BlockchainBasic;
+      arbitrum: OnChainScannerSettings;
     };
     multiChains: {
       bsc: BlockchainSettings;
