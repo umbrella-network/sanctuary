@@ -29,7 +29,7 @@ export class UpdateTxRepository {
     const decodeData = decoder.decodeData(tx.data);
 
     if (decodeData.method != 'update') {
-      this.logger.info(`[UpdateTxRepository] '${decodeData.method}' method is ignored`);
+      this.logger.info(`[UpdateTxRepository][${chainId}] '${decodeData.method}' method is ignored`);
       return true;
     }
 
@@ -38,7 +38,7 @@ export class UpdateTxRepository {
 
     const prettyKeys = updateData.keys.map((hash) => {
       const name = existingKeys[hash];
-      if (!name) throw new Error(`[UpdateTxRepository] can not find name for hash ${hash}`);
+      if (!name) throw new Error(`[UpdateTxRepository][${chainId}] can not find name for hash ${hash}`);
       return name;
     });
 
@@ -68,13 +68,13 @@ export class UpdateTxRepository {
         prettyKeys.map((key, i) => this.priceDataRepository.save(chainId, tx.hash, key, updateData.priceDatas[i]))
       );
     } catch (e) {
-      this.logger.error(`[UpdateTxRepository] ${e.message}`);
+      this.logger.error(`[UpdateTxRepository][${chainId}] ${e.message}`);
       await UpdateTx.deleteOne({ _id: tx.hash });
       await this.priceDataRepository.deleteMany(tx.hash);
       return false;
     }
 
-    this.logger.info(`[UpdateTxRepository] saved update data for tx ${tx.hash}`);
+    this.logger.info(`[UpdateTxRepository][${chainId}] saved update data for tx ${tx.hash}`);
     return true;
   }
 

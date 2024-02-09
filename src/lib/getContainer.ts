@@ -24,6 +24,7 @@ import { GasCalculatorEvm } from '../services/on-chain-stats/GasCalculatorEvm';
 import { GasCalculator } from '../services/on-chain-stats/GasCalculator';
 import { KeysUpdateService } from '../services/on-chain-stats/KeysUpdateService';
 import { FeedKeyRepository } from '../repositories/FeedKeyRepository';
+import { ScanningTimeLeft } from '../services/on-chain-stats/ScanningTimeLeft';
 
 export function getContainer(): Container {
   const container = new Container({ autoBindInjectable: true });
@@ -65,5 +66,6 @@ export function getContainer(): Container {
   container.bind(GasCalculator).toSelf().inSingletonScope();
   container.bind(KeysUpdateService).toSelf().inSingletonScope();
   container.bind(FeedKeyRepository).toSelf().inSingletonScope();
+  container.bind(ScanningTimeLeft).toSelf().inSingletonScope();
   return container;
 }
