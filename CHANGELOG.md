@@ -5,8 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [5.9.0] - 2024-02-09
 ### Added
 - contract scanner service
+- on-chain tx scanner
 
 ### Fixed
 - in `testBalanceThreshold` support case where `balance` is null/undefined (solana case) 
