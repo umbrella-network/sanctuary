@@ -1,6 +1,5 @@
 import './boot';
 import { Logger } from 'winston';
-import newrelic from 'newrelic';
 
 import Application from './lib/Application';
 import BlockSynchronizerWorker from './workers/BlockSynchronizerWorker';
@@ -39,7 +38,6 @@ logger.info('Starting Scheduler...');
         }
       );
     } catch (e) {
-      newrelic.noticeError(e);
       logger.error(e);
     }
   };
@@ -92,7 +90,6 @@ logger.info('Starting Scheduler...');
         }
       );
     } catch (e) {
-      newrelic.noticeError(e);
       logger.error(e);
     }
   }, settings.jobs.blockCreation.interval);

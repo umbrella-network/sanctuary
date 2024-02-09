@@ -1,6 +1,5 @@
 import { inject, injectable, postConstruct } from 'inversify';
 import { Logger } from 'winston';
-import newrelic from 'newrelic';
 
 import { FeedValue } from '@umb-network/toolbox/dist/types/Feed';
 import { LeafKeyCoder, LeafValueCoder, TxSender } from '@umb-network/toolbox';
@@ -17,7 +16,7 @@ import { ForeignChainContract } from '../../contracts/ForeignChainContract';
 import { ChainContract } from '../../contracts/ChainContract';
 
 import { IForeignBlockReplicator } from './IForeignBlockReplicator';
-import Settings from '../../types/Settings';
+import Settings, { BlockchainSettings } from '../../types/Settings';
 import { Blockchain } from '../../lib/Blockchain';
 import { FailedTransactionEvent } from '../../constants/ReportedMetricsEvents';
 import RevertedBlockResolver from '../RevertedBlockResolver';
@@ -147,7 +146,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
       };
     }
 
-    newrelic.recordCustomEvent(FailedTransactionEvent, { transactionHash: receipt.transactionHash });
     return { errors: [`[${this.chainId}] Tx for blockId ${block.blockId} failed`] };
   };
 
@@ -218,7 +216,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     for (const blockChainData of datas) {
       const { chainId, blockId } = blockChainData;
       // we need to wait for confirmations before we replicate block
-      const { confirmations } = this.settings.blockchain.multiChains[chainId as ChainsIds];
+      const { confirmations } = (this.settings.blockchain.multiChains as Record<string, BlockchainSettings>)[chainId];
 
       if (!cacheBlockNumber[chainId]) {
         cacheBlockNumber[chainId] = await this.blockchainRepository.get(chainId).getBlockNumber();
@@ -309,7 +307,6 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
   }
 
   private noticeError = (err: string): void => {
-    newrelic.noticeError(Error(err));
     this.logger.error(err);
   };
 }

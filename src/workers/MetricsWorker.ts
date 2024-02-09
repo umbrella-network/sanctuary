@@ -1,34 +1,43 @@
 import Bull from 'bullmq';
-import { Logger } from 'winston';
 import { inject, injectable } from 'inversify';
 
-import BlockMintedReporter from '../services/BlockMintedReporter';
-import BlockLeafCountReporter from '../services/BlockLeafCountReporter';
 import BasicWorker from './BasicWorker';
+import { ContractSynchronizer } from '../services/ContractSynchronizer';
 import { ChainsIds } from '../types/ChainsIds';
-import HomechainBalanceReporter from '../services/HomechainBalanceReporter';
-import ForeignChainBalanceReporter from '../services/ForeignChainBalanceReporter';
+import { STAKING_BANK_NAME, UMBRELLA_FEEDS_NAME } from '../constants/variables';
+import { OnChainTxFetcher } from '../services/on-chain-stats/OnChainTxFetcher';
+import { KeysUpdateService } from '../services/on-chain-stats/KeysUpdateService';
 
 @injectable()
 class MetricsWorker extends BasicWorker {
-  @inject('Logger') logger!: Logger;
-  @inject(BlockMintedReporter) blockMintedReporter!: BlockMintedReporter;
-  @inject(BlockLeafCountReporter) blockLeafCountReporter!: BlockLeafCountReporter;
-  @inject(HomechainBalanceReporter) homechainBalanceReporter!: HomechainBalanceReporter;
-  @inject(ForeignChainBalanceReporter) foreignChainBalanceReporter!: ForeignChainBalanceReporter;
+  @inject(ContractSynchronizer) private contractSynchronizer!: ContractSynchronizer;
+  @inject(OnChainTxFetcher) private onChainTxFetcher!: OnChainTxFetcher;
+  @inject(KeysUpdateService) private keysUpdateService!: KeysUpdateService;
 
   apply = async (job: Bull.Job): Promise<void> => {
-    try {
-      this.logger.debug(`Sending metrics to NewRelic ${job.data}`);
-      const chains = Object.values(ChainsIds);
-      await Promise.all(chains.map((chainId) => this.blockMintedReporter.call(chainId)));
-      await this.blockLeafCountReporter.call();
+    this.logger.debug(`[MetricsWorker] apply for ${job.id}`);
 
-      await this.homechainBalanceReporter.call();
-      await this.foreignChainBalanceReporter.call([ChainsIds.SOLANA]);
+    try {
+      await this.keysUpdateService.apply();
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error(`[MetricsWorker] keysUpdateService: ${e.message}`);
     }
+
+    try {
+      const chains = Object.keys(this.settings.blockchain.blockchainScanner) as ChainsIds[];
+      await Promise.allSettled(chains.map((chainId) => this.syncOnChainTransactions(chainId)));
+    } catch (e) {
+      this.logger.error(`[MetricsWorker] syncOnChainTransactions: ${e.message}`);
+    }
+  };
+
+  private syncOnChainTransactions = async (chainId: ChainsIds): Promise<void> => {
+    const { lastSyncedBlock } = await this.contractSynchronizer.apply(chainId, [
+      UMBRELLA_FEEDS_NAME,
+      STAKING_BANK_NAME,
+    ]);
+
+    await this.onChainTxFetcher.call(chainId, lastSyncedBlock);
   };
 }
 

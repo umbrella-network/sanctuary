@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import './config/setupDotenv';
-import './config/setupNewrelic';
 import initMongoDB from './config/initMongoDB';
 import logger from './lib/logger';
 

@@ -1,9 +1,12 @@
 {
   "name": "sanctuary",
-  "version": "5.8.0",
+  "version": "5.9.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "license": "MIT",
   "scripts": {
@@ -45,11 +48,9 @@
     "@types/mocha": "~8.2.0",
     "@types/mongodb": "^3.5.28",
     "@types/moxios": "~0.4.9",
-    "@types/newrelic": "~7.0.0",
     "@types/node": "~14.11.2",
     "@types/rosie": "^0.0.40",
     "@types/sinon": "^10.0.2",
-    "@types/statsd-client": "^0.4.3",
     "@types/supertest": "^2.0.11",
     "@types/swagger-ui-express": "^4.1.3",
     "@types/uuid": "~8.3.0",
@@ -83,6 +84,7 @@
     "@project-serum/anchor": "~0.23.0",
     "@solana/web3.js": "~1.36.0",
     "@umb-network/toolbox": "~5.10.0",
+    "@eth-optimism/sdk": "~3.1.8",
     "auth0": "^2.37.0",
     "axios": "~0.21.1",
     "bcrypt": "~5.0.0",
@@ -94,6 +96,7 @@
     "date-fns": "^2.22.1",
     "dotenv": "~8.2.0",
     "ethers": "~5.5.1",
+    "ethereum-input-data-decoder": "~0.4.2",
     "express": "~4.17.1",
     "express-async-errors": "^3.1.1",
     "express-jwt": "^6.1.0",
@@ -107,10 +110,8 @@
     "jwks-rsa": "^2.0.5",
     "lodash": "^4.17.21",
     "mongoose": "5.13.12",
-    "newrelic": "~7.2.0",
     "reflect-metadata": "~0.1.13",
     "rimraf": "~3.0.2",
-    "statsd-client": "~0.4.5",
     "uuid": "~8.3.0",
     "uuidv4": "~6.2.4",
     "winston": "~3.3.3",

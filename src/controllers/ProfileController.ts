@@ -2,7 +2,6 @@ import { inject, injectable, postConstruct } from 'inversify';
 import { NextFunction, Request, Response, Router } from 'express';
 import { AuthenticationMiddleware } from '../middleware/AuthenticationMiddleware';
 import { UserNotFoundError, UserRepository, UserUpdateError } from '../repositories/UserRepository';
-import { MetricsMiddleware } from '../middleware/MetricsMiddleware';
 import { Logger } from 'winston';
 
 @injectable()
@@ -12,9 +11,6 @@ export class ProfileController {
 
   @inject(AuthenticationMiddleware)
   private authenticationMiddleware!: AuthenticationMiddleware;
-
-  @inject(MetricsMiddleware)
-  private metricsMiddleware!: MetricsMiddleware;
 
   @inject(UserRepository)
   private userRepository!: UserRepository;
@@ -29,8 +25,7 @@ export class ProfileController {
       .use(this.authenticationMiddleware.apply)
       .get('/', this.show)
       .put('/', this.update)
-      .patch('/', this.update)
-      .use(this.metricsMiddleware.apply);
+      .patch('/', this.update);
   }
 
   show = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

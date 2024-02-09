@@ -1,5 +1,4 @@
 import { inject, injectable, postConstruct } from 'inversify';
-import StatsdClient from 'statsd-client';
 import { Request, Response, Router } from 'express';
 
 import { ProjectAuthenticationMiddleware } from '../middleware/ProjectAuthenticationMiddleware';
@@ -10,9 +9,6 @@ import { extractChainId, replyWithLeaves } from './helpers';
 
 @injectable()
 export class BlocksController {
-  @inject('StatsdClient')
-  private statsdClient?: StatsdClient;
-
   @inject(ProjectAuthenticationMiddleware)
   private projectAuthenticationMiddleware: ProjectAuthenticationMiddleware;
 
@@ -35,9 +31,6 @@ export class BlocksController {
   }
 
   index = async (request: Request, response: Response): Promise<void> => {
-    await this.statsdClient?.increment('sanctuary.blocks-controller.index', 1, {
-      projectId: request.params.currentProjectId,
-    });
     const chainId = extractChainId(request);
     const offset = parseInt(<string>request.query.offset || '0');
     const limit = Math.min(parseInt(<string>request.query.limit || '100'), 100);
@@ -53,10 +46,6 @@ export class BlocksController {
   };
 
   show = async (request: Request, response: Response): Promise<void> => {
-    this.statsdClient?.increment('sanctuary.blocks-controller.show', 1, {
-      projectId: request.params.currentProjectId,
-    });
-
     const chainId = extractChainId(request);
     const blockId = parseInt(<string>request.params.blockId);
     const block = await this.blockRepository.findOne({ blockId, chainId });
@@ -69,10 +58,6 @@ export class BlocksController {
   };
 
   leaves = async (request: Request, response: Response): Promise<void> => {
-    this.statsdClient?.increment('sanctuary.blocks-controller.leaves', undefined, {
-      projectId: request.params.currentProjectId,
-    });
-
     const chainId = extractChainId(request);
     const blockId = parseInt(<string>request.params.blockId);
     const block = await this.blockRepository.findOne({ blockId, chainId });

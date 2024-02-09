@@ -1,19 +1,29 @@
 import { Container } from 'inversify';
+import { Redis } from 'ioredis';
+import { Logger } from 'winston';
+import { ManagementClient } from 'auth0';
 import Settings from '../types/Settings';
 import settings from '../config/settings';
-import { Redis } from 'ioredis';
 import buildRedisConnection from '../utils/buildRedisConnection';
-import { Logger } from 'winston';
-import StatsdClient from 'statsd-client';
 import { Blockchain } from './Blockchain';
 import { ProjectAuthUtils } from '../services/ProjectAuthUtils';
 import LockRepository from '../repositories/LockRepository';
 import { BlockchainRepository } from '../repositories/BlockchainRepository';
 import { ChainContractRepository } from '../repositories/ChainContractRepository';
-import { ManagementClient } from 'auth0';
 import { initAuth0ManagementClient } from '../config/initAuth0ManagementClient';
-import { getStatsdClient } from './getStatsdClient';
 import { getLogger } from './getLogger';
+import { BlockchainScanner } from './BlockchainScanner';
+import { BlockchainScannerRepository } from '../repositories/BlockchainScannerRepository';
+import { ContractSynchronizer } from '../services/ContractSynchronizer';
+import ChainSynchronizer from '../services/ChainSynchronizer';
+import { RegisteredContractRepository } from '../repositories/RegisteredContractRepository';
+import { BaseTxReceiptFetcher } from '../services/on-chain-stats/BaseTxReceiptFetcher';
+import { TxReceiptFetcher } from '../services/on-chain-stats/TxReceiptFetcher';
+import { UpdateTxRepository } from '../repositories/UpdateTxRepository';
+import { GasCalculatorEvm } from '../services/on-chain-stats/GasCalculatorEvm';
+import { GasCalculator } from '../services/on-chain-stats/GasCalculator';
+import { KeysUpdateService } from '../services/on-chain-stats/KeysUpdateService';
+import { FeedKeyRepository } from '../repositories/FeedKeyRepository';
 
 export function getContainer(): Container {
   const container = new Container({ autoBindInjectable: true });
@@ -34,19 +44,26 @@ export function getContainer(): Container {
     .inSingletonScope();
 
   container
-    .bind<StatsdClient>('StatsdClient')
-    .toDynamicValue(() => getStatsdClient())
-    .inSingletonScope();
-
-  container
     .bind<ManagementClient>('Auth0ManagementClient')
     .toDynamicValue((ctx) => initAuth0ManagementClient(ctx.container.get('Settings')))
     .inSingletonScope();
 
   container.bind<Blockchain>(Blockchain).toSelf().inSingletonScope();
+  container.bind<BlockchainScanner>(BlockchainScanner).toSelf().inSingletonScope();
   container.bind<ProjectAuthUtils>(ProjectAuthUtils).toSelf().inSingletonScope();
   container.bind(LockRepository).toSelf().inSingletonScope();
   container.bind(BlockchainRepository).toSelf().inSingletonScope();
+  container.bind(BlockchainScannerRepository).toSelf().inSingletonScope();
+  container.bind(ContractSynchronizer).toSelf().inSingletonScope();
+  container.bind(ChainSynchronizer).toSelf().inSingletonScope();
   container.bind(ChainContractRepository).toSelf().inSingletonScope();
+  container.bind(RegisteredContractRepository).toSelf().inSingletonScope();
+  container.bind(BaseTxReceiptFetcher).toSelf().inSingletonScope();
+  container.bind(TxReceiptFetcher).toSelf().inSingletonScope();
+  container.bind(UpdateTxRepository).toSelf().inSingletonScope();
+  container.bind(GasCalculatorEvm).toSelf().inSingletonScope();
+  container.bind(GasCalculator).toSelf().inSingletonScope();
+  container.bind(KeysUpdateService).toSelf().inSingletonScope();
+  container.bind(FeedKeyRepository).toSelf().inSingletonScope();
   return container;
 }

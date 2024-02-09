@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.0] - 2024-02-09
+### Added
+- contract scanner service
+- on-chain tx scanner
+
+### Fixed
+- in `testBalanceThreshold` support case where `balance` is null/undefined (solana case) 
+
+### Updated
+- docker node to v18
+
+### Removed
+- remove `newrelic` and `statsd`
+
 ## [5.8.0] - 2023-05-29
 ### Removed
 - replicatin for: Eth, Avax, Polygon, Arbitrum
