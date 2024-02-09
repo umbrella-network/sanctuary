@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.2] - 2024-02-10
+### Fixed
+- limit scanner by time
+
 ## [5.9.1] - 2024-02-09
 ### Fixed
 - limit range of scanning for event in one go
