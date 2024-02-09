@@ -2,8 +2,6 @@ import { Logger } from 'winston';
 import { ABI, ContractRegistry } from '@umb-network/toolbox';
 import { inject, injectable } from 'inversify';
 import { Contract, Event } from 'ethers';
-import * as fastq from 'fastq';
-import type { queueAsPromised } from 'fastq';
 
 import { LogRegistered } from '../types/events';
 import { CreateBatchRanges } from './CreateBatchRanges';
@@ -13,11 +11,7 @@ import { LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT } from '../constants/mappings';
 import RegisteredContracts, { IRegisteredContracts } from '../models/RegisteredContracts';
 import { BlockchainScannerRepository } from '../repositories/BlockchainScannerRepository';
 import { RegisteredContractRepository } from '../repositories/RegisteredContractRepository';
-
-type SyncChainTask = {
-  batchFrom: number;
-  batchTo: number;
-};
+import { ScanningTimeLeft } from './on-chain-stats/ScanningTimeLeft';
 
 type FreshContracts = {
   name: string;
@@ -31,6 +25,7 @@ export class ContractSynchronizer {
   @inject(BlockchainScannerRepository) private blockchainScannerRepository!: BlockchainScannerRepository;
   @inject(MappingRepository) private mappingRepository: MappingRepository;
   @inject(RegisteredContractRepository) private contractRepository: RegisteredContractRepository;
+  @inject(ScanningTimeLeft) private timeLeft: ScanningTimeLeft;
 
   apply = async (chainId: ChainsIds, contracts: string[]): Promise<{ lastSyncedBlock: number }> => {
     let lastSyncedBlock = -1;
@@ -133,26 +128,23 @@ export class ContractSynchronizer {
     );
 
     const ranges = CreateBatchRanges.apply(fromBlock, toBlock, blockchainScanner.settings.scanBatchSize);
+    const timeStart = Date.now();
+    let lastScannedBlock = fromBlock;
 
-    const worker = async (task: SyncChainTask) => {
-      await this.synchronizeContractsForBatch(chainId, task.batchFrom, task.batchTo, contracts);
-    };
+    const roundsBatch = 10;
+    const rounds = ranges.length / roundsBatch;
 
-    const queue: queueAsPromised<SyncChainTask> = fastq.promise(
-      worker,
-      blockchainScanner.settings.maxRequestConcurrency
-    );
+    // it might be faster to do async, but it is easier to manage with time limit
+    for (let i = 0; i < rounds && this.timeLeft.call(timeStart, 0.1) > 0; i++) {
+      await Promise.all(
+        ranges.slice(i * roundsBatch, roundsBatch * (i + 1)).map(([batchFrom, batchTo]) => {
+          this.synchronizeContractsForBatch(chainId, batchFrom, batchTo, contracts);
+          lastScannedBlock = batchTo;
+        })
+      );
+    }
 
-    // limit execution
-    const limit = ranges.slice(0, blockchainScanner.settings.maxRequestConcurrency * 10);
-
-    limit.map(([batchFrom, batchTo]) => {
-      queue.push({ batchFrom, batchTo });
-    });
-
-    await queue.drained();
-
-    return limit.pop()[1];
+    return lastScannedBlock;
   };
 
   private synchronizeContractsForBatch = async (
