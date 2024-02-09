@@ -74,6 +74,9 @@ type Settings = {
     };
     blockchainScanner: {
       arbitrum: OnChainScannerSettings;
+      linea: OnChainScannerSettings;
+      base: OnChainScannerSettings;
+      polygon: OnChainScannerSettings;
     };
     multiChains: {
       bsc: BlockchainSettings;

@@ -44,9 +44,7 @@ const settings: Settings = {
     blockSyncBatchSize: parseInt(process.env.BLOCK_SYNC_BATCH_SIZE || '5', 10),
     feedsFile: process.env.FEEDS_FILE || '',
     feedsOnChain: process.env.FEEDS_ON_CHAIN_FILE || '',
-    layer1FeedFile:
-      process.env.LAYER_FEEDS_FILE ||
-      'https://raw.githubusercontent.com/umbrella-network/pegasus-feeds/main/prod/onChainData128.8.yaml',
+    layer1FeedFile: process.env.LAYER_FEEDS_FILE || '',
   },
   blockchain: {
     contracts: {
@@ -71,6 +69,33 @@ const settings: Settings = {
         confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '5', 10),
         providerUrl: process.env.ARBITRUM_SCANNER_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.ARBITRUM_REGISTRY_CONTRACT_ADDRESS,
+      },
+      base: {
+        startBlockNumber: parseInt(process.env.BASE_SCANNER_START_BLOCK_NUMBER || '0', 10),
+        scanBatchSize: parseInt(process.env.BASE_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        fetchBlocksBatchSize: parseInt(process.env.BASE_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
+        maxRequestConcurrency: parseInt(process.env.BASE_MAX_REQUEST_CONCURRENCY || '10', 10),
+        confirmations: parseInt(process.env.BASE_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.BASE_SCANNER_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.BASE_REGISTRY_CONTRACT_ADDRESS,
+      },
+      linea: {
+        startBlockNumber: parseInt(process.env.LINEA_SCANNER_START_BLOCK_NUMBER || '0', 10),
+        scanBatchSize: parseInt(process.env.LINEA_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        fetchBlocksBatchSize: parseInt(process.env.LINEA_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
+        maxRequestConcurrency: parseInt(process.env.LINEA_MAX_REQUEST_CONCURRENCY || '10', 10),
+        confirmations: parseInt(process.env.LINEA_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.LINEA_SCANNER_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.LINEA_REGISTRY_CONTRACT_ADDRESS,
+      },
+      polygon: {
+        startBlockNumber: parseInt(process.env.POLYGON_SCANNER_START_BLOCK_NUMBER || '0', 10),
+        scanBatchSize: parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        fetchBlocksBatchSize: parseInt(process.env.POLYGON_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
+        maxRequestConcurrency: parseInt(process.env.POLYGON_MAX_REQUEST_CONCURRENCY || '10', 10),
+        confirmations: parseInt(process.env.POLYGON_BLOCK_CONFIRMATIONS || '5', 10),
+        providerUrl: process.env.POLYGON_SCANNER_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
       },
     },
     multiChains: {

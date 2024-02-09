@@ -16,7 +16,7 @@ import { ForeignChainContract } from '../../contracts/ForeignChainContract';
 import { ChainContract } from '../../contracts/ChainContract';
 
 import { IForeignBlockReplicator } from './IForeignBlockReplicator';
-import Settings from '../../types/Settings';
+import Settings, { BlockchainSettings } from '../../types/Settings';
 import { Blockchain } from '../../lib/Blockchain';
 import { FailedTransactionEvent } from '../../constants/ReportedMetricsEvents';
 import RevertedBlockResolver from '../RevertedBlockResolver';
@@ -216,7 +216,7 @@ export abstract class ForeignBlockReplicator implements IForeignBlockReplicator 
     for (const blockChainData of datas) {
       const { chainId, blockId } = blockChainData;
       // we need to wait for confirmations before we replicate block
-      const { confirmations } = this.settings.blockchain.multiChains[chainId as ChainsIds];
+      const { confirmations } = (this.settings.blockchain.multiChains as Record<string, BlockchainSettings>)[chainId];
 
       if (!cacheBlockNumber[chainId]) {
         cacheBlockNumber[chainId] = await this.blockchainRepository.get(chainId).getBlockNumber();

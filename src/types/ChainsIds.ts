@@ -5,6 +5,7 @@ export enum ChainsIds {
   ETH = 'ethereum',
   POLYGON = 'polygon',
   SOLANA = 'solana',
+  BASE = 'base',
 }
 
 export type TForeignChainsIds =
