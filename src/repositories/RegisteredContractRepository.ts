@@ -35,8 +35,8 @@ export class RegisteredContractRepository {
     return RegisteredContracts.find({ chainId, name }).exec();
   }
 
-  async getLastSavedAnchor(): Promise<number | undefined> {
-    const records = await RegisteredContracts.find().limit(1).sort({ anchor: -1 }).exec();
+  async getLastSavedAnchor(chainId: ChainsIds): Promise<number | undefined> {
+    const records = await RegisteredContracts.find({ chainId }).limit(1).sort({ anchor: -1 }).exec();
     return records[0] ? records[0].anchor : undefined;
   }
 }
