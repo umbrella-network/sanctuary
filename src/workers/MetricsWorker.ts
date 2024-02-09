@@ -15,7 +15,7 @@ class MetricsWorker extends BasicWorker {
   @inject(KeysUpdateService) private keysUpdateService!: KeysUpdateService;
 
   apply = async (job: Bull.Job): Promise<void> => {
-    this.logger.info(`[MetricsWorker] apply for ${job.id}`);
+    this.logger.debug(`[MetricsWorker] apply for ${job.id}`);
 
     try {
       await this.keysUpdateService.apply();
