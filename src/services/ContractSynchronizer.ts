@@ -42,6 +42,7 @@ export class ContractSynchronizer {
     const blockchainScanner = this.blockchainScannerRepository.get(chainId);
 
     if (!blockchainScanner.settings.startBlockNumber) {
+      this.logger.debug(`[ContractSynchronizer][${chainId}] startBlockNumber not set`);
       return { lastSyncedBlock };
     }
 

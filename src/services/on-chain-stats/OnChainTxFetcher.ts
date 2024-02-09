@@ -26,14 +26,14 @@ export class OnChainTxFetcher {
   @inject(TxReceiptFetcher) private txReceiptFetcher: TxReceiptFetcher;
 
   async call(chainId: ChainsIds, lastSyncedBlock: number): Promise<void> {
-    this.logger.info(`[OnChainTxFetcher] start for ${chainId} with last synced block ${lastSyncedBlock}`);
-
     const blockchainScanner = this.blockchainScannerRepository.get(chainId);
 
     if (!blockchainScanner.settings.startBlockNumber) {
-      this.logger.info(`[OnChainTxFetcher] startBlockNumber not set for ${chainId}`);
+      this.logger.debug(`[OnChainTxFetcher][${chainId}] startBlockNumber not set`);
       return;
     }
+
+    this.logger.info(`[OnChainTxFetcher][${chainId}] started with last synced block ${lastSyncedBlock}`);
 
     const [lastSavedBlock, network] = await Promise.all([
       this.getLastValidCheckedBlock(chainId),
@@ -44,7 +44,7 @@ export class OnChainTxFetcher {
     const rangeTo = this.blockTo(chainId, lastSyncedBlock);
 
     if (rangeFrom >= rangeTo) {
-      this.logger.debug(`[OnChainTxFetcher] rangeFrom ${rangeFrom} >= rangeTo ${rangeTo}`);
+      this.logger.debug(`[OnChainTxFetcher][${chainId}] rangeFrom ${rangeFrom} >= rangeTo ${rangeTo}`);
       return;
     }
 
@@ -54,16 +54,16 @@ export class OnChainTxFetcher {
     const feedsMap = await this.umbrellaFeedsMap(chainId);
 
     this.logger.info(
-      `[OnChainTxFetcher] blocks on ${chainId} to sync: ${rangeTo - rangeFrom} blocks, starting from ${rangeFrom}`
+      `[OnChainTxFetcher][${chainId}] blocks to sync: ${rangeTo - rangeFrom} blocks, starting from ${rangeFrom}`
     );
     let gotError = false;
 
     // sync execution
     for (let i = 0; i < ranges.length && this.calcTimeLeft(timeStart) > 0 && !gotError; i++) {
       const [from, to] = ranges[i];
-      const logPrefix = `[OnChainTxFetcher][${i}/${ranges.length}]`;
+      const logPrefix = `[OnChainTxFetcher][${chainId}] [${i}/${ranges.length}]`;
       this.logger.debug(
-        `${logPrefix} scanning ${chainId} ${from} - ${to} (${to - from} blocks), T${this.calcTimeLeft(timeStart)}s`
+        `${logPrefix} scanning ${from} - ${to} (${to - from} blocks), T${this.calcTimeLeft(timeStart)}s`
       );
 
       const fetchedBlocks = await this.updateTxRepository.getBlocks(chainId, from, to);
@@ -144,7 +144,7 @@ export class OnChainTxFetcher {
   }
 
   private async saveCheckpoint(chainId: ChainsIds, blockNumber: number): Promise<void> {
-    this.logger.debug(`[OnChainTxFetcher] checkpoint ${chainId}@${blockNumber}`);
+    this.logger.debug(`[OnChainTxFetcher][${chainId}] checkpoint ${blockNumber}`);
     await this.mappingRepository.set(this.lastCheckedBlockMappingKey(chainId), blockNumber.toString(10));
   }
 }
