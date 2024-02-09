@@ -66,7 +66,7 @@ const settings: Settings = {
         scanBatchSize: parseInt(process.env.ARBITRUM_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         fetchBlocksBatchSize: parseInt(process.env.ARBITRUM_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
         maxRequestConcurrency: parseInt(process.env.ARBITRUM_MAX_REQUEST_CONCURRENCY || '10', 10),
-        confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '5', 10),
+        confirmations: parseInt(process.env.ARBITRUM_BLOCK_CONFIRMATIONS || '20', 10),
         providerUrl: process.env.ARBITRUM_SCANNER_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.ARBITRUM_REGISTRY_CONTRACT_ADDRESS,
       },
@@ -75,7 +75,7 @@ const settings: Settings = {
         scanBatchSize: parseInt(process.env.BASE_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         fetchBlocksBatchSize: parseInt(process.env.BASE_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
         maxRequestConcurrency: parseInt(process.env.BASE_MAX_REQUEST_CONCURRENCY || '10', 10),
-        confirmations: parseInt(process.env.BASE_BLOCK_CONFIRMATIONS || '5', 10),
+        confirmations: parseInt(process.env.BASE_BLOCK_CONFIRMATIONS || '10', 10),
         providerUrl: process.env.BASE_SCANNER_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.BASE_REGISTRY_CONTRACT_ADDRESS,
       },
@@ -84,7 +84,7 @@ const settings: Settings = {
         scanBatchSize: parseInt(process.env.LINEA_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         fetchBlocksBatchSize: parseInt(process.env.LINEA_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
         maxRequestConcurrency: parseInt(process.env.LINEA_MAX_REQUEST_CONCURRENCY || '10', 10),
-        confirmations: parseInt(process.env.LINEA_BLOCK_CONFIRMATIONS || '5', 10),
+        confirmations: parseInt(process.env.LINEA_BLOCK_CONFIRMATIONS || '10', 10),
         providerUrl: process.env.LINEA_SCANNER_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.LINEA_REGISTRY_CONTRACT_ADDRESS,
       },
@@ -93,7 +93,7 @@ const settings: Settings = {
         scanBatchSize: parseInt(process.env.POLYGON_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
         fetchBlocksBatchSize: parseInt(process.env.POLYGON_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
         maxRequestConcurrency: parseInt(process.env.POLYGON_MAX_REQUEST_CONCURRENCY || '10', 10),
-        confirmations: parseInt(process.env.POLYGON_BLOCK_CONFIRMATIONS || '5', 10),
+        confirmations: parseInt(process.env.POLYGON_BLOCK_CONFIRMATIONS || '15', 10),
         providerUrl: process.env.POLYGON_SCANNER_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
       },
