@@ -12,6 +12,7 @@ import { EvmTxsFetcher } from './EvmTxsFetcher';
 import { UpdateTxRepository } from '../../repositories/UpdateTxRepository';
 import { TxReceiptFetcher } from './TxReceiptFetcher';
 import { CreateBatchRanges } from '../CreateBatchRanges';
+import { ScanningTimeLeft } from './ScanningTimeLeft';
 
 @injectable()
 export class OnChainTxFetcher {
@@ -24,6 +25,7 @@ export class OnChainTxFetcher {
   @inject(EvmTxsFetcher) private txsFetcher: EvmTxsFetcher;
   @inject(UpdateTxRepository) private updateTxRepository: UpdateTxRepository;
   @inject(TxReceiptFetcher) private txReceiptFetcher: TxReceiptFetcher;
+  @inject(ScanningTimeLeft) private timeLeft: ScanningTimeLeft;
 
   async call(chainId: ChainsIds, lastSyncedBlock: number): Promise<void> {
     const blockchainScanner = this.blockchainScannerRepository.get(chainId);
@@ -59,11 +61,12 @@ export class OnChainTxFetcher {
     let gotError = false;
 
     // sync execution
-    for (let i = 0; i < ranges.length && this.calcTimeLeft(timeStart) > 0 && !gotError; i++) {
+    for (let i = 0; i < ranges.length && this.timeLeft.call(timeStart) > 0 && !gotError; i++) {
       const [from, to] = ranges[i];
       const logPrefix = `[OnChainTxFetcher][${chainId}] [${i}/${ranges.length}]`;
+
       this.logger.debug(
-        `${logPrefix} scanning ${from} - ${to} (${to - from} blocks), T${this.calcTimeLeft(timeStart)}s`
+        `${logPrefix} scanning ${from} - ${to} (${to - from} blocks), T${this.timeLeft.call(timeStart)}s`
       );
 
       const fetchedBlocks = await this.updateTxRepository.getBlocks(chainId, from, to);
@@ -106,11 +109,6 @@ export class OnChainTxFetcher {
     return txs.filter((tx) => {
       return !!tx.to && feedsAddresses.has(tx.to.toLowerCase());
     });
-  }
-
-  private calcTimeLeft(timeStart: number): number {
-    const maxExecutionTime = (this.settings.jobs.metricsReporting.interval * 3) / 4;
-    return Math.trunc((maxExecutionTime - (Date.now() - timeStart)) / 1000);
   }
 
   private async umbrellaFeedsMap(chainId: ChainsIds): Promise<Map<string, boolean>> {

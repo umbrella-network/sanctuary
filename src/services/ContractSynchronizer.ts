@@ -33,7 +33,7 @@ export class ContractSynchronizer {
   @inject(RegisteredContractRepository) private contractRepository: RegisteredContractRepository;
 
   apply = async (chainId: ChainsIds, contracts: string[]): Promise<{ lastSyncedBlock: number }> => {
-    let lastSyncedBlock = 0;
+    let lastSyncedBlock = -1;
 
     if (chainId === ChainsIds.SOLANA) {
       return { lastSyncedBlock };
@@ -50,7 +50,7 @@ export class ContractSynchronizer {
     const lastCheckedBlock = await this.mappingRepository.get(LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT(chainId));
 
     if (!this.readyForFullBatch(chainId, blockNumber, lastCheckedBlock, blockchainScanner.settings.scanBatchSize)) {
-      this.logger.debug(`[${chainId}] not ready for full batch`);
+      this.logger.debug(`[ContractSynchronizer][${chainId}] not ready for full batch`);
       lastSyncedBlock = lastCheckedBlock ? parseInt(lastCheckedBlock, 10) : blockchainScanner.settings.startBlockNumber;
       return { lastSyncedBlock };
     }
@@ -58,20 +58,22 @@ export class ContractSynchronizer {
     const upToDate = await this.contractsUpToDate(chainId, contracts);
 
     if (upToDate.upToDate) {
-      await this.mappingRepository.set(LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT(chainId), blockNumber.toString(10));
-      this.logger.info(`[${chainId}] contracts up to date.`);
-      return { lastSyncedBlock: blockNumber };
+      lastSyncedBlock = blockNumber - blockchainScanner.settings.confirmations;
+      await this.mappingRepository.set(LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT(chainId), lastSyncedBlock.toString(10));
+      this.logger.info(`[ContractSynchronizer][${chainId}] contracts up to date.`);
+      return { lastSyncedBlock };
     }
 
-    this.logger.info(`[${chainId}] contracts not up to date.`);
-    await this.synchronizeContracts(chainId, blockNumber, contracts);
+    this.logger.info(`[ContractSynchronizer][${chainId}] contracts not up to date.`);
+    lastSyncedBlock = await this.synchronizeContracts(chainId, blockNumber, contracts);
+
+    await this.mappingRepository.set(LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT(chainId), lastSyncedBlock.toString(10));
 
     if (!(await this.contractRepository.getLastSavedAnchor())) {
-      this.logger.info(`[${chainId}] scanning finished but nothing found.`);
       await this.saveInitialContracts(chainId, upToDate.list, blockchainScanner.settings.startBlockNumber);
     }
 
-    return { lastSyncedBlock: blockNumber };
+    return { lastSyncedBlock };
   };
 
   private contractsUpToDate = async (
@@ -87,7 +89,7 @@ export class ContractSynchronizer {
   };
 
   private contractUpToDate = async (chainId: string, contractName: string): Promise<FreshContracts> => {
-    this.logger.debug(`[${chainId}] checking if ${contractName} up to date.`);
+    this.logger.debug(`[ContractSynchronizer][${chainId}] checking if ${contractName} up to date.`);
     const blockchain = this.blockchainScannerRepository.get(chainId);
     const registry = new ContractRegistry(blockchain.getProvider(), blockchain.getContractRegistryAddress());
 
@@ -96,7 +98,9 @@ export class ContractSynchronizer {
     try {
       currentAddress = await registry.getAddress(contractName);
     } catch (e) {
-      this.logger.error(`[${chainId}] unable to get address for ${contractName}. Trying provider again`);
+      this.logger.error(
+        `[ContractSynchronizer][${chainId}] unable to get address for ${contractName}. Trying provider again`
+      );
       currentAddress = await registry.getAddress(contractName);
     }
 
@@ -114,7 +118,7 @@ export class ContractSynchronizer {
     chainId: ChainsIds,
     currentBlockNumber: number,
     contracts: string[]
-  ): Promise<void> => {
+  ): Promise<number> => {
     const blockchainScanner = this.blockchainScannerRepository.get(chainId);
 
     const [fromBlock, toBlock] = await this.calculateBlockNumberRange(
@@ -124,7 +128,9 @@ export class ContractSynchronizer {
       blockchainScanner.settings.confirmations
     );
 
-    this.logger.info(`[${chainId}] Synchronizing contracts @${currentBlockNumber}: ${fromBlock} - ${toBlock}`);
+    this.logger.info(
+      `[ContractSynchronizer][${chainId}] synchronizing contracts @${currentBlockNumber}: ${fromBlock} - ${toBlock}`
+    );
 
     const ranges = CreateBatchRanges.apply(fromBlock, toBlock, blockchainScanner.settings.scanBatchSize);
 
@@ -137,11 +143,16 @@ export class ContractSynchronizer {
       blockchainScanner.settings.maxRequestConcurrency
     );
 
-    ranges.map(([batchFrom, batchTo]) => {
+    // limit execution
+    const limit = ranges.slice(0, blockchainScanner.settings.maxRequestConcurrency * 10);
+
+    limit.map(([batchFrom, batchTo]) => {
       queue.push({ batchFrom, batchTo });
     });
 
     await queue.drained();
+
+    return limit.pop()[1];
   };
 
   private synchronizeContractsForBatch = async (
@@ -150,17 +161,18 @@ export class ContractSynchronizer {
     toBlock: number,
     contracts: string[]
   ): Promise<IRegisteredContracts[]> => {
-    if (fromBlock > toBlock) throw new Error(`[ContractSynchronizer] fromBlock ${fromBlock} > toBlock ${toBlock}`);
+    if (fromBlock > toBlock)
+      throw new Error(`[ContractSynchronizer][${chainId} fromBlock ${fromBlock} > toBlock ${toBlock}`);
 
     const events = await this.scanForEvents(chainId, fromBlock, toBlock, contracts);
 
-    this.logger.info(`[${chainId}] got ${events.length} events for ${fromBlock}-${toBlock}`);
+    this.logger.info(`[ContractSynchronizer][${chainId}] got ${events.length} events for ${fromBlock}-${toBlock}`);
 
     return Promise.all(
       events.map((logRegistered) => {
         const { destination, anchor, bytes32 } = logRegistered;
         const [name] = Buffer.from(bytes32.replace('0x', ''), 'hex').toString().split(']x00');
-        this.logger.info(`[${chainId}] Detected new ${name}: ${destination} at ${anchor}`);
+        this.logger.info(`[ContractSynchronizer][${chainId}] Detected new ${name}: ${destination} at ${anchor}`);
         return this.contractRepository.save(chainId, anchor, name, destination);
       })
     );
@@ -172,7 +184,7 @@ export class ContractSynchronizer {
     endBlockNumber: number,
     confirmations: number
   ): Promise<[number, number]> => {
-    const prefix = `[${chainId}] `;
+    const prefix = `[ContractSynchronizer][${chainId}] `;
 
     const [lastCheckBlockCached, lastSavedAnchor] = await Promise.all([
       this.mappingRepository.get(LAST_BLOCK_CHECKED_FOR_NEW_CONTRACT(chainId)),
@@ -221,7 +233,7 @@ export class ContractSynchronizer {
   ): Promise<LogRegistered[]> => {
     const blockchain = this.blockchainScannerRepository.get(chainId);
 
-    this.logger.info(`[${chainId}] Checking for new contracts ${fromBlock} - ${toBlock}`);
+    this.logger.info(`[ContractSynchronizer][${chainId}] Checking for new contracts ${fromBlock} - ${toBlock}`);
     // event LogRegistered(address indexed destination, bytes32 name);
     const registry: Contract = new Contract(
       blockchain.getContractRegistryAddress(),
@@ -250,7 +262,9 @@ export class ContractSynchronizer {
       upToDate
         .filter((data) => !data.fresh)
         .map((contractData) => {
-          this.logger.info(`[${chainId}] saving initial contract ${contractData.name}@${contractData.address}`);
+          this.logger.info(
+            `[ContractSynchronizer][${chainId}] saving initial contract ${contractData.name}@${contractData.address}`
+          );
 
           return this.contractRepository.save(
             chainId,
