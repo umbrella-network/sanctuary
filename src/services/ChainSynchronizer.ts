@@ -59,7 +59,7 @@ class ChainSynchronizer {
     try {
       currentChainAddress = await registry.getAddress(CHAIN_CONTRACT_NAME);
     } catch (e) {
-      this.logger.info(`[${chainId}] unable to get address. Trying provider again`);
+      this.logger.error(`[${chainId}] unable to get ${CHAIN_CONTRACT_NAME} address. Trying provider again`);
       currentChainAddress = await registry.getAddress(CHAIN_CONTRACT_NAME);
     }
 
