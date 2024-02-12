@@ -52,7 +52,7 @@ export class UpdateTxRepository {
         feedsAddress: tx.to,
         blockNumber: tx.blockNumber,
         success: !!receipt.status,
-        sender: tx.from,
+        sender: tx.from.toLowerCase(),
         signers: SignersRecoveryEvm.apply(networkId, tx.to, updateData),
         fee: this.gasCalculator.apply(chainId, receipt).toString(10),
         kees: prettyKeys,
