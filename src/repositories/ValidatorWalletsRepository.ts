@@ -26,6 +26,10 @@ export class ValidatorWalletsRepository {
             signer: data.signer.toLowerCase(),
             deviation: data.deviation.toLowerCase(),
             chainId,
+          },
+          {
+            new: true,
+            upsert: true,
           }
         ).exec();
       })
