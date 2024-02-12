@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.13] - 2024-02-12
+### Updated
+- sort report data
+
 ## [5.9.12] - 2024-02-12
 ### Fixed
 - fix report formatting

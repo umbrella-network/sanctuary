@@ -118,11 +118,16 @@ if validator did not submit any tx, it will not be included in report, even if h
       this.processTx(tx, results, signerToSender);
     });
 
-    const records = Object.keys(results).map((sender) => {
-      const { failed, gasFail, gasSuccess, successfulUpdates, signatures } = results[sender];
-      const totalWei = ethers.utils.formatEther(gasFail + gasSuccess);
-      return [sender, failed, successfulUpdates, signatures, gasFail, gasSuccess, totalWei].join(';');
-    });
+    const records = Object.keys(results)
+      .map((sender) => {
+        const { failed, gasFail, gasSuccess, successfulUpdates, signatures } = results[sender];
+        const totalWei = ethers.utils.formatEther(gasFail + gasSuccess);
+        return { sender, failed, successfulUpdates, signatures, gasFail, gasSuccess, totalWei };
+      })
+      .sort((a, b) => b.signatures - a.signatures)
+      .map(({ sender, failed, successfulUpdates, signatures, gasFail, gasSuccess, totalWei }) => {
+        return [sender, failed, successfulUpdates, signatures, gasFail, gasSuccess, totalWei].join(';');
+      });
 
     const labels = [
       'wallet',
