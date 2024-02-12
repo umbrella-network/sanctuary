@@ -14,8 +14,8 @@ export class ValidatorWalletsRepository {
     return ValidatorWallets.find({ chainId }).exec();
   }
 
-  async save(chainId: ChainsIds, validators: IValidatorWallets[]): Promise<void> {
-    await Promise.all(
+  async save(chainId: ChainsIds, validators: IValidatorWallets[]): Promise<IValidatorWallets[]> {
+    return Promise.all(
       validators.map((data) => {
         const id = `validator::${chainId}::${data.signer.toLowerCase()}`;
 
