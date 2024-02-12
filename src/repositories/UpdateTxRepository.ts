@@ -89,6 +89,11 @@ export class UpdateTxRepository {
     const nextM = month == 12 ? 1 : month + 1;
     const to = new Date(`${nextY}-${nextM.toString(10).padStart(2, '0')}-01`);
 
+    this.logger.info(
+      `[UpdateTxRepository.findMonthlyTx][${chainId}]` +
+        `looking for tx from ${from.toISOString()} - ${to.toISOString()}`
+    );
+
     return UpdateTx.find({ chainId, txTimestamp: { $gte: from, $lt: to } }).exec();
   }
 
