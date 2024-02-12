@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
-## [5.9.6] - 2024-02-13
+## [5.9.7] - 2024-02-12
+### Fixed
+- fix fetching validators
+
+## [5.9.6] - 2024-02-12
 ### Fixed
 - fix counting signatures by creating service to connect signing wallet with deviation wallet
 
