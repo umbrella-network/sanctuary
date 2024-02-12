@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.5] - 2024-02-12
+### Fixed
+- use lowercase for `UpdateTx` model
+
 ## [5.9.4] - 2024-02-12
 ### Added
 - additional logs for API
