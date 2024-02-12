@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.4] - 2024-02-12
+### Added
+- additional logs for API
+
 ## [5.9.3] - 2024-02-10
 ### Fixed
 - fix ID for `PriceData`

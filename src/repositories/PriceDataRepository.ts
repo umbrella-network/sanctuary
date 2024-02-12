@@ -1,6 +1,7 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { ethers } from 'ethers';
 import { FilterQuery } from 'mongoose';
+import { Logger } from 'winston';
 
 import { ChainsIds } from '../types/ChainsIds';
 import { FeedsPriceData } from '../types/UpdateInput';
@@ -8,6 +9,8 @@ import PriceData, { IPriceData } from '../models/PriceData';
 
 @injectable()
 export class PriceDataRepository {
+  @inject('Logger') private logger!: Logger;
+
   async deleteMany(txHash: string): Promise<void> {
     await PriceData.deleteMany({ tx: txHash });
   }
@@ -15,7 +18,13 @@ export class PriceDataRepository {
   async lastPrices(chainId: ChainsIds | undefined, key: string, days: number): Promise<IPriceData[]> {
     const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const filter: FilterQuery<IPriceData> = { key, timestamp: { $gte: from.getTime() / 1000 } };
-    if (chainId) filter['chainId'] = chainId;
+
+    if (chainId) {
+      filter['chainId'] = chainId;
+    }
+
+    this.logger.info(`[PriceDataRepository.priceHistory][${chainId}] ${filter}`);
+
     return PriceData.find(filter).sort({ timestamp: 1 }).exec();
   }
 

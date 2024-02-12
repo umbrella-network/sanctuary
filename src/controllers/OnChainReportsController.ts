@@ -38,6 +38,8 @@ export class OnChainReportsController {
 
     try {
       const prices = await this.priceDataRepository.lastPrices(chainId, key, 7);
+      this.logger.info(`[priceHistory][${chainId}] got ${prices.length} records`);
+
       response
         // .type('application/text')
         .send(prices);
@@ -77,6 +79,8 @@ export class OnChainReportsController {
 
     try {
       const txs = await this.updateTxRepository.findMonthlyTx(chainId, year, month);
+      this.logger.info(`[monthlyExpenses][${chainId}] got ${txs.length} records`);
+
       response
         // .type('application/text')
         .send(this.processMonthlyExpenses(txs));
