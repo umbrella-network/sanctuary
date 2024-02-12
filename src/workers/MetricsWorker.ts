@@ -41,9 +41,12 @@ class MetricsWorker extends BasicWorker {
 
     if (lastSyncedBlock <= 0) return;
 
+    const now = new Date();
+    const allowExecution = now.getHours() == 0 && now.getMinutes() < 5;
+
     await Promise.all([
       this.onChainTxFetcher.call(chainId, lastSyncedBlock),
-      this.validatorsWalletsScanner.call(chainId),
+      allowExecution ? this.validatorsWalletsScanner.call(chainId) : undefined,
     ]);
   };
 }
