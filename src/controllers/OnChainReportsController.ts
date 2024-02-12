@@ -7,6 +7,7 @@ import { UpdateTxRepository } from '../repositories/UpdateTxRepository';
 import { ChainsIds } from '../types/ChainsIds';
 import { IUpdateTx } from '../models/UpdateTx';
 import { PriceDataRepository } from '../repositories/PriceDataRepository';
+import { ValidatorWalletsRepository } from '../repositories/ValidatorWalletsRepository';
 
 type UpdateTxData = {
   failed: number;
@@ -21,6 +22,7 @@ export class OnChainReportsController {
   @inject('Logger') private logger: Logger;
   @inject(UpdateTxRepository) private updateTxRepository!: UpdateTxRepository;
   @inject(PriceDataRepository) private priceDataRepository!: PriceDataRepository;
+  @inject(ValidatorWalletsRepository) private validatorWalletsRepository!: ValidatorWalletsRepository;
 
   router: Router;
 
@@ -80,10 +82,11 @@ export class OnChainReportsController {
     try {
       const txs = await this.updateTxRepository.findMonthlyTx(chainId, year, month);
       this.logger.info(`[monthlyExpenses][${chainId}] got ${txs.length} records`);
+      const signerToSender = await this.validatorsMap(chainId);
 
       response
         // .type('application/text')
-        .send(this.processMonthlyExpenses(txs));
+        .send(this.processMonthlyExpenses(txs, signerToSender));
     } catch (e) {
       this.logger.error(e);
       response.status(500).send(e.message);
@@ -104,7 +107,7 @@ export class OnChainReportsController {
 if validator did not submit any tx, it will not be included in report, even if he might sign
 
 */
-  private processMonthlyExpenses = (txs: IUpdateTx[]): string => {
+  private processMonthlyExpenses = (txs: IUpdateTx[], signerToSender: Record<string, string>): string => {
     const results: Record<string, UpdateTxData> = {};
     let blockMin = Number.MAX_SAFE_INTEGER;
     let blockMax = 0;
@@ -112,7 +115,7 @@ if validator did not submit any tx, it will not be included in report, even if h
     txs.forEach((tx) => {
       blockMin = Math.min(blockMin, tx.blockNumber);
       blockMax = Math.max(blockMax, tx.blockNumber);
-      this.processTx(tx, results);
+      this.processTx(tx, results, signerToSender);
     });
 
     const records = Object.keys(results).map((sender) => {
@@ -134,7 +137,11 @@ if validator did not submit any tx, it will not be included in report, even if h
     return `${labels.join(';')}\n${records.join('<br/>\n')}`;
   };
 
-  private processTx = (tx: IUpdateTx, results: Record<string, UpdateTxData>): void => {
+  private processTx = (
+    tx: IUpdateTx,
+    results: Record<string, UpdateTxData>,
+    signerToSender: Record<string, string>
+  ): void => {
     const sender = tx.sender.toLowerCase();
 
     if (!results[sender]) {
@@ -150,9 +157,22 @@ if validator did not submit any tx, it will not be included in report, even if h
     }
 
     tx.signers.forEach((s) => {
-      if (!results[s]) this.resetRecord(results, s);
-      results[s].signatures++;
+      const resolveSender = signerToSender[s] ?? 'unknown';
+      if (!results[resolveSender]) this.resetRecord(results, resolveSender);
+      results[resolveSender].signatures++;
     });
+  };
+
+  private validatorsMap = async (chainId: ChainsIds): Promise<Record<string, string>> => {
+    const validators = await this.validatorWalletsRepository.get(chainId);
+    const list: Record<string, string> = {};
+
+    validators.forEach((v) => {
+      list[v.signer] = v.deviation;
+      list[v.deviation] = v.deviation;
+    });
+
+    return list;
   };
 
   private resetRecord = (results: Record<string, UpdateTxData>, key: string): void => {
