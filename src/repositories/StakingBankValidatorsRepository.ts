@@ -1,8 +1,9 @@
 import { Logger } from 'winston';
-import { ABI, ContractRegistry } from '@umb-network/toolbox';
 import { inject, injectable } from 'inversify';
 import { Contract } from 'ethers';
+import { ContractRegistry } from '@umb-network/toolbox';
 
+import StakingBankStatic from '../contracts/StakingBankStatic.json';
 import { ChainsIds } from '../types/ChainsIds';
 import { BlockchainScannerRepository } from './BlockchainScannerRepository';
 import Settings, { BlockchainSettings } from '../types/Settings';
@@ -28,12 +29,7 @@ export class StakingBankValidatorsRepository {
     );
 
     const bankAddress = await registry.getAddress(this.settings.blockchain.contracts.stakingBank.name);
-    return new Contract(bankAddress, ABI.stakingBankAbi, provider);
-  }
-
-  private async numberOfValidators(chainId: ChainsIds): Promise<number> {
-    const bank = await this.stakingBank(chainId);
-    return bank.numberOfValidators();
+    return new Contract(bankAddress, StakingBankStatic.abi, provider);
   }
 
   private async getAddresses(chainId: ChainsIds): Promise<string[]> {
