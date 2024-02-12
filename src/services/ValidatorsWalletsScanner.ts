@@ -17,10 +17,12 @@ export class ValidatorsWalletsScanner {
   @inject(ValidatorWalletsRepository) private validatorWalletsRepository: ValidatorWalletsRepository;
 
   async call(chainId: ChainsIds): Promise<void> {
+    this.logger.info(`[ValidatorsWalletsScanner][${chainId}] run for ${chainId}`);
     const validators = await this.stakingBankValidatorsRepository.apply(chainId);
-    this.logger.info(`[ValidatorsWalletsScanner][${chainId}] pulled ${validators.length} validators`);
     const data = await this.fetchValidatorsWallets(chainId, validators);
-    await this.validatorWalletsRepository.save(chainId, data);
+    this.logger.info(`[ValidatorsWalletsScanner][${chainId}] resolved ${JSON.stringify(data)}`);
+    const saved = await this.validatorWalletsRepository.save(chainId, data);
+    this.logger.info(`[ValidatorsWalletsScanner][${chainId}] saved ${saved.length} validators`);
   }
 
   private async fetchValidatorsWallets(chainId: ChainsIds, validators: IValidator[]): Promise<IValidatorWallets[]> {
