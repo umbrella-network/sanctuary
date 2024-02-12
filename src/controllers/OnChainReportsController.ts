@@ -135,16 +135,18 @@ if validator did not submit any tx, it will not be included in report, even if h
   };
 
   private processTx = (tx: IUpdateTx, results: Record<string, UpdateTxData>): void => {
-    if (!results[tx.sender]) {
-      this.resetRecord(results, tx.sender);
+    const sender = tx.sender.toLowerCase();
+
+    if (!results[sender]) {
+      this.resetRecord(results, sender);
     }
 
     if (tx.success) {
-      results[tx.sender].successfulUpdates++;
-      results[tx.sender].gasSuccess += BigInt(tx.fee);
+      results[sender].successfulUpdates++;
+      results[sender].gasSuccess += BigInt(tx.fee);
     } else {
-      results[tx.sender].failed++;
-      results[tx.sender].gasFail += BigInt(tx.fee);
+      results[sender].failed++;
+      results[sender].gasFail += BigInt(tx.fee);
     }
 
     tx.signers.forEach((s) => {
