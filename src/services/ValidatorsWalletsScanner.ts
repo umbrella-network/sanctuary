@@ -16,12 +16,12 @@ export class ValidatorsWalletsScanner {
   @inject(StakingBankValidatorsRepository) private stakingBankValidatorsRepository: StakingBankValidatorsRepository;
   @inject(ValidatorWalletsRepository) private validatorWalletsRepository: ValidatorWalletsRepository;
 
-  call = async (chainId: ChainsIds): Promise<void> => {
+  async call(chainId: ChainsIds): Promise<void> {
     const validators = await this.stakingBankValidatorsRepository.apply(chainId);
     this.logger.info(`[ValidatorsWalletsScanner][${chainId}] pulled ${validators.length} validators`);
     const data = await this.fetchValidatorsWallets(chainId, validators);
     await this.validatorWalletsRepository.save(chainId, data);
-  };
+  }
 
   private async fetchValidatorsWallets(chainId: ChainsIds, validators: IValidator[]): Promise<IValidatorWallets[]> {
     return Promise.all(validators.map((v) => this.fetchWallets(chainId, v)));

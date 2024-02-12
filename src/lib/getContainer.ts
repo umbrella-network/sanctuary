@@ -25,6 +25,9 @@ import { GasCalculator } from '../services/on-chain-stats/GasCalculator';
 import { KeysUpdateService } from '../services/on-chain-stats/KeysUpdateService';
 import { FeedKeyRepository } from '../repositories/FeedKeyRepository';
 import { ScanningTimeLeft } from '../services/on-chain-stats/ScanningTimeLeft';
+import { ValidatorsWalletsScanner } from '../services/ValidatorsWalletsScanner';
+import { StakingBankValidatorsRepository } from '../repositories/StakingBankValidatorsRepository';
+import { ValidatorWalletsRepository } from '../repositories/ValidatorWalletsRepository';
 
 export function getContainer(): Container {
   const container = new Container({ autoBindInjectable: true });
@@ -67,5 +70,8 @@ export function getContainer(): Container {
   container.bind(KeysUpdateService).toSelf().inSingletonScope();
   container.bind(FeedKeyRepository).toSelf().inSingletonScope();
   container.bind(ScanningTimeLeft).toSelf().inSingletonScope();
+  container.bind(ValidatorWalletsRepository).toSelf().inSingletonScope();
+  container.bind(ValidatorsWalletsScanner).toSelf().inSingletonScope();
+  container.bind(StakingBankValidatorsRepository).toSelf().inSingletonScope();
   return container;
 }

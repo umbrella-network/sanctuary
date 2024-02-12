@@ -36,16 +36,13 @@ export class StakingBankValidatorsRepository {
     return bank.numberOfValidators();
   }
 
-  private async fetchValidators(chainId: ChainsIds): Promise<IValidator[]> {
-    const n = await this.numberOfValidators(chainId);
+  private async getAddresses(chainId: ChainsIds): Promise<string[]> {
     const bank = await this.stakingBank(chainId);
+    return bank.getAddresses();
+  }
 
-    const awaits = [];
-
-    for (let i = 0; i < n; i++) {
-      awaits.push(bank.validators(i));
-    }
-
-    return Promise.all(awaits);
+  private async fetchValidators(chainId: ChainsIds): Promise<IValidator[]> {
+    const [addresses, bank] = await Promise.all([this.getAddresses(chainId), this.stakingBank(chainId)]);
+    return Promise.all(addresses.map((a) => bank.validators(a)));
   }
 }
