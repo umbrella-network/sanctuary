@@ -128,13 +128,14 @@ if validator did not submit any tx, it will not be included in report, even if h
       'wallet',
       'failed tx',
       `submits for blocks ${blockMin} - ${blockMax}`,
-      'signatures',
+      'signatures (only successful tx)',
       'failed gas',
       'success gas',
       'total gas',
     ];
 
-    return `${labels.join(';')}\n${records.join('<br/>\n')}`;
+    const separator = '<br/>\n';
+    return `${labels.join(';')}${separator}${records.join(separator)}`;
   };
 
   private processTx = (
@@ -151,16 +152,16 @@ if validator did not submit any tx, it will not be included in report, even if h
     if (tx.success) {
       results[sender].successfulUpdates++;
       results[sender].gasSuccess += BigInt(tx.fee);
+
+      tx.signers.forEach((s) => {
+        const resolveSender = signerToSender[s] ?? 'unknown';
+        if (!results[resolveSender]) this.resetRecord(results, resolveSender);
+        results[resolveSender].signatures++;
+      });
     } else {
       results[sender].failed++;
       results[sender].gasFail += BigInt(tx.fee);
     }
-
-    tx.signers.forEach((s) => {
-      const resolveSender = signerToSender[s] ?? 'unknown';
-      if (!results[resolveSender]) this.resetRecord(results, resolveSender);
-      results[resolveSender].signatures++;
-    });
   };
 
   private validatorsMap = async (chainId: ChainsIds): Promise<Record<string, string>> => {
