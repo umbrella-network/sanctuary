@@ -29,8 +29,10 @@ export class ValidatorsWalletsScanner {
   }
 
   private async fetchWallets(chainId: ChainsIds, validator: IValidator): Promise<IValidatorWallets | undefined> {
+    const url = `${validator.location}/info?details=${chainId}`;
+
     try {
-      const response = await axios.get(`${validator.location}/info?details=${chainId}`, { timeout: 3000 });
+      const response = await axios.get(url, { timeout: 10000 });
 
       return <IValidatorWallets>{
         chainId,
@@ -38,7 +40,7 @@ export class ValidatorsWalletsScanner {
         signer: response.data.chains[chainId].walletAddress ?? '',
       };
     } catch (e) {
-      this.logger.error(`[ValidatorsWalletsScanner][${chainId} error: ${e.message}`);
+      this.logger.error(`[ValidatorsWalletsScanner][${chainId}] ${url} error: ${e.message}`);
       return;
     }
   }
