@@ -24,16 +24,22 @@ export class ValidatorsWalletsScanner {
   }
 
   private async fetchValidatorsWallets(chainId: ChainsIds, validators: IValidator[]): Promise<IValidatorWallets[]> {
-    return Promise.all(validators.map((v) => this.fetchWallets(chainId, v)));
+    const responses = await Promise.all(validators.map((v) => this.fetchWallets(chainId, v)));
+    return responses.filter((r) => !!r);
   }
 
-  private async fetchWallets(chainId: ChainsIds, validator: IValidator): Promise<IValidatorWallets> {
-    const response = await axios.get(`${validator.location}/info?details=${chainId}`);
+  private async fetchWallets(chainId: ChainsIds, validator: IValidator): Promise<IValidatorWallets | undefined> {
+    try {
+      const response = await axios.get(`${validator.location}/info?details=${chainId}`, { timeout: 3000 });
 
-    return <IValidatorWallets>{
-      chainId,
-      deviation: response.data.chains[chainId].deviationWalletAddress ?? '',
-      signer: response.data.chains[chainId].walletAddress ?? '',
-    };
+      return <IValidatorWallets>{
+        chainId,
+        deviation: response.data.chains[chainId].deviationWalletAddress ?? '',
+        signer: response.data.chains[chainId].walletAddress ?? '',
+      };
+    } catch (e) {
+      this.logger.error(`[ValidatorsWalletsScanner][${chainId} error: ${e.message}`);
+      return;
+    }
   }
 }
