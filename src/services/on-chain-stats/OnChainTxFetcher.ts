@@ -58,6 +58,7 @@ export class OnChainTxFetcher {
     this.logger.info(
       `[OnChainTxFetcher][${chainId}] blocks to sync: ${rangeTo - rangeFrom} blocks, starting from ${rangeFrom}`
     );
+
     let gotError = false;
 
     // sync execution
