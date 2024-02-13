@@ -94,6 +94,10 @@ export class OnChainTxFetcher {
         filteredTx.map((tx) => tx.hash)
       );
 
+      if (filteredTx.length != Object.keys(receipts).length) {
+        throw new Error(`${logPrefix} expected ${filteredTx.length} receipts, got ${Object.keys(receipts).length}`);
+      }
+
       const allSaved = await Promise.all(
         filteredTx.map((tx) => this.updateTxRepository.saveUpdates(chainId, network.chainId, tx, receipts[tx.hash]))
       );

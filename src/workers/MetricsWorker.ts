@@ -26,11 +26,12 @@ class MetricsWorker extends BasicWorker {
       this.logger.error(`[MetricsWorker] keysUpdateService: ${e.message}`);
     }
 
-    try {
-      await Promise.allSettled(chains.map((chainId) => this.syncOnChainTransactions(chainId)));
-    } catch (e) {
-      this.logger.error(`[MetricsWorker] syncOnChainTransactions: ${e.message}`);
-    }
+    const results = await Promise.allSettled(chains.map((chainId) => this.syncOnChainTransactions(chainId)));
+
+    results.forEach((r) => {
+      if (r.status == 'fulfilled') return;
+      this.logger.error(`[MetricsWorker] error: ${r.reason}`);
+    });
   };
 
   private syncOnChainTransactions = async (chainId: ChainsIds): Promise<void> => {
