@@ -2,21 +2,15 @@ import { inject, injectable } from 'inversify';
 import { Logger } from 'winston';
 import { TransactionResponse } from '@ethersproject/providers';
 
-import { MappingRepository } from '../../repositories/MappingRepository';
-import { ChainsIds } from '../../types/ChainsIds.js';
-import Settings from '../../types/Settings';
+import { ChainsIds } from '../../types/ChainsIds';
 import { BlockchainScannerRepository } from '../../repositories/BlockchainScannerRepository';
-import { RegisteredContractRepository } from '../../repositories/RegisteredContractRepository';
 import { promiseWithTimeout } from '../../utils/promiseWithTimeout';
 
 @injectable()
 export class EvmTxsFetcher {
-  @inject('Settings') private settings!: Settings;
   @inject('Logger') private logger!: Logger;
 
   @inject(BlockchainScannerRepository) private blockchainScannerRepository: BlockchainScannerRepository;
-  @inject(MappingRepository) private mappingRepository: MappingRepository;
-  @inject(RegisteredContractRepository) private contractRepository: RegisteredContractRepository;
 
   async call(
     chainId: ChainsIds,
