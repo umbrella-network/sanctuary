@@ -6,6 +6,7 @@ export enum ChainsIds {
   POLYGON = 'polygon',
   SOLANA = 'solana',
   BASE = 'base',
+  LINEA = 'linea',
 }
 
 export type TForeignChainsIds =

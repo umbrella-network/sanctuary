@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.16] - 2024-02-13
+### Added
+- add `linea` to list of chains
+
 ## [5.9.15] - 2024-02-13
 ### Fixed
 - display scanner errors

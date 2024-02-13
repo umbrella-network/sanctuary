@@ -16,11 +16,11 @@ export class GasCalculator {
     switch (chainId) {
       // case CHAIN_IDS.ROOTSTOCK_SBX:
       //   return rootstockCalculator(receipt);
-      case 'base':
+      case ChainsIds.BASE:
         return this.gasCalculatorBase.apply(receipt as BaseTransactionReceipt);
       //
       // case CHAIN_IDS.POLYGON:
-      case 'linea':
+      case ChainsIds.LINEA:
       case ChainsIds.POLYGON:
       case ChainsIds.ARBITRUM:
         return this.gasCalculatorEvm.apply(receipt);
