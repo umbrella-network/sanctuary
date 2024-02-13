@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.15] - 2024-02-13
+### Fixed
+- display scanner errors
+
 ## [5.9.14] - 2024-02-13
 ### Fixed
 - exclude sender from signature count
