@@ -16,7 +16,7 @@ export class TxReceiptFetcher {
     let receipts: TransactionReceipt[] = [];
 
     switch (chainId) {
-      case 'base':
+      case ChainsIds.BASE:
         receipts = await Promise.all(txHashes.map((h) => this.baseTxReceiptFetcher.call(h)));
         break;
 
