@@ -159,9 +159,11 @@ if validator did not submit any tx, it will not be included in report, even if h
       results[sender].gasSuccess += BigInt(tx.fee);
 
       tx.signers.forEach((s) => {
-        const resolveSender = signerToSender[s] ?? 'unknown';
-        if (!results[resolveSender]) this.resetRecord(results, resolveSender);
-        results[resolveSender].signatures++;
+        const senderFromSig = signerToSender[s] ?? 'unknown';
+        if (senderFromSig == sender) return;
+
+        if (!results[senderFromSig]) this.resetRecord(results, senderFromSig);
+        results[senderFromSig].signatures++;
       });
     } else {
       results[sender].failed++;

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.9.14] - 2024-02-13
+### Fixed
+- exclude sender from signature count
+
 ## [5.9.13] - 2024-02-12
 ### Updated
 - sort report data
