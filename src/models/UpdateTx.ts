@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface IUpdateTx extends Document {
+export interface IUpdateTx {
+  _id: string;
   txTimestamp: Date;
   chainId: string;
   feedsAddress: string;
