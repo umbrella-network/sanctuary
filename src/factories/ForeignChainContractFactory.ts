@@ -26,8 +26,6 @@ export class ForeignChainContractFactory {
           return new ForeignChainContract(<BaseChainContractProps>props);
         }
 
-        console.log(`[${props.blockchain.chainId}] provider: ${!!props.blockchain.provider}`);
-        console.log(`[${props.blockchain.chainId}] registry: ${props.blockchain.getContractRegistryAddress()}`);
         return null;
     }
   }

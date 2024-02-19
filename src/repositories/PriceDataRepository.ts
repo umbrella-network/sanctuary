@@ -5,7 +5,7 @@ import { Logger } from 'winston';
 
 import { ChainsIds } from '../types/ChainsIds';
 import { FeedsPriceData } from '../types/UpdateInput';
-import PriceData, { IPriceData } from '../models/PriceData';
+import PriceData, { IPriceData, IPriceDataRaw } from '../models/PriceData';
 
 @injectable()
 export class PriceDataRepository {
@@ -15,17 +15,29 @@ export class PriceDataRepository {
     await PriceData.deleteMany({ tx: txHash });
   }
 
-  async lastPrices(chainId: ChainsIds | undefined, key: string, days: number): Promise<IPriceData[]> {
-    const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    const filter: FilterQuery<IPriceData> = { key, timestamp: { $gte: from.getTime() / 1000 } };
+  async lastPrices(chainId: ChainsIds | undefined, key: string, lastDays: number): Promise<IPriceDataRaw[]> {
+    const from = new Date(Date.now() - lastDays * 24 * 60 * 60 * 1000);
+    const filter: FilterQuery<IPriceData> = { key, timestamp: { $gte: Math.trunc(from.getTime() / 1000) } };
 
     if (chainId) {
       filter['chainId'] = chainId;
     }
 
-    this.logger.info(`[PriceDataRepository.priceHistory][${chainId}] ${filter}`);
+    this.logger.info(`[PriceDataRepository.priceHistory][${chainId}] ${JSON.stringify(filter)}`);
 
-    return PriceData.find(filter).sort({ timestamp: 1 }).exec();
+    const records = await PriceData.find(filter).sort({ timestamp: -1 }).exec();
+
+    return records.map((r) => {
+      return {
+        timestamp: r.timestamp,
+        data: r.data,
+        key: r.key,
+        tx: r.tx,
+        chainId: r.chainId,
+        heartbeat: r.heartbeat,
+        value: BigInt(r.value),
+      };
+    });
   }
 
   async save(chainId: ChainsIds, txHash: string, key: string, data: FeedsPriceData): Promise<boolean> {

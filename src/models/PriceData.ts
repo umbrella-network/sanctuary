@@ -10,6 +10,16 @@ export interface IPriceData extends Document {
   data: string;
 }
 
+export interface IPriceDataRaw {
+  tx: string;
+  chainId: string;
+  key: string;
+  value: bigint;
+  heartbeat: number;
+  timestamp: number;
+  data: string;
+}
+
 const PriceData: Schema = new Schema({
   _id: { type: String, required: true },
   tx: { type: String, required: true },
