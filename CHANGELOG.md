@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.10.1] - 2024-02-15
+### Fixed
+- fix labels in price history base report
+
 ## [5.10.0] - 2024-02-15
 ### Added
 - add price history base report
