@@ -8,6 +8,7 @@ import { ChainsIds } from '../types/ChainsIds';
 import { IUpdateTx } from '../models/UpdateTx';
 import { PriceDataRepository } from '../repositories/PriceDataRepository';
 import { ValidatorWalletsRepository } from '../repositories/ValidatorWalletsRepository';
+import { IPriceDataRaw } from '../models/PriceData';
 
 type UpdateTxData = {
   failed: number;
@@ -30,26 +31,10 @@ export class OnChainReportsController {
   setup(): void {
     this.router = Router()
       .get('/monthly-expenses/:chainId/:year/:month', this.monthlyExpenses)
-      .get('/price-history/:key', this.priceHistory)
-      .get('/price-history/:chainId/:key', this.priceHistory);
+      // .get('/price-history/:key', this.priceHistory)
+      .get('/price-history/:chainId/:key', this.priceHistory)
+      .get('/price-history/:chainId/:key/last/:days/days', this.priceHistory);
   }
-
-  priceHistory = async (request: Request, response: Response): Promise<void> => {
-    const chainId = request.params.chainId as ChainsIds;
-    const key = request.params.key;
-
-    try {
-      const prices = await this.priceDataRepository.lastPrices(chainId, key, 7);
-      this.logger.info(`[priceHistory][${chainId}] got ${prices.length} records`);
-
-      response
-        // .type('application/text')
-        .send(prices);
-    } catch (e) {
-      this.logger.error(e);
-      response.status(500).send(e.message);
-    }
-  };
 
   monthlyExpenses = async (request: Request, response: Response): Promise<void> => {
     const chainId = request.params.chainId as ChainsIds;
@@ -91,6 +76,111 @@ export class OnChainReportsController {
       this.logger.error(e);
       response.status(500).send(e.message);
     }
+  };
+
+  priceHistory = async (request: Request, response: Response): Promise<void> => {
+    const chainId = request.params.chainId as ChainsIds;
+    const key = request.params.key;
+    let days = parseInt(request.params.days || '3');
+    const daysLimit = 30;
+
+    if (days > daysLimit) {
+      this.logger.warning(`[priceHistory][${chainId}] days limit is ${daysLimit}`);
+      days = daysLimit;
+    }
+
+    try {
+      const prices = await this.priceDataRepository.lastPrices(chainId, key, days);
+      this.logger.info(`[priceHistory][${chainId}] got ${prices.length} records`);
+      const history = await this.printOnChainHistory(chainId, key, prices);
+
+      response
+        // .type('application/text')
+        .send(history.join('<br/>\n'));
+    } catch (e) {
+      this.logger.error(e);
+      response.status(500).send(e.message);
+    }
+  };
+
+  private printOnChainHistory = async (
+    chainId: ChainsIds,
+    key: string,
+    feedsHistory: IPriceDataRaw[]
+  ): Promise<string[]> => {
+    const results: string[] = [];
+    const separator = ';';
+
+    results.push(
+      [
+        'key',
+        'timestamp of the feed',
+        'how long it took from start of consensus to mint tx',
+        'tx hash',
+        'price',
+        'price difference',
+        'previous heartbeat',
+        '[%] of heartbeat used',
+        'rounds left: how many rounds was left till the end of heartbeat',
+        'overshoot: if we not deliver in time, overshoot time is presented in negative [seconds]',
+      ].join(separator)
+    );
+
+    let prev = {
+      ...feedsHistory[feedsHistory.length > 0 ? 1 : 0],
+    };
+
+    const txMap = await this.getTxMap(chainId, feedsHistory);
+
+    feedsHistory.forEach((p, i) => {
+      const txTimestamp = txMap[p.tx];
+      const price = BigInt(p.value);
+      const prevPrice = BigInt(prev.value);
+
+      const priceDiff = Number(((price - prevPrice) * 10000n) / prevPrice) / 100;
+      const hDiffSec = p.timestamp - prev.timestamp;
+      const hDiff = Math.round((hDiffSec * 10000) / prev.heartbeat) / 100;
+      const hDiffRounds = hDiff <= 100 ? Math.floor((prev.heartbeat - hDiffSec) / 60) : -1;
+      const mintTime = txTimestamp ? txTimestamp - p.timestamp : '';
+      const overshoot = hDiffRounds < 0 ? `${prev.heartbeat - hDiffSec}` : '';
+
+      results.push(
+        [
+          key,
+          new Date(p.timestamp * 1000).toISOString(),
+          mintTime.toString(),
+          p.tx,
+          Number(p.value) / 1e8,
+          `${priceDiff}%`,
+          prev.heartbeat,
+          `${hDiff}%`,
+          overshoot,
+          `${hDiffRounds < 0 ? '- !!! -' : hDiffRounds}`,
+        ].join(';')
+      );
+
+      prev = {
+        ...(feedsHistory[i + 2] || feedsHistory[i + 1]),
+      };
+    });
+
+    return results;
+  };
+
+  private getTxMap = async (chainId: ChainsIds, feedsHistory: IPriceDataRaw[]): Promise<Record<string, number>> => {
+    const txs = await this.updateTxRepository.find(
+      chainId,
+      feedsHistory.map((k) => k.tx),
+      { txTimestamp: 1 }
+    );
+
+    const txMap: Record<string, number> = {};
+
+    txs.forEach((tx) => {
+      txMap[tx._id] = Math.trunc(tx.txTimestamp.getTime() / 1000);
+    });
+
+    return txMap;
   };
 
   /*

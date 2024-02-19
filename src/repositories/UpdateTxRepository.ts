@@ -97,6 +97,10 @@ export class UpdateTxRepository {
     return UpdateTx.find({ chainId, txTimestamp: { $gte: from, $lt: to } }).exec();
   }
 
+  async find(chainId: ChainsIds, txHashes: string[], projection?: Record<string, number>): Promise<IUpdateTx[]> {
+    return UpdateTx.find({ chainId, _id: { $in: txHashes } }, projection).exec();
+  }
+
   private toUpdateData(data: UpdateInput): UpdateData {
     return {
       keys: data[0],
