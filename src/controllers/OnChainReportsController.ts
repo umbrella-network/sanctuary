@@ -121,8 +121,8 @@ export class OnChainReportsController {
         'price difference',
         'previous heartbeat',
         '[%] of heartbeat used',
-        'rounds left: how many rounds was left till the end of heartbeat',
         'overshoot: if we not deliver in time, overshoot time is presented in negative [seconds]',
+        'rounds left: how many rounds was left till the end of heartbeat',
       ].join(separator)
     );
 
