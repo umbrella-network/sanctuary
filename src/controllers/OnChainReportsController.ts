@@ -18,6 +18,8 @@ type UpdateTxData = {
   gasFail: bigint;
 };
 
+type WalletsMap = Record<string, { deviation: string; signer: string }>;
+
 @injectable()
 export class OnChainReportsController {
   @inject('Logger') private logger: Logger;
@@ -197,7 +199,7 @@ export class OnChainReportsController {
 if validator did not submit any tx, it will not be included in report, even if he might sign
 
 */
-  private processMonthlyExpenses = (txs: IUpdateTx[], signerToSender: Record<string, string>): string => {
+  private processMonthlyExpenses = (txs: IUpdateTx[], signerToSender: WalletsMap): string => {
     const results: Record<string, UpdateTxData> = {};
     let blockMin = Number.MAX_SAFE_INTEGER;
     let blockMax = 0;
@@ -216,28 +218,34 @@ if validator did not submit any tx, it will not be included in report, even if h
       })
       .sort((a, b) => b.signatures - a.signatures)
       .map(({ sender, failed, successfulUpdates, signatures, gasFail, gasSuccess, totalWei }) => {
-        return [sender, failed, successfulUpdates, signatures, gasFail, gasSuccess, totalWei].join(';');
+        return [
+          sender,
+          failed,
+          successfulUpdates,
+          signatures,
+          gasFail,
+          gasSuccess,
+          totalWei,
+          signerToSender[sender]?.signer,
+        ].join(';');
       });
 
     const labels = [
-      'wallet',
+      'wallet (sender)',
       'failed tx',
       `submits for blocks ${blockMin} - ${blockMax}`,
       'signatures (only successful tx)',
       'failed gas',
       'success gas',
       'total gas',
+      'signing wallet',
     ];
 
     const separator = '<br/>\n';
     return `${labels.join(';')}${separator}${records.join(separator)}`;
   };
 
-  private processTx = (
-    tx: IUpdateTx,
-    results: Record<string, UpdateTxData>,
-    signerToSender: Record<string, string>
-  ): void => {
+  private processTx = (tx: IUpdateTx, results: Record<string, UpdateTxData>, signerToSender: WalletsMap): void => {
     const sender = tx.sender.toLowerCase();
 
     if (!results[sender]) {
@@ -249,7 +257,7 @@ if validator did not submit any tx, it will not be included in report, even if h
       results[sender].gasSuccess += BigInt(tx.fee);
 
       tx.signers.forEach((s) => {
-        const senderFromSig = signerToSender[s] ?? 'unknown';
+        const senderFromSig = signerToSender[s]?.deviation ? signerToSender[s].deviation : 'unknown';
         if (senderFromSig == sender) return;
 
         if (!results[senderFromSig]) this.resetRecord(results, senderFromSig);
@@ -261,13 +269,13 @@ if validator did not submit any tx, it will not be included in report, even if h
     }
   };
 
-  private validatorsMap = async (chainId: ChainsIds): Promise<Record<string, string>> => {
+  private validatorsMap = async (chainId: ChainsIds): Promise<WalletsMap> => {
     const validators = await this.validatorWalletsRepository.get(chainId);
-    const list: Record<string, string> = {};
+    const list: WalletsMap = {};
 
     validators.forEach((v) => {
-      list[v.signer] = v.deviation;
-      list[v.deviation] = v.deviation;
+      list[v.signer] = { deviation: v.deviation, signer: v.signer };
+      list[v.deviation] = { deviation: v.deviation, signer: v.signer };
     });
 
     return list;
