@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.10.2] - 2024-02-15
+### Fixed
+- add missing wallet in report
+
 ## [5.10.1] - 2024-02-15
 ### Fixed
 - fix labels in price history base report
