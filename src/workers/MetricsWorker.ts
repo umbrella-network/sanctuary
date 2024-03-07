@@ -30,9 +30,11 @@ class MetricsWorker extends BasicWorker {
 
     const results = await Promise.allSettled(chains.map((chainId) => this.syncOnChainTransactions(chainId)));
 
-    results.forEach((r) => {
+    results.forEach((r, i) => {
       if (r.status == 'fulfilled') return;
-      this.logger.error(`[MetricsWorker] error: ${r.reason}`);
+
+      this.logger.error(`[MetricsWorker][${chains[i]}] error: ${r.reason}`);
+      this.lastWalletRun[chains[i]] = 0;
     });
   };
 
@@ -55,6 +57,8 @@ class MetricsWorker extends BasicWorker {
     const lastRun = this.lastWalletRun[chainId];
 
     if (!lastRun || now - lastRun > 60 * 60 * 24 * 1000) {
+      this.logger.info(`[MetricsWorker][${chainId}] allow to run WalletScanner`);
+
       this.lastWalletRun[chainId] = now;
       return true;
     }
