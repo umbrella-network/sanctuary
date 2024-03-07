@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.10.5] - 2024-03-07
+### Fixed
+- reset last run for wallet scanner on error
+
 ## [5.10.4] - 2024-03-07
 ### Fixed
 - fix caculation for last run in wallet scanner
