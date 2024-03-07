@@ -16,6 +16,8 @@ class MetricsWorker extends BasicWorker {
   @inject(KeysUpdateService) private keysUpdateService!: KeysUpdateService;
   @inject(ValidatorsWalletsScanner) private validatorsWalletsScanner: ValidatorsWalletsScanner;
 
+  private lastWalletRun = 0;
+
   apply = async (job: Bull.Job): Promise<void> => {
     this.logger.debug(`[MetricsWorker] apply for ${job.id}`);
     const chains = Object.keys(this.settings.blockchain.blockchainScanner) as ChainsIds[];
@@ -42,14 +44,22 @@ class MetricsWorker extends BasicWorker {
 
     if (lastSyncedBlock <= 0) return;
 
-    const now = new Date();
-    const allowExecution = now.getHours() == 0 && now.getMinutes() < 5;
-
     await Promise.all([
       this.onChainTxFetcher.call(chainId, lastSyncedBlock),
-      allowExecution ? this.validatorsWalletsScanner.call(chainId) : undefined,
+      this.allowWalletScanner() ? this.validatorsWalletsScanner.call(chainId) : undefined,
     ]);
   };
+
+  private allowWalletScanner(): boolean {
+    const now = Date.now();
+
+    if (now - this.lastWalletRun > 60 * 60 * 24) {
+      this.lastWalletRun = now;
+      return true;
+    }
+
+    return false;
+  }
 }
 
 export default MetricsWorker;
