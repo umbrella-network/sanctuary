@@ -25,7 +25,9 @@ export class StakingBankValidatorsRepository {
 
     const registry = new ContractRegistry(
       provider,
-      (this.settings.blockchain.multiChains as Record<string, BlockchainSettings>)[chainId].contractRegistryAddress
+      (this.settings.blockchain.blockchainScanner as Record<string, BlockchainSettings>)[
+        chainId
+      ].contractRegistryAddress
     );
 
     const bankAddress = await registry.getAddress(this.settings.blockchain.contracts.stakingBank.name);
