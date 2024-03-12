@@ -84,10 +84,10 @@ export class OnChainReportsController {
     const chainId = request.params.chainId as ChainsIds;
     const key = request.params.key;
     let days = parseInt(request.params.days || '3');
-    const daysLimit = 30;
+    const daysLimit = 365;
 
     if (days > daysLimit) {
-      this.logger.warning(`[priceHistory][${chainId}] days limit is ${daysLimit}`);
+      this.logger.warn(`[priceHistory][${chainId}] days limit is ${daysLimit}`);
       days = daysLimit;
     }
 
