@@ -18,6 +18,63 @@ type UpdateTxData = {
   gasFail: bigint;
 };
 
+interface TxMapInterface {
+  txTimestamp: number;
+  fee: bigint;
+}
+
+interface ExpensesReportLabels {
+  sender: string;
+  failedTx: string;
+  submits: string;
+  signatures: string;
+  gasOnFailedTx: string;
+  gasOnSuccessfulTx: string;
+  totalGas: string;
+  signingWallet: string;
+}
+
+interface ExpensesReportValues {
+  sender: string;
+  failedTx: number;
+  submits: number;
+  signatures: number;
+  gasOnFailedTx: bigint;
+  gasOnSuccessfulTx: bigint;
+  totalGas: string;
+  signingWallet: string;
+}
+
+interface PriceHistoryReportLabels {
+  key: string;
+  timestamp: string;
+  txFinality: string;
+  txHash: string;
+  price: string;
+  priceDiff: string;
+  prevHeartbeat: string;
+  heartbeatUsed: string;
+  overshoot: string;
+  roundsLeft: string;
+  txCost: string;
+  feedsInTx: string;
+}
+
+interface PriceHistoryReportValues {
+  key: string;
+  timestamp: Date;
+  txFinality: number;
+  txHash: string;
+  price: number;
+  priceDiff: number;
+  prevHeartbeat: number;
+  heartbeatUsed: number;
+  overshoot: number;
+  roundsLeft: number;
+  txCost: bigint;
+  feedsInTx: number;
+}
+
 type WalletsMap = Record<string, { deviation: string; signer: string }>;
 
 @injectable()
@@ -113,20 +170,22 @@ export class OnChainReportsController {
     const results: string[] = [];
     const separator = ';';
 
-    results.push(
-      [
-        'key',
-        'timestamp of the feed',
-        'how long it took from start of consensus to mint tx',
-        'tx hash',
-        'price',
-        'price difference',
-        'previous heartbeat',
-        '[%] of heartbeat used',
-        'overshoot: if we not deliver in time, overshoot time is presented in negative [seconds]',
-        'rounds left: how many rounds was left till the end of heartbeat',
-      ].join(separator)
-    );
+    const historyReportLabels: PriceHistoryReportLabels = {
+      key: 'key',
+      timestamp: 'timestamp of the feed',
+      txFinality: 'how long it took from start of consensus to mint tx',
+      txHash: 'tx hash',
+      price: 'price',
+      priceDiff: 'price difference',
+      prevHeartbeat: 'previous heartbeat',
+      heartbeatUsed: '[%] of heartbeat used',
+      overshoot: 'overshoot: if we not deliver in time, overshoot time is presented in negative [seconds]',
+      roundsLeft: 'rounds left: how many rounds was left till the end of heartbeat',
+      txCost: 'gas used for tx',
+      feedsInTx: 'number of feeds updated in one tx',
+    };
+
+    results.push(Object.values(historyReportLabels).join(separator));
 
     let prev = {
       ...feedsHistory[feedsHistory.length > 0 ? 1 : 0],
@@ -135,30 +194,43 @@ export class OnChainReportsController {
     const txMap = await this.getTxMap(chainId, feedsHistory);
 
     feedsHistory.forEach((p, i) => {
-      const txTimestamp = txMap[p.tx];
+      const txData = txMap[p.tx];
       const price = BigInt(p.value);
       const prevPrice = BigInt(prev.value);
-
-      const priceDiff = Number(((price - prevPrice) * 10000n) / prevPrice) / 100;
       const hDiffSec = p.timestamp - prev.timestamp;
       const hDiff = Math.round((hDiffSec * 10000) / prev.heartbeat) / 100;
       const hDiffRounds = hDiff <= 100 ? Math.floor((prev.heartbeat - hDiffSec) / 60) : -1;
-      const mintTime = txTimestamp ? txTimestamp - p.timestamp : '';
-      const overshoot = hDiffRounds < 0 ? `${prev.heartbeat - hDiffSec}` : '';
+
+      const data: PriceHistoryReportValues = {
+        key,
+        timestamp: new Date(p.timestamp * 1000),
+        txFinality: txData.txTimestamp ? txData.txTimestamp - p.timestamp : -1,
+        txHash: p.tx,
+        price: Number(p.value) / 1e8,
+        priceDiff: Number(((price - prevPrice) * 10000n) / prevPrice) / 100,
+        prevHeartbeat: prev.heartbeat,
+        heartbeatUsed: Math.round((hDiffSec * 10000) / prev.heartbeat) / 100,
+        overshoot: hDiffRounds < 0 ? prev.heartbeat - hDiffSec : 0,
+        roundsLeft: hDiffRounds < 0 ? -1 : hDiffRounds,
+        txCost: txData.fee,
+        feedsInTx: feedsHistory.filter((h) => h.tx == p.tx).length,
+      };
 
       results.push(
-        [
-          key,
-          new Date(p.timestamp * 1000).toISOString(),
-          mintTime.toString(),
-          p.tx,
-          Number(p.value) / 1e8,
-          `${priceDiff}%`,
-          prev.heartbeat,
-          `${hDiff}%`,
-          overshoot,
-          `${hDiffRounds < 0 ? '- !!! -' : hDiffRounds}`,
-        ].join(';')
+        Object.values(<PriceHistoryReportLabels>{
+          key: data.key,
+          timestamp: data.timestamp.toISOString(),
+          txFinality: data.txFinality.toString(),
+          txHash: data.txHash,
+          price: data.price.toString(),
+          priceDiff: `${data.priceDiff}%`,
+          prevHeartbeat: data.prevHeartbeat.toString(),
+          heartbeatUsed: `${data.heartbeatUsed}%`,
+          overshoot: data.overshoot.toString(),
+          roundsLeft: `${data.roundsLeft < 0 ? '- !!! -' : data.roundsLeft}`,
+          txCost: ethers.utils.formatEther(data.txCost),
+          feedsInTx: data.feedsInTx.toString(),
+        }).join(';')
       );
 
       prev = {
@@ -169,35 +241,30 @@ export class OnChainReportsController {
     return results;
   };
 
-  private getTxMap = async (chainId: ChainsIds, feedsHistory: IPriceDataRaw[]): Promise<Record<string, number>> => {
+  private getTxMap = async (
+    chainId: ChainsIds,
+    feedsHistory: IPriceDataRaw[]
+  ): Promise<Record<string, TxMapInterface>> => {
     const txs = await this.updateTxRepository.find(
       chainId,
       feedsHistory.map((k) => k.tx),
-      { txTimestamp: 1 }
+      { txTimestamp: 1, fee: 1 }
     );
 
-    const txMap: Record<string, number> = {};
+    const txMap: Record<string, TxMapInterface> = {};
 
     txs.forEach((tx) => {
-      txMap[tx._id] = Math.trunc(tx.txTimestamp.getTime() / 1000);
+      txMap[tx._id] = {
+        txTimestamp: Math.trunc(tx.txTimestamp.getTime() / 1000),
+        fee: BigInt(tx.fee),
+      };
     });
 
     return txMap;
   };
 
   /*
-[
-  'wallet: who submit',
-  'failed tx',
-  'submits for blocks: range of blocks for which query was done',
-  'signatures: how many signatures validator did (excluding cases when he is leader)',
-  'wei: gas spend in wei',
-  'fail wei: gas spend for failed tx',
-  'validator: address of signer (this address is registered in bank)'
-]
-
 if validator did not submit any tx, it will not be included in report, even if he might sign
-
 */
   private processMonthlyExpenses = (txs: IUpdateTx[], signerToSender: WalletsMap): string => {
     const results: Record<string, UpdateTxData> = {};
@@ -214,33 +281,44 @@ if validator did not submit any tx, it will not be included in report, even if h
       .map((sender) => {
         const { failed, gasFail, gasSuccess, successfulUpdates, signatures } = results[sender];
         const totalWei = ethers.utils.formatEther(gasFail + gasSuccess);
-        return { sender, failed, successfulUpdates, signatures, gasFail, gasSuccess, totalWei };
+
+        return <ExpensesReportValues>{
+          sender,
+          failedTx: failed,
+          submits: successfulUpdates,
+          signatures,
+          gasOnFailedTx: gasFail,
+          gasOnSuccessfulTx: gasSuccess,
+          totalGas: totalWei,
+          signingWallet: signerToSender[sender]?.signer || '',
+        };
       })
       .sort((a, b) => b.signatures - a.signatures)
-      .map(({ sender, failed, successfulUpdates, signatures, gasFail, gasSuccess, totalWei }) => {
-        return [
-          sender,
-          failed,
-          successfulUpdates,
-          signatures,
-          gasFail,
-          gasSuccess,
-          totalWei,
-          signerToSender[sender]?.signer,
-        ].join(';');
+      .map((data) => {
+        return Object.values(<ExpensesReportLabels>{
+          sender: data.sender,
+          failedTx: data.failedTx.toString(),
+          submits: data.submits.toString(),
+          signatures: data.signatures.toString(),
+          gasOnFailedTx: data.gasOnFailedTx.toString(),
+          gasOnSuccessfulTx: data.gasOnSuccessfulTx.toString(),
+          totalGas: data.totalGas.toString(),
+          signingWallet: data.signingWallet,
+        }).join(';');
       });
 
-    const labels = [
-      'wallet (sender)',
-      'failed tx',
-      `submits for blocks ${blockMin} - ${blockMax}`,
-      'signatures (only successful tx)',
-      'failed gas',
-      'success gas',
-      'total gas',
-      'signing wallet',
-    ];
+    const expensesReportLabels: ExpensesReportLabels = {
+      sender: 'wallet (sender)',
+      failedTx: 'failed tx',
+      submits: `submits for blocks ${blockMin} - ${blockMax}`,
+      signatures: 'signatures (only successful tx)',
+      gasOnFailedTx: 'failed gas',
+      gasOnSuccessfulTx: 'success gas',
+      totalGas: 'total gas',
+      signingWallet: 'signing wallet',
+    };
 
+    const labels = Object.values(expensesReportLabels);
     const separator = '<br/>\n';
     return `${labels.join(';')}${separator}${records.join(separator)}`;
   };
