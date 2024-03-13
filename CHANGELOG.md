@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.11.1] - 2024-03-13
+### Fixed
+- fix `prevPrice` in reports
+
 ## [5.11.0] - 2024-03-13
 ### Updated
 - include tx cost and the number of feeds updated in each tx in reports

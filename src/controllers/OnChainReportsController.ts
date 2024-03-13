@@ -188,7 +188,7 @@ export class OnChainReportsController {
     results.push(Object.values(historyReportLabels).join(separator));
 
     let prev = {
-      ...feedsHistory[feedsHistory.length > 0 ? 1 : 0],
+      ...feedsHistory[feedsHistory.length > 1 ? 1 : 0],
     };
 
     const txMap = await this.getTxMap(chainId, feedsHistory);
