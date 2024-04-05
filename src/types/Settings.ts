@@ -77,6 +77,7 @@ type Settings = {
       linea: OnChainScannerSettings;
       base: OnChainScannerSettings;
       polygon: OnChainScannerSettings;
+      rootstock: OnChainScannerSettings;
     };
     multiChains: {
       bsc: BlockchainSettings;
