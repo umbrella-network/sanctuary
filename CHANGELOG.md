@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.12.0] - 2024-04-04
+### Added
+- scanning setup for rootstock
+
 ## [5.11.1] - 2024-03-13
 ### Fixed
 - fix `prevPrice` in reports

@@ -97,6 +97,15 @@ const settings: Settings = {
         providerUrl: process.env.POLYGON_SCANNER_PROVIDER_URL, // we can't have default providers set up
         contractRegistryAddress: process.env.POLYGON_REGISTRY_CONTRACT_ADDRESS,
       },
+      rootstock: {
+        startBlockNumber: parseInt(process.env.ROOTSTOCK_SCANNER_START_BLOCK_NUMBER || '0', 10),
+        scanBatchSize: parseInt(process.env.ROOTSTOCK_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        fetchBlocksBatchSize: parseInt(process.env.ROOTSTOCK_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
+        maxRequestConcurrency: parseInt(process.env.ROOTSTOCK_MAX_REQUEST_CONCURRENCY || '10', 10),
+        confirmations: parseInt(process.env.ROOTSTOCK_BLOCK_CONFIRMATIONS || '15', 10),
+        providerUrl: process.env.ROOTSTOCK_SCANNER_PROVIDER_URL, // we can't have default providers set up
+        contractRegistryAddress: process.env.ROOTSTOCK_REGISTRY_CONTRACT_ADDRESS,
+      },
     },
     multiChains: {
       bsc: {
