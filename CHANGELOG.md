@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.12.1] - 2024-05-20
+### Added
+- Update Makefile and cicd actions due to Non Prod migration to Frankfurt
+
 ## [5.12.0] - 2024-04-04
 ### Added
 - scanning setup for rootstock
