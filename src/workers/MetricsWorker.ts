@@ -17,15 +17,17 @@ class MetricsWorker extends BasicWorker {
   @inject(ValidatorsWalletsScanner) private validatorsWalletsScanner: ValidatorsWalletsScanner;
 
   private lastWalletRun: Record<string, number> = {};
+  private logPrefix = '[MetricsWorker]';
 
   apply = async (job: Bull.Job): Promise<void> => {
-    this.logger.debug(`[MetricsWorker] apply for ${job.id}`);
     const chains = Object.keys(this.settings.blockchain.blockchainScanner) as ChainsIds[];
+    this.logger.debug(`${this.logPrefix} apply for ${job.id}`);
+    this.logger.debug(`${this.logPrefix} chains ${chains}`);
 
     try {
       await this.keysUpdateService.apply();
     } catch (e) {
-      this.logger.error(`[MetricsWorker] keysUpdateService: ${e.message}`);
+      this.logger.error(`${this.logPrefix} keysUpdateService: ${e.message}`);
     }
 
     const results = await Promise.allSettled(chains.map((chainId) => this.syncOnChainTransactions(chainId)));
@@ -33,7 +35,7 @@ class MetricsWorker extends BasicWorker {
     results.forEach((r, i) => {
       if (r.status == 'fulfilled') return;
 
-      this.logger.error(`[MetricsWorker][${chains[i]}] error: ${r.reason}`);
+      this.logger.error(`${this.logPrefix}[${chains[i]}] error: ${r.reason}`);
       this.lastWalletRun[chains[i]] = 0;
     });
   };
@@ -57,7 +59,7 @@ class MetricsWorker extends BasicWorker {
     const lastRun = this.lastWalletRun[chainId];
 
     if (!lastRun || now - lastRun > 60 * 60 * 24 * 1000) {
-      this.logger.info(`[MetricsWorker][${chainId}] allow to run WalletScanner`);
+      this.logger.info(`${this.logPrefix}[${chainId}] allow to run WalletScanner`);
 
       this.lastWalletRun[chainId] = now;
       return true;
