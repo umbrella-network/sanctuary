@@ -38,7 +38,7 @@ export class EvmTxsFetcher {
     );
 
     let errorDetected = false;
-    let lastBlockBeforeError: number | undefined;
+    let lastBlockBeforeError = arr[0] - 1;
 
     const allTxs = allTxsSettled.map((result, i) => {
       if (result.status == 'fulfilled') {
