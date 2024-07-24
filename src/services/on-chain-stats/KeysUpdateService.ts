@@ -13,20 +13,29 @@ export class KeysUpdateService {
   @inject(FeedKeyRepository) private feedKeyRepository: FeedKeyRepository;
 
   private readonly SUCCESS_CODES = [200, 201, 301];
+  private logPrefix = '[KeysUpdateService]';
 
   async apply(): Promise<void> {
-    const yaml = await this.downloadFile();
+    await this.processFeedFile(this.settings.app.layer1FeedFile);
+    await this.processFeedFile(this.settings.app.feedsFile);
+    await this.processFeedFile(this.settings.app.feedsOnChain);
+  }
+
+  private async processFeedFile(feedFile: string) {
+    this.logger.debug(`${this.logPrefix} checking ${feedFile}`);
+
+    const yaml = await this.downloadFile(feedFile);
     if (!yaml) return;
 
     const existingKeys = await this.feedKeyRepository.getAllByKey();
     const keys = this.extractKeys(yaml, existingKeys);
 
     if (keys.length == 0) {
-      this.logger.debug('[KeysUpdateService] no new keys');
+      this.logger.debug(`${this.logPrefix} no new keys`);
       return;
     }
 
-    this.logger.info(`[KeysUpdateService] new keys: ${keys}`);
+    this.logger.info(`${this.logPrefix} new keys: ${keys}`);
     await Promise.all(keys.map((key) => this.feedKeyRepository.save(key)));
   }
 
@@ -39,21 +48,19 @@ export class KeysUpdateService {
       .filter((key) => !existingKeys[key]);
   }
 
-  private async downloadFile(): Promise<string | undefined> {
-    const layer1FeedFile = this.settings.app.layer1FeedFile;
-
-    if (!layer1FeedFile) {
-      this.logger.warn('[KeysUpdateService] Skipping, no URL configured');
+  private async downloadFile(feedFile: string): Promise<string | undefined> {
+    if (!feedFile) {
+      this.logger.warn('${this.logPrefix} Skipping, no URL configured');
       return;
     }
 
-    this.logger.debug(`[KeysUpdateService] layer1FeedFile: ${layer1FeedFile}`);
+    this.logger.debug(`${this.logPrefix} layer1FeedFile: ${feedFile}`);
 
-    const response = await axios.get(layer1FeedFile, { timeout: 3000 });
+    const response = await axios.get(feedFile, { timeout: 3000 });
 
     if (!this.SUCCESS_CODES.includes(response.status)) {
-      this.logger.error(`[KeysUpdateService] Download Failed. HTTP Status: ${response.status}`);
-      this.logger.error(`[KeysUpdateService] HTTP Response: ${JSON.stringify(response)}`);
+      this.logger.error(`${this.logPrefix} Download Failed. HTTP Status: ${response.status}`);
+      this.logger.error(`${this.logPrefix} HTTP Response: ${JSON.stringify(response)}`);
       return;
     }
 
