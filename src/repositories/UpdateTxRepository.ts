@@ -54,7 +54,7 @@ export class UpdateTxRepository {
         success: !!receipt.status,
         sender: tx.from.toLowerCase(),
         signers: SignersRecoveryEvm.apply(networkId, tx.to, updateData),
-        fee: this.gasCalculator.apply(chainId, receipt).toString(10),
+        fee: this.gasCalculator.apply(chainId, receipt, tx).toString(10),
         kees: prettyKeys,
       },
       {
