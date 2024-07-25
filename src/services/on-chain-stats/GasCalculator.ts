@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { TransactionReceipt } from '@ethersproject/providers';
+import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers';
 import { Logger } from 'winston';
 import { GasCalculatorEvm } from './GasCalculatorEvm';
 import { ChainsIds } from '../../types/ChainsIds';
 import { BaseTransactionReceipt, GasCalculatorBase } from './GasCalculatorBase';
+import { GasCalculatorRootstock } from './GasCalculatorRootstock';
 
 @injectable()
 export class GasCalculator {
@@ -11,11 +12,13 @@ export class GasCalculator {
 
   @inject(GasCalculatorEvm) private gasCalculatorEvm: GasCalculatorEvm;
   @inject(GasCalculatorBase) private gasCalculatorBase: GasCalculatorBase;
+  @inject(GasCalculatorRootstock) private gasCalculatorRootstock: GasCalculatorRootstock;
 
-  apply(chainId: string, receipt: TransactionReceipt): bigint {
+  apply(chainId: string, receipt: TransactionReceipt, tx: TransactionResponse): bigint {
     switch (chainId) {
-      // case CHAIN_IDS.ROOTSTOCK_SBX:
-      //   return rootstockCalculator(receipt);
+      case ChainsIds.ROOTSTOCK:
+        return this.gasCalculatorRootstock.apply(receipt, tx);
+
       case ChainsIds.BASE:
         return this.gasCalculatorBase.apply(receipt as BaseTransactionReceipt);
       //

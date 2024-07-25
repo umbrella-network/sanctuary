@@ -7,6 +7,7 @@ export enum ChainsIds {
   SOLANA = 'solana',
   BASE = 'base',
   LINEA = 'linea',
+  ROOTSTOCK = 'rootstock',
 }
 
 export type TForeignChainsIds =

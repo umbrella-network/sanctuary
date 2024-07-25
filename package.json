@@ -1,6 +1,6 @@
 {
   "name": "sanctuary",
-  "version": "5.12.1",
+  "version": "5.12.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/umbrella-network/sanctuary.git"

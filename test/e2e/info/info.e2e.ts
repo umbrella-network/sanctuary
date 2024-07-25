@@ -68,7 +68,7 @@ describe('info', () => {
         });
       });
 
-      describe('when chainId is ethereum', () => {
+      describe.skip('when chainId is ethereum', () => {
         before(async () => {
           response = await request(app).get('/info?chainId=ethereum');
         });

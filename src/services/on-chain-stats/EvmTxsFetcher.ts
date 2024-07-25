@@ -22,9 +22,10 @@ export class EvmTxsFetcher {
     const provider = blockchainScanner.provider;
 
     const arr: number[] = [];
+    const setOfBlocks: Set<number> = new Set<number>(existingBlocks);
 
     for (let i = fromBlock; i <= toBlock; i++) {
-      if (existingBlocks.includes(i)) continue;
+      if (setOfBlocks.has(i)) continue;
 
       arr.push(i);
     }
@@ -32,17 +33,16 @@ export class EvmTxsFetcher {
     this.logger.debug(`[EvmTxsFetcher] fetching txs for ${arr.length} blocks`);
 
     const allTxsSettled = await Promise.allSettled(
-      arr.map((i) => {
-        return promiseWithTimeout(provider.getBlockWithTransactions(i), 15000);
-      })
+      arr.sort().map((i) => promiseWithTimeout(provider.getBlockWithTransactions(i), 15000))
     );
 
     let errorDetected = false;
-    let lastBlockBeforeError: number | undefined;
+    let lastBlockBeforeError = arr[0] - 1;
 
     const allTxs = allTxsSettled.map((result, i) => {
       if (result.status == 'fulfilled') {
         if (!errorDetected) lastBlockBeforeError = result.value.number;
+
         return result.value;
       }
 
