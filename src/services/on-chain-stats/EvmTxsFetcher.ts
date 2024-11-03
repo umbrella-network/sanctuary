@@ -30,7 +30,7 @@ export class EvmTxsFetcher {
       arr.push(i);
     }
 
-    this.logger.debug(`[EvmTxsFetcher] fetching txs for ${arr.length} blocks`);
+    this.logger.debug(`${chainId}[EvmTxsFetcher] fetching txs for ${arr.length} blocks`);
 
     const allTxsSettled = await Promise.allSettled(
       arr.sort().map((i) => promiseWithTimeout(provider.getBlockWithTransactions(i), 15000))

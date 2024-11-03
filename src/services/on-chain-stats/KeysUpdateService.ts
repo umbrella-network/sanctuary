@@ -50,7 +50,7 @@ export class KeysUpdateService {
 
   private async downloadFile(feedFile: string): Promise<string | undefined> {
     if (!feedFile) {
-      this.logger.warn('${this.logPrefix} Skipping, no URL configured');
+      this.logger.warn(`${this.logPrefix} Skipping, no URL configured`);
       return;
     }
 

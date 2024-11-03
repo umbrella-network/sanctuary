@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 - Fix github actions
 
+## [5.12.3] - 2024-11-03
+### Added
+- added more logs to tx fetcher
+
 ## [5.12.2] - 2024-07-25
 ### Fixed
 - in `EvmTxsFetcher` fix case when we get error on first block and we checkpoint all blocks
