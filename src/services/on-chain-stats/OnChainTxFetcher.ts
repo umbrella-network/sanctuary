@@ -55,6 +55,8 @@ export class OnChainTxFetcher {
 
     const feedsMap = await this.umbrellaFeedsMap(chainId);
 
+    this.logger.debug(`[OnChainTxFetcher][${chainId}] feedsMap: ${feedsMap.keys()}`);
+
     this.logger.info(
       `[OnChainTxFetcher][${chainId}] blocks to sync: ${rangeTo - rangeFrom} blocks, starting from ${rangeFrom}`
     );
@@ -87,7 +89,9 @@ export class OnChainTxFetcher {
         continue;
       }
 
-      this.logger.info(`${logPrefix} found ${filteredTx.length} 'update()' txs`);
+      this.logger.info(
+        `${logPrefix} found ${filteredTx.length} 'update()' txs ${filteredTx.map((tx) => tx.blockNumber).sort()}`
+      );
 
       const receipts = await this.txReceiptFetcher.call(
         chainId,
