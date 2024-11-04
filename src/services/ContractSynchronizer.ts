@@ -167,11 +167,20 @@ export class ContractSynchronizer {
     return Promise.all(
       events.map((logRegistered) => {
         const { destination, anchor, bytes32 } = logRegistered;
-        const [name] = Buffer.from(bytes32.replace('0x', ''), 'hex').toString().split(']x00');
+        const name = this.clearName(bytes32);
         this.logger.info(`${this.logPrefix}[${chainId}] Detected new ${name}: ${destination} at ${anchor}`);
         return this.contractRepository.save(chainId, anchor, name, destination);
       })
     );
+  };
+
+  private clearName = (bytes32: string): string => {
+    const b = Buffer.from(bytes32.replace('0x', ''), 'hex');
+    let i = 0;
+
+    while (b[i] != 0) i++;
+
+    return b.slice(0, i).toString('utf-8');
   };
 
   private calculateBlockNumberRange = async (
