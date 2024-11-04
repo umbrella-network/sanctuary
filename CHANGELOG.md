@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.12.4] - 2024-11-04
+### Added
+- added more logs to tx fetcher
+
 ## [5.12.3] - 2024-11-03
 ### Added
 - added more logs to tx fetcher

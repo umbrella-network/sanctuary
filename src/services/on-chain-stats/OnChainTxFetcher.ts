@@ -53,9 +53,9 @@ export class OnChainTxFetcher {
     const ranges = CreateBatchRanges.apply(rangeFrom, rangeTo, blockchainScanner.settings.fetchBlocksBatchSize);
     const timeStart = Date.now();
 
-    const feedsMap = await this.umbrellaFeedsMap(chainId);
+    const allFeedsContracts = await this.umbrellaFeedsMap(chainId);
 
-    this.logger.debug(`[OnChainTxFetcher][${chainId}] feedsMap: ${feedsMap.keys()}`);
+    this.logger.debug(`[OnChainTxFetcher][${chainId}] allFeedsContracts.size: ${allFeedsContracts.size}`);
 
     this.logger.info(
       `[OnChainTxFetcher][${chainId}] blocks to sync: ${rangeTo - rangeFrom} blocks, starting from ${rangeFrom}`
@@ -74,7 +74,8 @@ export class OnChainTxFetcher {
 
       const fetchedBlocks = await this.updateTxRepository.getBlocks(chainId, from, to);
       const { txs, lastBlockBeforeError } = await this.txsFetcher.call(chainId, from, to, fetchedBlocks);
-      const filteredTx = this.onlyUmbrellaFeedsTx(txs, feedsMap);
+      const filteredTx = this.onlyUmbrellaFeedsTx(txs, allFeedsContracts);
+      this.logger.debug(`[OnChainTxFetcher][${chainId}] filteredTx: ${filteredTx.length} of ${txs.length}`);
 
       gotError = lastBlockBeforeError !== undefined;
       const checkpointBlock = lastBlockBeforeError || to;
@@ -114,21 +115,21 @@ export class OnChainTxFetcher {
     }
   }
 
-  private onlyUmbrellaFeedsTx(txs: TransactionResponse[], feedsAddresses: Map<string, boolean>): TransactionResponse[] {
+  private onlyUmbrellaFeedsTx(txs: TransactionResponse[], feedsAddresses: Set<string>): TransactionResponse[] {
     return txs.filter((tx) => {
       return !!tx.to && feedsAddresses.has(tx.to.toLowerCase());
     });
   }
 
-  private async umbrellaFeedsMap(chainId: ChainsIds): Promise<Map<string, boolean>> {
-    const map = new Map<string, boolean>();
+  private async umbrellaFeedsMap(chainId: ChainsIds): Promise<Set<string>> {
+    const set = new Set<string>();
     const umbrellaFeeds = await this.contractRepository.getAllContracts(chainId, UMBRELLA_FEEDS_NAME);
 
     umbrellaFeeds.forEach((uf) => {
-      map.set(uf.address.toLowerCase(), true);
+      set.add(uf.address.toLowerCase());
     });
 
-    return map;
+    return set;
   }
 
   private blockFrom(chainId: ChainsIds, lastSavedBlock: number | undefined): number {
