@@ -1,4 +1,4 @@
-import {ContractRegistry} from "@umb-network/toolbox";
+import { ContractRegistry } from '@umb-network/toolbox';
 
 export class RegistryContractExt extends ContractRegistry {
   getAddressByString = async (name: string): Promise<string> => {

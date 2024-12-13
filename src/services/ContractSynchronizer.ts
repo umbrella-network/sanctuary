@@ -1,5 +1,5 @@
 import { Logger } from 'winston';
-import { ABI } from '@umb-network/toolbox';
+import { ABI, ContractRegistry } from '@umb-network/toolbox';
 import { inject, injectable } from 'inversify';
 import { Contract, Event } from 'ethers';
 
@@ -12,7 +12,6 @@ import RegisteredContracts, { IRegisteredContracts } from '../models/RegisteredC
 import { BlockchainScannerRepository } from '../repositories/BlockchainScannerRepository';
 import { RegisteredContractRepository } from '../repositories/RegisteredContractRepository';
 import { ScanningTimeLeft } from './on-chain-stats/ScanningTimeLeft';
-import {RegistryContractExt} from '../contracts/RegistryContractExt';
 
 type FreshContracts = {
   name: string;
@@ -91,17 +90,18 @@ export class ContractSynchronizer {
   private contractUpToDate = async (chainId: string, contractName: string): Promise<FreshContracts> => {
     this.logger.debug(`${this.logPrefix}[${chainId}] checking if ${contractName} up to date.`);
     const blockchain = this.blockchainScannerRepository.get(chainId);
-    const registry = new RegistryContractExt(blockchain.getProvider(), blockchain.getContractRegistryAddress());
+    const registry = new ContractRegistry(blockchain.getProvider(), blockchain.getContractRegistryAddress());
 
     let currentAddress;
 
     try {
-      currentAddress = await registry.getAddressByString(contractName);
+      currentAddress = await registry.getAddress(contractName);
     } catch (e) {
+      this.logger.error(`${this.logPrefix}[${chainId}] ${JSON.stringify(e)}`);
       this.logger.error(
         `${this.logPrefix}[${chainId}] unable to get address for ${contractName}. Trying provider again`
       );
-      currentAddress = await registry.getAddressByString(contractName);
+      currentAddress = await registry.getAddress(contractName);
     }
 
     const id = this.contractRepository.instanceId(chainId, contractName, currentAddress);

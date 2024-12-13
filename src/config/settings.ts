@@ -108,7 +108,7 @@ const settings: Settings = {
       },
       _5ire: {
         startBlockNumber: parseInt(process.env._5IRE_SCANNER_START_BLOCK_NUMBER || '0', 10),
-        scanBatchSize: parseInt(process.env._5IRE_BLOCK_SCAN_BATCH_SIZE || '1000', 10),
+        scanBatchSize: parseInt(process.env._5IRE_BLOCK_SCAN_BATCH_SIZE || '5000', 10),
         fetchBlocksBatchSize: parseInt(process.env._5IRE_SCANNER_FETCH_BLOCKS_BATCH || '100', 10),
         maxRequestConcurrency: parseInt(process.env._5IRE_MAX_REQUEST_CONCURRENCY || '10', 10),
         confirmations: parseInt(process.env._5IRE_BLOCK_CONFIRMATIONS || '15', 10),
