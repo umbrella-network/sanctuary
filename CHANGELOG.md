@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+## [5.13.0] - 2024-12-13
+### Added
+- add support for `5ire` expenses reports 
+### Fixed
+- Fix github actions
+
 ## [5.12.5] - 2024-11-04
 ### Fixed
 - Fix bytes32 to string conversion

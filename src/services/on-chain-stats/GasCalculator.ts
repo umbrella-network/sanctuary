@@ -26,6 +26,7 @@ export class GasCalculator {
       case ChainsIds.LINEA:
       case ChainsIds.POLYGON:
       case ChainsIds.ARBITRUM:
+      case ChainsIds._5IRE:
         return this.gasCalculatorEvm.apply(receipt);
 
       default:

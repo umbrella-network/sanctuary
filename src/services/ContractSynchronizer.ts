@@ -97,6 +97,7 @@ export class ContractSynchronizer {
     try {
       currentAddress = await registry.getAddress(contractName);
     } catch (e) {
+      this.logger.error(`${this.logPrefix}[${chainId}] ${JSON.stringify(e)}`);
       this.logger.error(
         `${this.logPrefix}[${chainId}] unable to get address for ${contractName}. Trying provider again`
       );
