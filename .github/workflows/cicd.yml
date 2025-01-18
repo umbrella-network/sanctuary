@@ -179,7 +179,7 @@ jobs:
           VERSION: ${{ steps.atifact-reader.outputs.version }}_sbx
           BUILDING_ENVIRONMENT: "staging/sbx"
         run: >-
-          yq eval ".images[0].newTag = \"$VERSION\"" -i $BUILDING_ENVIRONMENT/backends/sanctuary/base/kustomization.yaml
+          yq eval ".global.imageTag = \"$VERSION\"" -i $BUILDING_ENVIRONMENT/backends/sanctuary/bsc01.yaml
 
       - name: Commit and Push to master for SANDBOX
         env:
@@ -197,7 +197,7 @@ jobs:
           VERSION: ${{ steps.atifact-reader.outputs.version }}
           BUILDING_ENVIRONMENT: ${{ steps.atifact-reader.outputs.environment }}
         run: >-
-          yq eval ".images[0].newTag = \"$VERSION\"" -i $BUILDING_ENVIRONMENT/backends/sanctuary/base/kustomization.yaml
+          yq eval ".global.imageTag = \"$VERSION\"" -i $BUILDING_ENVIRONMENT/backends/sanctuary/bsc01.yaml
 
       - name: Commit, Push and create Pull Request
         env:
@@ -211,4 +211,4 @@ jobs:
           git checkout -b $BRANCH
           git commit -a -m "chore(build): $IMAGE"
           git push origin -f $BRANCH 
-          gh pr create --base master --title "sanctuary Release" --body "sanctuary" || exit 0
+          gh pr create --base master --head $BRANCH --title "sanctuary Release" --body "sanctuary" || exit 0
