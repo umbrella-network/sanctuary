@@ -1,0 +1,135 @@
+name: deploy_nonProd
+on:
+  workflow_dispatch:
+    branches:
+      - feature/*
+      - release/*
+      - hotfix/*
+      - develop
+    inputs:
+      env:
+        required: true
+        description: 'Please select env you want to deploy the version'
+        default: dev
+        type: choice
+        options:
+          - dev
+          - sbx
+jobs:
+  build_local:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials to SBX
+        uses: aws-actions/configure-aws-credentials@v4
+        if: inputs.env == 'sbx'
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_NONPROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_NONPROD }}
+          aws-region: ${{ secrets.AWS_REGION_NONPROD }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_NONPROD }}:role/Developers
+          role-skip-session-tagging: true
+          role-duration-seconds: 1800
+      
+      - name: Configure AWS Kubeconfig Credentials to SBX
+        if: inputs.env == 'sbx'
+        run: |
+          aws --region ${{ secrets.AWS_REGION_NONPROD }} eks update-kubeconfig --kubeconfig ~/.kube/config-staging --name ${{ secrets.CLUSTER_NAME_NONPROD }}
+
+      - name: Get sbx image tag
+        id: sbx_tag
+        if: inputs.env == 'sbx'
+        run: |
+          export SBX_TAG=$(kubectl --kubeconfig ~/.kube/config-staging get deployments -n sandbox sanctuary-api-bsc01 -o=jsonpath='{$$.spec.template.spec.containers[:1].image}' | awk -F':' '{print $2}')
+          echo "The tag is: $SBX_TAG"
+          echo "tag=$SBX_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_ECR }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ECR }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      
+      - name: Extract Docker-image params
+        id: docker-params
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          export IMAGE="$ECR_REGISTRY/sanctuary"
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+      
+      - name: Build and push to develop
+        if: inputs.env == 'dev'
+        run: |
+          docker build -t ${{ steps.docker-params.outputs.image }}:develop .
+          docker push ${{ steps.docker-params.outputs.image }}:develop
+  
+      - name: Build and push to sbx
+        if: inputs.env == 'sbx'
+        run: |
+          docker build -t ${{ steps.docker-params.outputs.image }}:${{ steps.sbx_tag.outputs.tag }} .
+          docker push ${{ steps.docker-params.outputs.image }}:${{ steps.sbx_tag.outputs.tag }}
+      
+      - name: Log out of Amazon ECR
+        if: always()
+        run: docker logout ${{ steps.login-ecr.outputs.registry }}
+
+  restart_deployments:
+    runs-on: ubuntu-latest
+    needs: build_local
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials to non-prod
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_NONPROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_NONPROD }}
+          aws-region: ${{ secrets.AWS_REGION_NONPROD }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_NONPROD }}:role/Developers
+          role-skip-session-tagging: true
+          role-duration-seconds: 1800
+      
+      - name: Configure AWS Kubeconfig Credentials to non_prod
+        run: |
+          aws --region ${{ secrets.AWS_REGION_NONPROD }} eks update-kubeconfig --kubeconfig ~/.kube/config-staging --name ${{ secrets.CLUSTER_NAME_NONPROD }}
+      
+      - name: Restart deployments to take last Image
+        run: |
+          if [ "${{ inputs.env }}" == "dev" ]; then
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-foreign-chain-worker-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-foreign-chain-worker-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-metrics-worker-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-metrics-worker-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-resolver-worker-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-resolver-worker-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-sync-worker-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-sync-worker-bsc01 -n dev	
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n dev
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n dev
+          fi
+          
+          if [ "${{ inputs.env }}" == "sbx" ]; then
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-foreign-chain-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-foreign-chain-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-metrics-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-metrics-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-resolver-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-resolver-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-sync-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-sync-worker-bsc01 -n sandbox	
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n sandbox
+          fi
