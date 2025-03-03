@@ -32,8 +32,10 @@ export class EvmTxsFetcher {
 
     this.logger.debug(`${chainId}[EvmTxsFetcher] fetching txs for ${arr.length} blocks`);
 
+    const arrSorted = arr.sort();
+
     const allTxsSettled = await Promise.allSettled(
-      arr.sort().map((i) => promiseWithTimeout(provider.getBlockWithTransactions(i), 15000))
+      arrSorted.map((i) => promiseWithTimeout(provider.getBlockWithTransactions(i), 25000))
     );
 
     let errorDetected = false;
@@ -47,7 +49,7 @@ export class EvmTxsFetcher {
       }
 
       errorDetected = true;
-      this.logger.error(`${chainId} block ${arr[i]} error: ${result.reason.toString()}`);
+      this.logger.error(`${chainId} block ${arrSorted[i]} error: ${result.reason.toString()}`);
       return undefined;
     });
 
