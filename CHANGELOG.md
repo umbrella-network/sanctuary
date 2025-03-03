@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - GitHub Action to use helm charts path
 
+## [5.13.1] - 2025-03-03
+### Changed
+- change timeout for fetching blocks to 25s
+
 ## [5.13.0] - 2024-12-13
 ### Added
 - add support for `5ire` expenses reports 
