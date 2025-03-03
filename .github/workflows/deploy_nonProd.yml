@@ -10,10 +10,9 @@ on:
       env:
         required: true
         description: 'Please select env you want to deploy the version'
-        default: dev
+        default: sbx
         type: choice
         options:
-          - dev
           - sbx
 jobs:
   build_local:
@@ -65,12 +64,6 @@ jobs:
           export IMAGE="$ECR_REGISTRY/sanctuary"
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
       
-      - name: Build and push to develop
-        if: inputs.env == 'dev'
-        run: |
-          docker build -t ${{ steps.docker-params.outputs.image }}:develop .
-          docker push ${{ steps.docker-params.outputs.image }}:develop
-  
       - name: Build and push to sbx
         if: inputs.env == 'sbx'
         run: |
@@ -104,32 +97,11 @@ jobs:
       
       - name: Restart deployments to take last Image
         run: |
-          if [ "${{ inputs.env }}" == "dev" ]; then
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-foreign-chain-worker-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-foreign-chain-worker-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-metrics-worker-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-metrics-worker-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-resolver-worker-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-resolver-worker-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-sync-worker-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-sync-worker-bsc01 -n dev	
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n dev
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n dev
-          fi
-          
           if [ "${{ inputs.env }}" == "sbx" ]; then
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-api-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-api-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-foreign-chain-worker-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-foreign-chain-worker-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-metrics-worker-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-metrics-worker-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-resolver-worker-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-resolver-worker-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-sync-worker-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-sync-worker-bsc01 -n sandbox	
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=0 deployment/sanctuary-scheduler-bsc01 -n sandbox
-            kubectl --kubeconfig ~/.kube/config-staging scale --replicas=1 deployment/sanctuary-scheduler-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging rollout restart deployment/sanctuary-api-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging rollout restart deployment/sanctuary-foreign-chain-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging rollout restart deployment/sanctuary-metrics-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging rollout restart deployment/sanctuary-resolver-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging rollout restart deployment/sanctuary-sync-worker-bsc01 -n sandbox
+            kubectl --kubeconfig ~/.kube/config-staging rollout restart deployment/sanctuary-scheduler-bsc01 -n sandbox
           fi

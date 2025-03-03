@@ -36,6 +36,10 @@ jobs:
         kubectl rollout restart deployment/sanctuary-scheduler-bsc01
         echo "Restarting 'sanctuary sync worker'"
         kubectl rollout restart deployment/sanctuary-sync-worker-bsc01
+        echo "Restarting 'sanctuary metrics worker'"
+        kubectl rollout restart deployment/sanctuary-metrics-worker-bsc01
+        echo "Restarting 'sanctuary api"
+        kubectl rollout restart deployment/sanctuary-api-bsc01
 
   notify:
     name: Discord Notification

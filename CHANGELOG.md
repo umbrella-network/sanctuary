@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Updated
+- Update Makefile and github actions due to decommission of DEV environment
+
 ### Added
 - GitHub Action to deploy to nonprod
 ### Fixed
