@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Updated
 - Update Makefile and github actions due to decommission of DEV environment
+- Update GitHub Action to schedule reboot of Sanctuary in Production Every Day at 10:30 UTC
 
 ### Added
 - GitHub Action to deploy to nonprod
